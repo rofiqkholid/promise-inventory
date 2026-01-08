@@ -1,0 +1,210 @@
+@import './style-bundle.css';
+
+#main-content {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.loader-spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #3b82f6;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+.dark .loader-spinner {
+    border-color: #4a5568;
+    border-top-color: #60a5fa;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    color: inherit;
+}
+
+.search-highlight {
+    color: #3b82f6;
+    font-weight: 500;
+    background: transparent;
+    padding: 0;
+}
+
+.dark .search-highlight {
+    color: #60a5fa;
+    background: transparent;
+}
+
+.bg-blue-50 {
+    background-color: #f8fafc;
+}
+
+.dark .bg-blue-900 {
+    background-color: #1e293b;
+}
+
+.search-menu-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.dark .search-menu-item {
+    border-bottom-color: #374151;
+}
+
+.search-menu-item:last-child {
+    border-bottom: none;
+}
+
+.search-menu-item:hover {
+    background-color: #f8fafc;
+}
+
+.dark .search-menu-item:hover {
+    background-color: #1e293b;
+}
+
+.search-history-item {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.dark .search-history-item {
+    border-bottom-color: #374151;
+}
+
+.search-history-item:last-child {
+    border-bottom: none;
+}
+
+.search-dropdown-container {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.search-section-title {
+    padding: 0.75rem 1rem 0.5rem 1rem;
+    background-color: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dark .search-section-title {
+    background-color: #1e293b;
+    border-bottom-color: #374151;
+}
+
+.d-none-custom {
+    display: none !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered:empty {
+    display: none;
+}
+
+.filter-pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #E0E7FF;
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #3730A3;
+}
+
+.filter-pill-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+    color: #4338CA;
+    line-height: 1;
+}
+
+.filter-pill-remove:hover {
+    color: #C7D2FE;
+}
+
+.dark .filter-pill {
+    background-color: #3730A3;
+    color: #E0E7FF;
+}
+
+.dark .filter-pill-remove {
+    color: #A5B4FC;
+}
+
+.dark .filter-pill-remove:hover {
+    color: #E0E7FF;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+}
+
+/*
+
+Eco Animation in Monitoring
+
+/* Animasi Jalan ke Kanan */
+@keyframes flowRight {
+    0% {
+        opacity: 0;
+        transform: translateX(-60px);
+        /* Mulai dari posisi Icon Kiri */
+    }
+
+    30% {
+        opacity: 1;
+    }
+
+    70% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateX(50px);
+        /* Berakhir di dekat Icon Kanan */
+    }
+}
+
+.animate-flow {
+    animation: flowRight 2s infinite ease-in-out;
+}
