@@ -20,7 +20,7 @@ window.defaultDataTable = function (selector, userConfig = {}) {
         lengthMenu: [10, 25, 50, 100],
 
         // Standardized DOM Layout
-        dom: "<'flex flex-col md:flex-row justify-between items-center mb-6 gap-2 sm:gap-4 px-1 sm:px-2'<'flex items-center gap-2 sm:gap-4'l B> f>rt<'flex flex-col md:flex-row justify-between items-center mt-6 gap-4 px-2'i p>",
+        dom: "<'flex flex-col md:flex-row justify-between items-center mb-4 gap-2 sm:gap-4'<'flex items-center gap-2 sm:gap-4'l B> f><'overflow-x-auto w-full rounded-lg'rt><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4'i p>",
 
         // Default Buttons
         buttons: [
@@ -52,14 +52,16 @@ window.defaultDataTable = function (selector, userConfig = {}) {
 
         // Styling Language
         language: {
-            processing: '<div class="overlay-loader"><i class="fa-solid fa-spinner fa-spin text-blue-500 mr-2"></i> Processing...</div>',
+            processing: '<div class="inline-flex items-center"><span class="spinner-modern"></span> Loading...</div>',
             search: "_INPUT_",
             searchPlaceholder: "Search records...",
             lengthMenu: "Show _MENU_",
             paginate: {
                 previous: '<i class="fa-solid fa-chevron-left"></i>',
                 next: '<i class="fa-solid fa-chevron-right"></i>'
-            }
+            },
+            emptyTable: '<div class="dt-empty-state"><i class="fa-solid fa-folder-open mb-4 text-slate-300 dark:text-slate-600"></i><p class="dt-empty-title">Kept you waiting?</p><p class="dt-empty-desc">No data found in this category.</p></div>',
+            zeroRecords: '<div class="dt-empty-state"><i class="fa-solid fa-magnifying-glass mb-4 text-slate-300 dark:text-slate-600"></i><p class="dt-empty-title">No matches found</p><p class="dt-empty-desc">Try adjusting your search filters.</p></div>'
         },
 
         // Default Error Handling for AJAX
