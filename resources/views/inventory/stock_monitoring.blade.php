@@ -56,35 +56,31 @@
     </div>
 
     {{-- DataTable --}}
-    <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-        <div class="p-4 md:p-6 overflow-x-auto">
-            <table id="stockMonitoringTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        <th rowspan="2" class="px-6 py-3 w-16 border-b dark:border-gray-600 align-middle">No</th>
-                        <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Part No</th>
-                        <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Spec & Size</th>
-                        <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Remark</th>
-                        <th colspan="2" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-600">Current Balance</th>
-                        <th colspan="{{ max(1, $categories->count()) }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/20">Usage History (Pcs / Unit)</th>
-                    </tr>
-                    <tr>
-                        <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Pcs</th>
-                        <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Unit</th>
+    <x-table id="stockMonitoringTable">
+        <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <tr>
+                <th rowspan="2" class="px-6 py-3 w-16 border-b dark:border-gray-600 align-middle">No</th>
+                <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Part No</th>
+                <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Spec & Size</th>
+                <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Remark</th>
+                <th colspan="2" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-600">Current Balance</th>
+                <th colspan="{{ max(1, $categories->count()) }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/20">Usage History (Pcs / Unit)</th>
+            </tr>
+            <tr>
+                <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Pcs</th>
+                <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Unit</th>
 
-                        @foreach($categories as $cat)
-                        <th class="px-6 py-3 border-b dark:border-gray-600 text-center text-xs whitespace-nowrap">{{ $cat->code }}</th>
-                        @endforeach
+                @foreach($categories as $cat)
+                <th class="px-6 py-3 border-b dark:border-gray-600 text-center text-xs whitespace-nowrap">{{ $cat->code }}</th>
+                @endforeach
 
-                        @if($categories->count() === 0)
-                        <th class="px-6 py-3 border-b dark:border-gray-600 text-center text-xs">-</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
+                @if($categories->count() === 0)
+                <th class="px-6 py-3 border-b dark:border-gray-600 text-center text-xs">-</th>
+                @endif
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </x-table>
 </div>
 @endsection
 
@@ -211,13 +207,13 @@
             });
         }
 
-        const table = $('#stockMonitoringTable').DataTable({
+        const table = window.defaultDataTable('stockMonitoringTable', {
             processing: true,
             serverSide: true,
             ajax: "{{ route('inventory.stockMonitoring.data') }}",
             columns: columns,
             pageLength: 25,
-            scrollX: true,
+            // scrollX handled by defaultDataTable, but explicit is fine
             createdRow: function(row, data, dataIndex) {
                 if (data.stock_status === 'danger') {
                     $(row).addClass('bg-red-50 dark:bg-red-900/10');

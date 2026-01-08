@@ -91,25 +91,25 @@
 
         {{-- Recent Transactions Table --}}
         <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden h-full flex flex-col">
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700">
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+            <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-xl overflow-hidden h-full flex flex-col border border-slate-200 dark:border-slate-700">
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
+                    <h3 class="text-lg font-medium text-slate-900 dark:text-white">
                         <i class="fa-solid fa-clock-rotate-left mr-2"></i> Recent Transactions
                     </h3>
-                    <button id="refreshTable" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <button id="refreshTable" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
                         <i class="fa-solid fa-arrows-rotate"></i>
                     </button>
                 </div>
-                <div class="p-4 overflow-x-auto flex-1">
+                <div class="p-4 md:p-6 overflow-x-auto flex-1 bg-white dark:bg-gray-800">
                     <table id="recentTransactionTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
                             <tr>
-                                <th class="px-4 py-3">Date</th>
-                                <th class="px-4 py-3">Product</th>
-                                <th class="px-4 py-3">Category</th>
-                                <th class="px-4 py-3 text-right">Qty</th>
-                                <th class="px-4 py-3">PIC</th>
-                                <th class="px-4 py-3">Remark</th>
+                                <th class="px-6 py-3">Date</th>
+                                <th class="px-6 py-3">Product</th>
+                                <th class="px-6 py-3">Category</th>
+                                <th class="px-6 py-3 text-right">Qty</th>
+                                <th class="px-6 py-3">PIC</th>
+                                <th class="px-6 py-3">Remark</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -157,10 +157,10 @@
         }
 
         // DataTable
-        var table = $('#recentTransactionTable').DataTable({
+        // DataTable
+        var table = window.defaultDataTable('recentTransactionTable', {
             processing: true,
             serverSide: true,
-            scrollX: true,
             ajax: "{{ route('inventory.transaction.data') }}",
             columns: [
                 { data: 'transaction_date', width: '15%' },
@@ -183,8 +183,10 @@
             ],
             order: [[0, 'desc']], // Order by date desc
             pageLength: 10,
-            lengthChange: false, // Simple table
-            searching: false // Simple table
+            
+            // Custom simplified layout for this widget-like table
+            dom: "<'flex flex-col md:flex-row justify-between items-center mb-4'rt><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4 px-2'i p>",
+            searching: false
         });
 
         $('#refreshTable').click(function() {

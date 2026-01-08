@@ -17,29 +17,25 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-        <div class="p-4 md:p-6 overflow-x-auto">
-            <table id="inventoryProductTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 w-16">No</th>
-                        <th scope="col" class="px-6 py-3">Part No & Rev</th>
-                        <th scope="col" class="px-6 py-3">Customer</th>
-                        <th scope="col" class="px-6 py-3">Model</th>
-                        <th scope="col" class="px-6 py-3">Material & Type</th>
-                        <th scope="col" class="px-6 py-3">Size (TxWxL)</th>
-                        <th scope="col" class="px-6 py-3">Pcs/Unit</th>
-                        <th scope="col" class="px-6 py-3">Unit/Car</th>
-                        <th scope="col" class="px-6 py-3">Rank</th>
-                        <th scope="col" class="px-6 py-3">Coil Center</th>
-                        <th scope="col" class="px-6 py-3">Remark</th>
-                        <th scope="col" class="px-6 py-3 text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
+    <x-table id="inventoryProductTable">
+        <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <tr>
+                <th scope="col" class="px-6 py-3 w-16">No</th>
+                <th scope="col" class="px-6 py-3">Part No & Rev</th>
+                <th scope="col" class="px-6 py-3">Customer</th>
+                <th scope="col" class="px-6 py-3">Model</th>
+                <th scope="col" class="px-6 py-3">Material & Type</th>
+                <th scope="col" class="px-6 py-3">Size (TxWxL)</th>
+                <th scope="col" class="px-6 py-3">Pcs/Unit</th>
+                <th scope="col" class="px-6 py-3">Unit/Car</th>
+                <th scope="col" class="px-6 py-3">Rank</th>
+                <th scope="col" class="px-6 py-3">Coil Center</th>
+                <th scope="col" class="px-6 py-3">Remark</th>
+                <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </x-table>
 </div>
 
 {{-- Add/Edit Modal --}}
@@ -304,10 +300,10 @@ $(function() {
     });
 
     // DataTable
-    const table = $('#inventoryProductTable').DataTable({
+    // DataTable
+    const table = window.defaultDataTable('inventoryProductTable', {
         processing: true,
         serverSide: true,
-        scrollX: true,
         ajax: {
             url: '{{ route("inventory.product.data") }}',
             type: 'GET',
@@ -346,17 +342,18 @@ $(function() {
                 orderable: false,
                 searchable: false,
                 className: 'text-center',
+                width: '100px',
                 render: row => `
-                    <button class="edit-button text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${row.id}">
-                        <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                    </button>
-                    <button class="delete-button text-red-600 hover:text-red-900" data-id="${row.id}">
-                        <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                    </button>`
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
             }
         ],
-        pageLength: 10,
-        lengthMenu: [10, 25, 50],
         order: [[0, 'desc']]
     });
 

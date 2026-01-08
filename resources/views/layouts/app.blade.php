@@ -39,7 +39,9 @@
     {{-- Third Party CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.tailwindcss.min.css">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         [x-cloak] { display: none !important; }
@@ -190,7 +192,7 @@
             @include('layouts.header')
 
             {{-- Page Content --}}
-            <main class="flex-1 overflow-y-auto p-6 scroll-smooth">
+            <main class="flex-1 overflow-y-auto p-3 md:p-6 scroll-smooth">
                 @include('components.toast') 
                 @yield('content')
             </main>
@@ -217,53 +219,19 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
+    
+    {{-- DataTables Buttons --}}
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.tailwindcss.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
-        // Simple Toast Function
-        window.showToast = function(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            const colors = {
-                success: 'bg-green-50 border-green-200 text-green-700',
-                error: 'bg-red-50 border-red-200 text-red-700',
-                warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-                info: 'bg-blue-50 border-blue-200 text-blue-700'
-            };
-            const icons = {
-                success: '<i class="fa-solid fa-circle-check"></i>',
-                error: '<i class="fa-solid fa-circle-xmark"></i>',
-                warning: '<i class="fa-solid fa-triangle-exclamation"></i>',
-                info: '<i class="fa-solid fa-circle-info"></i>'
-            }
-
-            const styles = colors[type] || colors.success;
-            const icon = icons[type] || icons.success;
-
-            toast.className = `flex items-center gap-3 w-80 p-4 border rounded-lg shadow-md transition-all duration-300 transform translate-x-full opacity-0 ${styles}`;
-            toast.innerHTML = `
-                <span class="text-xl">${icon}</span>
-                <span class="text-sm font-medium flex-1">${message}</span>
-                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            `;
-
-            container.appendChild(toast);
-
-            // Animate In
-            requestAnimationFrame(() => toast.classList.remove('translate-x-full', 'opacity-0'));
-
-            // Auto Remove
-            setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-    </script>
     
     @yield('js')
     @stack('scripts')

@@ -53,22 +53,18 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="coilCenterTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Code</th>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3">Address</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="coilCenterTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Code</th>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Address</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 
     {{-- Tab Content: Material Spec --}}
@@ -78,21 +74,17 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="materialSpecTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Spec Name</th>
-                            <th scope="col" class="px-6 py-3">Coating Type</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="materialSpecTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Spec Name</th>
+                    <th scope="col" class="px-6 py-3">Coating Type</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 
     {{-- Tab Content: Unit --}}
@@ -102,21 +94,17 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="unitTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Code</th>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="unitTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Code</th>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 
     {{-- Tab Content: Rank --}}
@@ -126,22 +114,18 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="rankTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Code</th>
-                            <th scope="col" class="px-6 py-3">Limit Value</th>
-                            <th scope="col" class="px-6 py-3">Description</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="rankTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Code</th>
+                    <th scope="col" class="px-6 py-3">Limit Value</th>
+                    <th scope="col" class="px-6 py-3">Description</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 
     {{-- Tab Content: Sub Contractor --}}
@@ -151,22 +135,18 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="subContractorTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Code</th>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3">Service Type</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="subContractorTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Code</th>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Service Type</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 
     {{-- Tab Content: Transaction Category --}}
@@ -176,22 +156,18 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="transactionCategoryTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Code</th>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3">Effect</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="transactionCategoryTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Code</th>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Effect</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 
     {{-- Tab Content: PIC --}}
@@ -201,20 +177,16 @@
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-            <div class="p-4 md:p-6 overflow-x-auto">
-                <table id="picTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3">Name</th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+        <x-table id="picTable">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3 w-16">No</th>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
     </div>
 </div>
 
@@ -233,14 +205,6 @@
         border-color: rgb(96 165 250);
         color: rgb(96 165 250);
     }
-    div.dataTables_length label { font-size: 0.75rem; }
-    div.dataTables_length select { font-size: 0.75rem; line-height: 1rem; padding: 0.25rem 1.25rem 0.25rem 0.5rem; height: 1.875rem; width: 4.5rem; }
-    div.dataTables_filter label { font-size: 0.75rem; }
-    div.dataTables_filter input[type="search"] { font-size: 0.75rem; line-height: 1rem; padding: 0.25rem 0.5rem; height: 1.875rem; width: 12rem; }
-    div.dataTables_info { font-size: 0.75rem; padding-top: 0.8em; }
-    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar { display: none !important; }
-    div.dataTables_wrapper div.dataTables_scrollBody { -ms-overflow-style: none !important; scrollbar-width: none !important; }
-
     /* Segmented tabs styling */
     .segmented-tabs { position: relative; }
     .segmented-tabs .segmented-btn {

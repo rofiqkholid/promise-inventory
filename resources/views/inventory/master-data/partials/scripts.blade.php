@@ -30,10 +30,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="coil-center"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="coil-center"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="coil-center" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="coil-center" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             },
@@ -56,10 +62,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="material-spec"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="material-spec"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="material-spec" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="material-spec" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             },
@@ -82,10 +94,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="unit"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="unit"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="unit" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="unit" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             },
@@ -111,10 +129,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="rank"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="rank"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="rank" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="rank" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             },
@@ -140,10 +164,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="sub-contractor"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="sub-contractor"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="sub-contractor" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="sub-contractor" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             },
@@ -174,10 +204,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="transaction-category"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="transaction-category"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="transaction-category" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="transaction-category" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             },
@@ -197,10 +233,16 @@
                         orderable: false,
                         searchable: false,
                         className: 'text-center',
+                        width: '100px',
                         render: (d, t, r) => `
-                    <button class="edit-btn text-gray-400 hover:text-gray-700 dark:hover:text-gray-300" data-id="${r.id}" data-type="pic"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                    <button class="delete-btn text-red-600 hover:text-red-900" data-id="${r.id}" data-type="pic"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-                `
+                    <div class="flex items-center justify-center gap-2">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="pic" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.id}" data-type="pic" title="Delete">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>`
                     }
                 ]
             }
@@ -213,22 +255,10 @@
             const config = tabConfig[tabName];
             if (!config || initializedTabs[tabName]) return;
 
-            tables[config.table] = $(`#${config.table}`).DataTable({
-                processing: true,
-                serverSide: true,
-                scrollX: true,
-                ajax: {
-                    url: config.dataUrl,
-                    type: 'GET'
-                },
+            tables[config.table] = window.defaultDataTable(`#${config.table}`, {
+                url: config.dataUrl,
                 columns: config.columns,
-                pageLength: 10,
-                lengthMenu: [10, 25, 50],
-                order: [
-                    [1, 'asc']
-                ],
-                responsive: true,
-                autoWidth: false
+                order: [[1, 'asc']]
             });
 
             initializedTabs[tabName] = true;

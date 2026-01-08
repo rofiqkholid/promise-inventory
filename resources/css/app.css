@@ -6,6 +6,398 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* --- Premium Table & DataTables Styling (Plain CSS for Build Stability) --- */
+
+.dataTables_wrapper {
+    padding: 1.5rem 0;
+}
+
+.dataTables_length,
+.dataTables_filter {
+    margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+    .dataTables_wrapper .dataTables_length {
+        float: left;
+    }
+
+    .dataTables_wrapper .dataTables_filter {
+        float: right;
+    }
+}
+
+/* Search Input */
+.dataTables_filter input {
+    margin-left: 0.5rem;
+    padding: 0.625rem 1rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    width: 100%;
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 640px) {
+    .dataTables_filter input {
+        width: 18rem;
+    }
+}
+
+.dataTables_filter input:focus {
+    background-color: white;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Length Select */
+.dataTables_length select {
+    padding: 0.5rem 2.25rem 0.5rem 0.875rem;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.dataTables_length select:focus {
+    border-color: #3b82f6;
+    background-color: white;
+}
+
+/* Export Icon Buttons - Unified Group */
+.dt-buttons {
+    display: inline-flex;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.625rem;
+    overflow: hidden;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-export-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    border: none !important;
+    border-right: 1px solid #e2e8f0 !important;
+    border-radius: 0 !important;
+    background-color: white !important;
+    color: #64748b !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+.btn-export-icon:last-child {
+    border-right: none !important;
+}
+
+.btn-export-icon:hover {
+    background-color: #f8fafc !important;
+    z-index: 1;
+}
+
+.btn-excel:hover {
+    color: #16a34a !important;
+    background-color: #f0fdf4 !important;
+}
+
+.btn-pdf:hover {
+    color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+}
+
+.btn-csv:hover {
+    color: #2563eb !important;
+    background-color: #eff6ff !important;
+}
+
+.btn-print:hover {
+    color: #7c3aed !important;
+    background-color: #f5f3ff !important;
+}
+
+/* Mobile Responsive - Export Buttons */
+@media (max-width: 640px) {
+    .btn-export-icon {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* Table Style */
+table.dataTable {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin: 1.5rem 0 !important;
+}
+
+table.dataTable thead th {
+    padding: 0.75rem 1rem !important;
+    /* Reduced padding from 1.125rem 1.5rem */
+    background-color: #f1f5f9;
+    /* Subtle contrast from card white */
+    color: #334155;
+    font-weight: 500;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e2e8f0 !important;
+    text-align: left;
+}
+
+table.dataTable thead th:first-child {
+    border-top-left-radius: 0.5rem;
+}
+
+table.dataTable thead th:last-child {
+    border-top-right-radius: 0.5rem;
+}
+
+table.dataTable tbody td {
+    padding: 0.75rem 1rem !important;
+    /* Reduced padding from 1.125rem 1.5rem */
+    font-size: 0.875rem;
+    color: #475569;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+table.dataTable tbody tr:hover td {
+    background-color: #f8fafc;
+    color: #111827;
+}
+
+/* Mobile Responsive - Table Content */
+@media (max-width: 640px) {
+    table.dataTable {
+        margin: 1rem 0 !important;
+    }
+
+    table.dataTable thead th {
+        padding: 0.75rem 0.75rem !important;
+        font-size: 0.625rem !important;
+        letter-spacing: 0.025em;
+    }
+
+    table.dataTable tbody td {
+        padding: 0.75rem 0.75rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+
+/* Pagination Fix - Force Horizontal Row */
+.dataTables_paginate {
+    margin-top: 1.5rem;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.375rem !important;
+}
+
+.dataTables_paginate span {
+    display: flex !important;
+    gap: 0.375rem !important;
+}
+
+.dataTables_paginate .paginate_button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid #e2e8f0 !important;
+    background: white !important;
+    color: #64748b !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    border-radius: 0.75rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+}
+
+.dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #2563eb !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: white !important;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    background-color: #f8fafc !important;
+    color: #cbd5e1 !important;
+    cursor: not-allowed !important;
+    border-color: #f1f5f9 !important;
+}
+
+/* Info */
+.dataTables_info {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Mobile Responsive - Pagination & Controls */
+@media (max-width: 640px) {
+    .dataTables_paginate .paginate_button {
+        width: 32px !important;
+        height: 32px !important;
+        min-width: 32px !important;
+        font-size: 0.75rem !important;
+    }
+
+    .dataTables_filter input {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.75rem !important;
+        width: 100% !important;
+    }
+
+    .dataTables_length select {
+        padding: 0.375rem 1.75rem 0.375rem 0.625rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .dataTables_info {
+        font-size: 0.625rem !important;
+    }
+
+    .dataTables_wrapper {
+        padding: 0.25rem 0 !important;
+    }
+
+    /* Reduce card padding on mobile */
+    .bg-white.shadow-xl>div,
+    .dark\:bg-gray-800.shadow-xl>div {
+        padding: 0.75rem 0.5rem !important;
+    }
+}
+
+/* Custom Scrollbar */
+.dataTables_scrollBody {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+    border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar {
+    height: 6px;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+.dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Dark Mode support */
+.dark table.dataTable thead th {
+    background-color: #1e293b;
+    color: #94a3b8;
+    border-color: #334155 !important;
+}
+
+.dark table.dataTable tbody td {
+    color: #94a3b8;
+    border-color: #334155;
+    background-color: #1e293b;
+}
+
+.dark table.dataTable tbody tr:hover td {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+.dark .btn-export-icon {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+
+.dark .btn-export-icon:hover {
+    background-color: #0f172a !important;
+}
+
+.dark .btn-excel:hover {
+    background-color: #022c22 !important;
+    border-color: #16a34a !important;
+    color: #4ade80 !important;
+}
+
+.dark .btn-pdf:hover {
+    background-color: #2d0a0a !important;
+    border-color: #dc2626 !important;
+    color: #f87171 !important;
+}
+
+.dark .btn-csv:hover {
+    background-color: #0a1628 !important;
+    border-color: #2563eb !important;
+    color: #60a5fa !important;
+}
+
+.dark .btn-print:hover {
+    background-color: #1e1b4b !important;
+    border-color: #7c3aed !important;
+    color: #a78bfa !important;
+}
+
+.dark .dataTables_filter input,
+.dark .dataTables_length select {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+
+.dark .dataTables_paginate .paginate_button {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+
+/* Hide DataTables Automatic Caret & Background Overlay */
+button.buttons-collection::after,
+button.dt-button.buttons-collection::after,
+.dt-button.buttons-collection::after,
+.buttons-collection::after {
+    content: none !important;
+    display: none !important;
+}
+
+.dt-button-collection-background {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+/* Force dropdown to float */
+div.dt-button-collection {
+    position: fixed !important;
+    z-index: 99999 !important;
 }
