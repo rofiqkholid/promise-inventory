@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
 
     <style>
+        [x-cloak] { display: none !important; }
         body { font-family: 'Outfit', sans-serif; }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -136,20 +137,23 @@
     border-bottom-right-radius: 0.5rem !important;
 }
 
-/* Mengatur warna highlight agar lebih modern (opsional) */
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #3b82f6 !important; /* Blue-500 Tailwind */
-    color: white !important;
-}
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #3b82f6 !important; /* Blue-500 Tailwind */
+            color: white !important;
+        }
+
+        [x-cloak] { display: none !important; }
     </style>
 
     @yield('css')
+    @stack('style')
 </head>
 
 <body class="bg-background text-slate-800 antialiased">
 
     {{-- Layout Container --}}
     <div x-data="{ 
+            sidebarReady: false,
             sidebarExpanded: localStorage.getItem('sidebarExpanded') !== 'false',
             sidebarMobileOpen: false,
             toggleSidebar() {
@@ -161,10 +165,11 @@
                 }
             }
         }" 
+        x-init="sidebarExpanded = localStorage.getItem('sidebarExpanded') !== 'false'"
         class="flex h-screen overflow-hidden">
         
         {{-- Sidebar --}}
-        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar border-r border-slate-200 transition-all duration-300 ease-in-out"
+        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar border-r border-slate-200 transition-all duration-300 ease-in-out w-64"
             :class="{
                 'w-64': sidebarExpanded && window.innerWidth >= 1024, 
                 'w-20': !sidebarExpanded && window.innerWidth >= 1024,
@@ -175,7 +180,7 @@
         </aside>
 
         {{-- Main Content --}}
-        <div class="flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300"
+        <div class="flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300 lg:pl-64"
              :class="{
                  'lg:pl-64': sidebarExpanded,
                  'lg:pl-20': !sidebarExpanded

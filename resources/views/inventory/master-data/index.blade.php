@@ -15,27 +15,30 @@
     {{-- Tab Navigation --}}
     <div class="mb-6">
         <div>
-            <nav aria-label="Tabs">
-                <div class="segmented-tabs inline-flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1 space-x-1" role="tablist">
-                    <button data-tab="coil-center" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+            <nav aria-label="Tabs" class="relative">
+                <div class="segmented-tabs inline-flex bg-gray-200 dark:bg-gray-700/50 rounded-lg p-1 relative overflow-x-auto max-w-full no-scrollbar" role="tablist">
+                    {{-- Sliding Highlight --}}
+                    <div id="tab-highlight" class="absolute bg-white dark:bg-gray-800 rounded-md shadow-sm transition-all duration-300 ease-in-out z-0"></div>
+                    
+                    <button data-tab="coil-center" role="tab" aria-selected="true" class="tab-button segmented-btn active rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Coil Center
                     </button>
-                    <button data-tab="material-spec" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+                    <button data-tab="material-spec" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Material Spec
                     </button>
-                    <button data-tab="unit" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+                    <button data-tab="unit" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Unit
                     </button>
-                    <button data-tab="rank" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+                    <button data-tab="rank" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Rank
                     </button>
-                    <button data-tab="sub-contractor" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+                    <button data-tab="sub-contractor" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Sub Contractor
                     </button>
-                    <button data-tab="transaction-category" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+                    <button data-tab="transaction-category" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Transaction Category
                     </button>
-                    <button data-tab="pic" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300">
+                    <button data-tab="pic" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         PIC
                     </button>
                 </div>
@@ -216,7 +219,7 @@
 </div>
 
 {{-- Modals will be added via separate file for brevity --}}
-@include('inventory.partials.modals')
+@include('inventory.master-data.partials.modals')
 
 @endsection
 
@@ -239,60 +242,44 @@
     div.dataTables_wrapper div.dataTables_scrollBody { -ms-overflow-style: none !important; scrollbar-width: none !important; }
 
     /* Segmented tabs styling */
-    .segmented-tabs { }
+    .segmented-tabs { position: relative; }
     .segmented-tabs .segmented-btn {
-        background: transparent;
-        color: #6b7280; /* gray-500 */
-        transition: all .12s ease-in-out;
+        background: transparent !important;
+        color: #64748b; /* slate-500 */
+        transition: color .2s ease-in-out;
         outline: none;
+        border: none !important;
+        box-shadow: none !important;
     }
     .segmented-tabs .segmented-btn:hover {
-        background: rgba(255,255,255,0.08);
-        color: #374151; /* gray-700 */
+        color: #334155; /* slate-700 */
+    }
+    .dark .segmented-tabs .segmented-btn {
+        color: #94a3b8; /* slate-400 */
+    }
+    .dark .segmented-tabs .segmented-btn:hover {
+        color: #e2e8f0; /* slate-200 */
     }
     .segmented-tabs .segmented-btn.active {
-        background: #ffffff;
-        color: #111827; /* gray-900 */
-        font-weight: 600;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-        border: 1px solid rgba(0,0,0,0.06);
-        transform: translateY(-1px);
+        color: #2563eb !important; /* blue-600 */
+        font-weight: 600 !important;
     }
     .dark .segmented-tabs .segmented-btn.active {
-        background: #0f1724; /* slightly lighter than background */
-        color: #E5E7EB;
-        border: 1px solid rgba(255,255,255,0.04);
-        box-shadow: 0 4px 10px rgba(2,6,23,0.6);
+        color: #60a5fa !important; /* blue-400 */
+    }
+    
+    #tab-highlight {
+        pointer-events: none;
+        display: none; /* Hidden by default, shown by JS on init */
     }
 
-    /* Add a small sliding indicator (optional) */
-    .segmented-tabs { position: relative; }
-    .segmented-tabs .segmented-btn { position: relative; z-index: 10; }
-    .segmented-tabs .segmented-btn::after {
-        content: '';
-        position: absolute;
-        left: 12px;
-        right: 12px;
-        bottom: 6px;
-        height: 3px;
-        border-radius: 2px;
-        background: transparent;
-        transition: all .18s ease-in-out;
-    }
-    .segmented-tabs .segmented-btn.active::after {
-        background: rgba(59,130,246,0.95); /* blue */
-        bottom: 6px;
-    }
-    .dark .segmented-tabs .segmented-btn.active::after {
-        background: rgba(96,165,250,0.95);
-    }
-    .segmented-tabs .segmented-btn:focus {
-        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-    }
+    /* Mobile scroll optimization */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
 @endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@include('inventory.partials.scripts')
+@include('inventory.master-data.partials.scripts')
 @endpush

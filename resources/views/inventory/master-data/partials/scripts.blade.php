@@ -260,8 +260,20 @@
 
         // Update tab visual/ARIA state
         function updateActiveTabVisual(tabName) {
+            const $btn = $(`.tab-button[data-tab="${tabName}"]`);
             $('.tab-button').removeClass('active').attr('aria-selected', 'false').attr('tabindex', '-1');
-            $(`.tab-button[data-tab="${tabName}"]`).addClass('active').attr('aria-selected', 'true').attr('tabindex', '0');
+            $btn.addClass('active').attr('aria-selected', 'true').attr('tabindex', '0');
+
+            // Move highlight
+            if ($btn.length) {
+                const $highlight = $('#tab-highlight');
+                $highlight.show().css({
+                    width: $btn.outerWidth() + 'px',
+                    height: $btn.outerHeight() + 'px',
+                    left: $btn[0].offsetLeft + 'px',
+                    top: $btn[0].offsetTop + 'px'
+                });
+            }
         }
 
         // Tab Switching

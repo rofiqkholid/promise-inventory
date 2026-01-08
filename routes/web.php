@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
 
 #Region Inventory Master
 Route::get('/inventory/master', function () {
-    return view('inventory.inventory_master');
+    return view('inventory.master-data.index');
 })->middleware(['auth'])->name('inventory.master');
 
 // Coil Center

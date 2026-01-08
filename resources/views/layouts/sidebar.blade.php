@@ -48,7 +48,9 @@
                 </div>
             </button>
 
-            <div x-show="open && sidebarExpanded" x-collapse class="pl-10 pr-2 space-y-1 mt-1 border-l-2 border-slate-100 ml-6">
+            <div x-show="open && sidebarExpanded" x-cloak 
+                 style="display: {{ request()->routeIs('inventory.*') ? 'block' : 'none' }};" 
+                 class="pl-10 pr-2 space-y-1 mt-1 border-l-2 border-slate-100 ml-6">
                 
                 <a href="{{ route('inventory.master') }}" 
                    class="block py-2 px-3 rounded-md text-sm transition-colors whitespace-nowrap
