@@ -1,170 +1,177 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
-@section('page_title', 'Dashboard')
+@section('title', 'Inventory Dashboard')
 
 @section('content')
+<div class="bg-[#e9ecef] min-h-screen p-4 font-sans text-slate-700">
     
-    <!-- Welcome Section -->
-    <div class="mb-8">
-        <h3 class="text-2xl font-bold text-slate-800">Welcome back, {{ Auth::user()->name }}!</h3>
-        <p class="text-slate-500">Here's what's happening with your inventory today.</p>
-    </div>
+    <div class="grid grid-cols-6 gap-3 mb-6">
+        @php
+            $stats = [
+                ['val' => '89,997,200', 'label' => 'TOTAL STOCK VALUE', 'icon' => 'fa-hand-holding-dollar'],
+                ['val' => '19,921', 'label' => 'TOTAL MATERIAL IN', 'icon' => 'fa-cart-flatbed-suitcase'],
+                ['val' => '10,964', 'label' => 'TOTAL MATERIAL OUT', 'icon' => 'fa-cart-flatbed-suitcase'],
+                ['val' => '1,651', 'label' => 'TOTAL MATERIAL OUT PP', 'icon' => 'fa-cart-flatbed-suitcase'],
+                ['val' => '3,963', 'label' => 'TOTAL MATERIAL OUT EVENT', 'icon' => 'fa-cart-flatbed-suitcase'],
+                ['val' => '5,110', 'label' => 'TOTAL MATERIAL OUT TRIAL', 'icon' => 'fa-cart-flatbed-suitcase'],
+            ];
+        @endphp
 
-    @if (session('success'))
-    <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-        <i class="fa-solid fa-circle-check text-green-600 mt-1"></i>
-        <div>
-            <h3 class="font-semibold text-green-800">Success</h3>
-            <p class="text-sm text-green-700">{{ session('success') }}</p>
+        @foreach($stats as $stat)
+        <div class="bg-white rounded-2xl border border-slate-400 p-3 flex flex-col items-center justify-center text-center shadow-sm">
+            <div class="text-[#34a4d4] mb-1 text-2xl">
+                <i class="fa-solid {{ $stat['icon'] }}"></i>
+            </div>
+            <h4 class="text-xl font-bold text-[#34a4d4] leading-none">{{ $stat['val'] }}</h4>
+            <p class="text-[9px] font-bold text-slate-500 mt-2 leading-tight uppercase tracking-tighter">{{ $stat['label'] }}</p>
         </div>
+        @endforeach
     </div>
-    @endif
 
-    <!-- Dashboard Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="flex items-center gap-1.5 mb-2">
+        <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
+            <i class="fa-solid fa-list text-[8px]"></i>
+        </div>
+        <span class="font-bold text-xs uppercase">Filter Data</span>
+    </div>
+    
+    <div class="grid grid-cols-5 gap-3 mb-6">
+        @php
+            $filters = [
+                'Months Trendline' => ['Oct', 'Nov', 'Dec'],
+                'Model' => ['5P45', 'D37D', 'VL20'],
+                'Costumer' => ['IAMI', 'MMKI', 'SIM'],
+                'Status Balance' => ['Critical', 'Over', 'Safe'],
+                'Status Usage' => ['Over', 'Safe']
+            ];
+        @endphp
+        @foreach($filters as $title => $options)
+        <div class="bg-white border border-slate-400 rounded p-1.5">
+            <div class="flex justify-between items-center mb-1.5 border-b border-slate-100 pb-1">
+                <span class="text-[10px] font-bold text-slate-700">{{ $title }}</span>
+                <div class="flex gap-1 text-slate-300 text-[9px]">
+                    <i class="fa-solid fa-list-check"></i>
+                    <i class="fa-solid fa-filter"></i>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-1">
+                @foreach(array_slice($options, 0, 3) as $opt)
+                    <div class="bg-[#c6d9f1] text-[9px] px-1 py-0.5 rounded border border-[#8db3e2] text-slate-800 truncate">{{ $opt }}</div>
+                @endforeach
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    <div class="grid grid-cols-12 gap-6">
         
-        <!-- Stats Card: Total Items -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">Total Items</p>
-                    <p class="text-3xl font-bold text-slate-800">1,234</p>
+        <div class="col-span-8 grid grid-cols-2 gap-x-6 gap-y-4">
+            @foreach(['Material Stock Status', 'Material Usage Status by Models', 'Transaction Trendline', 'Material Usage Status by Makers'] as $chart)
+            <div>
+                <div class="flex items-center gap-1.5 mb-2">
+                    <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
+                        <i class="fa-solid fa-chart-column text-[8px]"></i>
+                    </div>
+                    <span class="font-bold text-[11px]">{{ $chart }}</span>
                 </div>
-                <div class="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center border border-blue-100">
-                    <i class="fa-solid fa-box text-blue-600 text-xl"></i>
+                <div class="bg-white rounded border border-slate-400 p-2 h-48">
+                    <div class="w-full h-full flex items-end justify-around border-b border-l border-slate-200 px-1 pb-1 gap-1">
+                        @for($i=0; $i<10; $i++)
+                            <div class="bg-blue-600 w-2" style="height: {{ rand(20, 90) }}%"></div>
+                            <div class="bg-orange-500 w-2" style="height: {{ rand(10, 40) }}%"></div>
+                        @endfor
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2 mt-4 text-xs">
-                <span class="text-green-600 font-medium flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-trend-up"></i> 12%
-                </span>
-                <span class="text-slate-400">from last month</span>
-            </div>
+            @endforeach
         </div>
 
-        <!-- Stats Card: Active Tasks -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">Active Tasks</p>
-                    <p class="text-3xl font-bold text-slate-800">42</p>
-                </div>
-                <div class="h-12 w-12 bg-cyan-50 rounded-lg flex items-center justify-center border border-cyan-100">
-                    <i class="fa-solid fa-list-check text-cyan-600 text-xl"></i>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 mt-4 text-xs">
-                <span class="text-orange-600 font-medium">3 due today</span>
-            </div>
-        </div>
-
-        <!-- Stats Card: Users -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">Users</p>
-                    <p class="text-3xl font-bold text-slate-800">128</p>
-                </div>
-                <div class="h-12 w-12 bg-emerald-50 rounded-lg flex items-center justify-center border border-emerald-100">
-                    <i class="fa-solid fa-users text-emerald-600 text-xl"></i>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 mt-4 text-xs">
-                <span class="text-green-600 font-medium flex items-center gap-1">
-                    <i class="fa-solid fa-plus"></i> 8
-                </span>
-                <span class="text-slate-400">new this month</span>
-            </div>
-        </div>
-
-        <!-- Stats Card: Completion -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">Completion Rate</p>
-                    <p class="text-3xl font-bold text-slate-800">92%</p>
-                </div>
-                <div class="h-12 w-12 bg-orange-50 rounded-lg flex items-center justify-center border border-orange-100">
-                    <i class="fa-solid fa-chart-line text-orange-600 text-xl"></i>
-                </div>
-            </div>
-             <div class="flex items-center gap-2 mt-4 text-xs">
-                <span class="text-green-600 font-medium flex items-center gap-1">
-                    <i class="fa-solid fa-arrow-up"></i> 5%
-                </span>
-                <span class="text-slate-400">from last month</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity & Quick Actions -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Recent Activity -->
-        <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col">
-            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-                <h2 class="text-lg font-bold text-slate-800">Recent Activity</h2>
-                <a href="#" class="text-sm text-blue-600 hover:text-blue-700 font-medium">View All</a>
-            </div>
-            <div class="p-5 space-y-5">
-                
-                <div class="flex items-start gap-4">
-                    <div class="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0 border border-blue-100">
-                        <i class="fa-solid fa-pen-to-square text-blue-600 text-sm"></i>
+        <div class="col-span-4 space-y-4">
+            
+            <div>
+                <div class="flex items-center gap-1.5 mb-2">
+                    <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
+                        <i class="fa-solid fa-table text-[8px]"></i>
                     </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-slate-800">Updated inventory item</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Part No: 123-456 was updated by Admin.</p>
-                        <p class="text-xs text-slate-400 mt-1">2 hours ago</p>
-                    </div>
+                    <span class="font-bold text-[10px] uppercase">Details of Material Balance Status</span>
                 </div>
-
-                <div class="flex items-start gap-4">
-                    <div class="h-10 w-10 bg-emerald-50 rounded-full flex items-center justify-center flex-shrink-0 border border-emerald-100">
-                        <i class="fa-solid fa-plus text-emerald-600 text-sm"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-slate-800">Created new task</p>
-                        <p class="text-xs text-slate-500 mt-0.5">New stock check schedule created.</p>
-                        <p class="text-xs text-slate-400 mt-1">5 hours ago</p>
-                    </div>
+                <div class="bg-white border border-slate-400 rounded overflow-hidden">
+                    <table class="w-full text-[9px]">
+                        <thead class="bg-slate-100 border-b border-slate-400">
+                            <tr>
+                                <th class="p-1 text-left border-r border-slate-200">Item No</th>
+                                <th class="p-1 text-left border-r border-slate-200">Costumer</th>
+                                <th class="p-1 text-left border-r border-slate-200">Model</th>
+                                <th class="p-1 text-left">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200">
+                            @for($i=0; $i<5; $i++)
+                            <tr>
+                                <td class="p-1 border-r border-slate-100">22644W030P-R</td>
+                                <td class="p-1 border-r border-slate-100 uppercase">MMKI</td>
+                                <td class="p-1 border-r border-slate-100 uppercase">5J45</td>
+                                <td class="p-1 font-bold text-green-600">Safe</td>
+                            </tr>
+                            @endfor
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="flex items-start gap-4">
-                    <div class="h-10 w-10 bg-orange-50 rounded-full flex items-center justify-center flex-shrink-0 border border-orange-100">
-                        <i class="fa-solid fa-file-pdf text-orange-600 text-sm"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-semibold text-slate-800">Generated report</p>
-                        <p class="text-xs text-slate-500 mt-0.5">Monthly stock report generated automatically.</p>
-                        <p class="text-xs text-slate-400 mt-1">1 day ago</p>
-                    </div>
-                </div>
-
             </div>
-        </div>
 
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm h-fit">
-            <div class="p-5 border-b border-slate-100">
-                <h2 class="text-lg font-bold text-slate-800">Quick Actions</h2>
+            <div>
+                <div class="flex items-center gap-1.5 mb-2">
+                    <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
+                        <i class="fa-solid fa-table text-[8px]"></i>
+                    </div>
+                    <span class="font-bold text-[10px] uppercase">Details of Material Usage Status</span>
+                </div>
+                <div class="bg-white border border-slate-400 rounded overflow-hidden">
+                    <table class="w-full text-[9px]">
+                        <tbody class="divide-y divide-slate-200">
+                            @for($i=0; $i<4; $i++)
+                            <tr>
+                                <td class="p-1 border-r border-slate-100 w-1/2">22644W030P-R</td>
+                                <td class="p-1 border-r border-slate-100 w-1/4 uppercase">MMKI</td>
+                                <td class="p-1 font-bold text-green-600">Safe</td>
+                            </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="p-5 space-y-3">
-                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-blue-200">
-                    <i class="fa-solid fa-plus"></i> Add Item
-                </button>
-                <button class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-cyan-200">
-                    <i class="fa-solid fa-list-check"></i> New Task
-                </button>
-                <div class="pt-2"></div>
-                <button class="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 rounded-lg transition-colors">
-                    View Reports
-                </button>
-                <button class="w-full border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-2.5 rounded-lg transition-colors">
-                    Manage Users
-                </button>
+
+            <div>
+                <div class="flex items-center gap-1.5 mb-2">
+                    <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
+                        <i class="fa-solid fa-clock-rotate-left text-[8px]"></i>
+                    </div>
+                    <span class="font-bold text-[10px] uppercase">Transaction History</span>
+                </div>
+                <div class="bg-white border border-slate-400 rounded overflow-hidden">
+                    <table class="w-full text-[9px]">
+                        <thead class="bg-[#bfdbfe] border-b border-slate-400 font-bold">
+                            <tr>
+                                <th class="p-1 text-left">Item No</th>
+                                <th class="p-1 text-center">Qty</th>
+                                <th class="p-1 text-left">Category</th>
+                                <th class="p-1 text-left">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for($i=0; $i<3; $i++)
+                            <tr class="border-b border-slate-100">
+                                <td class="p-1 text-blue-700">8975861544/89...</td>
+                                <td class="p-1 text-center font-bold text-red-600">-20</td>
+                                <td class="p-1">Out Trial</td>
+                                <td class="p-1 text-[8px]">12/4/2025</td>
+                            </tr>
+                            @endfor
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+</div>
 @endsection
