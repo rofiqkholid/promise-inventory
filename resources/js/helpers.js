@@ -55,19 +55,22 @@ window.defaultDataTable = function (selector, userConfig = {}) {
             processing: '<div class="inline-flex items-center"><span class="spinner-modern"></span> Loading...</div>',
             search: "_INPUT_",
             searchPlaceholder: "Search records...",
-            lengthMenu: "Show _MENU_",
             paginate: {
                 previous: '<i class="fa-solid fa-chevron-left"></i>',
                 next: '<i class="fa-solid fa-chevron-right"></i>'
             },
             emptyTable: '<div class="dt-empty-state"><i class="fa-solid fa-folder-open mb-4 text-slate-300 dark:text-slate-600"></i><p class="dt-empty-title">Kept you waiting?</p><p class="dt-empty-desc">No data found in this category.</p></div>',
-            zeroRecords: '<div class="dt-empty-state"><i class="fa-solid fa-magnifying-glass mb-4 text-slate-300 dark:text-slate-600"></i><p class="dt-empty-title">No matches found</p><p class="dt-empty-desc">Try adjusting your search filters.</p></div>'
+            zeroRecords: '<div class="dt-empty-state"><i class="fa-solid fa-magnifying-glass mb-4 text-slate-300 dark:text-slate-600"></i><p class="dt-empty-title">No matches found</p><p class="dt-empty-desc">Try adjusting your search filters.</p></div>',
+            lengthMenu: "_MENU_"
         },
 
         // Default Error Handling for AJAX
         ajax: {
             error: function (xhr, error, thrown) {
-                if (window.showToast) window.showToast('Failed to load data: ' + (xhr.responseJSON?.message || error), 'error');
+                // Sanitize message for user toast, keep details in console
+                if (window.showToast) {
+                    window.showToast('Something went wrong while fetching data. Please try again.', 'error');
+                }
                 console.error('DataTable Error:', xhr, error, thrown);
             }
         }
@@ -103,13 +106,25 @@ window.defaultDataTable = function (selector, userConfig = {}) {
     // Re-apply the smart AJAX configuration we built
     options.ajax = finalAjax;
 
-    // Override drawCallback to include pagination fix
+    // Override drawCallback to include pagination and length menu fixes
     options.drawCallback = function (settings) {
+        const $wrapper = $(selector).closest('.dataTables_wrapper');
+
         // Fix pagination styling
-        const $pagination = $(selector).closest('.dataTables_wrapper').find('.dataTables_paginate');
-        $pagination.find('.paginate_button').each(function () {
+        $wrapper.find('.dataTables_paginate .paginate_button').each(function () {
             $(this).addClass('flex items-center justify-center !w-[38px] !h-[38px] !p-0 !min-w-[38px] rounded-lg transition-all');
         });
+
+        // Ensure Select2 in length menu is initialized (or re-initialized)
+        const $lengthSelect = $wrapper.find('.dataTables_length select');
+        if ($lengthSelect.length && !$lengthSelect.hasClass('select2-hidden-accessible')) {
+            $lengthSelect.select2({
+                minimumResultsForSearch: Infinity,
+                width: 'auto',
+                dropdownAutoWidth: true,
+                containerCssClass: 'dt-length-select2'
+            });
+        }
 
         // Call user's original callback
         if (originalDrawCallback) {
@@ -128,8 +143,35 @@ window.defaultDataTable = function (selector, userConfig = {}) {
         return;
     }
 
-    return $table.DataTable(options);
+    // Initialize the DataTable
+    const dt = $table.DataTable(options);
+
+    // Call user's initComplete if provided
+    options.initComplete = function (settings, json) {
+        if (userConfig.initComplete) userConfig.initComplete.call(this, settings, json);
+    };
+
+    return dt;
 };
+
+// Global Select2 Initialization for a premium look everywhere
+$(function () {
+    // Only target standard selects, or those with .select2 class
+    $('select:not(.no-select2), .select2').each(function () {
+        // Skip if already initialized or if part of a DataTable wrapper (handled by initComplete)
+        if ($(this).hasClass('select2-hidden-accessible') || $(this).closest('.dataTables_length').length) return;
+
+        $(this).select2({
+            width: '100%',
+            dropdownAutoWidth: true
+        });
+    });
+
+    // Fix for Select2 focus ring styling
+    $(document).on('select2:open', () => {
+        document.querySelector('.select2-search__field').focus();
+    });
+});
 
 /**
  * Simple Toast Function

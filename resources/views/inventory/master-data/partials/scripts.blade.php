@@ -23,7 +23,8 @@
                         data: 'name'
                     },
                     {
-                        data: 'address'
+                        data: 'address',
+                        orderable: false
                     },
                     {
                         data: null,

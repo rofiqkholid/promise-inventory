@@ -21,10 +21,10 @@
         <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
             <tr>
                 <th scope="col" class="px-6 py-3 w-16">No</th>
-                <th scope="col" class="px-6 py-3">Part No & Rev</th>
+                <th scope="col" class="px-6 py-3">Part No</th>
                 <th scope="col" class="px-6 py-3">Customer</th>
                 <th scope="col" class="px-6 py-3">Model</th>
-                <th scope="col" class="px-6 py-3">Material & Type</th>
+                <th scope="col" class="px-6 py-3">Material</th>
                 <th scope="col" class="px-6 py-3">Size (TxWxL)</th>
                 <th scope="col" class="px-6 py-3">Pcs/Unit</th>
                 <th scope="col" class="px-6 py-3">Unit/Car</th>
@@ -335,6 +335,7 @@ $(function() {
                 data: 'remark', 
                 defaultContent: '-', 
                 className: 'text-xs text-gray-500',
+                orderable: false,
                 render: (d) => d || '-'
             },
             {
