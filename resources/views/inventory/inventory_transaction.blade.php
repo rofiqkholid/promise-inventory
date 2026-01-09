@@ -30,7 +30,7 @@
                         {{-- Product Selection --}}
                         <div class="mb-4">
                             <label for="product_detail_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-500">*</span></label>
-                            <select name="product_detail_id" id="product_detail_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" required>
+                            <select name="product_detail_id" id="product_detail_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" data-placeholder="Select Product..." required>
                                 <option value="">Select Product...</option>
                                 @foreach($products as $product)
                                     <option value="{{ $product->id }}" data-partno="{{ $product->part_no }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
@@ -119,22 +119,43 @@
         </div>
     </div>
 </div>
+
+{{-- Scanner Modal --}}
+<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-black bg-opacity-75 flex p-4">
+    <div class="relative w-full max-w-lg h-auto">
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 p-4">
+            <div class="flex items-center justify-between mb-4 px-2">
+                <h3 class="text-xl font-medium text-gray-900 dark:text-white">QR Code Scanner</h3>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="toggleMirror" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-1.5 transition-colors" title="Mirror Camera">
+                        <i class="fa-solid fa-arrows-left-right w-5 h-5"></i>
+                    </button>
+                    <button type="button" id="closeScanner" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                        <i class="fa-solid fa-xmark w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="qr-reader" class="w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black"></div>
+            <div id="qr-status" class="mt-2 text-center text-sm font-medium text-blue-600 dark:text-blue-400">
+                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Initializing Camera...
+            </div>
+            <div id="qr-reader-results" class="hidden"></div>
+            <p class="mt-4 text-xs text-gray-500 text-center italic">Point your camera at the QR code on the product label.</p>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-{{-- Select2 CSS & JS (Ensure these are loaded in layout or here) --}}
-{{-- Using simple Select2 initialization if available, otherwise standard select --}}
+{{-- html5-qrcode library --}}
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
     $(document).ready(function() {
         // Initialize Select2 for Product (Searchable)
+        // Note: Generic initialization is handled in helpers.js
+        
+        // Add Custom formatting for Category if select2 is present
         if ($.fn.select2) {
-            $('.select2').select2({
-                placeholder: "Select Product...",
-                allowClear: false,
-                width: '100%'
-            });
-
-            // Custom Select2 for Category
             function formatCategory(state) {
                 if (!state.id) return state.text;
                 let effect = $(state.element).data('effect');
@@ -148,11 +169,10 @@
             }
 
             $('#category').select2({
-                placeholder: "Select Category...",
-                minimumResultsForSearch: Infinity, // Disable search box for categories
-                width: '100%',
+                minimumResultsForSearch: Infinity,
                 templateResult: formatCategory,
-                templateSelection: formatCategory
+                templateSelection: formatCategory,
+                width: '100%'
             });
         }
 
@@ -193,18 +213,53 @@
             table.ajax.reload();
         });
 
-        // Auto-select product on scan (Simple implementation)
+        // Auto-select product on scan (Improved)
+        $('#scan_id').on('keypress', function(e) {
+            if (e.which == 13) { // Enter key
+                e.preventDefault();
+                let val = $(this).val().trim();
+                if (!val) return;
+                
+                // Try to find exact match by ID (the option value)
+                let option = $(`#product_detail_id option[value="${val}"]`);
+                
+                if (option.length > 0) {
+                    $('#product_detail_id').val(val).trigger('change');
+                    
+                    // Visual feedback
+                    $(this).addClass('bg-green-100 dark:bg-green-900 border-green-500');
+                    setTimeout(() => {
+                        $(this).removeClass('bg-green-100 dark:bg-green-900 border-green-500').val('');
+                    }, 500);
+                    
+                    $('#qty').focus();
+                } else {
+                    // Feedback for no match
+                    $(this).addClass('bg-red-100 dark:bg-red-900 border-red-500');
+                    setTimeout(() => {
+                        $(this).removeClass('bg-red-100 dark:bg-red-900 border-red-500');
+                    }, 500);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Product Not Found',
+                        text: `ID "${val}" does not exist in the current list.`,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            }
+        });
+
         $('#scan_id').on('input', function() {
-            let val = $(this).val();
-            // Find option with data-partno matching val
-            let option = $(`#product_detail_id option`).filter(function() {
-                return $(this).data('partno') == val;
-            });
+            let val = $(this).val().trim();
+            if (!val) return;
+
+            let option = $(`#product_detail_id option[value="${val}"]`);
             
             if (option.length > 0) {
-                $('#product_detail_id').val(option.val()).trigger('change');
-                // Optional: Focus Qty
+                $('#product_detail_id').val(val).trigger('change');
                 $('#qty').focus();
+                $(this).val(''); // Clear scan input
             }
         });
 
@@ -246,6 +301,116 @@
                     Swal.fire('Error', msg, 'error');
                 }
             });
+        });
+
+        // Camera Scanner Logic
+        let html5QrCode = null;
+        let isMirrored = false;
+
+        $('#btn-scan').on('click', function() {
+            // Mobile browsers require HTTPS for camera access
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'HTTPS Required',
+                    text: 'Mobile browsers strictly require a secure (HTTPS) connection to access the camera. Please use HTTPS or access via localhost.',
+                    footer: '<a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#security_requirements" target="_blank" class="text-blue-600 underline">Learn more about camera security</a>'
+                });
+                return;
+            }
+
+            $('#scannerModal').removeClass('hidden').addClass('flex');
+            
+            if (html5QrCode === null) {
+                html5QrCode = new Html5Qrcode("qr-reader", { verbose: true });
+            }
+
+            const config = { 
+                fps: 25, // Higher FPS
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    let minEdgePercentage = 0.75; 
+                    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                    let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                    return {
+                        width: qrboxSize,
+                        height: qrboxSize
+                    };
+                },
+                aspectRatio: 1.0,
+                showTorchButtonIfSupported: true,
+            };
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                (decodedText) => {
+                    console.log("[SCANNER] Found QR Code:", decodedText);
+                    
+                    html5QrCode.stop().then(() => {
+                        $('#scannerModal').addClass('hidden').removeClass('flex');
+                        $('#scan_id').val(decodedText);
+                        
+                        // Check if ID exists in select options
+                        let option = $(`#product_detail_id option[value="${decodedText}"]`);
+                        console.log("[SCANNER] Matching ID in dropdown:", decodedText, "Found:", option.length > 0);
+                        
+                        if (option.length > 0) {
+                            $('#product_detail_id').val(decodedText).trigger('change');
+                            $('#scan_id').trigger($.Event('keypress', { which: 13 }));
+                        } else {
+                            console.warn("[SCANNER] Scanned ID not found in product list:", decodedText);
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Product Not Found',
+                                text: `Scanned ID "${decodedText}" does not exist in the current list.`
+                            });
+                        }
+                    }).catch(err => {
+                        console.error("[SCANNER] Stop failed:", err);
+                    });
+                },
+                (errorMessage) => {
+                    // Log errors occasionally or only if they are not "NotFound"
+                    // Too many logs here can slow down the browser
+                }
+            ).then(() => {
+                console.log("[SCANNER] Camera started successfully");
+                $('#qr-status').html('<i class="fa-solid fa-expand fa-beat mr-2"></i> Scanning... Move camera to focus');
+                applyMirror();
+            }).catch((err) => {
+                console.error("[SCANNER] Start failed:", err);
+                $('#qr-status').html('<span class="text-red-500"><i class="fa-solid fa-circle-exclamation mr-2"></i> Camera Error</span>');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Camera Error',
+                    text: 'Unable to start camera. Error: ' + err
+                });
+                $('#scannerModal').addClass('hidden').removeClass('flex');
+            });
+        });
+
+        function applyMirror() {
+            const video = $('#qr-reader video')[0];
+            if (video) {
+                console.log("[SCANNER] Applying mirror state:", isMirrored);
+                video.style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
+            }
+        }
+
+        $('#toggleMirror').on('click', function() {
+            isMirrored = !isMirrored;
+            applyMirror();
+            $(this).toggleClass('text-blue-600 dark:text-blue-400', isMirrored);
+        });
+
+        $('#closeScanner').on('click', function() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    $('#scannerModal').addClass('hidden').removeClass('flex');
+                });
+            } else {
+                $('#scannerModal').addClass('hidden').removeClass('flex');
+            }
         });
     });
 </script>

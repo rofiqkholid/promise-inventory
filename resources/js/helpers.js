@@ -115,16 +115,63 @@ window.defaultDataTable = function (selector, userConfig = {}) {
             $(this).addClass('flex items-center justify-center !w-[38px] !h-[38px] !p-0 !min-w-[38px] rounded-lg transition-all');
         });
 
-        // Ensure Select2 in length menu is initialized (or re-initialized)
-        const $lengthSelect = $wrapper.find('.dataTables_length select');
-        if ($lengthSelect.length && !$lengthSelect.hasClass('select2-hidden-accessible')) {
-            $lengthSelect.select2({
-                minimumResultsForSearch: Infinity,
-                width: 'auto',
-                dropdownAutoWidth: true,
-                containerCssClass: 'dt-length-select2'
+        // Custom Alpine-styled Length Menu
+        const $nativeSelect = $wrapper.find('.dataTables_length select');
+        if ($nativeSelect.length && !$nativeSelect.parent().hasClass('dt-custom-length-wrapper')) {
+            const currentValue = $nativeSelect.val();
+            const options = [];
+            $nativeSelect.find('option').each(function () {
+                options.push({ value: $(this).val(), text: $(this).text() });
             });
+
+            // Wrap native select and hide it
+            $nativeSelect.addClass('hidden').wrap('<div class="dt-custom-length-wrapper flex items-center gap-2"></div>');
+
+            // Inject Alpine Component
+            const alpineHtml = `
+                <div x-data="{ 
+                    open: false, 
+                    value: '${currentValue}',
+                    options: ${JSON.stringify(options).replace(/"/g, '&quot;')},
+                    select(val) {
+                        this.value = val
+                        this.open = false
+                        const $sel = $(this.$el).closest('.dt-custom-length-wrapper').find('select')
+                        $sel.val(val).trigger('change')
+                    }
+                }" class="relative inline-block text-left">
+                    <button @click="open = !open" @click.away="open = false" type="button" 
+                        class="flex items-center justify-between gap-2 px-3 py-1.5 min-w-[70px] bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-white hover:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all dark:bg-slate-800/50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        id="menu-button" aria-expanded="true" aria-haspopup="true">
+                        <span x-text="value"></span>
+                        <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div x-show="open" 
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="transform opacity-100 scale-100"
+                        x-transition:leave-end="transform opacity-0 scale-95"
+                        class="absolute left-0 z-50 mt-2 w-20 origin-top-left rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-slate-800 dark:ring-slate-700 overflow-hidden backdrop-blur-sm" 
+                        role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
+                        <div class="py-1" role="none">
+                            <template x-for="opt in options" :key="opt.value">
+                                <button @click="select(opt.value)" 
+                                    class="w-full text-left px-4 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700 dark:hover:text-blue-400"
+                                    :class="value == opt.value ? 'bg-blue-50 text-blue-700 font-bold dark:bg-blue-900/30' : 'text-slate-600 dark:text-slate-400'"
+                                    role="menuitem" tabindex="-1">
+                                    <span x-text="opt.text"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $nativeSelect.after(alpineHtml);
         }
+
 
         // Call user's original callback
         if (originalDrawCallback) {
@@ -156,20 +203,45 @@ window.defaultDataTable = function (selector, userConfig = {}) {
 
 // Global Select2 Initialization for a premium look everywhere
 $(function () {
-    // Only target standard selects, or those with .select2 class
-    $('select:not(.no-select2), .select2').each(function () {
-        // Skip if already initialized or if part of a DataTable wrapper (handled by initComplete)
-        if ($(this).hasClass('select2-hidden-accessible') || $(this).closest('.dataTables_length').length) return;
+    const initSelect2 = (context = document) => {
+        $(context).find('select.select2:not(.no-select2)').each(function () {
+            // Skip if already initialized or if part of a DataTable wrapper (handled by defaultDataTable)
+            if ($(this).hasClass('select2-hidden-accessible') || $(this).closest('.dataTables_length').length) return;
 
-        $(this).select2({
-            width: '100%',
-            dropdownAutoWidth: true
+            const $this = $(this);
+            const options = {
+                width: '100%',
+                dropdownAutoWidth: true,
+                selectionCssClass: $this.hasClass('select2-sm') ? 'select2-sm' : '',
+                placeholder: $this.data('placeholder') || $this.find('option[value=""]').text() || 'Select an option',
+                allowClear: $this.data('allow-clear') === true || $this.data('allow-clear') === 'true',
+            };
+
+            // Auto-detect modal parent to fix visibility/focus issues
+            const $modal = $this.closest('.fixed, .absolute, [role="dialog"]');
+            if ($modal.length) {
+                options.dropdownParent = $modal;
+            }
+
+            $this.select2(options);
         });
+    };
+
+    // Initial load
+    initSelect2();
+
+    // Re-init for dynamically added elements (like Alpine x-if or AJAX content)
+    $(document).on('select2:reinit', (e, container) => {
+        initSelect2(container || document);
     });
 
-    // Fix for Select2 focus ring styling
-    $(document).on('select2:open', () => {
-        document.querySelector('.select2-search__field').focus();
+    // Fix for Select2 focus ring and search field focus in modals
+    $(document).on('select2:open', (e) => {
+        const openedEvent = e;
+        setTimeout(() => {
+            const searchField = document.querySelector('.select2-search__field');
+            if (searchField) searchField.focus();
+        }, 10);
     });
 });
 

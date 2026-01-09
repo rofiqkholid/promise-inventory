@@ -12,6 +12,7 @@ use App\Models\InventoryModel\SubContractor;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class InventoryProductController extends Controller
 {
@@ -275,5 +276,49 @@ class InventoryProductController extends Controller
     {
         $inventoryProduct->delete();
         return response()->json(['success' => true, 'message' => 'Inventory Product deleted successfully.']);
+    }
+
+    /**
+     * Print Label for the specified resource.
+     */
+    public function printLabel(InventoryProduct $inventoryProduct)
+    {
+        $data = DB::table('inv_t_product_detail as p')
+            ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
+            ->leftJoin('models as model', 'model.id', '=', 'prod.model_id')
+            ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
+            ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
+            ->where('p.id', $inventoryProduct->id)
+            ->select([
+                'prod.part_no',
+                'prod.part_name',
+                'cust.code as customer_code',
+                'model.name as model_name',
+                'p.revision',
+                'p.thickness',
+                'p.width',
+                'p.length',
+                'ms.spec_name as material_spec',
+                'ms.coating_type',
+                'r.code as rank_code'
+            ])
+            ->first();
+
+        if (!$data) abort(404);
+        
+        $product = (object) [
+            'qrcode' => QrCode::size(250)->errorCorrection('H')->generate($inventoryProduct->id),
+            'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
+            'item_name' => $data->part_name,
+            'model_name' => $data->model_name ?? '-',
+            'partner_code' => $data->customer_code ?? '-',
+            'dimension' => ($data->thickness ?? 0) . ' x ' . ($data->width ?? 0) . ' x ' . ($data->length ?? 0),
+            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : '')
+        ];
+
+        $products = [$product];
+
+        return view('inventory.qrcode', compact('products'));
     }
 }

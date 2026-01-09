@@ -73,57 +73,75 @@
     color: #94a3b8;
 }
 
-/* Native Select Styling (to prevent FOUC/Shrinking before JS loads) */
+
+/* Native Select Styling (Refined for Premium Look) */
 .dataTables_length select {
-    width: 86px !important;
-    height: 36px !important;
+    width: auto !important;
+    min-width: 70px !important;
+    height: 38px !important;
     background-color: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
-    border-radius: 0.625rem !important;
-    padding: 0 12px !important;
-    font-size: 0.875rem !important;
+    border-radius: 0.75rem !important;
+    padding: 0 32px 0 12px !important;
+    font-size: 0.813rem !important;
+    font-weight: 600 !important;
     color: #1e293b !important;
     cursor: pointer;
     outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9' /%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    background-size: 1.25rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Specific styling for the Select2 container in the length menu */
-.select2-container.dt-length-select2 {
-    margin: 0 !important;
+.dataTables_length select:focus {
+    background-color: white !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
 }
 
-.select2-container.dt-length-select2 .select2-selection--single {
-    width: 86px !important;
-    height: 36px !important;
-    background-color: #f8fafc !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 0.625rem !important;
-    box-shadow: none !important;
-}
-
-.select2-container.dt-length-select2 .select2-selection--single .select2-selection__rendered {
-    line-height: 34px !important;
-    padding-left: 10px !important;
-    padding-right: 20px !important;
-    font-weight: 600 !important;
-    color: #1e293b !important;
-    text-align: center;
-}
-
-.select2-container.dt-length-select2 .select2-selection--single .select2-selection__arrow {
-    height: 34px !important;
-    width: 20px !important;
-    right: 4px !important;
-}
-
-/* Dark mode specific for length menu */
-.dark .select2-container.dt-length-select2 .select2-selection--single {
+.dark .dataTables_length select {
     background-color: rgba(30, 41, 59, 0.5) !important;
     border-color: #334155 !important;
+    color: #f1f5f9 !important;
 }
 
-.dark .select2-container.dt-length-select2 .select2-selection--single .select2-selection__rendered {
-    color: #f1f5f9 !important;
+.dark .dataTables_length select:focus {
+    background-color: #1e293b !important;
+    border-color: #60a5fa !important;
+}
+
+/* Native Select (Hidden but functional) */
+.dataTables_length select.hidden {
+    display: none !important;
+}
+
+/* Alpine Dropdown Custom UI Adjustments */
+.dt-custom-length-wrapper label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin: 0 !important;
+    font-size: 0 !important;
+    /* Hide original text */
+}
+
+.dt-custom-length-wrapper label::before {
+    content: "Show";
+    display: inline-block;
+    font-size: 0.813rem !important;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.dt-custom-length-wrapper label::after {
+    content: "entries";
+    display: inline-block;
+    font-size: 0.813rem !important;
+    font-weight: 500;
+    color: #94a3b8;
 }
 
 /* Export Icon Buttons - Unified Group */
@@ -713,6 +731,8 @@ label {
     border: 1px solid #e2e8f0 !important;
     border-radius: 0.75rem !important;
     height: 42px !important;
+    display: flex !important;
+    align-items: center !important;
     transition: all 0.2s !important;
 }
 
@@ -726,7 +746,6 @@ label {
 .select2-container--default .select2-selection--single .select2-selection__arrow {
     height: 40px !important;
     right: 8px !important;
-    /* Move arrow further from edge */
 }
 
 .select2-container--default.select2-container--focus .select2-selection--single {
@@ -752,35 +771,64 @@ label {
 
 /* Select2 Dropdown */
 .select2-dropdown {
+    background-color: white !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 0.75rem !important;
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
     overflow: hidden !important;
+    z-index: 10000 !important;
 }
 
 .dark .select2-dropdown {
     background-color: #1e293b !important;
     border-color: #334155 !important;
+    color: #f1f5f9 !important;
 }
 
 .select2-results__option {
     padding: 10px 14px !important;
     font-size: 0.875rem !important;
+    color: #334155 !important;
     transition: all 0.15s ease !important;
     margin: 2px 4px !important;
     border-radius: 0.5rem !important;
 }
 
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-    background-color: #3b82f6 !important;
+.dark .select2-results__option {
+    color: #cbd5e1 !important;
 }
 
-.dark .select2-results__option[aria-selected="true"] {
-    background-color: #334155 !important;
-    color: #60a5fa !important;
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: white !important;
 }
 
 .select2-container--default .select2-results__option[aria-selected="true"] {
     background-color: #f1f5f9 !important;
     color: #1e40af !important;
+}
+
+.dark .select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: #334155 !important;
+    color: #60a5fa !important;
+}
+
+/* Search Field inside Dropdown */
+.select2-search--dropdown .select2-search__field {
+    border-radius: 0.5rem !important;
+    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 0.5rem 0.75rem !important;
+    outline: none !important;
+}
+
+.dark .select2-search--dropdown .select2-search__field {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: white !important;
+}
+
+.select2-search--dropdown .select2-search__field:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
 }

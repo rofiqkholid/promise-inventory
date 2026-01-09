@@ -273,12 +273,6 @@ $(function() {
 
 
 
-    // Initialize Generic Select2
-    $('.select2').select2({
-        dropdownParent: $('#formModal'),
-        width: '100%',
-        allowClear: false
-    });
 
     // Initialize Product Select2
     $('#product_id').select2({
@@ -346,6 +340,9 @@ $(function() {
                 width: '100px',
                 render: row => `
                     <div class="flex items-center justify-center gap-2">
+                        <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-green-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Print Label">
+                            <i class="fa-solid fa-print text-sm"></i>
+                        </button>
                         <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Edit">
                             <i class="fa-solid fa-pen-to-square text-sm"></i>
                         </button>
@@ -449,6 +446,12 @@ $(function() {
 
             showModal(formModal);
         });
+    });
+    
+    // Print button
+    $(document).on('click', '.print-button', function() {
+        const id = $(this).data('id');
+        window.open(`/inventory/product/${id}/print`, '_blank');
     });
 
     // Delete button
