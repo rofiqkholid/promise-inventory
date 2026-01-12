@@ -39,11 +39,11 @@ Route::get('/inventory/master', function () {
 
 // Coil Center
 Route::get('/inventory/coil-center/data', [CoilCenterController::class, 'data'])->name('inventory.coilCenter.data');
-Route::resource('inventory/master/coil-center', CoilCenterController::class)->names('inventory.coilCenter')->except(['create', 'edit', 'index']);
+Route::resource('inventory/master/coil-center', CoilCenterController::class)->names('inventory.coilCenter')->parameters(['coil-center' => 'coilCenter'])->except(['create', 'edit', 'index']);
 
 // Material Spec
 Route::get('/inventory/material-spec/data', [MaterialSpecController::class, 'data'])->name('inventory.materialSpec.data');
-Route::resource('inventory/master/material-spec', MaterialSpecController::class)->names('inventory.materialSpec')->except(['create', 'edit', 'index']);
+Route::resource('inventory/master/material-spec', MaterialSpecController::class)->names('inventory.materialSpec')->parameters(['material-spec' => 'materialSpec'])->except(['create', 'edit', 'index']);
 
 // Unit
 Route::get('/inventory/unit/data', [UnitController::class, 'data'])->name('inventory.unit.data');
@@ -55,11 +55,11 @@ Route::resource('inventory/master/rank', RankController::class)->names('inventor
 
 // Sub Contractor
 Route::get('/inventory/sub-contractor/data', [SubContractorController::class, 'data'])->name('inventory.subContractor.data');
-Route::resource('inventory/master/sub-contractor', SubContractorController::class)->names('inventory.subContractor')->except(['create', 'edit', 'index']);
+Route::resource('inventory/master/sub-contractor', SubContractorController::class)->names('inventory.subContractor')->parameters(['sub-contractor' => 'subContractor'])->except(['create', 'edit', 'index']);
 
 // Transaction Category
 Route::get('/inventory/transaction-category/data', [TransactionCategoryController::class, 'data'])->name('inventory.transactionCategory.data');
-Route::resource('inventory/master/transaction-category', TransactionCategoryController::class)->names('inventory.transactionCategory')->except(['create', 'edit', 'index']);
+Route::resource('inventory/master/transaction-category', TransactionCategoryController::class)->names('inventory.transactionCategory')->parameters(['transaction-category' => 'transactionCategory'])->except(['create', 'edit', 'index']);
 
 // PIC
 Route::get('/inventory/pic/data', [PICController::class, 'data'])->name('inventory.pic.data');
