@@ -112,7 +112,7 @@ class DashboardController extends Controller
 
         // --- TABLES ---
         $balanceStatusTable = (clone $stockQuery)
-            ->select('prod.part_no', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
+            ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
             ->limit(10)
             ->get()
             ->map(function($item) {
@@ -131,7 +131,7 @@ class DashboardController extends Controller
         $usageStatusTable = (clone $balanceStatusTable); // Using same logic for demo or diff if specialized
 
         $transactionHistory = (clone $queryTrans)
-            ->select('prod.part_no', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
+            ->select('prod.part_no', 'p.revision', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
             ->orderByDesc('t.transaction_date')
             ->limit(10)
             ->get();

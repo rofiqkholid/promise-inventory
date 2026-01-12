@@ -421,20 +421,17 @@ $(function() {
         $('[id^="error-"]').addClass('hidden').text('');
 
         $.get(`/inventory/product/${id}`, function(data) {
-            $('#revision').val(data.revision);
-            $('#subcont_id').val(data.subcont_id);
-            $('#coil_center_id').val(data.coil_center_id);
-            $('#material_spec_id').val(data.material_spec_id);
+            $('#revision').val(data.revision).trigger('change');
+            $('#subcont_id').val(data.subcont_id).trigger('change');
+            $('#coil_center_id').val(data.coil_center_id).trigger('change');
+            $('#material_spec_id').val(data.material_spec_id).trigger('change');
             $('#thickness').val(data.thickness);
             $('#width').val(data.width);
             $('#length').val(data.length);
             $('#length_2').val(data.length_2);
-            $('#unit_id').val(data.unit_id);
-            $('#rank_id').val(data.rank_id);
+            $('#unit_id').val(data.unit_id).trigger('change');
+            $('#rank_id').val(data.rank_id).trigger('change');
             $('#pcs_per_unit').val(data.pcs_per_unit);
-            $('#unit_per_car').val(data.unit_per_car);
-            $('#min_stock').val(data.min_stock);
-
             $('#unit_per_car').val(data.unit_per_car);
             $('#min_stock').val(data.min_stock);
             $('#remark').val(data.remark);
