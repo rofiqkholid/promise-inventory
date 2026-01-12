@@ -308,7 +308,7 @@ class InventoryProductController extends Controller
         if (!$data) abort(404);
         
         $product = (object) [
-            'qrcode' => QrCode::size(250)->errorCorrection('H')->generate($inventoryProduct->id),
+            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate($inventoryProduct->id),
             'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
             'item_name' => $data->part_name,
             'model_name' => $data->model_name ?? '-',

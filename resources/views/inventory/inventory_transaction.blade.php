@@ -40,11 +40,11 @@
 
                         {{-- Transaction Category --}}
                         <div class="mb-4">
-                            <label for="category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category <span class="text-red-500">*</span></label>
-                            <select name="category" id="category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                            <label for="transaction_category_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category <span class="text-red-500">*</span></label>
+                            <select name="transaction_category_id" id="transaction_category_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                                 <option value="">Select Category...</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->code }}" data-effect="{{ $category->effect }}" class="{{ $category->effect == 1 ? 'text-green-600' : 'text-red-600' }}">
+                                    <option value="{{ $category->id }}" data-effect="{{ $category->effect }}" class="{{ $category->effect == 1 ? 'text-green-600' : 'text-red-600' }}">
                                         {{ $category->name }} ({{ $category->effect == 1 ? 'IN +' : 'OUT -' }})
                                     </option>
                                 @endforeach
@@ -135,8 +135,12 @@
                     </button>
                 </div>
             </div>
-            <div id="qr-reader" class="w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black"></div>
-            <div id="qr-status" class="mt-2 text-center text-sm font-medium text-blue-600 dark:text-blue-400">
+            <div class="relative">
+                <div id="qr-reader" class="w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black"></div>
+                {{-- Scanning Line Animation --}}
+                <div id="scanner-line" class="hidden absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] z-10 animate-scan"></div>
+            </div>
+            <div id="qr-status" class="mt-4 text-center text-sm font-medium text-blue-600 dark:text-blue-400 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
                 <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Initializing Camera...
             </div>
             <div id="qr-reader-results" class="hidden"></div>
@@ -145,6 +149,21 @@
     </div>
 </div>
 @endsection
+
+@push('style')
+<style>
+    @keyframes scan {
+        0% { top: 0; }
+        100% { top: 100%; }
+    }
+    .animate-scan {
+        animation: scan 2s linear infinite;
+    }
+    #qr-reader video {
+        border-radius: 0.5rem;
+    }
+</style>
+@endpush
 
 @push('scripts')
 {{-- html5-qrcode library --}}
@@ -168,7 +187,7 @@
                 return $(`<span class="${textClass} flex items-center">${icon}${state.text}</span>`);
             }
 
-            $('#category').select2({
+            $('#transaction_category_id').select2({
                 minimumResultsForSearch: Infinity,
                 templateResult: formatCategory,
                 templateSelection: formatCategory,
@@ -322,51 +341,63 @@
             $('#scannerModal').removeClass('hidden').addClass('flex');
             
             if (html5QrCode === null) {
-                html5QrCode = new Html5Qrcode("qr-reader", { verbose: true });
+                html5QrCode = new Html5Qrcode("qr-reader", { verbose: false });
             }
 
             const config = { 
-                fps: 25, // Higher FPS
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    let minEdgePercentage = 0.75; 
+                fps: 25, // Increased for smoother detection
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    // Make the box larger (85% of smaller edge) for easier alignment
                     let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                    let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                    return {
-                        width: qrboxSize,
-                        height: qrboxSize
-                    };
+                    let qrboxSize = Math.floor(minEdgeSize * 0.85);
+                    return { width: qrboxSize, height: qrboxSize };
                 },
                 aspectRatio: 1.0,
                 showTorchButtonIfSupported: true,
+                rememberLastUsedCamera: true,
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                },
+                // Use a higher resolution for better detail capture
+                videoConstraints: {
+                    facingMode: "environment",
+                    width: { min: 640, ideal: 1280, max: 1920 },
+                    height: { min: 480, ideal: 720, max: 1080 },
+                    focusMode: "continuous"
+                }
             };
 
             html5QrCode.start(
-                { facingMode: "environment" },
+                config.videoConstraints,
                 config,
                 (decodedText) => {
+                    decodedText = decodedText.trim();
                     console.log("[SCANNER] Found QR Code:", decodedText);
                     
+                    // Stop scanning immediately on success
                     html5QrCode.stop().then(() => {
                         $('#scannerModal').addClass('hidden').removeClass('flex');
                         $('#scan_id').val(decodedText);
                         
                         // Check if ID exists in select options
                         let option = $(`#product_detail_id option[value="${decodedText}"]`);
-                        console.log("[SCANNER] Matching ID in dropdown:", decodedText, "Found:", option.length > 0);
                         
                         if (option.length > 0) {
                             $('#product_detail_id').val(decodedText).trigger('change');
-                            $('#scan_id').trigger($.Event('keypress', { which: 13 }));
+                            // Focus qty after short delay to ensure select2 is updated
+                            setTimeout(() => $('#qty').focus(), 300);
                         } else {
-                            console.warn("[SCANNER] Scanned ID not found in product list:", decodedText);
                             Swal.fire({
                                 icon: 'warning',
                                 title: 'Product Not Found',
-                                text: `Scanned ID "${decodedText}" does not exist in the current list.`
+                                text: `Scanned ID "${decodedText}" does not exist in the current list.`,
+                                timer: 3000
                             });
                         }
                     }).catch(err => {
                         console.error("[SCANNER] Stop failed:", err);
+                        $('#scannerModal').addClass('hidden').removeClass('flex');
                     });
                 },
                 (errorMessage) => {
@@ -375,11 +406,17 @@
                 }
             ).then(() => {
                 console.log("[SCANNER] Camera started successfully");
-                $('#qr-status').html('<i class="fa-solid fa-expand fa-beat mr-2"></i> Scanning... Move camera to focus');
+                $('#qr-status').html('<i class="fa-solid fa-expand fa-beat mr-2"></i> Scanning... Move camera to focus')
+                    .removeClass('bg-blue-50 dark:bg-blue-900/30')
+                    .addClass('bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400');
+                $('#scanner-line').removeClass('hidden');
                 applyMirror();
             }).catch((err) => {
                 console.error("[SCANNER] Start failed:", err);
-                $('#qr-status').html('<span class="text-red-500"><i class="fa-solid fa-circle-exclamation mr-2"></i> Camera Error</span>');
+                $('#scanner-line').addClass('hidden');
+                $('#qr-status').html('<span class="text-red-500"><i class="fa-solid fa-circle-exclamation mr-2"></i> Camera Error</span>')
+                    .removeClass('bg-blue-50 dark:bg-blue-900/30')
+                    .addClass('bg-red-50 dark:bg-red-900/30');
                 Swal.fire({
                     icon: 'error',
                     title: 'Camera Error',
@@ -404,6 +441,7 @@
         });
 
         $('#closeScanner').on('click', function() {
+            $('#scanner-line').addClass('hidden');
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop().then(() => {
                     $('#scannerModal').addClass('hidden').removeClass('flex');

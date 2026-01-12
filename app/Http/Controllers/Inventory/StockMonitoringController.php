@@ -38,12 +38,12 @@ class StockMonitoringController extends Controller
             foreach ($categories as $cat) {
                 // Sanitize code to be safe for alias (remove special chars if any, mostly alphanumeric expected)
                 $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
-                $selects[] = DB::raw("CAST(SUM(CASE WHEN t.category = '{$cat->code}' THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as {$alias}");
+                $selects[] = DB::raw("CAST(SUM(CASE WHEN tc.code = '{$cat->code}' THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as {$alias}");
             }
 
             // Total Out (safe list because categories exist)
             $codesList = $categories->pluck('code')->map(fn($c)=> "'$c'")->join(',');
-            $selects[] = DB::raw("CAST(SUM(CASE WHEN t.category IN ($codesList) THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as total_out_sum");
+            $selects[] = DB::raw("CAST(SUM(CASE WHEN tc.code IN ($codesList) THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as total_out_sum");
         } else {
             // No OUT categories defined — avoid IN () SQL syntax error by using 0
             $selects[] = DB::raw("0 as total_out_sum");
@@ -53,7 +53,7 @@ class StockMonitoringController extends Controller
         $inCategories = \App\Models\InventoryModel\TransactionCategory::where('effect', 1)->pluck('code');
         if ($inCategories->count() > 0) {
             $inStr = $inCategories->map(fn($c)=> "'$c'")->join(',');
-            $selects[] = DB::raw("CAST(SUM(CASE WHEN t.category IN ($inStr) THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as total_in_sum");
+            $selects[] = DB::raw("CAST(SUM(CASE WHEN tc.code IN ($inStr) THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as total_in_sum");
         } else {
             $selects[] = DB::raw("0 as total_in_sum");
         }
@@ -68,6 +68,7 @@ class StockMonitoringController extends Controller
             ->leftJoin('inv_m_rank', 'inv_m_rank.id', '=', 'inv_t_product_detail.rank_id')
             ->leftJoin('inv_m_unit', 'inv_m_unit.id', '=', 'inv_t_product_detail.unit_id')
             ->leftJoin('inv_t_inventory_transaction as t', 't.product_detail_id', '=', 'inv_t_product_detail.id')
+            ->leftJoin('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             // Selects
             ->select(array_merge($selects, [
                 'inv_m_material_spec.spec_name',

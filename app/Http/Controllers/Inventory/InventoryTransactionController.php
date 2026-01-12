@@ -25,7 +25,7 @@ class InventoryTransactionController extends Controller
             ->orderBy('products.part_no')
             ->get();
         
-        $categories = TransactionCategory::select('code', 'name', 'effect')->orderBy('name')->get();
+        $categories = TransactionCategory::select('id', 'code', 'name', 'effect')->orderBy('name')->get();
         $pics = PIC::where('is_active', 1)->orderBy('name')->get();
 
         return view('inventory.inventory_transaction', compact('products', 'categories', 'pics'));
@@ -33,7 +33,7 @@ class InventoryTransactionController extends Controller
 
     public function data(Request $request)
     {
-        $query = InventoryTransaction::with(['product.product', 'pic']);
+        $query = InventoryTransaction::with(['product.product', 'pic', 'transactionCategory']);
 
         // Filter by Product
         if ($request->has('product_detail_id') && !empty($request->product_detail_id)) {
@@ -44,7 +44,10 @@ class InventoryTransactionController extends Controller
         if ($request->has('search') && !empty($request->search['value'])) {
             $search = $request->search['value'];
             $query->where(function($q) use ($search) {
-                $q->where('category', 'like', '%' . $search . '%')
+                $q->whereHas('transactionCategory', function($q4) use ($search) {
+                        $q4->where('name', 'like', '%' . $search . '%')
+                           ->orWhere('code', 'like', '%' . $search . '%');
+                  })
                   ->orWhere('remark', 'like', '%' . $search . '%')
                   ->orWhereHas('pic', function($q3) use ($search) {
                       $q3->where('name', 'like', '%' . $search . '%');
@@ -56,7 +59,7 @@ class InventoryTransactionController extends Controller
         }
 
         // Sorting
-        $columns = ['id', 'transaction_date', 'product_detail_id', 'category', 'qty', 'pic_id', 'remark'];
+        $columns = ['id', 'transaction_date', 'product_detail_id', 'transaction_category_id', 'qty', 'pic_id', 'remark'];
         $orderBy = $columns[$request->input('order.0.column')] ?? 'created_at';
         $orderDir = $request->input('order.0.dir') ?? 'desc';
         $query->orderBy($orderBy, $orderDir);
@@ -75,7 +78,7 @@ class InventoryTransactionController extends Controller
                 'transaction_date' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
                 'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision : ''),
                 'product_name' => $item->product->product->part_name ?? '-',
-                'category' => $item->category,
+                'category' => $item->transactionCategory->code ?? '-',
                 'qty' => $item->qty,
                 'pic_name' => $item->pic->name ?? '-',
                 'remark' => $item->remark,
@@ -96,7 +99,7 @@ class InventoryTransactionController extends Controller
             'product_detail_id' => 'required|exists:inv_t_product_detail,id',
             'transaction_date' => 'required|date',
             'qty' => 'required|integer|min:1',
-            'category' => 'required|string',
+            'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
             'pic_id' => 'required|exists:inv_m_pic,id',
             'remark' => 'nullable|string',
         ]);
@@ -104,17 +107,14 @@ class InventoryTransactionController extends Controller
         DB::beginTransaction();
         try {
             // Get Category Effect
-            $category = TransactionCategory::where('code', $request->category)->first();
-            if (!$category) {
-                throw new \Exception("Transaction Category not found.");
-            }
+            $category = TransactionCategory::findOrFail($request->transaction_category_id);
 
             // Save Transaction
             $transaction = InventoryTransaction::create([
                 'product_detail_id' => $request->product_detail_id,
                 'transaction_date' => $request->transaction_date,
                 'qty' => $request->qty,
-                'category' => $request->category,
+                'transaction_category_id' => $request->transaction_category_id,
                 'pic_id' => $request->pic_id,
                 'remark' => $request->remark,
             ]);

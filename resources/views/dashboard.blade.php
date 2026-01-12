@@ -2,173 +2,442 @@
 
 @section('title', 'Inventory Dashboard')
 
-@section('content')
-<div class="bg-[#e9ecef] min-h-screen p-4 font-sans text-slate-700">
-    {{-- STATS SECTION --}}
-    <div class="grid grid-cols-6 gap-3 mb-6">
-        @php
-            $stats = [
-                ['val' => '89,997,200', 'label' => 'TOTAL STOCK VALUE', 'icon' => 'fa-hand-holding-dollar'],
-                ['val' => '19,921', 'label' => 'TOTAL MATERIAL IN', 'icon' => 'fa-cart-flatbed-suitcase'],
-                ['val' => '10,964', 'label' => 'TOTAL MATERIAL OUT', 'icon' => 'fa-cart-flatbed-suitcase'],
-                ['val' => '1,651', 'label' => 'TOTAL MATERIAL OUT PP', 'icon' => 'fa-cart-flatbed-suitcase'],
-                ['val' => '3,963', 'label' => 'TOTAL MATERIAL OUT EVENT', 'icon' => 'fa-cart-flatbed-suitcase'],
-                ['val' => '5,110', 'label' => 'TOTAL MATERIAL OUT TRIAL', 'icon' => 'fa-cart-flatbed-suitcase'],
-            ];
-        @endphp
+@section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+<style>
+    .dashboard-container { background-color: #f8fafc; }
+    
+    /* Advanced Select2 Styling */
+    .select2-container--bootstrap-5 .select2-selection {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        background-color: #f8fafc !important;
+        height: auto !important;
+        min-height: 40px !important;
+        transition: all 0.2s ease;
+        padding: 4px 8px !important;
+        box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+    }
+    
+    /* Remove the annoying blue outline */
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+    .select2-container--bootstrap-5.select2-container--open .select2-selection {
+        outline: none !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15) !important;
+    }
 
-        @foreach($stats as $stat)
-        <div class="bg-white rounded-2xl border border-slate-400 p-3 flex flex-col items-center justify-center text-center shadow-sm">
-            <div class="text-[#34a4d4] mb-1 text-2xl">
-                <i class="fa-solid {{ $stat['icon'] }}"></i>
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+        background-color: #eff6ff !important;
+        border: 1px solid #dbeafe !important;
+        border-radius: 6px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #1e40af !important;
+        margin: 0 !important;
+        padding: 2px 8px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+        color: #3b82f6 !important;
+        margin-right: 6px !important;
+        border-right: 1px solid #dbeafe !important;
+        padding-right: 4px !important;
+    }
+
+    /* Search input inside Select2 */
+    .select2-container--bootstrap-5 .select2-search__field {
+        margin-top: 0 !important;
+        font-size: 12px !important;
+        color: #334155 !important;
+        background: transparent !important;
+    }
+
+    .select2-container .select2-selection--multiple .select2-search__field {
+        width: 100% !important;
+        margin-left: 2px !important;
+    }
+
+    /* Dropdown Styling */
+    .select2-container--bootstrap-5 .select2-dropdown {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        overflow: hidden !important;
+        z-index: 1060 !important;
+        padding: 4px !important;
+        border-top: none !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option--highlighted {
+        background-color: #3b82f6 !important;
+        border-radius: 6px !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-results__option {
+        font-size: 12px !important;
+        padding: 8px 12px !important;
+        border-radius: 6px !important;
+        margin-bottom: 2px !important;
+    }
+
+    /* Input & Labels */
+    .modern-input {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background-color: #f8fafc;
+        height: 40px;
+        padding: 0 12px;
+        font-size: 13px;
+        color: #334155;
+        width: 100%;
+        transition: all 0.2s ease;
+    }
+
+    .modern-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        background-color: white;
+    }
+
+    /* Buttons */
+    .btn-modern-reset {
+        height: 38px;
+        padding: 0 16px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        background-color: #ffffff;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-modern-reset:hover {
+        background-color: #f8fafc;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+
+    .btn-modern-apply {
+        height: 38px;
+        padding: 0 20px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        transition: all 0.2s ease;
+    }
+
+    .btn-modern-apply:hover {
+        background-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+    }
+    
+    /* Custom Scrollbar for tables */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
+@endsection
+
+@section('content')
+<div class="dashboard-container min-h-screen p-6 bg-slate-50">
+    {{-- STATS SECTION --}}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        @foreach([
+            ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50'],
+            ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50'],
+            ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50'],
+            ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50'],
+            ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50'],
+            ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50'],
+        ] as $stat)
+        <div class="stat-card flex flex-col justify-between h-full p-4 bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="{{ $stat['bg'] }} {{ $stat['color'] }} w-10 h-10 rounded-lg flex items-center justify-center shadow-sm">
+                    <i class="fa-solid {{ $stat['icon'] }} text-lg"></i>
+                </div>
             </div>
-            <h4 class="text-xl font-bold text-[#34a4d4] leading-none">{{ $stat['val'] }}</h4>
-            <p class="text-[9px] font-bold text-slate-500 mt-2 leading-tight uppercase tracking-tighter">{{ $stat['label'] }}</p>
+            <div>
+                <div class="value font-bold text-2xl text-slate-800 tracking-tight">{{ $stat['val'] }}</div>
+                <div class="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wide">{{ $stat['label'] }}</div>
+            </div>
         </div>
         @endforeach
     </div>
 
     {{-- FILTER SECTION --}}
-    <div class="bg-white border border-slate-400 rounded-lg p-4 mb-6 shadow-sm">
-        
-        {{-- Header Filter --}}
-        <div class="flex items-center gap-1.5 mb-4 border-b border-slate-100 pb-2">
-            <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
-                <i class="fa-solid fa-list text-[8px]"></i>
+    <div class="filter-card bg-white rounded-xl border border-slate-100 shadow-sm mb-8 p-6">
+        <div class="section-title flex items-center gap-2 mb-6 text-slate-800">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <i class="fa-solid fa-filter text-sm"></i>
             </div>
-            <span class="font-bold text-xs uppercase">Filter Data</span>
+            <span class="font-bold text-sm uppercase tracking-wider">Filter Data</span>
         </div>
-      <form id="filterForm">      
-        {{-- Grid Input Filter (Manual Columns) --}}
-        <div class="grid grid-cols-5 gap-4">
-            {{-- 1. Filter Month --}}
-           <div class="flex flex-col">
-    <label class="text-[10px] font-bold text-slate-700 mb-1 uppercase tracking-tight">Months Trendline</label>
-    <div class="relative w-full">
-        <input type="text" 
-               id="month_year_picker"
-               class="w-full border border-slate-300 rounded px-2 text-[10px] h-[28px] leading-none focus:outline-none focus:border-blue-500 placeholder-slate-400 bg-white cursor-pointer" 
-               placeholder="Select Month..." 
-               name="month_year"
-               readonly>
-        
-        <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
-            <i class="fa-regular fa-calendar text-xs"></i>
-        </div>
-    </div>
-</div>
-
-            {{-- 2. Filter Model --}}
-            <div class="flex flex-col">
-                <label class="text-[10px] font-bold text-slate-700 mb-1 uppercase tracking-tight">Model</label>
-                <select class="select2-filter w-full hidden" name="model[]" multiple="multiple">
-                    {{-- NANTI: Loop data Model dari Database di sini --}}
-                    {{-- @foreach($models as $model) --}}
-                    {{--    <option value="{{ $model->id }}">{{ $model->name }}</option> --}}
-                    {{-- @endforeach --}}
-                </select>
+        <form id="filterForm">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <div class="space-y-2">
+                    <label class="filter-label block text-xs font-bold text-slate-500 uppercase tracking-wide">Period</label>
+                    <div class="relative">
+                        <input type="text" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="modern-input w-full pl-10" readonly placeholder="Select Month">
+                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="filter-label block text-xs font-bold text-slate-500 uppercase tracking-wide">Model</label>
+                    <select class="select2-filter" name="model[]" multiple>
+                        @foreach($filters['models'] as $m)
+                            <option value="{{ $m->id }}" {{ in_array($m->id, $filters['selected_models']) ? 'selected' : '' }}>{{ $m->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="filter-label block text-xs font-bold text-slate-500 uppercase tracking-wide">Customer</label>
+                    <select class="select2-filter" name="customer[]" multiple>
+                        @foreach($filters['customers'] as $c)
+                            <option value="{{ $c->id }}" {{ in_array($c->id, $filters['selected_customers']) ? 'selected' : '' }}>{{ $c->code }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="filter-label block text-xs font-bold text-slate-500 uppercase tracking-wide">Balance Status</label>
+                    <select class="select2-filter" name="status_balance[]" multiple>
+                        <option value="Critical" {{ in_array('Critical', $filters['selected_status_balance']) ? 'selected' : '' }}>Critical</option>
+                        <option value="Over" {{ in_array('Over', $filters['selected_status_balance']) ? 'selected' : '' }}>Over</option>
+                        <option value="Safe" {{ in_array('Safe', $filters['selected_status_balance']) ? 'selected' : '' }}>Safe</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <label class="filter-label block text-xs font-bold text-slate-500 uppercase tracking-wide">Usage Status</label>
+                    <select class="select2-filter" name="status_usage[]" multiple>
+                        <option value="Over" {{ in_array('Over', $filters['selected_status_usage']) ? 'selected' : '' }}>Over</option>
+                        <option value="Safe" {{ in_array('Safe', $filters['selected_status_usage']) ? 'selected' : '' }}>Safe</option>
+                    </select>
+                </div>
             </div>
-
-            {{-- 3. Filter Customer --}}
-            <div class="flex flex-col">
-                <label class="text-[10px] font-bold text-slate-700 mb-1 uppercase tracking-tight">Customer</label>
-                <select class="select2-filter w-full hidden" name="customer[]" multiple="multiple">
-                    {{-- NANTI: Loop data Customer dari Database di sini --}}
-                </select>
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-50">
+                <button type="button" id="btnReset" class="btn-modern-reset flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+                <button type="button" id="btnApply" class="btn-modern-apply flex items-center gap-2">
+                    <i class="fa-solid fa-filter"></i> Apply Filter
+                </button>
             </div>
-
-            {{-- 4. Filter Status Balance --}}
-            <div class="flex flex-col">
-                <label class="text-[10px] font-bold text-slate-700 mb-1 uppercase tracking-tight">Status Balance</label>
-                <select class="select2-filter w-full hidden" name="status_balance[]" multiple="multiple">
-                    {{-- Opsi statis bisa tetap ditulis manual jika tidak dari DB --}}
-                    <option value="Critical">Critical</option>
-                    <option value="Over">Over</option>
-                    <option value="Safe">Safe</option>
-                </select>
-            </div>
-
-            {{-- 5. Filter Status Usage --}}
-            <div class="flex flex-col">
-                <label class="text-[10px] font-bold text-slate-700 mb-1 uppercase tracking-tight">Status Usage</label>
-                <select class="select2-filter w-full hidden" name="status_usage[]" multiple="multiple">
-                     {{-- Opsi statis --}}
-                     <option value="Over">Over</option>
-                     <option value="Safe">Safe</option>
-                </select>
-            </div>
-
-        </div>
-
-        {{-- Footer Tombol --}}
-        <div class="flex justify-end gap-2 mt-5 pt-3 border-t border-slate-100">
-            <button type="button" id="btnReset" class="bg-slate-200 hover:bg-slate-300 text-slate-700 rounded px-4 py-1.5 flex items-center gap-2 transition shadow-sm border border-slate-400">
-                <i class="fa-solid fa-rotate-left text-xs"></i>
-                <span class="text-[10px] font-bold uppercase">Reset</span>
-            </button>
-            <button type="button" id="btnApply" class="bg-blue-600 hover:bg-blue-700 text-white rounded px-4 py-1.5 flex items-center gap-2 transition shadow-sm border border-blue-800">
-                <i class="fa-solid fa-filter text-xs"></i>
-                <span class="text-[10px] font-bold uppercase">Apply Filter</span>
-            </button>
-        </div>
         </form>
     </div>
 
-    {{-- CHARTS & TABLES (Bagian Bawah Tetap Sama) --}}
-    <div class="grid grid-cols-12 gap-6">
-        <div class="col-span-8 grid grid-cols-2 gap-x-6 gap-y-4">
-            @foreach(['Material Stock Status', 'Material Usage Status by Models', 'Transaction Trendline', 'Material Usage Status by Makers'] as $chart)
-            <div>
-                <div class="flex items-center gap-1.5 mb-2">
-                    <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
-                        <i class="fa-solid fa-chart-column text-[8px]"></i>
+    {{-- MAIN GRID --}}
+    <div class="grid grid-cols-12 gap-8">
+        {{-- CHARTS COLUMN --}}
+        <div class="col-span-12 xl:col-span-8 flex flex-col gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="chart-card bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1 h-4 bg-blue-500 rounded-full"></div>
+                            <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Material Stock Status</span>
+                        </div>
+                        <button class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
-                    <span class="font-bold text-[11px]">{{ $chart }}</span>
+                    <div class="h-64"><canvas id="stockStatusChart"></canvas></div>
                 </div>
-                <div class="bg-white rounded border border-slate-400 p-2 h-48">
-                    {{-- Placeholder Chart --}}
-                    <div class="w-full h-full flex items-end justify-around border-b border-l border-slate-200 px-1 pb-1 gap-1">
-                        @for($i=0; $i<10; $i++)
-                            <div class="bg-blue-600 w-2" style="height: {{ rand(20, 90) }}%"></div>
-                            <div class="bg-orange-500 w-2" style="height: {{ rand(10, 40) }}%"></div>
-                        @endfor
+                <div class="chart-card bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1 h-4 bg-amber-500 rounded-full"></div>
+                            <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Usage by Models</span>
+                        </div>
+                        <button class="text-slate-400 hover:text-amber-500"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
+                    <div class="h-64"><canvas id="usageModelChart"></canvas></div>
                 </div>
             </div>
-            @endforeach
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="chart-card bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
+                            <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Transaction Trend</span>
+                        </div>
+                         <button class="text-slate-400 hover:text-emerald-500"><i class="fa-solid fa-ellipsis"></i></button>
+                    </div>
+                    <div class="h-64"><canvas id="trendlineChart"></canvas></div>
+                </div>
+                <div class="chart-card bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
+                            <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Usage by Makers</span>
+                        </div>
+                        <button class="text-slate-400 hover:text-indigo-500"><i class="fa-solid fa-ellipsis"></i></button>
+                    </div>
+                    <div class="h-64"><canvas id="makerChart"></canvas></div>
+                </div>
+            </div>
         </div>
 
-        <div class="col-span-4 space-y-4">
-            @foreach(['Details of Material Balance Status', 'Details of Material Usage Status'] as $tableTitle)
-            <div>
-                <div class="flex items-center gap-1.5 mb-2">
-                    <div class="bg-black text-white rounded h-4 w-4 flex items-center justify-center">
-                        <i class="fa-solid fa-table text-[8px]"></i>
+        {{-- TABLES COLUMN --}}
+        <div class="col-span-12 xl:col-span-4 flex flex-col gap-6">
+            {{-- Material Balance Table --}}
+            <div class="table-container bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full max-h-[400px]">
+                <div class="p-4 border-b border-slate-50 bg-white sticky top-0 z-10 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center">
+                            <i class="fa-solid fa-triangle-exclamation text-xs"></i>
+                        </div>
+                        <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Balance Warnings</span>
                     </div>
-                    <span class="font-bold text-[10px] uppercase">{{ $tableTitle }}</span>
+                    @if(count($tables['balance']) > 0)
+                    <span class="text-[10px] font-semibold bg-rose-100 text-rose-600 py-1 px-2 rounded-md">{{ count($tables['balance']) }} Items</span>
+                    @endif
                 </div>
-                <div class="bg-white border border-slate-400 rounded overflow-hidden">
-                    <table class="w-full text-[9px]">
-                        <thead class="bg-slate-100 border-b border-slate-400">
+                <div class="overflow-y-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 sticky top-0 z-10">
                             <tr>
-                                <th class="p-1 text-left border-r border-slate-200">Item No</th>
-                                <th class="p-1 text-left border-r border-slate-200">Costumer</th>
-                                <th class="p-1 text-left">Status</th>
+                                <th class="p-3 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Item No</th>
+                                <th class="p-3 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Cust</th>
+                                <th class="p-3 text-right font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            @for($i=0; $i<3; $i++)
-                            <tr>
-                                <td class="p-1 border-r border-slate-100">22644W030P-R</td>
-                                <td class="p-1 border-r border-slate-100 uppercase">MMKI</td>
-                                <td class="p-1 font-bold text-green-600">Safe</td>
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($tables['balance'] as $row)
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 font-medium text-slate-700">
+                                    <div class="truncate max-w-[120px]" title="{{ $row->part_no }}">{{ $row->part_no }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">{{ $row->model_name }}</div>
+                                </td>
+                                <td class="p-3 text-slate-600">{{ $row->customer_code }}</td>
+                                <td class="p-3 text-right">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold {{ $row->status == 'Critical' ? 'bg-rose-100 text-rose-600' : ($row->status == 'Over' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600') }}">
+                                        {{ $row->status }}
+                                    </span>
+                                </td>
                             </tr>
-                            @endfor
+                            @empty
+                            <tr><td colspan="3" class="p-4 text-center text-slate-400 italic">No warnings found</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-            @endforeach
+
+            {{-- Material Usage Table --}}
+            <div class="table-container bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full max-h-[400px]">
+                <div class="p-4 border-b border-slate-50 bg-white sticky top-0 z-10 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
+                            <i class="fa-solid fa-chart-pie text-xs"></i>
+                        </div>
+                        <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Usage Status</span>
+                    </div>
+                </div>
+                <div class="overflow-y-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Item No</th>
+                                <th class="p-3 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Cust</th>
+                                <th class="p-3 text-right font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($tables['usage'] as $row)
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 font-medium text-slate-700">
+                                    <div class="truncate max-w-[120px]" title="{{ $row->part_no }}">{{ $row->part_no }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">{{ $row->model_name }}</div>
+                                </td>
+                                <td class="p-3 text-slate-600">{{ $row->customer_code }}</td>
+                                <td class="p-3 text-right">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold {{ $row->status == 'Over' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600' }}">
+                                        {{ $row->status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="3" class="p-4 text-center text-slate-400 italic">No usage data found</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Recent History Table --}}
+            <div class="table-container bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-full max-h-[400px]">
+                <div class="p-4 border-b border-slate-50 bg-white sticky top-0 z-10 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
+                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                        </div>
+                        <span class="font-bold text-xs uppercase text-slate-700 tracking-wider">Recent Transactions</span>
+                    </div>
+                </div>
+                <div class="overflow-y-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 sticky top-0 z-10">
+                            <tr>
+                                <th class="p-3 text-left font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Item</th>
+                                <th class="p-3 text-center font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Type</th>
+                                <th class="p-3 text-right font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Qty</th>
+                                <th class="p-3 text-right font-semibold text-slate-500 uppercase tracking-wider text-[10px]">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @forelse($tables['history'] as $row)
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-3 font-medium text-slate-700">
+                                    <div class="truncate max-w-[100px]" title="{{ $row->part_no }}">{{ $row->part_no }}</div>
+                                </td>
+                                <td class="p-3 text-center">
+                                    @php
+                                        $cat = strtolower($row->category);
+                                        $activeClass = 'bg-slate-50 text-slate-600 border-slate-100';
+                                        if (Str::contains($cat, 'in')) $activeClass = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                                        elseif (Str::contains($cat, 'trial')) $activeClass = 'bg-rose-50 text-rose-600 border-rose-100';
+                                        elseif (Str::contains($cat, 'event')) $activeClass = 'bg-purple-50 text-purple-600 border-purple-100';
+                                        elseif (Str::contains($cat, 'pp')) $activeClass = 'bg-indigo-50 text-indigo-600 border-indigo-100';
+                                        elseif (Str::contains($cat, 'out')) $activeClass = 'bg-amber-50 text-amber-600 border-amber-100';
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border {{ $activeClass }}">
+                                        {{ $row->category }}
+                                    </span>
+                                </td>
+                                <td class="p-3 text-right font-mono font-medium text-slate-700">
+                                    {{ number_format($row->qty * $row->pcs_per_unit) }}
+                                </td>
+                                <td class="p-3 text-right text-[10px] text-slate-500 whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($row->transaction_date)->format('d/m/y') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="p-4 text-center text-slate-400 italic">No history found</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -177,57 +446,73 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-   
     $(document).ready(function() {
-    // Inisialisasi Flatpickr Month Picker
-    const monthPicker = flatpickr("#month_year_picker", {
-            disableMobile: "true",
-            plugins: [
-                new monthSelectPlugin({
-                    shorthand: true,
-                    dateFormat: "Y-m",
-                    altFormat: "F Y",
-                    theme: "light"
-                })
-            ]
+        flatpickr("#month_picker", {
+            plugins: [new monthSelectPlugin({ shorthand: true, dateFormat: "Y-m", altFormat: "F Y", theme: "light" })]
+        });
+        $('.select2-filter').select2({ placeholder: 'Select...', allowClear: true, width: '100%', theme: 'bootstrap-5' });
+        
+        $('#btnApply').on('click', () => window.location.href = window.location.pathname + "?" + $('#filterForm').serialize());
+        $('#btnReset').on('click', () => window.location.href = window.location.pathname);
+
+        // Chart 1: Stock Status (Grouped Bar)
+        const stockLabels = {!! json_encode(array_keys($charts['stock_grouped'])) !!};
+        const stockData = {!! json_encode(array_values($charts['stock_grouped'])) !!};
+        new Chart(document.getElementById('stockStatusChart'), {
+            type: 'bar',
+            data: {
+                labels: stockLabels,
+                datasets: [
+                    { label: 'Critical', data: stockData.map(d => d.critical), backgroundColor: '#ef4444' },
+                    { label: 'Over', data: stockData.map(d => d.over), backgroundColor: '#3b82f6' },
+                    { label: 'Safe', data: stockData.map(d => d.safe), backgroundColor: '#10b981' }
+                ]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false, ticks: {font:{size:8}} }, y: { beginAtZero: true } } }
         });
 
-    // Inisialisasi Select2 yang sudah ada
-    $('.select2-filter').select2({
-        placeholder: 'Select...',
-        allowClear: true,
-        width: '100%'
+        // Chart 2: Usage Models
+        new Chart(document.getElementById('usageModelChart'), {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($charts['usage_model']->pluck('label')) !!},
+                datasets: [{ label: 'Usage', data: {!! json_encode($charts['usage_model']->pluck('total')) !!}, backgroundColor: '#f59e0b' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: {font:{size:8}} } } }
+        });
+
+        // Chart 3: Trendline (Stacked Area)
+        const trendData = {!! json_encode($charts['trendline']) !!};
+        const dates = [...new Set(trendData.map(d => d.transaction_date))];
+        const cats = [...new Set(trendData.map(d => d.category))];
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        new Chart(document.getElementById('trendlineChart'), {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: cats.map((cat, idx) => ({
+                    label: cat,
+                    data: dates.map(d => (trendData.find(td => td.transaction_date === d && td.category === cat) || {total:0}).total),
+                    borderColor: colors[idx],
+                    backgroundColor: colors[idx] + '40',
+                    fill: true,
+                    tension: 0.4
+                }))
+            },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true } } }
+        });
+
+        // Chart 4: Maker
+        new Chart(document.getElementById('makerChart'), {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($charts['maker']->pluck('code')) !!},
+                datasets: [{ label: 'Usage', data: {!! json_encode($charts['maker']->pluck('total')) !!}, backgroundColor: '#6366f1' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
     });
-
-    // 2. Inisialisasi Select2
-    $('.select2-filter').select2({
-        placeholder: 'Select...',
-        allowClear: true,
-        width: '100%'
-    });
-
-    // 3. Logika Tombol APPLY FILTER
-   $('#btnApply').on('click', function() {
-    const formData = $('#filterForm').serialize();
-    
-    // window.location.pathname akan mengambil URL dashboard yang sedang aktif
-    window.location.href = window.location.pathname + "?" + formData;
-});
-
-    // 4. Logika Tombol RESET
-    $('#btnReset').on('click', function() {
-        // Reset Input Biasa
-        $('#filterForm')[0].reset();
-
-        // Reset Select2 (wajib dipanggil agar tampilan visualnya kembali kosong)
-        $('.select2-filter').val(null).trigger('change');
-
-        // Reset Flatpickr
-        monthPicker.clear();
-
-        console.log("Filter dibersihkan");
-    });
-});
 </script>
 @endpush

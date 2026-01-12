@@ -18,7 +18,7 @@ class InventoryTransaction extends Model
         'product_detail_id',
         'transaction_date',
         'qty',
-        'category', // Stores the CODE from Master
+        'transaction_category_id',
         'pic_id',
         'remark'
     ];
@@ -27,6 +27,11 @@ class InventoryTransaction extends Model
         'transaction_date' => 'date',
         'qty' => 'float',
     ];
+
+    public function transactionCategory()
+    {
+        return $this->belongsTo(TransactionCategory::class, 'transaction_category_id');
+    }
 
     public function product()
     {
