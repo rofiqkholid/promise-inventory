@@ -233,8 +233,9 @@ class InventoryProductController extends Controller
     /**
      * Display the specified resource for editing.
      */
-    public function show(InventoryProduct $inventoryProduct)
+    public function show($id)
     {
+        $inventoryProduct = InventoryProduct::findOrFail($id);
         $inventoryProduct->load(['product', 'coilCenter', 'materialSpec', 'unit', 'rank']);
         return response()->json($inventoryProduct);
     }
@@ -242,8 +243,9 @@ class InventoryProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, InventoryProduct $inventoryProduct)
+    public function update(Request $request, $id)
     {
+        $inventoryProduct = InventoryProduct::findOrFail($id);
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'subcont_id' => 'nullable|exists:inv_m_sub_contractor,id',
@@ -272,8 +274,9 @@ class InventoryProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(InventoryProduct $inventoryProduct)
+    public function destroy($id)
     {
+        $inventoryProduct = InventoryProduct::findOrFail($id);
         $inventoryProduct->delete();
         return response()->json(['success' => true, 'message' => 'Inventory Product deleted successfully.']);
     }
@@ -281,8 +284,9 @@ class InventoryProductController extends Controller
     /**
      * Print Label for the specified resource.
      */
-    public function printLabel(InventoryProduct $inventoryProduct)
+    public function printLabel($id)
     {
+        $inventoryProduct = InventoryProduct::findOrFail($id);
         $data = DB::table('inv_t_product_detail as p')
             ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')

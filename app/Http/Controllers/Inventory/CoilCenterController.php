@@ -77,16 +77,18 @@ class CoilCenterController extends Controller
     /**
      * Display the specified resource for editing.
      */
-    public function show(CoilCenter $coilCenter)
+    public function show($id)
     {
+        $coilCenter = CoilCenter::findOrFail($id);
         return response()->json($coilCenter);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, CoilCenter $coilCenter)
+    public function update(Request $request, $id)
     {
+        $coilCenter = CoilCenter::findOrFail($id);
         $validated = $request->validate([
             'code' => [
                 'required',
@@ -106,8 +108,9 @@ class CoilCenterController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(CoilCenter $coilCenter)
+    public function destroy($id)
     {
+        $coilCenter = CoilCenter::findOrFail($id);
         $coilCenter->delete();
         return response()->json(['success' => true, 'message' => 'Coil Center deleted successfully.']);
     }
