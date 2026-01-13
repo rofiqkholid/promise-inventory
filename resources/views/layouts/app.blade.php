@@ -16,30 +16,9 @@
     {{-- Icons --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
-    {{-- Tailwind CSS (CDN) --}}
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        primary: '#3b82f6', 
-                        secondary: '#64748b',
-                        sidebar: '#ffffff',
-                        background: '#f1f5f9', 
-                    }
-                }
-            }
-        }
-    </script>
-    
     {{-- Third Party CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.tailwindcss.min.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -100,7 +79,7 @@
             @include('layouts.header')
 
             {{-- Page Content --}}
-            <main class="flex-1 overflow-y-auto p-3 md:p-6 scroll-smooth">
+            <main class="flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth">
                 @include('components.toast') 
                 @yield('content')
             </main>
@@ -130,7 +109,6 @@
     
     {{-- DataTables Buttons --}}
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.tailwindcss.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
@@ -139,6 +117,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
 
     
     @yield('js')

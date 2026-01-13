@@ -12,14 +12,18 @@ class StockMonitoringController extends Controller
     public function index()
     {
         // Get all OUT categories for dynamic columns
-        $categories = \App\Models\InventoryModel\TransactionCategory::where('effect', -1)->orderBy('name')->get();
+        $categories = \App\Models\InventoryModel\TransactionCategory::orderBy('effect', 'desc')
+            ->orderBy('name')
+            ->get();
         return view('inventory.stock_monitoring', compact('categories'));
     }
 
     public function data(Request $request)
     {
         // 1. Get Dynamic Categories (OUT)
-        $categories = \App\Models\InventoryModel\TransactionCategory::where('effect', -1)->orderBy('name')->get();
+        $categories = \App\Models\InventoryModel\TransactionCategory::orderBy('effect', 'desc')
+            ->orderBy('name')
+            ->get();
 
         // 2. Build Select Clause Dynamically
         $selects = [
@@ -42,17 +46,17 @@ class StockMonitoringController extends Controller
             }
 
             // Total Out (safe list because categories exist)
-            $codesList = $categories->pluck('code')->map(fn($c)=> "'$c'")->join(',');
+            $codesList = $categories->pluck('code')->map(fn($c) => "'$c'")->join(',');
             $selects[] = DB::raw("CAST(SUM(CASE WHEN tc.code IN ($codesList) THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as total_out_sum");
         } else {
             // No OUT categories defined — avoid IN () SQL syntax error by using 0
             $selects[] = DB::raw("0 as total_out_sum");
         }
-        
+
         // Total In (Assuming effect 1)
         $inCategories = \App\Models\InventoryModel\TransactionCategory::where('effect', 1)->pluck('code');
         if ($inCategories->count() > 0) {
-            $inStr = $inCategories->map(fn($c)=> "'$c'")->join(',');
+            $inStr = $inCategories->map(fn($c) => "'$c'")->join(',');
             $selects[] = DB::raw("CAST(SUM(CASE WHEN tc.code IN ($inStr) THEN t.qty ELSE 0 END) AS DECIMAL(10,2)) as total_in_sum");
         } else {
             $selects[] = DB::raw("0 as total_in_sum");
@@ -76,18 +80,18 @@ class StockMonitoringController extends Controller
                 'inv_t_product_detail.thickness',
                 'inv_t_product_detail.width',
                 'inv_t_product_detail.length',
-                'models.name as model_name', 
-                'customers.code as customer_code',    
+                'models.name as model_name',
+                'customers.code as customer_code',
                 'inv_m_rank.code as rank_code',
                 'inv_m_rank.limit_value', // Add Limit Value
                 'inv_t_product_detail.min_stock',
                 'inv_t_product_detail.unit_per_car',
-                'inv_t_product_detail.updated_at' 
+                'inv_t_product_detail.updated_at'
             ]))
             ->groupBy(
                 'inv_t_product_detail.id',
                 'products.part_no',
-                'products.part_name', 
+                'products.part_name',
                 'inv_m_material_spec.spec_name',
                 'inv_m_material_spec.coating_type', // Group by Coating Type
                 'inv_t_product_detail.thickness',
@@ -110,12 +114,12 @@ class StockMonitoringController extends Controller
         // Global Search
         if ($request->has('search') && !empty($request->search['value'])) {
             $search = $request->search['value'];
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('products.part_no', 'like', '%' . $search . '%')
-                  ->orWhere('inv_m_material_spec.spec_name', 'like', '%' . $search . '%')
-                  ->orWhere('models.name', 'like', '%' . $search . '%')
-                  ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN ' - ' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%'])
-                  ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN '-' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%']);
+                    ->orWhere('inv_m_material_spec.spec_name', 'like', '%' . $search . '%')
+                    ->orWhere('models.name', 'like', '%' . $search . '%')
+                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN ' - ' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%'])
+                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN '-' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%']);
             });
         }
 
@@ -124,24 +128,24 @@ class StockMonitoringController extends Controller
 
         // Pagination
         $totalRecords = InventoryProduct::count();
-        $filteredRecords = $query->get()->count(); 
-        
+        $filteredRecords = $query->get()->count();
+
         $perPage = $request->input('length', 10);
         $start = $request->input('start', 0);
-        
+
         $data = $query->skip($start)->take($perPage)->get();
 
         // Formatting Data
-        $formattedData = $data->map(function($item) use ($categories) {
+        $formattedData = $data->map(function ($item) use ($categories) {
             $pcsPerUnit = $item->pcs_per_unit ?? 1;
-            
+
             // Format Size: T x W x L (or just T x W if L is 0/null)
             $size = floatval($item->thickness);
-            if(floatval($item->width) > 0) $size .= ' x ' . floatval($item->width);
-            if(floatval($item->length) > 0) $size .= ' x ' . floatval($item->length);
+            if (floatval($item->width) > 0) $size .= ' x ' . floatval($item->width);
+            if (floatval($item->length) > 0) $size .= ' x ' . floatval($item->length);
 
             $specSize = ($item->spec_name ?? '-') . ' <br><span class="text-xs text-gray-500">' . $size . '</span>';
-            
+
             $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
 
             $row = [
@@ -164,10 +168,10 @@ class StockMonitoringController extends Controller
                 ],
                 'stock_status' => $this->calculateStockStatus($item->current_stock_qty, $item->min_stock)
             ];
-            
+
             // Map Dynamic Columns
             $trialStatus = 'safe'; // Default
-            
+
             foreach ($categories as $cat) {
                 $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
                 $row[$alias] = $this->formatQty($item->$alias, $pcsPerUnit);
@@ -177,12 +181,12 @@ class StockMonitoringController extends Controller
                     $trialQty = abs(floatval($item->$alias)); // Unit
                     $limitValue = floatval($item->limit_value);
                     $trialStatus = $this->calculateTrialStatus($trialQty, $limitValue, $pcsPerUnit);
-                    
+
                     // Append status to the specific cell data if needed, or row
                     $row['trial_status'] = $trialStatus;
                 }
             }
-            
+
             $row['stock_status'] = $this->calculateStockStatus($item->current_stock_qty, $item->min_stock);
 
             return $row;
@@ -196,30 +200,32 @@ class StockMonitoringController extends Controller
         ]);
     }
 
-    private function formatQty($qty, $pcsPerUnit) {
+    private function formatQty($qty, $pcsPerUnit)
+    {
         $qty = floatval($qty);
         if ($qty == 0) return '-';
         $pcs = $qty * $pcsPerUnit;
-        
+
         $pcsDisplay = number_format($pcs, 0);
-        
+
         // If 1 PCS = 1 Unit, showing both is redundant.
         if ($pcsPerUnit == 1) {
-             return "<span class='font-bold'>$pcsDisplay</span>";
+            return "<span class='font-bold'>$pcsDisplay</span>";
         }
-        
+
         // Remove decimals from Unit display as well
-        $unitDisplay = number_format($qty, 0); 
-        
+        $unitDisplay = number_format($qty, 0);
+
         return "<span class='font-bold'>$pcsDisplay</span> <span class='text-xs text-gray-500'>($unitDisplay)</span>";
     }
 
-    private function calculateStockStatus($current, $min) {
+    private function calculateStockStatus($current, $min)
+    {
         $min = floatval($min);
         $current = floatval($current);
-        
-        if ($min <= 0) return 'safe'; 
-        
+
+        if ($min <= 0) return 'safe';
+
         $maxStock = $min * 3;
 
         if ($current > $maxStock) return 'over'; // Blue
@@ -229,21 +235,22 @@ class StockMonitoringController extends Controller
         return 'safe'; // Min to Max
     }
 
-    private function calculateTrialStatus($usage, $limit, $pcsPerUnit) {
+    private function calculateTrialStatus($usage, $limit, $pcsPerUnit)
+    {
         $limit = floatval($limit);
         $usage = floatval($usage);
-        
+
         if ($limit <= 0) return 'safe';
-        
+
         $usagePCS = $usage * $pcsPerUnit;
-        
+
         // Legacy Logic:
         // Danger if > Limit
         // Warning if > Limit - 50 (and <= Limit)
-        
+
         if ($usagePCS > $limit) return 'danger';
         if ($usagePCS > ($limit - 50)) return 'warning';
-        
+
         return 'safe';
     }
 }
