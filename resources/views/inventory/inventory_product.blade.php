@@ -447,10 +447,10 @@ $(function() {
         isEditMode = true;
         $('#modalTitle').text('Edit Inventory Product');
         $('#formMethod').val('PUT');
-        $('#productForm').attr('action', `/inventory/product/${id}`);
+        $('#productForm').attr('action', `{{ url('inventory/product') }}/${id}`);
         $('[id^="error-"]').addClass('hidden').text('');
 
-        $.get(`/inventory/product/${id}`, function(data) {
+        $.get(`{{ url('inventory/product') }}/${id}`, function(data) {
             $('#revision').val(data.revision).trigger('change');
             $('#subcont_id').val(data.subcont_id).trigger('change');
             $('#coil_center_id').val(data.coil_center_id).trigger('change');
@@ -480,7 +480,7 @@ $(function() {
     // Print button
     $(document).on('click', '.print-button', function() {
         const id = $(this).data('id');
-        window.open(`/inventory/product/${id}/print`, '_blank');
+        window.open(`{{ url('inventory/product') }}/${id}/print`, '_blank');
     });
 
     // Toggle Length 2 visibility
@@ -515,7 +515,7 @@ $(function() {
         if (!deleteId) return;
         
         $.ajax({
-            url: `/inventory/product/${deleteId}`,
+            url: `{{ url('inventory/product') }}/${deleteId}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             success: (res) => {
