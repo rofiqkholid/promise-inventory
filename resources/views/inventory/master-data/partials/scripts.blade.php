@@ -11,7 +11,7 @@
             'coil-center': {
                 table: 'coilCenterTable',
                 dataUrl: '{{ route("inventory.coilCenter.data") }}',
-                apiBase: '/inventory/master/coil-center',
+                apiBase: '{{ url("inventory/master/coil-center") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
@@ -47,7 +47,7 @@
             'material-spec': {
                 table: 'materialSpecTable',
                 dataUrl: '{{ route("inventory.materialSpec.data") }}',
-                apiBase: '/inventory/master/material-spec',
+                apiBase: '{{ url("inventory/master/material-spec") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
@@ -79,7 +79,7 @@
             'unit': {
                 table: 'unitTable',
                 dataUrl: '{{ route("inventory.unit.data") }}',
-                apiBase: '/inventory/master/unit',
+                apiBase: '{{ url("inventory/master/unit") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
@@ -111,7 +111,7 @@
             'rank': {
                 table: 'rankTable',
                 dataUrl: '{{ route("inventory.rank.data") }}',
-                apiBase: '/inventory/master/rank',
+                apiBase: '{{ url("inventory/master/rank") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
@@ -146,7 +146,7 @@
             'sub-contractor': {
                 table: 'subContractorTable',
                 dataUrl: '{{ route("inventory.subContractor.data") }}',
-                apiBase: '/inventory/master/sub-contractor',
+                apiBase: '{{ url("inventory/master/sub-contractor") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
@@ -181,7 +181,7 @@
             'transaction-category': {
                 table: 'transactionCategoryTable',
                 dataUrl: '{{ route("inventory.transactionCategory.data") }}',
-                apiBase: '/inventory/master/transaction-category',
+                apiBase: '{{ url("inventory/master/transaction-category") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
@@ -221,7 +221,7 @@
             'pic': {
                 table: 'picTable',
                 dataUrl: '{{ route("inventory.pic.data") }}',
-                apiBase: '/inventory/master/pic',
+                apiBase: '{{ url("inventory/master/pic") }}',
                 columns: [{
                         data: null,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
