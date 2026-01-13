@@ -27,7 +27,7 @@
                             <select name="product_detail_id" id="product_detail_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" data-placeholder="Select Product..." required>
                                 <option value="">Select Product...</option>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->hash_id }}" data-id="{{ $product->id }}" data-partno="{{ $product->part_no }}" data-hash="{{ $product->hash_id }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                                    <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -246,26 +246,14 @@
                         // If it's a hash, we use it directly. If it looks like base64, we try decoding.
                         // Actually, our robust logic is to check BOTH against the select options.
                         
-                        // Try finding option by Hash (New Format)
-                        let matchHash = $(`#product_detail_id option[data-hash="${data.id}"]`);
+                        // Try finding option by Hash (Value)
+                        let matchHash = $(`#product_detail_id option[value="${data.id}"]`);
                         if (matchHash.length > 0) {
-                            finalId = matchHash.val(); // Get integer ID
-                            console.log("[SCANNER] Matched via HashID:", data.id, "->", finalId);
+                            finalId = matchHash.val(); // Get HashID (same as data.id)
+                            console.log("[SCANNER] Matched via HashID:", data.id);
                         } else {
-                            // Try finding by ID (Legacy Base64?)
-                            // Attempt decode
-                            try {
-                                let decoded = atob(data.id);
-                                // Look for option with data-id (Raw ID)
-                                let matchId = $(`#product_detail_id option[data-id="${decoded}"]`);
-                                if (matchId.length > 0) {
-                                    finalId = matchId.val(); // Get HashID from value
-                                    console.log("[SCANNER] Matched via Legacy Base64:", data.id, "->", finalId);
-                                }
-                            } catch(e) {
-                                // Not base64 or failed
-                                console.log("[SCANNER] Not a valid Base64 ID");
-                            }
+                            // HashID mismatch
+                            console.log("[SCANNER] HashID mismatch for:", data.id);
                         }
                     }
                 } catch (e) {

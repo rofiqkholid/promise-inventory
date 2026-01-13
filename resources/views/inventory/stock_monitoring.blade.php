@@ -65,6 +65,7 @@
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Remark</th>
                 <th colspan="2" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-600">Current Balance</th>
                 <th colspan="{{ max(1, $categories->count()) }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/20">Usage History (Pcs / Unit)</th>
+                <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle text-center">Action</th>
             </tr>
             <tr>
                 <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Pcs</th>
@@ -207,6 +208,21 @@
             });
         }
 
+        // Add Action Column
+        columns.push({
+            data: null,
+            orderable: false,
+            searchable: false,
+            className: 'text-center',
+            render: function(data, type, row) {
+                return `
+                    <button class="print-balance-button h-7 w-7 inline-flex items-center justify-center text-purple-600 rounded bg-purple-50 hover:bg-purple-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-purple-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500" data-id="${row.hash_id}" title="Print Balance Label">
+                        <i class="fa-solid fa-print text-xs"></i>
+                    </button>
+                `;
+            }
+        });
+
         const table = window.defaultDataTable('stockMonitoringTable', {
             processing: true,
             serverSide: true,
@@ -303,6 +319,13 @@
                     api: true
                 }).columns.adjust();
             }
+        });
+
+        // Print Balance Button Handler
+        $(document).on('click', '.print-balance-button', function() {
+            const id = $(this).data('id');
+            // Route: inventory/stock-monitoring/{hash}/print-balance
+            window.open(`{{ url('inventory/stock-monitoring') }}/${id}/print-balance`, '_blank');
         });
     });
 </script>

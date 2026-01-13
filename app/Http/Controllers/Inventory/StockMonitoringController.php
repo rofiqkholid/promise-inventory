@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryModel\InventoryProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class StockMonitoringController extends Controller
 {
@@ -135,9 +136,18 @@ class StockMonitoringController extends Controller
 
         $data = $query->skip($start)->take($perPage)->get();
 
+        // Instantiate Hashids for InventoryProduct
+        $salt = config('app.key') . InventoryProduct::class;
+        $length = config('hashids.connections.main.length', 10);
+        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
+        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
+
         // Formatting Data
-        $formattedData = $data->map(function ($item) use ($categories) {
+        $formattedData = $data->map(function ($item) use ($categories, $hashids) {
             $pcsPerUnit = $item->pcs_per_unit ?? 1;
+
+            // Generate HashID
+            $hashId = $hashids->encode($item->id);
 
             // Format Size: T x W x L (or just T x W if L is 0/null)
             $size = floatval($item->thickness);
@@ -149,6 +159,7 @@ class StockMonitoringController extends Controller
             $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
 
             $row = [
+                'hash_id' => $hashId,
                 'part_no' => $partNoDisplay,
                 'spec_size' => $specSize,
                 'remark' => $item->remark ?? '-',
@@ -252,5 +263,67 @@ class StockMonitoringController extends Controller
         if ($usagePCS > ($limit - 50)) return 'warning';
 
         return 'safe';
+    }
+
+    /**
+     * Print Label with Balance for the specified resource.
+     */
+    public function printBalanceLabel($id)
+    {
+        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
+        $data = DB::table('inv_t_product_detail as p')
+            ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
+            ->leftJoin('models as model', 'model.id', '=', 'prod.model_id')
+            ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
+            ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->where('p.id', $inventoryProduct->id)
+            ->select([
+                'prod.part_no',
+                'prod.part_name',
+                'cust.code as customer_code',
+                'model.name as model_name',
+                'p.revision',
+                'p.thickness',
+                'p.width',
+                'p.length',
+                'p.length_2',
+                'p.pitch',
+                'ms.spec_name as material_spec',
+                'ms.coating_type',
+                'r.code as rank_code',
+                'p.current_stock_qty',
+                'p.pcs_per_unit',
+                'u.code as unit_code'
+            ])
+            ->first();
+
+        if (!$data) abort(404);
+        
+        $qrData = json_encode([
+            'id' => $inventoryProduct->hash_id,
+            'pn' => $data->part_no,
+            'rev' => $data->revision,
+            'dim' => (float)$data->thickness . 'x' . (float)$data->width . 'x' . (float)$data->length . ($data->length_2 > 0 ? 'x' . (float)$data->length_2 : '') . ($data->pitch > 0 ? 'x' . (float)$data->pitch : '')
+        ]);
+
+        $balancePcs = (float)$data->current_stock_qty * (int)($data->pcs_per_unit ?? 1);
+
+        $product = (object) [
+            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate($qrData),
+            'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
+            'item_name' => $data->part_name,
+            'model_name' => $data->model_name ?? '-',
+            'partner_code' => $data->customer_code ?? '-',
+            'dimension' => (float)$data->thickness . ' x ' . (float)$data->width . ' x ' . (float)$data->length . ($data->length_2 > 0 ? ' x ' . (float)$data->length_2 : '') . ($data->pitch > 0 ? ' x ' . (float)$data->pitch : ''),
+            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : ''),
+            'balance' => number_format($balancePcs, 0),
+            'unit' => 'PCS'
+        ];
+
+        $products = [$product];
+
+        return view('inventory.qrcode_balance', compact('products'));
     }
 }

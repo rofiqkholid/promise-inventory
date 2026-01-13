@@ -76,6 +76,7 @@ Route::get('/inventory/product/data', [InventoryProductController::class, 'data'
 Route::get('/inventory/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('inventory.product.dropdownData');
 Route::get('/inventory/product/get-products', [InventoryProductController::class, 'getProducts'])->name('inventory.product.getProducts');
 Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');
+Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');
 Route::resource('inventory/product', InventoryProductController::class)->names('inventory.product')->parameters(['product' => 'inventoryProduct'])->except(['create', 'edit', 'index']);
 
 // Inventory Transaction
@@ -87,4 +88,5 @@ Route::get('/inventory/transaction/categories', [InventoryTransactionController:
 // Stock Monitoring
 Route::get('/inventory/stock-monitoring', [StockMonitoringController::class, 'index'])->name('inventory.stockMonitoring');
 Route::get('/inventory/stock-monitoring/data', [StockMonitoringController::class, 'data'])->name('inventory.stockMonitoring.data');
+Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 #End region

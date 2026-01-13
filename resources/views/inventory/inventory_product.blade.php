@@ -483,6 +483,7 @@ $(function() {
         window.open(`{{ url('inventory/product') }}/${id}/print`, '_blank');
     });
 
+
     // Toggle Length 2 visibility
     function toggleLength2() {
         const unitId = $('#unit_id').val();

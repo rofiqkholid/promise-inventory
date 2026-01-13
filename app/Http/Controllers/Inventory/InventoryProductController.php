@@ -226,35 +226,21 @@ class InventoryProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    use \App\Traits\DecodesHashInputs;
+
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        $data = $request->all();
-
-        // Decode product_id (HashID from getProducts)
-        if (isset($data['product_id']) && !is_numeric($data['product_id'])) {
-            $data['product_id'] = \App\Models\Products::decodeHash($data['product_id']);
-        }
-        // Decode other FKs if they are HashIDs (Safe to check)
-        $fks = ['subcont_id', 'coil_center_id', 'material_spec_id', 'unit_id', 'rank_id'];
-        foreach ($fks as $fk) {
-            if (isset($data[$fk]) && !is_numeric($data[$fk])) {
-                // Determine model based on FK. 
-                // Helper or Switch?
-                // Or just use the Decode logic from the respective model directly.
-                $model = null;
-                switch ($fk) {
-                    case 'subcont_id': $model = SubContractor::class; break;
-                    case 'coil_center_id': $model = CoilCenter::class; break;
-                    case 'material_spec_id': $model = MaterialSpec::class; break;
-                    case 'unit_id': $model = Unit::class; break;
-                    case 'rank_id': $model = Rank::class; break;
-                }
-                if ($model) {
-                    $decoded = $model::decodeHash($data[$fk]);
-                    if ($decoded) $data[$fk] = $decoded;
-                }
-            }
-        }
+        $data = $this->decodeHashInputs($request->all(), [
+            'product_id' => \App\Models\Products::class,
+            'subcont_id' => SubContractor::class,
+            'coil_center_id' => CoilCenter::class,
+            'material_spec_id' => MaterialSpec::class,
+            'unit_id' => Unit::class,
+            'rank_id' => Rank::class,
+        ]);
         
         $request->merge($data);
 
@@ -303,30 +289,15 @@ class InventoryProductController extends Controller
     {
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
         
-        $data = $request->all();
+        $data = $this->decodeHashInputs($request->all(), [
+            'product_id' => \App\Models\Products::class,
+            'subcont_id' => SubContractor::class,
+            'coil_center_id' => CoilCenter::class,
+            'material_spec_id' => MaterialSpec::class,
+            'unit_id' => Unit::class,
+            'rank_id' => Rank::class,
+        ]);
 
-        // Decode product_id
-        if (isset($data['product_id']) && !is_numeric($data['product_id'])) {
-            $data['product_id'] = \App\Models\Products::decodeHash($data['product_id']);
-        }
-         // Decode other FKs
-        $fks = ['subcont_id', 'coil_center_id', 'material_spec_id', 'unit_id', 'rank_id'];
-        foreach ($fks as $fk) {
-            if (isset($data[$fk]) && !is_numeric($data[$fk])) {
-                $model = null;
-                switch ($fk) {
-                    case 'subcont_id': $model = SubContractor::class; break;
-                    case 'coil_center_id': $model = CoilCenter::class; break;
-                    case 'material_spec_id': $model = MaterialSpec::class; break;
-                    case 'unit_id': $model = Unit::class; break;
-                    case 'rank_id': $model = Rank::class; break;
-                }
-                if ($model) {
-                    $decoded = $model::decodeHash($data[$fk]);
-                    if ($decoded) $data[$fk] = $decoded;
-                }
-            }
-        }
         $request->merge($data);
 
         $validated = $request->validate([
@@ -419,4 +390,5 @@ class InventoryProductController extends Controller
 
         return view('inventory.qrcode', compact('products'));
     }
+
 }
