@@ -16,20 +16,14 @@
                 <div class="p-6">
                     <form id="transactionForm">
                         @csrf
-                        {{-- Scan ID (for future use or manual entry) --}}
-                        <div class="mb-4">
-                            <label for="scan_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Scan ID / Part No</label>
-                            <div class="flex gap-2">
-                                <input type="text" id="scan_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Scan or Type Part No...">
-                                <button type="button" id="btn-scan" class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-800">
-                                    <i class="fa-solid fa-barcode"></i>
-                                </button>
-                            </div>
-                        </div>
-
                         {{-- Product Selection --}}
                         <div class="mb-4">
-                            <label for="product_detail_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-500">*</span></label>
+                            <div class="flex justify-between items-end mb-2">
+                                <label for="product_detail_id" class="block text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-500">*</span></label>
+                                <button type="button" id="btn-scan" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-300 rounded-lg hover:bg-blue-100 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700 dark:hover:bg-blue-900/60 transition-all shadow-sm">
+                                    <i class="fa-solid fa-barcode mr-2"></i> Scan Camera
+                                </button>
+                            </div>
                             <select name="product_detail_id" id="product_detail_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" data-placeholder="Select Product..." required>
                                 <option value="">Select Product...</option>
                                 @foreach($products as $product)
@@ -232,54 +226,81 @@
             table.ajax.reload();
         });
 
-        // Auto-select product on scan (Improved)
-        $('#scan_id').on('keypress', function(e) {
-            if (e.which == 13) { // Enter key
-                e.preventDefault();
-                let val = $(this).val().trim();
-                if (!val) return;
-                
-                // Try to find exact match by ID (the option value)
-                let option = $(`#product_detail_id option[value="${val}"]`);
-                
-                if (option.length > 0) {
-                    $('#product_detail_id').val(val).trigger('change');
-                    
-                    // Visual feedback
-                    $(this).addClass('bg-green-100 dark:bg-green-900 border-green-500');
-                    setTimeout(() => {
-                        $(this).removeClass('bg-green-100 dark:bg-green-900 border-green-500').val('');
-                    }, 500);
-                    
-                    $('#qty').focus();
-                } else {
-                    // Feedback for no match
-                    $(this).addClass('bg-red-100 dark:bg-red-900 border-red-500');
-                    setTimeout(() => {
-                        $(this).removeClass('bg-red-100 dark:bg-red-900 border-red-500');
-                    }, 500);
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Product Not Found',
-                        text: `ID "${val}" does not exist in the current list.`,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+        // Process QR/Scan Input (New Helper)
+        function processQRInput(input) {
+            input = input.trim();
+            if (!input) return;
+
+            console.log("[SCANNER] Processing:", input);
+            let finalId = input;
+            let displayPartNo = "";
+
+            // 1. Detect JSON Format
+            if (input.startsWith('{') && input.endsWith('}')) {
+                try {
+                    const data = JSON.parse(input);
+                    if (data.id) {
+                        // Decode Base64 ID
+                        finalId = atob(data.id);
+                        displayPartNo = data.pn || '';
+                        console.log("[SCANNER] Parsed JSON. Decoded ID:", finalId);
+                    }
+                } catch (e) {
+                    console.error("[SCANNER] JSON Parse Error:", e);
                 }
             }
-        });
 
-        $('#scan_id').on('input', function() {
-            let val = $(this).val().trim();
-            if (!val) return;
-
-            let option = $(`#product_detail_id option[value="${val}"]`);
+            // 2. Auto-Select Product
+            let option = $(`#product_detail_id option[value="${finalId}"]`);
             
             if (option.length > 0) {
-                $('#product_detail_id').val(val).trigger('change');
-                $('#qty').focus();
-                $(this).val(''); // Clear scan input
+                $('#product_detail_id').val(finalId).trigger('change');
+                
+                // Visual feedback via toast
+                toast('success', 'Product Selected', displayPartNo || option.text().split(' - ')[0]);
+                
+                // Focus Qty field
+                setTimeout(() => $('#qty').focus(), 300);
+                
+                return true;
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Product Not Found',
+                    text: `ID/Part No "${finalId}" does not exist in the current list.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                return false;
             }
+        }
+
+        // Global Hardware Scanner Listener (Wedge)
+        let scannerBuffer = "";
+        let scannerTimeout = null;
+
+        $(document).on('keypress', function(e) {
+            // Ignore if user is typing in a textarea or certain inputs
+            if ($(e.target).is('textarea') || $(e.target).is('input[type="text"]:not(#qty)')) {
+                return;
+            }
+
+            // Detect fast typing (typical of hardware scanners)
+            if (scannerTimeout) clearTimeout(scannerTimeout);
+            
+            if (e.which === 13) { // Enter usually marks end of scan
+                if (scannerBuffer.length > 2) {
+                    e.preventDefault();
+                    processQRInput(scannerBuffer);
+                    scannerBuffer = "";
+                }
+            } else {
+                scannerBuffer += String.fromCharCode(e.which);
+            }
+
+            scannerTimeout = setTimeout(() => {
+                scannerBuffer = "";
+            }, 50); // Scanners are very fast, 50ms is enough to clear human typing
         });
 
         // Form Submit
@@ -378,26 +399,11 @@
                     // Stop scanning immediately on success
                     html5QrCode.stop().then(() => {
                         $('#scannerModal').addClass('hidden').removeClass('flex');
-                        $('#scan_id').val(decodedText);
-                        
-                        // Check if ID exists in select options
-                        let option = $(`#product_detail_id option[value="${decodedText}"]`);
-                        
-                        if (option.length > 0) {
-                            $('#product_detail_id').val(decodedText).trigger('change');
-                            // Focus qty after short delay to ensure select2 is updated
-                            setTimeout(() => $('#qty').focus(), 300);
-                        } else {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Product Not Found',
-                                text: `Scanned ID "${decodedText}" does not exist in the current list.`,
-                                timer: 3000
-                            });
-                        }
+                        processQRInput(decodedText);
                     }).catch(err => {
                         console.error("[SCANNER] Stop failed:", err);
                         $('#scannerModal').addClass('hidden').removeClass('flex');
+                        processQRInput(decodedText);
                     });
                 },
                 (errorMessage) => {
