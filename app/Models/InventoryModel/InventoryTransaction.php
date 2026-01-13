@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class InventoryTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasHashId;
+
+    protected $appends = ['hash_id'];
+    protected $hidden = ['id'];
 
     protected $table = 'inv_t_inventory_transaction';
 

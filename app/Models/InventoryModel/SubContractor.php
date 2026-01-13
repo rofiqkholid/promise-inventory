@@ -3,15 +3,20 @@
 namespace App\Models\InventoryModel;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasHashId;
 
 class SubContractor extends Model
 {
+    use HasHashId;
+
     /**
      * The table associated with the model.
      *
      * @var string
      */
     protected $table = 'inv_m_sub_contractor';
+    protected $appends = ['hash_id'];
+    protected $hidden = ['id'];
 
     /**
      * The attributes that are mass assignable.

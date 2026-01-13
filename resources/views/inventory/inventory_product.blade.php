@@ -268,24 +268,24 @@ $(function() {
         dropdownData = data;
         
         data.coilCenters.forEach(cc => {
-            $('#coil_center_id').append(`<option value="${cc.id}">${cc.code} - ${cc.name}</option>`);
+            $('#coil_center_id').append(`<option value="${cc.hash_id}">${cc.code} - ${cc.name}</option>`);
         });
         
         data.materialSpecs.forEach(ms => {
-            $('#material_spec_id').append(`<option value="${ms.id}">${ms.spec_name}</option>`);
+            $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`);
         });
         
         data.units.forEach(u => {
-            $('#unit_id').append(`<option value="${u.id}">${u.code} - ${u.name}</option>`);
+            $('#unit_id').append(`<option value="${u.hash_id}">${u.code} - ${u.name}</option>`);
         });
         
         data.ranks.forEach(r => {
-            $('#rank_id').append(`<option value="${r.id}">${r.code}</option>`);
+            $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`);
         });
 
         if (data.subContractors) {
             data.subContractors.forEach(sc => {
-                $('#subcont_id').append(`<option value="${sc.id}">${sc.name} (${sc.code})</option>`);
+                $('#subcont_id').append(`<option value="${sc.hash_id}">${sc.name} (${sc.code})</option>`);
             });
         }
     });

@@ -72,8 +72,9 @@ class PICController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(PIC $pIC)
+    public function show($id)
     {
+        $pIC = PIC::findByHashOrFail($id);
         return response()->json($pIC);
     }
 
@@ -82,7 +83,7 @@ class PICController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $pIC = PIC::findOrFail($id);
+        $pIC = PIC::findByHashOrFail($id);
         
         $validated = $request->validate([
             'name' => 'required|string|max:100',
@@ -98,7 +99,7 @@ class PICController extends Controller
      */
     public function destroy($id)
     {
-        $pIC = PIC::findOrFail($id);
+        $pIC = PIC::findByHashOrFail($id);
         $pIC->delete();
         return response()->json(['success' => true, 'message' => 'PIC deleted successfully.']);
     }

@@ -75,16 +75,18 @@ class MaterialSpecController extends Controller
     /**
      * Display the specified resource for editing.
      */
-    public function show(MaterialSpec $materialSpec)
+    public function show($id)
     {
+        $materialSpec = MaterialSpec::findByHashOrFail($id);
         return response()->json($materialSpec);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, MaterialSpec $materialSpec)
+    public function update(Request $request, $id)
     {
+        $materialSpec = MaterialSpec::findByHashOrFail($id);
         $validated = $request->validate([
             'spec_name' => [
                 'required',
@@ -103,8 +105,9 @@ class MaterialSpecController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MaterialSpec $materialSpec)
+    public function destroy($id)
     {
+        $materialSpec = MaterialSpec::findByHashOrFail($id);
         $materialSpec->delete();
         return response()->json(['success' => true, 'message' => 'Material Spec deleted successfully.']);
     }

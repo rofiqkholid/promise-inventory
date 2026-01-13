@@ -27,7 +27,7 @@
                             <select name="product_detail_id" id="product_detail_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" data-placeholder="Select Product..." required>
                                 <option value="">Select Product...</option>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->id }}" data-partno="{{ $product->part_no }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                                    <option value="{{ $product->hash_id }}" data-id="{{ $product->id }}" data-partno="{{ $product->part_no }}" data-hash="{{ $product->hash_id }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -38,7 +38,7 @@
                             <select name="transaction_category_id" id="transaction_category_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                                 <option value="">Select Category...</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" data-effect="{{ $category->effect }}" class="{{ $category->effect == 1 ? 'text-green-600' : 'text-red-600' }}">
+                                    <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}" class="{{ $category->effect == 1 ? 'text-green-600' : 'text-red-600' }}">
                                         {{ $category->name }} ({{ $category->effect == 1 ? 'IN +' : 'OUT -' }})
                                     </option>
                                 @endforeach
@@ -63,7 +63,7 @@
                             <select name="pic_id" id="pic_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" required>
                                 <option value="">Select PIC...</option>
                                 @foreach($pics as $pic)
-                                    <option value="{{ $pic->id }}">{{ $pic->name }}</option>
+                                    <option value="{{ $pic->hash_id }}">{{ $pic->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -240,10 +240,33 @@
                 try {
                     const data = JSON.parse(input);
                     if (data.id) {
-                        // Decode Base64 ID
-                        finalId = atob(data.id);
                         displayPartNo = data.pn || '';
-                        console.log("[SCANNER] Parsed JSON. Decoded ID:", finalId);
+                        
+                        // Check if it's a HashID (alphanumeric) or Base64 (Legacy)
+                        // If it's a hash, we use it directly. If it looks like base64, we try decoding.
+                        // Actually, our robust logic is to check BOTH against the select options.
+                        
+                        // Try finding option by Hash (New Format)
+                        let matchHash = $(`#product_detail_id option[data-hash="${data.id}"]`);
+                        if (matchHash.length > 0) {
+                            finalId = matchHash.val(); // Get integer ID
+                            console.log("[SCANNER] Matched via HashID:", data.id, "->", finalId);
+                        } else {
+                            // Try finding by ID (Legacy Base64?)
+                            // Attempt decode
+                            try {
+                                let decoded = atob(data.id);
+                                // Look for option with data-id (Raw ID)
+                                let matchId = $(`#product_detail_id option[data-id="${decoded}"]`);
+                                if (matchId.length > 0) {
+                                    finalId = matchId.val(); // Get HashID from value
+                                    console.log("[SCANNER] Matched via Legacy Base64:", data.id, "->", finalId);
+                                }
+                            } catch(e) {
+                                // Not base64 or failed
+                                console.log("[SCANNER] Not a valid Base64 ID");
+                            }
+                        }
                     }
                 } catch (e) {
                     console.error("[SCANNER] JSON Parse Error:", e);

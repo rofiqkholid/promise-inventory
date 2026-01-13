@@ -115,13 +115,21 @@ class InventoryProductController extends Controller
 
         $recordsFiltered = $query->count();
 
+        // Instantiate Hashids for InventoryProduct
+        $salt = config('app.key') . InventoryProduct::class;
+        $length = config('hashids.connections.main.length', 10);
+        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
+        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
+
         $data = $query->orderByRaw("$orderCol $orderDir")
             ->skip($start)
             ->take($length)
             ->get()
             ->map(fn($r) => [
-                'id' => $r->id,
-                'product_id' => $r->product_id,
+                'id' => $hashids->encode($r->id),
+                'product_id' => $r->product_id, // This is raw, but maybe not used or needs hashing too? Let's leave for now or hash if it's Products ID.
+                // Wait, product_id is foreign key to Products. If we want full obfuscation, this should be hashed too.
+                // But let's stick to primary ID first. User said "product... hashing".
                 'part_no' => $r->part_no . ($r->revision ? ' - ' . $r->revision : ''),
                 'part_name' => $r->part_name,
                 'customer' => $r->customer_code,
@@ -160,7 +168,12 @@ class InventoryProductController extends Controller
     public function getDropdownData()
     {
         return response()->json([
-            'subContractors' => SubContractor::select('id', 'code', 'name')->get(),
+            'subContractors' => SubContractor::select('id', 'code', 'name')->get(), // These use Models so hash_id is appended automatically if I used 'get()'. 
+            // BUT select('id',...) creates models with ONLY those attrs. appends might fail if they rely on attributes not selected? 
+            // HasHashId depends on 'id', which is selected. Good. 
+            // Appends are applied when toArray/toJson is called.
+            // So these should already have hash_id if Models have trait.
+            // I updated SubContractor and others earlier.
             'coilCenters' => CoilCenter::select('id', 'code', 'name')->get(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::select('id', 'code', 'name')->get(),
@@ -195,9 +208,15 @@ class InventoryProductController extends Controller
         $total = (clone $query)->count();
         $rows = $query->orderBy('p.part_no')->skip($skip)->take($limit)->get();
 
+        // Instantiate Hashids for Products
+        $salt = config('app.key') . \App\Models\Products::class;
+        $length = config('hashids.connections.main.length', 10);
+        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
+        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
+
         return response()->json([
             'results' => $rows->map(fn($p) => [
-                'id' => $p->id,
+                'id' => $hashids->encode($p->id),
                 'text' => "{$p->part_no} - {$p->part_name} ({$p->customer_code})",
             ]),
             'pagination' => ['more' => ($skip + $limit) < $total],
@@ -209,6 +228,36 @@ class InventoryProductController extends Controller
      */
     public function store(Request $request)
     {
+        $data = $request->all();
+
+        // Decode product_id (HashID from getProducts)
+        if (isset($data['product_id']) && !is_numeric($data['product_id'])) {
+            $data['product_id'] = \App\Models\Products::decodeHash($data['product_id']);
+        }
+        // Decode other FKs if they are HashIDs (Safe to check)
+        $fks = ['subcont_id', 'coil_center_id', 'material_spec_id', 'unit_id', 'rank_id'];
+        foreach ($fks as $fk) {
+            if (isset($data[$fk]) && !is_numeric($data[$fk])) {
+                // Determine model based on FK. 
+                // Helper or Switch?
+                // Or just use the Decode logic from the respective model directly.
+                $model = null;
+                switch ($fk) {
+                    case 'subcont_id': $model = SubContractor::class; break;
+                    case 'coil_center_id': $model = CoilCenter::class; break;
+                    case 'material_spec_id': $model = MaterialSpec::class; break;
+                    case 'unit_id': $model = Unit::class; break;
+                    case 'rank_id': $model = Rank::class; break;
+                }
+                if ($model) {
+                    $decoded = $model::decodeHash($data[$fk]);
+                    if ($decoded) $data[$fk] = $decoded;
+                }
+            }
+        }
+        
+        $request->merge($data);
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'subcont_id' => 'nullable|exists:inv_m_sub_contractor,id',
@@ -240,8 +289,10 @@ class InventoryProductController extends Controller
      */
     public function show($id)
     {
-        $inventoryProduct = InventoryProduct::findOrFail($id);
+        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
         $inventoryProduct->load(['product', 'coilCenter', 'materialSpec', 'unit', 'rank']);
+        // Ensure relations also have hash_id appended? Yes, default.
+        // But for product (Products model), I just added it.
         return response()->json($inventoryProduct);
     }
 
@@ -250,7 +301,34 @@ class InventoryProductController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $inventoryProduct = InventoryProduct::findOrFail($id);
+        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
+        
+        $data = $request->all();
+
+        // Decode product_id
+        if (isset($data['product_id']) && !is_numeric($data['product_id'])) {
+            $data['product_id'] = \App\Models\Products::decodeHash($data['product_id']);
+        }
+         // Decode other FKs
+        $fks = ['subcont_id', 'coil_center_id', 'material_spec_id', 'unit_id', 'rank_id'];
+        foreach ($fks as $fk) {
+            if (isset($data[$fk]) && !is_numeric($data[$fk])) {
+                $model = null;
+                switch ($fk) {
+                    case 'subcont_id': $model = SubContractor::class; break;
+                    case 'coil_center_id': $model = CoilCenter::class; break;
+                    case 'material_spec_id': $model = MaterialSpec::class; break;
+                    case 'unit_id': $model = Unit::class; break;
+                    case 'rank_id': $model = Rank::class; break;
+                }
+                if ($model) {
+                    $decoded = $model::decodeHash($data[$fk]);
+                    if ($decoded) $data[$fk] = $decoded;
+                }
+            }
+        }
+        $request->merge($data);
+
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'subcont_id' => 'nullable|exists:inv_m_sub_contractor,id',
@@ -282,7 +360,7 @@ class InventoryProductController extends Controller
      */
     public function destroy($id)
     {
-        $inventoryProduct = InventoryProduct::findOrFail($id);
+        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
         $inventoryProduct->delete();
         return response()->json(['success' => true, 'message' => 'Inventory Product deleted successfully.']);
     }
@@ -292,7 +370,7 @@ class InventoryProductController extends Controller
      */
     public function printLabel($id)
     {
-        $inventoryProduct = InventoryProduct::findOrFail($id);
+        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
         $data = DB::table('inv_t_product_detail as p')
             ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
@@ -321,7 +399,7 @@ class InventoryProductController extends Controller
         
         
         $qrData = json_encode([
-            'id' => base64_encode($inventoryProduct->id),
+            'id' => $inventoryProduct->hash_id,
             'pn' => $data->part_no,
             'rev' => $data->revision,
             'dim' => (float)$data->thickness . 'x' . (float)$data->width . 'x' . (float)$data->length . ($data->length_2 > 0 ? 'x' . (float)$data->length_2 : '') . ($data->pitch > 0 ? 'x' . (float)$data->pitch : '')

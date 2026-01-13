@@ -4,10 +4,11 @@ namespace App\Models\InventoryModel;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasHashId;
 
 class InventoryProduct extends Model
 {
-    use HasFactory;
+    use HasFactory, HasHashId;
 
     /**
      * The table associated with the model.
@@ -15,6 +16,8 @@ class InventoryProduct extends Model
      * @var string
      */
     protected $table = 'inv_t_product_detail';
+    protected $appends = ['hash_id'];
+    protected $hidden = ['id'];
 
     /**
      * The attributes that are mass assignable.

@@ -77,16 +77,18 @@ class TransactionCategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(TransactionCategory $transactionCategory)
+    public function show($id)
     {
+        $transactionCategory = TransactionCategory::findByHashOrFail($id);
         return response()->json($transactionCategory);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, TransactionCategory $transactionCategory)
+    public function update(Request $request, $id)
     {
+        $transactionCategory = TransactionCategory::findByHashOrFail($id);
         $validated = $request->validate([
             'code' => [
                 'required',
@@ -106,8 +108,9 @@ class TransactionCategoryController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(TransactionCategory $transactionCategory)
+    public function destroy($id)
     {
+        $transactionCategory = TransactionCategory::findByHashOrFail($id);
         $transactionCategory->delete();
         return response()->json(['success' => true, 'message' => 'Category deleted successfully.']);
     }

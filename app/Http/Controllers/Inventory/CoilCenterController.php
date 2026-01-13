@@ -79,7 +79,7 @@ class CoilCenterController extends Controller
      */
     public function show($id)
     {
-        $coilCenter = CoilCenter::findOrFail($id);
+        $coilCenter = CoilCenter::findByHashOrFail($id);
         return response()->json($coilCenter);
     }
 
@@ -88,7 +88,7 @@ class CoilCenterController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $coilCenter = CoilCenter::findOrFail($id);
+        $coilCenter = CoilCenter::findByHashOrFail($id);
         $validated = $request->validate([
             'code' => [
                 'required',
@@ -110,7 +110,7 @@ class CoilCenterController extends Controller
      */
     public function destroy($id)
     {
-        $coilCenter = CoilCenter::findOrFail($id);
+        $coilCenter = CoilCenter::findByHashOrFail($id);
         $coilCenter->delete();
         return response()->json(['success' => true, 'message' => 'Coil Center deleted successfully.']);
     }

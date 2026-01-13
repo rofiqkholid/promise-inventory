@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Products extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasHashId;
+
+    protected $appends = ['hash_id'];
+    protected $hidden = ['id'];
 
     protected $fillable = [
         'customer_id',

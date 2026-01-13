@@ -69,16 +69,18 @@ class SubContractorController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(SubContractor $subContractor)
+    public function show($id)
     {
+        $subContractor = SubContractor::findByHashOrFail($id);
         return response()->json($subContractor);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, SubContractor $subContractor)
+    public function update(Request $request, $id)
     {
+        $subContractor = SubContractor::findByHashOrFail($id);
         $validated = $request->validate([
             'code' => 'required|string|max:50|unique:inv_m_sub_contractor,code,' . $subContractor->id,
             'name' => 'nullable|string|max:255',
@@ -93,8 +95,9 @@ class SubContractorController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SubContractor $subContractor)
+    public function destroy($id)
     {
+        $subContractor = SubContractor::findByHashOrFail($id);
         $subContractor->delete();
 
         return response()->json(['success' => true, 'message' => 'Sub Contractor deleted successfully.']);

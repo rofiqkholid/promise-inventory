@@ -75,16 +75,18 @@ class UnitController extends Controller
     /**
      * Display the specified resource for editing.
      */
-    public function show(Unit $unit)
+    public function show($id)
     {
+        $unit = Unit::findByHashOrFail($id);
         return response()->json($unit);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Unit $unit)
+    public function update(Request $request, $id)
     {
+        $unit = Unit::findByHashOrFail($id);
         $validated = $request->validate([
             'code' => [
                 'required',
@@ -103,8 +105,9 @@ class UnitController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Unit $unit)
+    public function destroy($id)
     {
+        $unit = Unit::findByHashOrFail($id);
         $unit->delete();
         return response()->json(['success' => true, 'message' => 'Unit deleted successfully.']);
     }

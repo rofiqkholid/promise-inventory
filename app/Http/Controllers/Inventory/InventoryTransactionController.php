@@ -37,7 +37,13 @@ class InventoryTransactionController extends Controller
 
         // Filter by Product
         if ($request->has('product_detail_id') && !empty($request->product_detail_id)) {
-            $query->where('product_detail_id', $request->product_detail_id);
+            // Decode HashID if provided
+            $prodId = $request->product_detail_id;
+            if (!is_numeric($prodId)) {
+                $decoded = \App\Models\InventoryModel\InventoryProduct::decodeHash($prodId);
+                if ($decoded) $prodId = $decoded;
+            }
+            $query->where('product_detail_id', $prodId);
         }
 
         // Global Search
@@ -74,7 +80,7 @@ class InventoryTransactionController extends Controller
         // Transform for DataTable
         $data = $transactions->map(function($item) {
             return [
-                'id' => $item->id,
+                'id' => $item->hash_id, // Return HashID
                 'transaction_date' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
                 'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision : ''),
                 'product_name' => $item->product->product->part_name ?? '-',
@@ -95,6 +101,22 @@ class InventoryTransactionController extends Controller
 
     public function store(Request $request)
     {
+        // Decode inputs before validation
+        $data = $request->all();
+        
+        if (isset($data['product_detail_id']) && !is_numeric($data['product_detail_id'])) {
+            $data['product_detail_id'] = \App\Models\InventoryModel\InventoryProduct::decodeHash($data['product_detail_id']);
+        }
+        if (isset($data['transaction_category_id']) && !is_numeric($data['transaction_category_id'])) {
+            $data['transaction_category_id'] = \App\Models\InventoryModel\TransactionCategory::decodeHash($data['transaction_category_id']);
+        }
+        if (isset($data['pic_id']) && !is_numeric($data['pic_id'])) {
+            $data['pic_id'] = \App\Models\InventoryModel\PIC::decodeHash($data['pic_id']);
+        }
+
+        // Replace request data
+        $request->merge($data);
+
         $request->validate([
             'product_detail_id' => 'required|exists:inv_t_product_detail,id',
             'transaction_date' => 'required|date',
@@ -137,7 +159,8 @@ class InventoryTransactionController extends Controller
 
     public function getCategories()
     {
-        $categories = TransactionCategory::select('code', 'name', 'effect')->orderBy('name')->get();
+        $categories = TransactionCategory::select('id', 'code', 'name', 'effect')->orderBy('name')->get();
+        // Return encoded IDs for consistency if needed, but select2 options in blade loop usually use View data
         return response()->json($categories);
     }
 }

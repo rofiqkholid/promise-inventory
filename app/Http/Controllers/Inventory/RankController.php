@@ -77,16 +77,18 @@ class RankController extends Controller
     /**
      * Display the specified resource for editing.
      */
-    public function show(Rank $rank)
+    public function show($id)
     {
+        $rank = Rank::findByHashOrFail($id);
         return response()->json($rank);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Rank $rank)
+    public function update(Request $request, $id)
     {
+        $rank = Rank::findByHashOrFail($id);
         $validated = $request->validate([
             'code' => [
                 'required',
@@ -106,8 +108,9 @@ class RankController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Rank $rank)
+    public function destroy($id)
     {
+        $rank = Rank::findByHashOrFail($id);
         $rank->delete();
         return response()->json(['success' => true, 'message' => 'Rank deleted successfully.']);
     }
