@@ -47,6 +47,9 @@ Route::prefix('inventory/master/coil-center')->name('inventory.coilCenter.')->gr
 });
 // Debug Alias (Temporary)
 Route::get('/inventory/cc-debug/{id}', [CoilCenterController::class, 'show']);
+Route::get('/inventory/debug-closure', function() {
+    return 'Closure Route OK';
+});
 
 // Material Spec
 Route::get('/inventory/material-spec/data', [MaterialSpecController::class, 'data'])->name('inventory.materialSpec.data');
