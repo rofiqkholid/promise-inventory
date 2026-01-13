@@ -53,139 +53,158 @@
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
                 
-                <div class="p-4 overflow-y-auto flex-1">
-                <div class="grid gap-4 mb-4 md:grid-cols-3">
-                    {{-- Product Selection --}}
-                    <div class="md:col-span-2">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-600">*</span></label>
-                        <select name="product_id" id="product_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="">Search Product...</option>
-                        </select>
-                        <p id="error-product_id" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-
-                    {{-- Revision --}}
+                <div class="p-4 overflow-y-auto flex-1 space-y-6">
+                    {{-- Product Identity Section --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Revision <span class="text-red-600">*</span></label>
-                        <select name="revision" id="revision" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                            <option value="">Select Revision</option>
-                            <option value="R">R</option>
-                            <option value="R1">R1</option>
-                            <option value="R2">R2</option>
-                            <option value="R3">R3</option>
-                            <option value="RC">RC</option>
-                            <option value="RC1">RC1</option>
-                            <option value="RC2">RC2</option>
-                        </select>
-                        <p id="error-revision" class="text-red-500 text-xs mt-1 hidden"></p>
+                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
+                            <i class="fa-solid fa-tag text-xs"></i>
+                            Product Identity
+                        </h4>
+                        <div class="grid gap-4 md:grid-cols-3">
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-600">*</span></label>
+                                <select name="product_id" id="product_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Search Product...</option>
+                                </select>
+                                <p id="error-product_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Revision <span class="text-red-600">*</span></label>
+                                <select name="revision" id="revision" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                    <option value="">Select Revision</option>
+                                    <option value="R">R</option>
+                                    <option value="R1">R1</option>
+                                    <option value="R2">R2</option>
+                                    <option value="R3">R3</option>
+                                    <option value="RC">RC</option>
+                                    <option value="RC1">RC1</option>
+                                    <option value="RC2">RC2</option>
+                                </select>
+                                <p id="error-revision" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Sub Contractor --}}
+                    {{-- Material & Source Section --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sub Contractor</label>
-                        <select name="subcont_id" id="subcont_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                            <option value="">Select Sub Contractor</option>
-                        </select>
-                        <p id="error-subcont_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
+                            <i class="fa-solid fa-industry text-xs"></i>
+                            Material & Source
+                        </h4>
+                        <div class="grid gap-4 md:grid-cols-3">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material Spec</label>
+                                <select name="material_spec_id" id="material_spec_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                    <option value="">Select Material Spec</option>
+                                </select>
+                                <p id="error-material_spec_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Coil Center</label>
+                                <select name="coil_center_id" id="coil_center_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                    <option value="">Select Coil Center</option>
+                                </select>
+                                <p id="error-coil_center_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sub Contractor</label>
+                                <select name="subcont_id" id="subcont_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                    <option value="">Select Sub Contractor</option>
+                                </select>
+                                <p id="error-subcont_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Coil Center --}}
+                    {{-- Dimensions Section --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Coil Center</label>
-                        <select name="coil_center_id" id="coil_center_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                            <option value="">Select Coil Center</option>
-                        </select>
-                        <p id="error-coil_center_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
+                            <i class="fa-solid fa-ruler-combined text-xs"></i>
+                            Dimensions
+                        </h4>
+                        <div class="grid gap-4 md:grid-cols-3">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thickness</label>
+                                <input type="number" name="thickness" id="thickness" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                <p id="error-thickness" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Width</label>
+                                <input type="number" name="width" id="width" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                <p id="error-width" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length</label>
+                                <input type="number" name="length" id="length" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                <p id="error-length" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div id="length2Container">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length 2 (Trapezoid)</label>
+                                <input type="number" name="length_2" id="length_2" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                <p id="error-length_2" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pitch</label>
+                                <input type="number" name="pitch" id="pitch" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                <p id="error-pitch" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Material Spec --}}
+                    {{-- Logistics Section --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material Spec</label>
-                        <select name="material_spec_id" id="material_spec_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                            <option value="">Select Material Spec</option>
-                        </select>
-                        <p id="error-material_spec_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
+                            <i class="fa-solid fa-truck-ramp-box text-xs"></i>
+                            Unit & Logistics
+                        </h4>
+                        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit</label>
+                                <select name="unit_id" id="unit_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                    <option value="">Select Unit</option>
+                                </select>
+                                <p id="error-unit_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rank</label>
+                                <select name="rank_id" id="rank_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                    <option value="">Select Rank</option>
+                                </select>
+                                <p id="error-rank_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pcs per Unit</label>
+                                <input type="number" name="pcs_per_unit" id="pcs_per_unit" min="1" value="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <p id="error-pcs_per_unit" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit per Car</label>
+                                <input type="number" name="unit_per_car" id="unit_per_car" min="1" value="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <p id="error-unit_per_car" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                {{-- Dimensions --}}
-                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-4 border-b pb-2">Dimensions</h4>
-                <div class="grid gap-4 mb-4 md:grid-cols-4">
+                    {{-- Inventory Control Section --}}
                     <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thickness</label>
-                        <input type="number" name="thickness" id="thickness" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
-                        <p id="error-thickness" class="text-red-500 text-xs mt-1 hidden"></p>
+                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
+                            <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                            Inventory Control & Others
+                        </h4>
+                        <div class="grid gap-4 md:grid-cols-3">
+                            <div>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Min Stock</label>
+                                <input type="number" name="min_stock" id="min_stock" min="0" value="0" readonly class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed" title="Auto-calculated (Pcs per Unit x 90)">
+                                <p id="error-min_stock" class="text-red-500 text-xs mt-1 hidden"></p>
+                                <p class="text-xs text-gray-500 mt-1">Formula: <b>Pcs per Unit x 90</b></p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark</label>
+                                <textarea name="remark" id="remark" rows="1" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white h-[42px] leading-tight" placeholder="Optional notes..."></textarea>
+                                <p id="error-remark" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                        </div>
                     </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Width</label>
-                        <input type="number" name="width" id="width" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
-                        <p id="error-width" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length (0 if Coil)</label>
-                        <input type="number" name="length" id="length" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
-                        <p id="error-length" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length 2 (Trapezoid)</label>
-                        <input type="number" name="length_2" id="length_2" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
-                        <p id="error-length_2" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-                </div>
-
-                {{-- Unit & Logistics --}}
-                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-4 border-b pb-2">Unit & Logistics</h4>
-                <div class="grid gap-4 mb-4 md:grid-cols-4">
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit</label>
-                        <select name="unit_id" id="unit_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                            <option value="">Select Unit</option>
-                        </select>
-                        <p id="error-unit_id" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rank</label>
-                        <select name="rank_id" id="rank_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                            <option value="">Select Rank</option>
-                        </select>
-                        <p id="error-rank_id" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pcs per Unit</label>
-                        <input type="number" name="pcs_per_unit" id="pcs_per_unit" min="1" value="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <p id="error-pcs_per_unit" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit per Car</label>
-                        <input type="number" name="unit_per_car" id="unit_per_car" min="1" value="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <p id="error-unit_per_car" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-                </div>
-
-                {{-- Stock Control & Info --}}
-                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-4 border-b pb-2">Stock Control & Other Info</h4>
-                <div class="grid gap-4 mb-4 md:grid-cols-3">
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Min Stock</label>
-                        <input type="number" name="min_stock" id="min_stock" min="0" value="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <p id="error-min_stock" class="text-red-500 text-xs mt-1 hidden"></p>
-                        <p class="text-xs text-gray-500 mt-1">Minimum stock threshold for alerts</p>
-                    </div>
-                    
-                    {{-- Remark --}}
-                    <div class="md:col-span-2">
-                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark</label>
-                        <textarea name="remark" id="remark" rows="1" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white h-[42px] leading-tight" placeholder="Optional notes..."></textarea>
-                        <p id="error-remark" class="text-red-500 text-xs mt-1 hidden"></p>
-                    </div>
-                </div>
-
                 </div>
 
                 <div class="flex items-center space-x-4 p-4 border-t border-gray-200 dark:border-gray-600">
@@ -315,10 +334,17 @@ $(function() {
             { 
                 data: null, 
                 render: row => {
-                    const t = row.thickness || 0;
-                    const w = row.width || 0;
-                    const l = row.length || 0;
-                    return `${t} x ${w} x ${l}`;
+                    const t = parseFloat(row.thickness) || 0;
+                    const w = parseFloat(row.width) || 0;
+                    const l = parseFloat(row.length) || 0;
+                    const l2 = parseFloat(row.length_2) || 0;
+                    const p = parseFloat(row.pitch) || 0;
+                    
+                    let size = `${t} x ${w} x ${l}`;
+                    if (l2 > 0) size += ` x ${l2}`;
+                    if (p > 0) size += ` x ${p}`;
+                    
+                    return size;
                 }
             },
             { data: 'pcs_per_unit' },
@@ -370,8 +396,12 @@ $(function() {
         $('#formMethod').val('POST');
         $('#productForm').attr('action', '{{ route("inventory.product.store") }}');
         $('#productForm')[0].reset();
+        $('#pcs_per_unit').val(1);
+        $('#min_stock').val(90);
         $('#product_id').val(null).trigger('change');
+        $('#unit_id').val('').trigger('change');
         $('[id^="error-"]').addClass('hidden').text('');
+        toggleLength2();
         showModal(formModal);
     });
 
@@ -429,6 +459,7 @@ $(function() {
             $('#width').val(data.width);
             $('#length').val(data.length);
             $('#length_2').val(data.length_2);
+            $('#pitch').val(data.pitch);
             $('#unit_id').val(data.unit_id).trigger('change');
             $('#rank_id').val(data.rank_id).trigger('change');
             $('#pcs_per_unit').val(data.pcs_per_unit);
@@ -440,7 +471,8 @@ $(function() {
                 const opt = new Option(`${data.product.part_no} - ${data.product.part_name}`, data.product_id, true, true);
                 $('#product_id').append(opt).trigger('change');
             }
-
+            
+            toggleLength2();
             showModal(formModal);
         });
     });
@@ -449,6 +481,27 @@ $(function() {
     $(document).on('click', '.print-button', function() {
         const id = $(this).data('id');
         window.open(`/inventory/product/${id}/print`, '_blank');
+    });
+
+    // Toggle Length 2 visibility
+    function toggleLength2() {
+        const unitId = $('#unit_id').val();
+        if (unitId == '3') {
+            $('#length2Container').show();
+        } else {
+            $('#length2Container').hide();
+            if (!isEditMode) $('#length_2').val('');
+        }
+    }
+
+    $('#unit_id').on('change', function() {
+        toggleLength2();
+    });
+
+    // Auto-calculate min stock
+    $('#pcs_per_unit').on('input change', function() {
+        const pcs = parseInt($(this).val()) || 0;
+        $('#min_stock').val(pcs * 90);
     });
 
     // Delete button
