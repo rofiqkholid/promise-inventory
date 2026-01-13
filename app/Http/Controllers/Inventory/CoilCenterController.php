@@ -79,8 +79,12 @@ class CoilCenterController extends Controller
      */
     public function show($id)
     {
-        $coilCenter = CoilCenter::findOrFail($id);
-        return response()->json($coilCenter);
+        try {
+            $coilCenter = CoilCenter::findOrFail($id);
+            return response()->json($coilCenter);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => true, 'message' => "Coil Center with ID {$id} not found in database."], 404);
+        }
     }
 
     /**

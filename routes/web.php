@@ -39,7 +39,14 @@ Route::get('/inventory/master', function () {
 
 // Coil Center
 Route::get('/inventory/coil-center/data', [CoilCenterController::class, 'data'])->name('inventory.coilCenter.data');
-Route::resource('inventory/master/coil-center', CoilCenterController::class)->names('inventory.coilCenter')->parameters(['coil-center' => 'coilCenter'])->except(['create', 'edit', 'index']);
+Route::prefix('inventory/master/coil-center')->name('inventory.coilCenter.')->group(function () {
+    Route::post('/', [CoilCenterController::class, 'store'])->name('store');
+    Route::get('/{id}', [CoilCenterController::class, 'show'])->name('show');
+    Route::put('/{id}', [CoilCenterController::class, 'update'])->name('update');
+    Route::delete('/{id}', [CoilCenterController::class, 'destroy'])->name('destroy');
+});
+// Debug Alias (Temporary)
+Route::get('/inventory/cc-debug/{id}', [CoilCenterController::class, 'show']);
 
 // Material Spec
 Route::get('/inventory/material-spec/data', [MaterialSpecController::class, 'data'])->name('inventory.materialSpec.data');
