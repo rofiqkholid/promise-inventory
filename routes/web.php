@@ -109,6 +109,8 @@ Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
 #Region Transaction History
 Route::get('/inventory/transaction-history', [TransactionHistoryController::class, 'index'])->name('inventory.transactionHistory');
 Route::get('/inventory/transaction-history/getData', [TransactionHistoryController::class, 'getData'])->name('inventory.transactionHistory.getData');
+Route::get('/inventory/transaction-history/{id}/edit', [TransactionHistoryController::class, 'edit']);
+Route::put('/inventory/transaction-history/{id}', [TransactionHistoryController::class, 'update'])->name('inventory.transactionHistory.update');
 # endregion
 
 #Region Dashboard API
