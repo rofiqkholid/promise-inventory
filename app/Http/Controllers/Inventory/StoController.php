@@ -7,11 +7,11 @@ use App\Models\InventoryModel\StoEvent;
 use App\Models\InventoryModel\StoDetail;
 use App\Models\InventoryModel\InventoryProduct;
 use App\Models\InventoryModel\PIC;
-use App\Models\InventoryModel\InventoryTransaction;
-use App\Models\InventoryModel\TransactionCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Traits\DecodesHashInputs;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\StoExport;
 
 class StoController extends Controller
 {
@@ -71,9 +71,8 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        // Load Details with Product Info
-        // Using DB query for performance if needed, but Eloquent is fine for start
-        $details = StoDetail::with(['product.product']) // Nested: StoDetail -> InvProduct -> MasterProduct
+        // Load Details with Product Info - Fix N+1 query by eager loading
+        $details = StoDetail::with(['product.product', 'product.unit', 'auditor'])
             ->where('event_id', $stoEvent->id)
             ->orderBy('updated_at', 'desc')
             ->get();
@@ -197,6 +196,9 @@ class StoController extends Controller
         $detail->real_qty_input = $request->real_qty;
         $detail->remark = $request->remark;
         
+        // Calculate diff_qty
+        $detail->diff_qty = $request->real_qty - $detail->system_qty_snapshot;
+        
         // Attempt to find PIC based on Auth User (assuming User Name matches PIC Name or similar, or just leave null if not linked)
         // Ideally User model should have 'pic_id' or we search by name.
         $user = auth()->user();
@@ -223,6 +225,12 @@ class StoController extends Controller
              return redirect()->route('inventory.sto.index')->with('error', 'Event is already closed.');
         }
 
+        // Validation: Check if there are any counted items
+        $totalItems = StoDetail::where('event_id', $stoEvent->id)->count();
+        if ($totalItems === 0) {
+            return back()->with('error', 'Cannot finalize empty STO event. Please count at least one item.');
+        }
+
         try {
             DB::beginTransaction();
 
@@ -230,62 +238,151 @@ class StoController extends Controller
             $stoEvent->period_end = now();
             $stoEvent->save();
 
-            // Process Adjustments
+            // Process Adjustments - Directly update stock based on diff_qty
             $details = StoDetail::where('event_id', $stoEvent->id)
                 ->where('is_adjusted', 0) // Only process unadjusted lines
                 ->get(); 
-            
-            // 1. Resolve Categories (Case Insensitive & Flexible)
-            $catIn = TransactionCategory::where('code', 'STO-IN')->orWhere('name', 'like', '%STO%IN%')->first();
-            if (!$catIn) {
-                $catIn = TransactionCategory::create(['code' => 'STO-IN', 'name' => 'STO Adjustment IN', 'effect' => 1]);
-            }
-            
-            $catOut = TransactionCategory::where('code', 'STO-OUT')->orWhere('name', 'like', '%STO%OUT%')->first();
-            if (!$catOut) {
-                $catOut = TransactionCategory::create(['code' => 'STO-OUT', 'name' => 'STO Adjustment OUT', 'effect' => -1]);
-            }
 
             $count = 0;
+            $errors = [];
 
             foreach ($details as $detail) {
-                $diff = $detail->real_qty_input - $detail->system_qty_snapshot;
+                // Use the already calculated diff_qty from the detail record
+                $diff = $detail->diff_qty;
                 
-                if ($diff == 0) continue;
-
-                $detail->is_adjusted = true;
-                $detail->save();
-
-                $categoryId = ($diff > 0) ? $catIn->id : $catOut->id;
-                $absDiff = abs($diff);
-
-                // Create Transaction
-                InventoryTransaction::create([
-                    'transaction_category_id' => $categoryId,
-                    'product_detail_id' => $detail->product_detail_id,
-                    'pic_id' => $detail->auditor_id ?? $stoEvent->pic_id,
-                    'qty' => $absDiff,
-                    'date' => now(),
-                    'remark' => "STO Adj (" . ($detail->remark ? $detail->remark . " - " : "") . "Event: {$stoEvent->code})"
-                ]);
-
-                // Update Master Stock
-                $product = InventoryProduct::find($detail->product_detail_id);
-                if ($diff > 0) {
-                    $product->current_stock_qty += $absDiff;
-                } else {
-                    $product->current_stock_qty -= $absDiff;
+                // Skip if no difference
+                if ($diff == 0) {
+                    $detail->is_adjusted = true;
+                    $detail->save();
+                    continue;
                 }
-                $product->save();
-                $count++;
+
+                // Update Master Stock directly
+                $product = InventoryProduct::find($detail->product_detail_id);
+                if ($product) {
+                    // diff_qty is already signed (positive = add, negative = subtract)
+                    $product->current_stock_qty += $diff;
+                    $product->save();
+                    
+                    // Mark as adjusted
+                    $detail->is_adjusted = true;
+                    $detail->save();
+                    
+                    $count++;
+                } else {
+                    // Log error but continue processing
+                    $errors[] = "Product ID {$detail->product_detail_id} not found";
+                }
             }
 
             DB::commit();
-            return redirect()->route('inventory.sto.index')->with('success', "STO Event finalized. Stock updated for {$count} items.");
+            
+            $message = "STO Event finalized. Stock updated for {$count} items.";
+            if (!empty($errors)) {
+                $message .= " Warnings: " . implode(', ', $errors);
+            }
+            
+            return redirect()->route('inventory.sto.index')->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Error finalizing: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Delete a counted item from STO detail.
+     */
+    public function deleteDetail($id, $detailId)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+        
+        if ($stoEvent->status !== 'OPEN') {
+            return response()->json(['success' => false, 'message' => 'Cannot delete from closed event.'], 403);
+        }
+
+        $detail = StoDetail::findByHashOrFail($detailId);
+        
+        if ($detail->event_id !== $stoEvent->id) {
+            return response()->json(['success' => false, 'message' => 'Detail does not belong to this event.'], 403);
+        }
+
+        $detail->delete();
+
+        return response()->json(['success' => true, 'message' => 'Item deleted successfully.']);
+    }
+
+    /**
+     * Reopen a closed STO event (Admin only).
+     */
+    public function reopen($id)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+        
+        if ($stoEvent->status === 'OPEN') {
+            return back()->with('error', 'Event is already open.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Reverse stock adjustments
+            $details = StoDetail::where('event_id', $stoEvent->id)
+                ->where('is_adjusted', 1)
+                ->get();
+
+            foreach ($details as $detail) {
+                $diff = $detail->diff_qty;
+                
+                if ($diff == 0) {
+                    $detail->is_adjusted = false;
+                    $detail->save();
+                    continue;
+                }
+
+                $product = InventoryProduct::find($detail->product_detail_id);
+                if ($product) {
+                    $oldStock = $product->current_stock_qty;
+                    
+                    // Reverse the adjustment (subtract what was added, add what was subtracted)
+                    $product->current_stock_qty -= $diff;
+                    $product->save();
+                    
+                    $detail->is_adjusted = false;
+                    $detail->save();
+                }
+            }
+
+            // Reopen event
+            $stoEvent->status = 'OPEN';
+            $stoEvent->period_end = null;
+            $stoEvent->save();
+            
+            // Refresh to ensure latest data
+            $stoEvent->refresh();
+
+            DB::commit();
+            
+            return redirect()->route('inventory.sto.show', $stoEvent->hash_id)
+                ->with('success', 'STO Event reopened successfully. Stock adjustments have been reversed.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error reopening: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Export STO event to Excel.
+     */
+    public function exportExcel($id)
+    {
+        // Explicitly call the static method on the model class
+        $stoEvent = \App\Models\InventoryModel\StoEvent::findByHashOrFail($id);
+        $stoEvent->load(['details.product.product', 'details.auditor', 'pic']);
+
+        $filename = "STO_{$stoEvent->code}_" . now()->format('Ymd_His') . ".xlsx";
+        
+        return Excel::download(new StoExport($stoEvent), $filename);
     }
 }

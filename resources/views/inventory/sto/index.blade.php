@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="p-6">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Stock Opname (STO) Events</h1>
+<div class="p-4 md:p-6">
+    <div class="flex justify-between items-center mb-4 md:mb-6">
+        <h1 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Stock Opname (STO) Events</h1>
         @auth
-            <button onclick="document.getElementById('createEventModal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <button onclick="document.getElementById('createEventModal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm whitespace-nowrap">
                 <i class="fa-solid fa-plus"></i> New Event
             </button>
         @endauth
@@ -13,38 +13,39 @@
 
     <!-- Stats or Info could go here -->
 
-    <!-- Events List -->
+    <!-- Events List - Responsive -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
             <thead>
-                <tr class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm uppercase">
-                    <th class="px-6 py-3 border-b dark:border-gray-600">Event Code</th>
-                    <th class="px-6 py-3 border-b dark:border-gray-600">Name</th>
-                    <th class="px-6 py-3 border-b dark:border-gray-600">Period</th>
-                    <th class="px-6 py-3 border-b dark:border-gray-600">Status</th>
-                    <th class="px-6 py-3 border-b dark:border-gray-600">PIC</th>
-                    <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Action</th>
+                <tr class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs uppercase">
+                    <th class="px-4 md:px-6 py-2 md:py-3 border-b dark:border-gray-600">Code</th>
+                    <th class="px-4 md:px-6 py-2 md:py-3 border-b dark:border-gray-600">Name</th>
+                    <th class="px-4 md:px-6 py-2 md:py-3 border-b dark:border-gray-600">Period</th>
+                    <th class="px-4 md:px-6 py-2 md:py-3 border-b dark:border-gray-600">Status</th>
+                    <th class="px-4 md:px-6 py-2 md:py-3 border-b dark:border-gray-600">PIC</th>
+                    <th class="px-4 md:px-6 py-2 md:py-3 border-b dark:border-gray-600 text-center">Action</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
                 @forelse($events as $event)
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <td class="px-6 py-4 font-medium text-gray-800 dark:text-gray-200">{{ $event->code }}</td>
-                    <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $event->name }}</td>
-                    <td class="px-6 py-4 text-gray-600 dark:text-gray-400">
+                    <td class="px-4 md:px-6 py-3 md:py-4 font-medium text-gray-800 dark:text-gray-200">{{ $event->code }}</td>
+                    <td class="px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400">{{ $event->name }}</td>
+                    <td class="px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {{ $event->period_start->format('d M Y') }} 
                         @if($event->period_end && $event->status === 'CLOSED')
                              - {{ $event->period_end->format('d M Y') }}
                         @endif
                     </td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 text-xs rounded-full 
+                    <td class="px-4 md:px-6 py-3 md:py-4">
+                        <span class="px-2 py-1 text-xs rounded-full whitespace-nowrap
                             {{ $event->status === 'OPEN' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
                             {{ $event->status }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-gray-600 dark:text-gray-400">{{ $event->pic->name ?? '-' }}</td>
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400">{{ $event->pic->name ?? '-' }}</td>
+                    <td class="px-4 md:px-6 py-3 md:py-4 text-center">
                         <a href="{{ route('inventory.sto.show', $event->hash_id) }}" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-semibold text-sm">
                             {{ $event->status === 'OPEN' ? 'Manage' : 'View' }}
                         </a>
@@ -52,13 +53,14 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    <td colspan="6" class="px-4 md:px-6 py-6 md:py-8 text-center text-gray-500 dark:text-gray-400">
                         No STO events found. Create one to get started.
                     </td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
+        </div>
         <div class="px-6 py-4 border-t dark:border-gray-600">
             {{ $events->links() }}
         </div>

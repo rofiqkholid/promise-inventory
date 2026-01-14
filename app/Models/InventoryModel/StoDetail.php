@@ -19,6 +19,7 @@ class StoDetail extends Model
         'product_detail_id',
         'system_qty_snapshot',
         'real_qty_input',
+        'diff_qty',
         'auditor_id',
         'remark',
         'is_adjusted'
@@ -27,6 +28,7 @@ class StoDetail extends Model
     protected $casts = [
         'system_qty_snapshot' => 'float',
         'real_qty_input' => 'float',
+        'diff_qty' => 'float',
         'is_adjusted' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

@@ -99,7 +99,10 @@ Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
     Route::get('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'show'])->name('show');
     Route::post('/{id}/scan', [\App\Http\Controllers\Inventory\StoController::class, 'scan'])->name('scan');
     Route::post('/{id}/save-count', [\App\Http\Controllers\Inventory\StoController::class, 'saveCount'])->name('saveCount');
+    Route::delete('/{id}/detail/{detailId}', [\App\Http\Controllers\Inventory\StoController::class, 'deleteDetail'])->name('deleteDetail');
     Route::post('/{id}/finalize', [\App\Http\Controllers\Inventory\StoController::class, 'finalize'])->name('finalize');
+    Route::post('/{id}/reopen', [\App\Http\Controllers\Inventory\StoController::class, 'reopen'])->name('reopen');
+    Route::get('/{id}/export-excel', [\App\Http\Controllers\Inventory\StoController::class, 'exportExcel'])->name('exportExcel');
 });
 #End region
 

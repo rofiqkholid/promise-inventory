@@ -72,8 +72,14 @@
 
                 <a href="{{ route('inventory.stockMonitoring') }}" 
                    class="block py-2 px-3 rounded-md text-sm transition-colors whitespace-nowrap
-                   {{ request()->routeIs('inventory.stockMonitoring*') ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-slate-500 hover:text-slate-800' }}">
+                   {{ request()->routeIs('inventory.stockMonitoring') || request()->routeIs('inventory.stockMonitoring.data') || request()->routeIs('inventory.stockMonitoring.printBalance') ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-slate-500 hover:text-slate-800' }}">
                    Stock Monitoring
+                </a>
+
+                <a href="{{ route('inventory.sto.index') }}" 
+                   class="block py-2 px-3 rounded-md text-sm transition-colors whitespace-nowrap
+                   {{ request()->routeIs('inventory.sto.index') || request()->routeIs('inventory.sto.show') || request()->routeIs('inventory.sto.scan') || request()->routeIs('inventory.sto.saveCount') || request()->routeIs('inventory.sto.finalize') || request()->routeIs('inventory.sto.reopen') || request()->routeIs('inventory.sto.exportExcel') || request()->routeIs('inventory.sto.deleteDetail') ? 'text-blue-600 font-medium bg-blue-50/50' : 'text-slate-500 hover:text-slate-800' }}">
+                   Stock Opname (STO)
                 </a>
 
             </div>
