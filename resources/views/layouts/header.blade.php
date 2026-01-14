@@ -1,5 +1,5 @@
 <!-- Header -->
-<header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30 h-16 flex-shrink-0">
+<header class="bg-white border-b border-slate-200 sticky top-0 z-30 h-16 flex-shrink-0">
     <div class="h-full px-6 flex items-center justify-between">
         
         <!-- Left Side -->
@@ -41,7 +41,7 @@
 
                 <!-- Dropdown -->
                 <div x-show="open" x-transition.origin.top.right
-                    class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-100 py-1" style="display: none;">
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-lg border border-slate-100 py-1" style="display: none;">
                     
                     <div class="px-4 py-3 border-b border-slate-50 md:hidden">
                         <p class="text-sm font-semibold text-slate-800">{{ Auth::user()->name }}</p>

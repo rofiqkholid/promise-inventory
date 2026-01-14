@@ -14,6 +14,8 @@ use App\Http\Controllers\Inventory\PICController;
 use App\Http\Controllers\Inventory\InventoryProductController;
 use App\Http\Controllers\Inventory\InventoryTransactionController;
 use App\Http\Controllers\Inventory\StockMonitoringController;
+use App\Http\Controllers\Inventory\TransactionHistory;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -27,7 +29,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected Routes
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 });
 
@@ -90,3 +92,12 @@ Route::get('/inventory/stock-monitoring', [StockMonitoringController::class, 'in
 Route::get('/inventory/stock-monitoring/data', [StockMonitoringController::class, 'data'])->name('inventory.stockMonitoring.data');
 Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 #End region
+
+#Region Transaction History
+Route::get('/inventory/transaction-history', [TransactionHistory::class, 'index'])->name('inventory.transactionHistory');
+Route::get('/inventory/transaction-history/getData', [TransactionHistory::class, 'getData'])->name('inventory.transactionHistory.getData');
+# endregion
+
+#Region Dashboard API
+Route::post('/api/data/models', [DashboardController::class, 'getModels'])->name('api.data.models');
+Route::post('/api/data/customers', [DashboardController::class, 'getCustomers'])->name('api.data.customers');

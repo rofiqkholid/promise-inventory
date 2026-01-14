@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InventoryModel\InventoryProduct;
-use App\Models\InventoryModel\InventoryTransaction;
 use App\Models\InventoryModel\TransactionCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,11 +16,9 @@ class DashboardController extends Controller
         $selectedStatusBalance = $request->input('status_balance', []);
         $selectedStatusUsage = $request->input('status_usage', []);
 
-        // --- STATS ---
         $inCategories = TransactionCategory::where('effect', 1)->pluck('code');
         $outCategories = TransactionCategory::where('effect', -1)->pluck('code');
 
-        // Total Stock pieces
         $stockQuery = DB::table('inv_t_product_detail as p')
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'prod.model_id')
@@ -33,7 +29,6 @@ class DashboardController extends Controller
 
         $totalStockPcs = $stockQuery->sum(DB::raw('p.current_stock_qty * p.pcs_per_unit'));
 
-        // Filtering for transactions
         $queryTrans = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
@@ -49,9 +44,6 @@ class DashboardController extends Controller
         $materialOutEventSum = (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->sum(DB::raw('t.qty * p.pcs_per_unit'));
         $materialOutTrialSum = (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->sum(DB::raw('t.qty * p.pcs_per_unit'));
 
-        // --- CHART DATA ---
-
-        // 1. Material Stock Status (Grouped by Model+Customer)
         $allProducts = $stockQuery->select(
             'm.name as model_name', 
             'c.code as customer_code', 
@@ -72,14 +64,13 @@ class DashboardController extends Controller
             
             if ($min > 0) {
                 if ($current > $maxStock) $stockDataGrouped[$key]['over']++;
-                elseif ($current < $min) $stockDataGrouped[$key]['critical']++; // Including Danger & Warning
+                elseif ($current < $min) $stockDataGrouped[$key]['critical']++;
                 else $stockDataGrouped[$key]['safe']++;
             } else {
                 $stockDataGrouped[$key]['safe']++;
             }
         }
 
-        // 2. Material Usage Status by Models
         $usageByModel = (clone $queryTrans)
             ->join('models as m', 'm.id', '=', 'prod.model_id')
             ->join('customers as c', 'c.id', '=', 'prod.customer_id')
@@ -91,7 +82,6 @@ class DashboardController extends Controller
             ->groupBy('m.name', 'c.code')
             ->get();
 
-        // 3. Transaction Trendline (Stacked Area)
         $trendlineByCat = (clone $queryTrans)
             ->select(
                 't.transaction_date', 
@@ -102,7 +92,6 @@ class DashboardController extends Controller
             ->orderBy('t.transaction_date')
             ->get();
 
-        // 4. Usage by Makers
         $usageByMaker = (clone $queryTrans)
             ->join('inv_m_coil_center as cc', 'cc.id', '=', 'p.coil_center_id')
             ->whereIn('tc.code', $outCategories)
@@ -110,7 +99,6 @@ class DashboardController extends Controller
             ->groupBy('cc.code')
             ->get();
 
-        // --- TABLES ---
         $balanceStatusTable = (clone $stockQuery)
             ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
             ->limit(10)
@@ -128,7 +116,7 @@ class DashboardController extends Controller
                 return $item;
             });
 
-        $usageStatusTable = (clone $balanceStatusTable); // Using same logic for demo or diff if specialized
+        $usageStatusTable = (clone $balanceStatusTable);
 
         $transactionHistory = (clone $queryTrans)
             ->select('prod.part_no', 'p.revision', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
@@ -136,9 +124,21 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // Dropdowns
-        $models = DB::table('models')->select('id', 'name')->get();
-        $customers = DB::table('customers')->select('id', 'code', 'name')->get();
+        $initialModels = [];
+        if (!empty($selectedModels)) {
+            $initialModels = DB::table('models')
+                ->whereIn('id', $selectedModels)
+                ->select('id', 'name')
+                ->get();
+        }
+
+        $initialCustomers = [];
+        if (!empty($selectedCustomers)) {
+            $initialCustomers = DB::table('customers')
+                ->whereIn('id', $selectedCustomers)
+                ->select('id', 'code', 'name')
+                ->get();
+        }
 
         return view('dashboard', [
             'stats' => [
@@ -161,14 +161,52 @@ class DashboardController extends Controller
                 'history' => $transactionHistory
             ],
             'filters' => [
-                'models' => $models,
-                'customers' => $customers,
+                'initial_models' => $initialModels, 
+                'initial_customers' => $initialCustomers,
                 'selected_models' => $selectedModels,
                 'selected_customers' => $selectedCustomers,
                 'selected_status_balance' => $selectedStatusBalance,
                 'selected_status_usage' => $selectedStatusUsage,
                 'month_year' => $monthYear
             ]
+        ]);
+    }
+
+    public function getModels(Request $request)
+    {
+        $term = $request->term;
+        $query = DB::table('models')->select('id', 'name as text');
+
+        if ($term) {
+            $query->where('name', 'like', '%' . $term . '%');
+        }
+
+        $data = $query->orderBy('name')->simplePaginate(20);
+
+        return response()->json([
+            'results' => $data->items(),
+            'pagination' => ['more' => $data->hasMorePages()]
+        ]);
+    }
+
+    public function getCustomers(Request $request)
+    {
+        $term = $request->term;
+        $query = DB::table('customers')
+            ->select('id', DB::raw("CONCAT(code, ' - ', name) as text"));
+
+        if ($term) {
+            $query->where(function($q) use ($term) {
+                $q->where('code', 'like', '%' . $term . '%')
+                  ->orWhere('name', 'like', '%' . $term . '%');
+            });
+        }
+
+        $data = $query->orderBy('code')->simplePaginate(20);
+
+        return response()->json([
+            'results' => $data->items(),
+            'pagination' => ['more' => $data->hasMorePages()]
         ]);
     }
 }

@@ -80,13 +80,13 @@
         </div>
 
         {{-- TASKS --}}
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative hover:bg-slate-50 hover:text-slate-900"
+        <a href="{{ route('inventory.transactionHistory') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative hover:bg-slate-50 hover:text-slate-900"
             :class="!sidebarExpanded ? 'justify-center' : ''">
             <i class="fa-solid fa-list-check w-6 text-center text-lg text-slate-400 group-hover:text-slate-600"></i>
-            <span x-show="sidebarExpanded" class="text-sm">Tasks</span>
+            <span x-show="sidebarExpanded" class="text-sm">Transaction History</span>
              {{-- Tooltip for Minimized --}}
              <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Tasks
+                Transaction History
             </div>
         </a>
 
