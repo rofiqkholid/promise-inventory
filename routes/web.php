@@ -91,6 +91,16 @@ Route::get('/inventory/transaction/categories', [InventoryTransactionController:
 Route::get('/inventory/stock-monitoring', [StockMonitoringController::class, 'index'])->name('inventory.stockMonitoring');
 Route::get('/inventory/stock-monitoring/data', [StockMonitoringController::class, 'data'])->name('inventory.stockMonitoring.data');
 Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
+
+// Stock Opname (STO)
+Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Inventory\StoController::class, 'index'])->name('index');
+    Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
+    Route::get('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'show'])->name('show');
+    Route::post('/{id}/scan', [\App\Http\Controllers\Inventory\StoController::class, 'scan'])->name('scan');
+    Route::post('/{id}/save-count', [\App\Http\Controllers\Inventory\StoController::class, 'saveCount'])->name('saveCount');
+    Route::post('/{id}/finalize', [\App\Http\Controllers\Inventory\StoController::class, 'finalize'])->name('finalize');
+});
 #End region
 
 #Region Transaction History
