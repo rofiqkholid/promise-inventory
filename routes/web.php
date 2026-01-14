@@ -14,7 +14,7 @@ use App\Http\Controllers\Inventory\PICController;
 use App\Http\Controllers\Inventory\InventoryProductController;
 use App\Http\Controllers\Inventory\InventoryTransactionController;
 use App\Http\Controllers\Inventory\StockMonitoringController;
-use App\Http\Controllers\Inventory\TransactionHistory;
+use App\Http\Controllers\Inventory\TransactionHistoryController;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
@@ -104,10 +104,11 @@ Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
 #End region
 
 #Region Transaction History
-Route::get('/inventory/transaction-history', [TransactionHistory::class, 'index'])->name('inventory.transactionHistory');
-Route::get('/inventory/transaction-history/getData', [TransactionHistory::class, 'getData'])->name('inventory.transactionHistory.getData');
+Route::get('/inventory/transaction-history', [TransactionHistoryController::class, 'index'])->name('inventory.transactionHistory');
+Route::get('/inventory/transaction-history/getData', [TransactionHistoryController::class, 'getData'])->name('inventory.transactionHistory.getData');
 # endregion
 
 #Region Dashboard API
 Route::post('/api/data/models', [DashboardController::class, 'getModels'])->name('api.data.models');
 Route::post('/api/data/customers', [DashboardController::class, 'getCustomers'])->name('api.data.customers');
+Route::get('/api/data/statuses/{type}', [DashboardController::class, 'getStatuses'])->name('api.data.statuses');

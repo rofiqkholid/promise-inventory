@@ -45,9 +45,9 @@ class DashboardController extends Controller
         $materialOutTrialSum = (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->sum(DB::raw('t.qty * p.pcs_per_unit'));
 
         $allProducts = $stockQuery->select(
-            'm.name as model_name', 
-            'c.code as customer_code', 
-            'p.current_stock_qty', 
+            'm.name as model_name',
+            'c.code as customer_code',
+            'p.current_stock_qty',
             'p.min_stock'
         )->get();
 
@@ -57,11 +57,11 @@ class DashboardController extends Controller
             if (!isset($stockDataGrouped[$key])) {
                 $stockDataGrouped[$key] = ['critical' => 0, 'over' => 0, 'safe' => 0];
             }
-            
+
             $current = floatval($prd->current_stock_qty);
             $min = floatval($prd->min_stock);
             $maxStock = $min * 3;
-            
+
             if ($min > 0) {
                 if ($current > $maxStock) $stockDataGrouped[$key]['over']++;
                 elseif ($current < $min) $stockDataGrouped[$key]['critical']++;
@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ->join('customers as c', 'c.id', '=', 'prod.customer_id')
             ->whereIn('tc.code', $outCategories)
             ->select(
-                DB::raw("m.name + ' ' + c.code as label"), 
+                DB::raw("m.name + ' ' + c.code as label"),
                 DB::raw('SUM(t.qty * p.pcs_per_unit) as total')
             )
             ->groupBy('m.name', 'c.code')
@@ -84,7 +84,7 @@ class DashboardController extends Controller
 
         $trendlineByCat = (clone $queryTrans)
             ->select(
-                't.transaction_date', 
+                't.transaction_date',
                 'tc.code as category',
                 DB::raw('COUNT(*) as total')
             )
@@ -103,7 +103,7 @@ class DashboardController extends Controller
             ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
             ->limit(10)
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 $current = floatval($item->current_stock_qty);
                 $min = floatval($item->min_stock);
                 if ($min > 0) {
@@ -161,7 +161,7 @@ class DashboardController extends Controller
                 'history' => $transactionHistory
             ],
             'filters' => [
-                'initial_models' => $initialModels, 
+                'initial_models' => $initialModels,
                 'initial_customers' => $initialCustomers,
                 'selected_models' => $selectedModels,
                 'selected_customers' => $selectedCustomers,
@@ -193,12 +193,12 @@ class DashboardController extends Controller
     {
         $term = $request->term;
         $query = DB::table('customers')
-            ->select('id', DB::raw("CONCAT(code, ' - ', name) as text"));
+            ->select('id', 'code as text');
 
         if ($term) {
-            $query->where(function($q) use ($term) {
+            $query->where(function ($q) use ($term) {
                 $q->where('code', 'like', '%' . $term . '%')
-                  ->orWhere('name', 'like', '%' . $term . '%');
+                    ->orWhere('name', 'like', '%' . $term . '%');
             });
         }
 
@@ -208,5 +208,21 @@ class DashboardController extends Controller
             'results' => $data->items(),
             'pagination' => ['more' => $data->hasMorePages()]
         ]);
+    }
+    public function getStatuses(Request $request, $type)
+    {
+        $statuses = [];
+
+        if ($type === 'balance') {
+            $statuses = ['Critical', 'Over', 'Safe'];
+        } elseif ($type === 'usage') {
+            $statuses = ['Over', 'Safe'];
+        }
+
+        $formatted = array_map(function ($item) {
+            return ['id' => $item, 'text' => $item];
+        }, $statuses);
+
+        return response()->json(['results' => $formatted]);
     }
 }

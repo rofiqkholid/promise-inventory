@@ -3,7 +3,7 @@
 @section('title', 'Inventory Dashboard')
 
 @section('content')
-<div class="dashboard-container min-h-screen">
+<div class="dashboard-container min-h-screen flex flex-col">
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
         @foreach([
         ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50'],
@@ -13,7 +13,7 @@
         ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50'],
         ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50'],
         ] as $stat)
-        <div class="stat-card flex flex-col justify-between h-full p-3 bg-white rounded-xl border border-gray-200 duration-200">
+        <div class="stat-card flex flex-col justify-between h-full p-3 bg-white rounded-sm border border-gray-200 duration-200">
             <div class="flex gap-2">
                 <div class="{{ $stat['bg'] }} {{ $stat['color'] }} w-12 rounded-lg flex items-center justify-center flex-shrink-0">
                     <i class="fa-solid {{ $stat['icon'] }} text-xl"></i>
@@ -27,7 +27,7 @@
         @endforeach
     </div>
 
-    <div class="filter-card bg-white rounded-xl border border-gray-200 p-4">
+    <div class="filter-card bg-white rounded-sm border border-gray-200 p-4">
         <div class="section-title flex items-center gap-2 mb-6 text-slate-800">
             <span class="font-bold text-md tracking-wider">Filter Data</span>
         </div>
@@ -36,48 +36,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 tracking-wide">Period</label>
-                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="modern-input w-full border-gray-300 rounded-lg h-[42px]">
+                        <input
+                            type="month"
+                            id="month_picker"
+                            name="month_year"
+                            value="{{ $filters['month_year'] }}"
+                            class="modern-input w-full border border-gray-300 rounded-lg h-[38px] px-3 text-gray-600 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                     </div>
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 tracking-wide">Model</label>
-                        <select id="filterModel" class="w-full" name="model[]" multiple>
-                            @foreach($filters['initial_models'] as $m)
-                            <option value="{{ $m->id }}" selected>{{ $m->name }}</option>
-                            @endforeach
-                        </select>
+                        <select id="filterModel" class="w-full"></select>
                     </div>
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 tracking-wide">Customer</label>
-                        <select id="filterCustomer" class="w-full" name="customer[]" multiple>
-                            @foreach($filters['initial_customers'] as $c)
-                            <option value="{{ $c->id }}" selected>{{ $c->code }} - {{ $c->name }}</option>
-                            @endforeach
-                        </select>
+                        <select id="filterCustomer" class="w-full"></select>
                     </div>
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 tracking-wide">Balance Status</label>
-                        <select id="filterBalance" class="w-full" name="status_balance[]" multiple>
-                            <option value="Critical" {{ in_array('Critical', $filters['selected_status_balance']) ? 'selected' : '' }}>Critical</option>
-                            <option value="Over" {{ in_array('Over', $filters['selected_status_balance']) ? 'selected' : '' }}>Over</option>
-                            <option value="Safe" {{ in_array('Safe', $filters['selected_status_balance']) ? 'selected' : '' }}>Safe</option>
-                        </select>
+                        <select id="filterBalance" class="w-full"></select>
                     </div>
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 tracking-wide">Usage Status</label>
-                        <select id="filterUsage" class="w-full" name="status_usage[]" multiple>
-                            <option value="Over" {{ in_array('Over', $filters['selected_status_usage']) ? 'selected' : '' }}>Over</option>
-                            <option value="Safe" {{ in_array('Safe', $filters['selected_status_usage']) ? 'selected' : '' }}>Safe</option>
-                        </select>
+                        <select id="filterUsage" class="w-full"></select>
                     </div>
                 </div>
 
                 <div class="flex gap-2 pt-2 xl:pt-0">
-                    <button type="button" id="btnReset" class="btn-modern-reset flex items-center justify-center gap-2 h-[38px] px-4 w-full md:w-auto border border-gray-300 rounded-lg hover:bg-gray-50">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        <span class="hidden md:inline">Reset</span>
+                    <button type="button" id="btnReset" class="btn-modern-reset flex items-center justify-center gap-2 h-[38px] px-4 w-full md:w-auto border border-gray-300 rounded-sm hover:bg-gray-50">
+                        <span class="text-sm text-gray-600">Reset</span>
                     </button>
-                    <button type="button" id="btnApply" class="btn-modern-apply flex items-center justify-center gap-2 h-[38px] px-6 w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white border-0 rounded-lg">
-                        <i class="fa-solid fa-filter"></i> Apply
+                    <button type="button" id="btnApply" class="btn-modern-apply flex items-center justify-center gap-2 h-[38px] px-6 w-full md:w-auto bg-blue-100 hover:bg-blue-200 text-white border border-blue-400 rounded-sm">
+                        <span class="text-sm text-blue-600">Apply</span>
                     </button>
                 </div>
             </div>
@@ -87,41 +76,37 @@
     <div class="grid grid-cols-12 gap-3 mt-3">
         <div class="col-span-12 xl:col-span-8 flex flex-col gap-3">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="chart-card bg-white p-5 rounded-xl border border-gray-200">
+                <div class="chart-card bg-white p-5 rounded-sm border border-gray-200">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm text-slate-700 tracking-wider">Material Stock Status</span>
                         </div>
-                        <button class="text-slate-400 hover:text-blue-500"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
                     <div class="h-64"><canvas id="stockStatusChart"></canvas></div>
                 </div>
-                <div class="chart-card bg-white p-5 rounded-xl border border-gray-200">
+                <div class="chart-card bg-white p-5 rounded-sm border border-gray-200">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm text-slate-700 tracking-wider">Usage by Models</span>
                         </div>
-                        <button class="text-slate-400 hover:text-amber-500"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
                     <div class="h-64"><canvas id="usageModelChart"></canvas></div>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="chart-card bg-white p-5 rounded-xl border border-gray-200">
+                <div class="chart-card bg-white p-5 rounded-sm border border-gray-200">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm text-slate-700 tracking-wider">Transaction Trend</span>
                         </div>
-                        <button class="text-slate-400 hover:text-emerald-500"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
                     <div class="h-64"><canvas id="trendlineChart"></canvas></div>
                 </div>
-                <div class="chart-card bg-white p-5 rounded-xl border border-gray-200">
+                <div class="chart-card bg-white p-5 rounded-sm border border-gray-200">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm text-slate-700 tracking-wider">Usage by Makers</span>
                         </div>
-                        <button class="text-slate-400 hover:text-indigo-500"><i class="fa-solid fa-ellipsis"></i></button>
                     </div>
                     <div class="h-64"><canvas id="makerChart"></canvas></div>
                 </div>
@@ -129,7 +114,7 @@
         </div>
 
         <div class="col-span-12 xl:col-span-4 flex flex-col gap-3">
-            <div class="table-container bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-full max-h-[400px]">
+            <div class="table-container bg-white rounded-sm border border-gray-200 overflow-hidden flex flex-col h-full max-h-[400px]">
                 <div class="p-4 border-b border-gray-50 bg-white sticky top-0 z-10 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center">
@@ -174,7 +159,7 @@
                 </div>
             </div>
 
-            <div class="table-container bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-full max-h-[400px]">
+            <div class="table-container bg-white rounded-sm border border-gray-200 overflow-hidden flex flex-col h-full max-h-[400px]">
                 <div class="p-4 border-b border-gray-50 bg-white sticky top-0 z-10 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
@@ -216,7 +201,7 @@
                 </div>
             </div>
 
-            <div class="table-container bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col h-full max-h-[400px]">
+            <div class="table-container bg-white rounded-sm border border-gray-200 overflow-hidden flex flex-col h-full max-h-[400px]">
                 <div class="p-4 border-b border-gray-50 bg-white sticky top-0 z-10 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
@@ -352,7 +337,7 @@
             dropdownParent: $('#filterModel').parent(),
             width: '100%',
             placeholder: 'Select Model...',
-            allowClear: true,
+            allowClear: false,
             ajax: {
                 url: '{{ route("api.data.models") }}',
                 method: 'POST',
@@ -379,7 +364,7 @@
             dropdownParent: $('#filterCustomer').parent(),
             width: '100%',
             placeholder: 'Select Customer...',
-            allowClear: true,
+            allowClear: false,
             ajax: {
                 url: '{{ route("api.data.customers") }}',
                 method: 'POST',
@@ -403,15 +388,36 @@
         });
 
         $('#filterBalance').select2({
+            dropdownParent: $('#filterBalance').parent(),
+            width: '100%',
             placeholder: 'Select Balance Status',
-            allowClear: true,
-            width: '100%'
+            allowClear: false,
+            ajax: {
+                url: '{{ route("api.data.statuses", ["type" => "balance"]) }}',
+                method: 'GET',
+                dataType: 'json',
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                }
+            }
         });
-
         $('#filterUsage').select2({
+            dropdownParent: $('#filterUsage').parent(),
+            width: '100%',
             placeholder: 'Select Usage Status',
-            allowClear: true,
-            width: '100%'
+            allowClear: false,
+            ajax: {
+                url: '{{ route("api.data.statuses", ["type" => "usage"]) }}',
+                method: 'GET',
+                dataType: 'json',
+                processResults: function(data) {
+                    return {
+                        results: data.results
+                    };
+                }
+            }
         });
 
         $('#btnApply').on('click', () => window.location.href = window.location.pathname + "?" + $('#filterForm').serialize());

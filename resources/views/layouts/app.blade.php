@@ -28,6 +28,7 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -86,14 +87,15 @@
 
             @include('layouts.header')
 
-            <main class="bg-gray-100 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth">
+            <main class="bg-gray-100 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth flex flex-col">
                 @include('components.toast')
-                @yield('content')
-            </main>
 
-            <footer class="bg-white border-t border-slate-200 p-4 text-center text-xs text-slate-500">
-                &copy; {{ date('Y') }} Promise Inventory. All rights reserved.
-            </footer>
+                <div class="flex-grow">
+                    @yield('content')
+                </div>
+
+                @include('layouts.footer')
+            </main>
         </div>
 
         <div x-show="sidebarMobileOpen" @click="sidebarMobileOpen = false" x-transition.opacity
@@ -116,9 +118,7 @@
     <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @yield('js')

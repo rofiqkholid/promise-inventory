@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryModel\InventoryTransaction;
 use Illuminate\Http\Request;
 
-class TransactionHistory extends Controller
+class TransactionHistoryController extends Controller
 {
  public function index()
  {
