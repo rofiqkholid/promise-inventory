@@ -11,6 +11,73 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400"></p>
         </div>
     </div>
+    {{-- FILTER BAR (REFINED) --}}
+    <div class="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div class="px-5 py-4 flex items-center gap-4">
+
+            {{-- ICON --}}
+            <div class="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-900/30">
+                <i class="fa-solid fa-filter text-sm"></i>
+            </div>
+
+            {{-- DATE RANGE --}}
+            <div class="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                <i class="fa-regular fa-calendar text-gray-400 text-sm"></i>
+                <input type="text"
+                    id="filter_date_range"
+                    readonly
+                    class="bg-transparent text-sm focus:outline-none w-[190px] dark:text-white"
+                    placeholder="This Month">
+            </div>
+
+            {{-- PRODUCT --}}
+            <select id="filter_product" class="select2-filter min-w-[160px]">
+    <option value="">All Product</option>
+    @foreach($products as $product)
+        <option value="{{ $product->hash_id }}">
+            {{ $product->part_no }} - {{ $product->part_name }}
+        </option>
+    @endforeach
+</select>
+
+
+            {{-- CATEGORY --}}
+           <select id="filter_category" class="select2-filter min-w-[140px]">
+    <option value="">All Category</option>
+    @foreach($categories as $category)
+        <option value="{{ $category->hash_id }}">
+            {{ $category->name }}
+        </option>
+    @endforeach
+</select>
+
+
+            {{-- PIC --}}
+            <select id="filter_pic" class="select2-filter min-w-[140px]">
+    <option value="">All PIC</option>
+    @foreach($pics as $pic)
+        <option value="{{ $pic->hash_id }}">
+            {{ $pic->name }}
+        </option>
+    @endforeach
+</select>
+
+
+            {{-- SPACER --}}
+            <div class="flex-1"></div>
+
+            {{-- RESET --}}
+            <button id="reset_filter"
+                class="inline-flex items-center gap-2 text-sm font-medium
+                   text-gray-600 hover:text-red-600
+                   dark:text-gray-300 dark:hover:text-red-400">
+                <i class="fa-solid fa-rotate-left text-xs"></i>
+                Reset
+            </button>
+
+        </div>
+    </div>
+
     <div class="lg:col-span-2">
         <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-xl overflow-hidden h-full flex flex-col border border-slate-200 dark:border-slate-700">
             <div class="p-4 md:p-6 overflow-x-auto flex-1 bg-white dark:bg-gray-800">
@@ -118,146 +185,176 @@
     </div>
     @endsection
     @push('scripts')
-    <script>
-        function editTransaction(id) {
-    $('#editTransactionForm')[0].reset();
-    
-    $.ajax({
-        url: "{{ url('inventory/transaction-history') }}/" + id + "/edit",
-        type: 'GET',
-        success: function(response) {
-            // 1. Isi input teks biasa
-            $('#edit_id').val(response.id);
-            $('#edit_qty').val(response.qty);
-            $('#edit_transaction_date').val(response.transaction_date);
-            $('#edit_remark').val(response.remark);
+   <script>
+    let table;
+    let dateRangePicker;
 
-            // 2. Tampilkan Modal (Wajib sebelum inisialisasi Select2)
-            $('#editTransactionModal').removeClass('hidden').addClass('flex');
+    $(document).ready(function () {
 
-            // 3. Inisialisasi Select2 khusus untuk modal
-            $('.select2-modal').select2({
-                dropdownParent: $('#editTransactionModal'),
-                width: '100%'
-            });
+        /* =========================
+         * INIT SELECT2
+         * ========================= */
+        $('.select2-filter').select2({
+            width: '100%',
+            placeholder: 'Select',
+            allowClear: true
+        });
 
-            // 4. Set nilai dropdown dengan jeda sedikit (untuk memastikan Select2 siap)
-            setTimeout(function() {
-                $('#edit_product_detail_id').val(response.product_detail_id).trigger('change');
-                $('#edit_transaction_category_id').val(response.transaction_category_id).trigger('change');
-                $('#edit_pic_id').val(response.pic_id).trigger('change');
-            }, 100);
-        }
-    });
-}
+        /* =========================
+         * DATE RANGE DEFAULT (THIS MONTH)
+         * ========================= */
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
 
-        function closeModal() {
-            $('#editTransactionModal').addClass('hidden').removeClass('flex');
-        }
-        $(document).ready(function() {
-            $('#TransactionHistoryTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ route('inventory.transactionHistory.getData') }}",
-                    type: 'GET',
-                    data: function(d) {
-                        d.product_detail_id = $('#filter_product').val();
+        const endOfMonth = new Date(
+            startOfMonth.getFullYear(),
+            startOfMonth.getMonth() + 1,
+            0
+        );
+
+        /* =========================
+         * INIT DATATABLE (SINGLE INIT)
+         * ========================= */
+        table = $('#TransactionHistoryTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('inventory.transactionHistory.getData') }}",
+                type: 'GET',
+                data: function (d) {
+                    d.product_detail_id = $('#filter_product').val();
+                    d.transaction_category_id = $('#filter_category').val();
+                    d.pic_id = $('#filter_pic').val();
+                    d.date_range = $('#filter_date_range').val();
+                }
+            },
+            columnDefs: [{
+                targets: '_all',
+                className: 'text-center'
+            }],
+            columns: [
+                { data: 'transaction_date', name: 'transaction_date' },
+                {
+                    data: null,
+                    name: 'product',
+                    render: function (data, type, row) {
+                        return `
+                            <div class="font-medium text-slate-900 dark:text-white">
+                                ${row.part_no}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                ${row.product_name}
+                            </div>
+                        `;
                     }
                 },
-                columnDefs: [{
-                    targets: '_all',
-                    className: 'text-center'
-                }],
-                columns: [{
-                        data: 'transaction_date',
-                        name: 'transaction_date'
-                    },
-                    {
-                        data: null,
-                        name: 'product_name',
-                        render: function(data, type, row) {
-                            return `<div class="font-medium text-slate-900 dark:text-white">${row.part_no}</div>
-                                <div class="text-xs text-gray-500">${row.product_name}</div>`;
-                        }
-                    },
-                    {
-                        data: 'category',
-                        name: 'category'
-                    },
-                    {
-                        data: 'qty',
-                        name: 'qty'
-                    },
-                    {
-                        data: 'pic_name',
-                        name: 'pic_name'
-                    },
-                    {
-                        data: 'remark',
-                        name: 'remark',
-                        render: function(data) {
-                            return data ? `<span class="italic text-gray-400 text-xs">${data}</span>` : '-';
-                        }
-                    },
-                    {
-                        data: null,
-                        name: 'action',
-                        searchable: false,
-                        orderable: false,
-                        render: function(data, type, row) {
-                            // Kita simpan hashed ID di atribut data-id
-                            return `
-                                        <div class="flex justify-center">
-                                            <button type="button" data-id="${row.id}" class="edit-transaction-btn text-blue-600 hover:text-blue-900 p-2">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        </div>
-                                    `;
-                        }
+                { data: 'category', name: 'category' },
+                { data: 'qty', name: 'qty' },
+                { data: 'pic_name', name: 'pic_name' },
+                {
+                    data: 'remark',
+                    name: 'remark',
+                    render: function (data) {
+                        return data
+                            ? `<span class="italic text-gray-400 text-xs">${data}</span>`
+                            : '-';
                     }
-                ],
-
-                language: {
-                    processing: '<div class="p-4 text-blue-500">Loading data...</div>',
                 },
-                order: [
-                    [0, 'desc']
-                ]
-            });
-            $('#filter_product').on('change', function() {
-                $('#TransactionHistoryTable').DataTable().ajax.reload();
-            });
-            // 2. Di dalam $(document).ready(function() { ... }), tambahkan ini:
-            $('#TransactionHistoryTable').on('click', '.edit-transaction-btn', function() {
-                let hashedId = $(this).data('id'); // Mengambil string hash
-                editTransaction(hashedId);
-            });
-            // HANDLE SUBMIT FORM UPDATE
-            $('#editTransactionForm').on('submit', function(e) {
-                e.preventDefault();
-
-                const id = $('#edit_id').val(); // Ini adalah Hashed ID
-                const formData = $(this).serialize();
-
-                $.ajax({
-                    url: `{{ url('inventory/transaction-history') }}/${id}`,
-                    type: 'POST', // Gunakan PUT untuk update
-                    data: formData,
-                    success: function(response) {
-                        if (response.success) {
-                            alert(response.message);
-                            closeModal();
-                            $('#TransactionHistoryTable').DataTable().ajax.reload(); // Refresh tabel
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMsg = xhr.responseJSON?.message || 'Update failed';
-                        alert('Error: ' + errorMsg);
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, row) {
+                        return `
+                            <button type="button"
+                                data-id="${row.id}"
+                                class="edit-transaction-btn text-blue-600 hover:text-blue-900 p-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        `;
                     }
-                });
+                }
+            ],
+            order: [[0, 'desc']],
+            language: {
+                processing: '<div class="p-4 text-blue-500">Loading data...</div>',
+            }
+        });
+
+        /* =========================
+         * INIT LITEPICKER (AFTER TABLE)
+         * ========================= */
+        dateRangePicker = new Litepicker({
+            element: document.getElementById('filter_date_range'),
+            singleMode: false,
+            autoApply: true,
+            format: 'YYYY-MM-DD',
+            delimiter: ' - ',
+            startDate: startOfMonth,
+            endDate: endOfMonth,
+            dropdowns: {
+                months: true,
+                years: true
+            },
+            setup: (picker) => {
+                picker.on('selected', () => table.ajax.reload());
+                picker.on('clear', () => table.ajax.reload());
+            }
+        });
+
+        /* =========================
+         * FILTER EVENTS (AUTO APPLY)
+         * ========================= */
+        $('#filter_product, #filter_category, #filter_pic').on('change', function () {
+            table.ajax.reload();
+        });
+
+        /* =========================
+         * RESET FILTER
+         * ========================= */
+        $('#reset_filter').on('click', function () {
+            $('#filter_product').val('').trigger('change');
+            $('#filter_category').val('').trigger('change');
+            $('#filter_pic').val('').trigger('change');
+
+            dateRangePicker.setDateRange(startOfMonth, endOfMonth);
+
+            table.ajax.reload();
+        });
+
+        /* =========================
+         * EDIT BUTTON
+         * ========================= */
+        $('#TransactionHistoryTable').on('click', '.edit-transaction-btn', function () {
+            editTransaction($(this).data('id'));
+        });
+
+        /* =========================
+         * SUBMIT EDIT FORM
+         * ========================= */
+        $('#editTransactionForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const id = $('#edit_id').val();
+
+            $.ajax({
+                url: `{{ url('inventory/transaction-history') }}/${id}`,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        closeModal();
+                        table.ajax.reload();
+                    }
+                },
+                error: function (xhr) {
+                    alert(xhr.responseJSON?.message || 'Update failed');
+                }
             });
         });
-        // Fungsi untuk membuka modal dan mengambil data
-    </script>
+
+    });
+</script>
+
     @endpush
