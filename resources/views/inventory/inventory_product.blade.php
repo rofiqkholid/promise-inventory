@@ -18,7 +18,7 @@
     </div>
 
     <x-table id="inventoryProductTable">
-        <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+        <thead>
             <tr>
                 <th scope="col" class="px-6 py-3 w-16">No</th>
                 <th scope="col" class="px-6 py-3">Part No</th>

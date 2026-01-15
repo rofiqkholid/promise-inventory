@@ -1,7 +1,8 @@
-<div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <div class="p-3 md:p-4 bg-white dark:bg-gray-800">
-        <table {{ $attributes->merge(['class' => 'inline-table w-full text-sm text-left text-gray-500 dark:text-gray-400']) }}>
+<div class="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden relative">
+    <div class="p-4 bg-white dark:bg-gray-800">
+        <table {{ $attributes->merge(['class' => 'custom-table w-full text-left border-collapse']) }}>
             {{ $slot }}
         </table>
     </div>
 </div>
+

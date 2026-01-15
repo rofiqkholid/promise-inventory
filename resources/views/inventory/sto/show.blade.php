@@ -84,7 +84,7 @@
 
     @if($stoEvent->status === 'OPEN')
     <!-- SCANNER SECTION - Responsive -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
         <label class="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             <i class="fa-solid fa-barcode"></i> Select or Scan Product
         </label>
@@ -106,7 +106,7 @@
         </div>
 
         <!-- Clean Result / Input Form -->
-        <div class="border-t dark:border-gray-700 pt-5 hidden" id="scanResultArea">
+        <div class="mt-6 hidden" id="scanResultArea">
              <div class="flex flex-col md:flex-row items-center gap-4 text-sm">
                  <!-- Product Info - Simplified -->
                  <div class="flex-1 w-full space-y-1">
@@ -123,15 +123,15 @@
                  <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
                     <div class="flex w-full sm:w-32">
                         <input type="number" id="realQtyInput" step="any" 
-                               class="w-full rounded border-gray-300 focus:border-blue-500 focus:ring-0 text-center font-bold px-2 py-2 shadow-sm" 
+                               class="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-center font-bold px-2 py-2" 
                                placeholder="Qty">
                     </div>
                     <div class="flex w-full sm:w-48">
                         <input type="text" id="remarkInput" 
-                               class="w-full rounded border-gray-300 focus:border-blue-500 focus:ring-0 text-sm px-3 py-2 shadow-sm" 
+                               class="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm px-3 py-2" 
                                placeholder="Note (Optional)">
                     </div>
-                    <button id="btnSaveCount" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-bold shadow-sm transition flex items-center justify-center gap-2">
+                    <button id="btnSaveCount" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2">
                         SAVE <i class="fa-solid fa-check"></i>
                     </button>
                  </div>
@@ -144,85 +144,114 @@
     
     @include('components.scanner-modal')
 
-    <!-- DATA TABLE - Responsive -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div class="px-4 md:px-6 py-3 md:py-4 border-b dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-700">
-            <h3 class="font-semibold text-sm md:text-base text-gray-700 dark:text-gray-200">Counted Items ({{ $stats['total_items'] }})</h3>
-            <div class="text-xs md:text-sm gap-3 md:gap-4 flex">
-                <span class="text-green-600"><i class="fa-solid fa-check-circle"></i> Match: {{ $stats['total_matched'] }}</span>
-                <span class="text-red-600"><i class="fa-solid fa-exclamation-circle"></i> Diff: {{ $stats['total_diff'] }}</span>
+    <!-- RESULTS TABLE - Elegant Dashboard Style -->
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden mt-8">
+        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
+            <h3 class="font-bold text-gray-800 dark:text-gray-200">Counted Items</h3>
+            <div class="flex items-center gap-4 text-xs font-bold">
+                <span class="flex items-center gap-1.5 text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-100 dark:border-green-800">
+                    <i class="fa-solid fa-circle-check"></i> {{ $stats['total_matched'] }} Match
+                </span>
+                <span class="flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-100 dark:border-red-800">
+                    <i class="fa-solid fa-circle-exclamation"></i> {{ $stats['total_diff'] }} Mismatch
+                </span>
             </div>
         </div>
+        
         <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs md:text-sm">
-            <thead class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 uppercase font-semibold text-[10px] md:text-xs">
-                <tr>
-                    <th class="px-2 md:px-4 py-2 md:py-3">Time</th>
-                    <th class="px-2 md:px-4 py-2 md:py-3">Part No / Name</th>
-                    <th class="px-2 md:px-4 py-2 md:py-3 text-center">Sys</th>
-                    <th class="px-2 md:px-4 py-2 md:py-3 text-center bg-yellow-50 dark:bg-yellow-900/10">Real</th>
-                    <th class="px-2 md:px-4 py-2 md:py-3 text-center">Diff</th>
-                    <th class="px-2 md:px-4 py-2 md:py-3">Status</th>
-                    @if($stoEvent->status === 'OPEN')
-                    <th class="px-2 md:px-4 py-2 md:py-3 text-center">Action</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody id="stoTableBody" class="divide-y divide-gray-200 dark:divide-gray-600">
-                @forelse($details as $detail)
-                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td class="px-4 py-3 text-gray-500">{{ $detail->updated_at->format('H:i') }}</td>
-                    <td class="px-4 py-3">
-                        <div class="font-bold text-gray-800 dark:text-gray-200">{{ $detail->product->product->part_no }}</div>
-                        <div class="text-xs text-gray-500">{{ $detail->product->product->part_name }}</div>
-                        @if($detail->remark)
-                            <div class="text-xs text-gray-500 italic mt-1"><i class="fa-solid fa-message mr-1"></i> {{ $detail->remark }}</div>
+            {{-- Results Table --}}
+            <x-table id="stoDetailsTable" class="mb-6 mt-3">
+                <thead class="bg-slate-50/50">
+                    <tr>
+                        <th class="px-6 py-4">Time</th>
+                        <th class="px-6 py-4">Product Details</th>
+                        <th class="px-6 py-4 text-center">System</th>
+                        <th class="px-6 py-4 text-center">Real</th>
+                        <th class="px-6 py-4 text-center">Diff</th>
+                        <th class="px-6 py-4">Status</th>
+                        @if($stoEvent->status === 'OPEN')
+                        <th class="px-6 py-4 text-right">Action</th>
                         @endif
-                        @if($detail->auditor)
-                            <div class="text-xs text-blue-500 mt-0.5"><i class="fa-solid fa-user mr-1"></i> {{ $detail->auditor->name }}</div>
-                        @elseif($detail->auditor_id)
-                             {{-- Fallback if relation not loaded or generic ID --}}
+                    </tr>
+                </thead>
+                <tbody id="stoTableBody" class="">
+                    @forelse($details as $detail)
+                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td class="px-6 py-4">
+                            <span class="text-xs font-medium text-gray-400 dark:text-gray-500">{{ $detail->updated_at->format('H:i') }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $detail->product->product->part_no }}</span>
+                                <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">{{ $detail->product->product->part_name }}</span>
+                                @if($detail->remark)
+                                    <div class="mt-1 flex items-center gap-1 text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-700 w-fit px-1.5 py-0.5 rounded capitalize">
+                                        <i class="fa-solid fa-message"></i> {{ $detail->remark }}
+                                    </div>
+                                @endif
+                                @if($detail->auditor)
+                                    <div class="mt-1 flex items-center gap-1 text-[10px] text-blue-500 font-semibold">
+                                        <i class="fa-solid fa-user-check"></i> {{ $detail->auditor->name }}
+                                    </div>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center font-mono text-sm text-gray-600 dark:text-gray-400">
+                            {{ $detail->system_qty_snapshot + 0 }}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="font-mono text-sm font-black text-blue-600 dark:text-blue-400">
+                                {{ $detail->real_qty_input + 0 }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @php $diff = $detail->real_qty_input - $detail->system_qty_snapshot; @endphp
+                            @if($diff > 0)
+                                <span class="text-sm font-bold text-green-600">+{{ $diff + 0 }}</span>
+                            @elseif($diff < 0)
+                                <span class="text-sm font-bold text-red-600">{{ $diff + 0 }}</span>
+                            @else
+                                <span class="text-sm font-medium text-gray-300">-</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            @if($diff == 0)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 uppercase">
+                                    MATCH
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 uppercase border border-red-200 dark:border-red-900/50">
+                                    MISMATCH
+                                </span>
+                            @endif
+                        </td>
+                        @if($stoEvent->status === 'OPEN')
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end gap-3">
+                                <button type="button" onclick="editItem('{{ $detail->product->hash_id }}')" 
+                                        class="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Edit Count">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" onclick="deleteItem('{{ $detail->hash_id }}')" 
+                                        class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
                         @endif
-                    </td>
-                    <td class="px-4 py-3 text-center font-mono">{{ $detail->system_qty_snapshot + 0 }}</td>
-                    <td class="px-4 py-3 text-center font-mono font-bold bg-yellow-50 dark:bg-yellow-900/10 text-blue-600">
-                        {{ $detail->real_qty_input + 0 }}
-                    </td>
-                    <td class="px-4 py-3 text-center font-bold">
-                        @php $diff = $detail->real_qty_input - $detail->system_qty_snapshot; @endphp
-                        @if($diff > 0)
-                            <span class="text-green-600">+{{ $diff + 0 }}</span>
-                        @elseif($diff < 0)
-                            <span class="text-red-600">{{ $diff + 0 }}</span>
-                        @else
-                            <span class="text-gray-400">-</span>
-                        @endif
-                    </td>
-                    <td class="px-4 py-3">
-                        @if($diff == 0)
-                            <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">MATCH</span>
-                        @else
-                            <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">MISMATCH</span>
-                        @endif
-                    </td>
-                    @if($stoEvent->status === 'OPEN')
-                    <td class="px-4 py-3 text-center">
-                        <button type="button" onclick="editItem('{{ $detail->product->hash_id }}')" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors mr-2" title="Edit Count">
-                            <i class="fa-solid fa-pen-to-square text-lg"></i>
-                        </button>
-                        <button type="button" onclick="deleteItem('{{ $detail->hash_id }}')" class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors" title="Delete">
-                            <i class="fa-solid fa-trash text-lg"></i>
-                        </button>
-                    </td>
-                    @endif
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="{{ $stoEvent->status === 'OPEN' ? '7' : '6' }}" class="px-4 py-8 text-center text-gray-400 italic">No items scanned yet.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="{{ $stoEvent->status === 'OPEN' ? '7' : '6' }}" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-2">
+                                <i class="fa-solid fa-clipboard-list text-gray-200 dark:text-gray-700 text-4xl"></i>
+                                <span class="text-sm text-gray-400 italic">No items scanned yet.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </x-table>
         </div>
     </div>
 </div>
@@ -233,6 +262,18 @@
     const scanUrl = "{{ route('inventory.sto.scan', $stoEvent->hash_id) }}";
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
+
+    // Initialize DataTable
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.defaultDataTable) {
+            window.defaultDataTable('stoDetailsTable', {
+                order: [[0, 'desc']], // Latest Time first
+                columnDefs: [
+                    { orderable: false, targets: [-1] } // Disable sort on last column (Action or Status if closed)
+                ]
+            });
+        }
+    });
 
     // DOM Elements
     const resultArea = document.getElementById('scanResultArea');
@@ -449,7 +490,7 @@
     }
 
     // Enhanced Finalize Confirmation with SweetAlert2
-    @if($stoEvent->status === 'OPEN')
+
     const finalizeForm = document.getElementById('finalizeForm');
     if (finalizeForm) {
         finalizeForm.addEventListener('submit', function(e) {
@@ -497,7 +538,7 @@
             });
         });
     }
-    @endif
+
 
     // Reopen Confirmation
     function confirmReopen() {
@@ -520,3 +561,5 @@
 </script>
 @endpush
 @endsection
+
+

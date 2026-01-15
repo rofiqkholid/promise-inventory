@@ -1,7 +1,7 @@
 {{-- Scanner Modal Partial --}}
 {{-- Requires: public/js/inventory-scanner.js --}}
 
-<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-black bg-opacity-75 flex p-4">
+<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-black/60 backdrop-blur-sm flex p-4">
     <div class="relative w-full max-w-lg h-auto">
         <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 p-4">
             <div class="flex items-center justify-between mb-4 px-2">

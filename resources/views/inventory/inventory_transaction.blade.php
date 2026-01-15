@@ -7,7 +7,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Transaction Form Panel --}}
         <div class="lg:col-span-1">
-            <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 sm:rounded-lg overflow-hidden">
                 <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-right-left"></i> Transaction Form
@@ -85,7 +85,7 @@
 
         {{-- Recent Transactions Table --}}
         <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-gray-800 shadow-xl sm:rounded-xl overflow-hidden h-full flex flex-col border border-slate-200 dark:border-slate-700">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 sm:rounded-lg overflow-hidden h-full flex flex-col">
                 <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800">
                     <h3 class="text-lg font-medium text-slate-900 dark:text-white">
                         <i class="fa-solid fa-clock-rotate-left mr-2"></i> Recent Transactions
@@ -94,9 +94,9 @@
                         <i class="fa-solid fa-arrows-rotate"></i>
                     </button>
                 </div>
-                <div class="p-4 md:p-6 overflow-x-auto flex-1 bg-white dark:bg-gray-800">
-                    <table id="recentTransactionTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+                <div class="overflow-x-auto flex-1 bg-white dark:bg-gray-800">
+                    <x-table id="recentTransactionTable">
+                        <thead>
                             <tr>
                                 <th class="px-6 py-3">Date</th>
                                 <th class="px-6 py-3">Product</th>
@@ -107,7 +107,7 @@
                             </tr>
                         </thead>
                         <tbody></tbody>
-                    </table>
+                    </x-table>
                 </div>
             </div>
         </div>
@@ -115,7 +115,7 @@
 </div>
 
 {{-- Scanner Modal --}}
-<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-black bg-opacity-75 flex p-4">
+<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-black/60 backdrop-blur-sm flex p-4">
     <div class="relative w-full max-w-lg h-auto">
         <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 p-4">
             <div class="flex items-center justify-between mb-4 px-2">

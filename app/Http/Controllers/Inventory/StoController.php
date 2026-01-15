@@ -22,7 +22,81 @@ class StoController extends Controller
      */
     public function index(Request $request)
     {
-        $events = StoEvent::with('pic')->orderBy('created_at', 'desc')->paginate(10);
+        if ($request->ajax()) {
+            $query = StoEvent::with('pic');
+
+            // Searching
+            if ($search = $request->input('search.value')) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                      ->orWhere('name', 'like', "%{$search}%")
+                      ->orWhere('status', 'like', "%{$search}%")
+                      ->orWhereHas('pic', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            // Ordering
+            if ($request->has('order')) {
+                $columns = ['code', 'name', 'period_start', 'status', 'pic_id', 'created_at']; // Map index to col name
+                $colIndex = $request->input('order.0.column');
+                $colName = $columns[$colIndex] ?? 'created_at';
+                $dir = $request->input('order.0.dir', 'desc');
+                
+                if ($colName === 'pic_id') {
+                    // Sort by relationship? Complex, fallback to created_at for now to avoid join complexity unless needed
+                    $query->orderBy('created_at', $dir); 
+                } else {
+                    $query->orderBy($colName, $dir);
+                }
+            } else {
+                $query->orderBy('created_at', 'desc');
+            }
+
+            // Count Total & Filtered
+            $recordsTotal = StoEvent::count();
+            $recordsFiltered = $query->count();
+
+            // Pagination
+            $limit = $request->input('length', 10);
+            $start = $request->input('start', 0);
+            $data = $query->skip($start)->take($limit)->get();
+
+            // Transform Data for View
+            $transformedData = $data->map(function ($event) {
+                $period = $event->period_start->format('d M Y');
+                if ($event->period_end && $event->status === 'CLOSED') {
+                    $period .= ' - ' . $event->period_end->format('d M Y');
+                }
+
+                $statusClass = $event->status === 'OPEN' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                
+                $statusBadge = '<span class="px-2 py-1 text-xs rounded-full whitespace-nowrap ' . $statusClass . '">' . $event->status . '</span>';
+                
+                $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-semibold text-sm">' . ($event->status === 'OPEN' ? 'Manage' : 'View') . '</a>';
+
+                return [
+                    $event->code,
+                    $event->name,
+                    $period,
+                    $statusBadge,
+                    $event->pic->name ?? '-',
+                    $actionBtn // No logic here, just raw HTML or view component could be better but this works for AJAX
+                ];
+            });
+
+            return response()->json([
+                "draw" => intval($request->input('draw')),
+                "recordsTotal" => $recordsTotal,
+                "recordsFiltered" => $recordsFiltered,
+                "data" => $transformedData
+            ]);
+        }
+
+        $events = StoEvent::with('pic')->orderBy('created_at', 'desc')->get(); // Fallback for initial load if needed, but DataTable will call AJAX
         $pics = PIC::where('is_active', 1)->get();
         return view('inventory.sto.index', compact('events', 'pics'));
     }

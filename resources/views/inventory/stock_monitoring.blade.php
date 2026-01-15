@@ -57,7 +57,7 @@
 
     {{-- DataTable --}}
     <x-table id="stockMonitoringTable">
-        <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+        <thead>
             <tr>
                 <th rowspan="2" class="px-6 py-3 w-16 border-b dark:border-gray-600 align-middle">No</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Part No</th>

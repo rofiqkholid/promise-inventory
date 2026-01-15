@@ -11,7 +11,7 @@ window.defaultDataTable = function (selector, userConfig = {}) {
     // Default configuration (styling, buttons, DOM, layout)
     const defaults = {
         processing: true,
-        serverSide: true,
+        serverSide: false, // Default to client-side unless specified
         scrollCollapse: true,
         autoWidth: false,
         ordering: true,
@@ -19,33 +19,33 @@ window.defaultDataTable = function (selector, userConfig = {}) {
         pageLength: 10,
         lengthMenu: [10, 25, 50, 100],
 
-        // Standardized DOM Layout
-        dom: "<'flex flex-col md:flex-row justify-between items-center mb-4 gap-2 sm:gap-4'<'flex items-center gap-2 sm:gap-4'l B> f><'overflow-x-auto w-full rounded-lg'rt><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4'i p>",
+        // Standardized DOM Layout (Elegant & Spacious)
+        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-6 gap-4'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-x-auto w-full relative border border-gray-200 dark:border-gray-700 rounded-md't><'flex flex-col md:flex-row justify-between items-center mt-6 gap-4 text-gray-500'i p>",
 
         // Default Buttons
         buttons: [
             {
                 extend: 'excel',
                 text: '<i class="fa-solid fa-file-excel"></i>',
-                className: 'btn-export-icon btn-excel',
+                className: 'px-3 py-1.5 bg-green-50 text-green-600 border border-green-100 rounded-lg hover:bg-green-100 transition-colors',
                 titleAttr: 'Export to Excel'
             },
             {
                 extend: 'pdf',
                 text: '<i class="fa-solid fa-file-pdf"></i>',
-                className: 'btn-export-icon btn-pdf',
+                className: 'px-3 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-colors',
                 titleAttr: 'Export to PDF'
             },
             {
                 extend: 'csv',
                 text: '<i class="fa-solid fa-file-csv"></i>',
-                className: 'btn-export-icon btn-csv',
+                className: 'px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors',
                 titleAttr: 'Export to CSV'
             },
             {
                 extend: 'print',
                 text: '<i class="fa-solid fa-print"></i>',
-                className: 'btn-export-icon btn-print',
+                className: 'px-3 py-1.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors',
                 titleAttr: 'Print Table'
             }
         ],
@@ -64,30 +64,29 @@ window.defaultDataTable = function (selector, userConfig = {}) {
             lengthMenu: "_MENU_"
         },
 
-        // Default Error Handling for AJAX
-        ajax: {
-            error: function (xhr, error, thrown) {
-                // Sanitize message for user toast, keep details in console
-                if (window.showToast) {
-                    window.showToast('Something went wrong while fetching data. Please try again.', 'error');
-                }
-                console.error('DataTable Error:', xhr, error, thrown);
-            }
+        // Default Error Handling for AJAX - Defined separately to avoid auto-triggering AJAX
+    };
+
+    const defaultAjaxError = function (xhr, error, thrown) {
+        if (window.showToast) {
+            window.showToast('Something went wrong while fetching data. Please try again.', 'error');
         }
+        console.error('DataTable Error:', xhr, error, thrown);
     };
 
     // Callback Wrappers to preserve both default and user functionality
     const originalDrawCallback = userConfig.drawCallback;
 
     // Handle AJAX specifically if it's just a URL string or explicit override
-    let finalAjax = defaults.ajax;
+    let finalAjax = undefined;
+
     if (userConfig.ajax) {
         if (typeof userConfig.ajax === 'string') {
-            finalAjax = { ...defaults.ajax, url: userConfig.ajax };
+            finalAjax = { url: userConfig.ajax, error: defaultAjaxError };
         } else {
-            // If user provides object, ensure headers are present
+            // If user provides object, ensure headers and error handler are present
             finalAjax = {
-                ...defaults.ajax, // keep default error handler
+                error: defaultAjaxError, // default error handler
                 ...userConfig.ajax, // overwrite with user settings
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
@@ -97,14 +96,16 @@ window.defaultDataTable = function (selector, userConfig = {}) {
         }
     } else if (userConfig.url) {
         // Fallback support for legacy 'url' property key
-        finalAjax = { ...defaults.ajax, url: userConfig.url };
+        finalAjax = { url: userConfig.url, error: defaultAjaxError };
     }
 
     // Merge everything into final options
     const options = $.extend(true, {}, defaults, userConfig);
 
-    // Re-apply the smart AJAX configuration we built
-    options.ajax = finalAjax;
+    // Only apply ajax if we actually constructed it
+    if (finalAjax) {
+        options.ajax = finalAjax;
+    }
 
     // Override drawCallback to include pagination and length menu fixes
     options.drawCallback = function (settings) {
