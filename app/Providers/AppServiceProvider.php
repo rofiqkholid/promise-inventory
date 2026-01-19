@@ -24,14 +24,21 @@ class AppServiceProvider extends ServiceProvider
                 ->join('products as prod', 'prod.id', '=', 'p.product_id')
                 ->leftJoin('models as m', 'm.id', '=', 'prod.model_id')
                 ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
-                ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
+                ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock', 'p.pcs_per_unit')
                 ->get()
                 ->map(function ($item) {
-                    $current = floatval($item->current_stock_qty);
-                    $min = floatval($item->min_stock);
-                    if ($min > 0) {
-                        if ($current > $min * 3) $item->status = 'Warning';
-                        elseif ($current < $min) $item->status = 'Critical';
+                    $pcsPerUnit = intval($item->pcs_per_unit);
+                    if ($pcsPerUnit <= 0) $pcsPerUnit = 1;
+
+                    $currentPCS = floatval($item->current_stock_qty) * $pcsPerUnit;
+                    $minPCS = floatval($item->min_stock);
+
+                    $item->current_stock_qty = $currentPCS;
+                    $item->min_stock = $minPCS;
+
+                    if ($minPCS > 0) {
+                        if ($currentPCS > $minPCS * 3) $item->status = 'Warning';
+                        elseif ($currentPCS < $minPCS) $item->status = 'Critical';
                         else $item->status = 'Safe';
                     } else {
                         $item->status = 'Safe';
@@ -44,6 +51,16 @@ class AppServiceProvider extends ServiceProvider
                 ->values();
 
             $view->with('stockAlerts', $stockAlerts);
+
+            // Only handle auto-open for the modal component to avoid session flag being set by header
+            if (str_contains($view->getName(), 'stock-alert-modal')) {
+                $stockAlertAutoOpen = false;
+                if (count($stockAlerts) > 0 && !\Illuminate\Support\Facades\Session::has('stock_alert_auto_shown')) {
+                    $stockAlertAutoOpen = true;
+                    \Illuminate\Support\Facades\Session::put('stock_alert_auto_shown', true);
+                }
+                $view->with('stockAlertAutoOpen', $stockAlertAutoOpen);
+            }
         });
     }
 }

@@ -147,19 +147,10 @@ class StoController extends Controller
         $stoEvent = StoEvent::findByHashOrFail($id);
         
         // Stats calculation remains here or can be deferred, but for now we keep it
-        $stats = [
-            'total_items' => StoDetail::where('event_id', $stoEvent->id)->count(),
-            'total_diff' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '!=', 0)->count(),
-            'total_matched' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', 0)->count(),
-            'total_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->sum('diff_qty'),
-            'total_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->sum('diff_qty'),
-            'count_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->count(),
-            'count_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->count(),
-        ];
-
-        $netAdjustment = StoDetail::where('event_id', $stoEvent->id)->sum('diff_qty');
-        $totalProducts = InventoryProduct::where('is_active', 1)->count();
-        $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
+        $statsData = $this->getStoStats($stoEvent);
+        $stats = $statsData['stats'];
+        $netAdjustment = $statsData['netAdjustment'];
+        $progress = $statsData['progress'];
 
         // Fetch all products for Select2 options (Similar to InventoryTransaction)
         // EXCLUDE products already counted in this event
@@ -423,7 +414,11 @@ class StoController extends Controller
         
         $detail->save();
 
-        return response()->json(['success' => true, 'message' => 'Saved']);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Saved',
+            'stats' => $this->getStoStats($stoEvent)
+        ]);
     }
 
     /**
@@ -521,7 +516,11 @@ class StoController extends Controller
 
         $detail->delete();
 
-        return response()->json(['success' => true, 'message' => 'Item deleted successfully.']);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Item deleted successfully.',
+            'stats' => $this->getStoStats($stoEvent)
+        ]);
     }
 
     /**
@@ -596,5 +595,28 @@ class StoController extends Controller
         $filename = "STO_{$stoEvent->code}_" . now()->format('Ymd_His') . ".xlsx";
         
         return Excel::download(new StoExport($stoEvent), $filename);
+    }
+
+    private function getStoStats($stoEvent)
+    {
+        $stats = [
+            'total_items' => StoDetail::where('event_id', $stoEvent->id)->count(),
+            'total_diff' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '!=', 0)->count(),
+            'total_matched' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', 0)->count(),
+            'total_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->sum('diff_qty'),
+            'total_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->sum('diff_qty'),
+            'count_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->count(),
+            'count_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->count(),
+        ];
+
+        $netAdjustment = StoDetail::where('event_id', $stoEvent->id)->sum('diff_qty');
+        $totalProducts = InventoryProduct::where('is_active', 1)->count();
+        $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
+
+        return [
+            'stats' => $stats,
+            'netAdjustment' => $netAdjustment,
+            'progress' => $progress
+        ];
     }
 }

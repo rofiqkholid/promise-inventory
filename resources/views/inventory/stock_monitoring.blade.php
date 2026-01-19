@@ -64,17 +64,18 @@
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Part No</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Spec & Size</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Remark</th>
-                <th colspan="2" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-700 dark:text-gray-200">Current Balance</th>
-                <th colspan="{{ max(1, $categories->count()) }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/40 dark:text-red-200">Usage History (Pcs / Unit)</th>
+                <th colspan="1" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-700 dark:text-gray-200">Stock Level</th>
+                <th colspan="{{ max(1, $categories->count()) + 1 }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/40 dark:text-red-200">History & Adjustment (Pcs / Unit)</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle text-center">Action</th>
             </tr>
             <tr>
-                <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Pcs</th>
-                <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Unit</th>
+                <th class="px-6 py-3 border-b dark:border-gray-600 text-center">Balance</th>
 
                 @foreach($categories as $cat)
                 <th class="px-6 py-3 border-b dark:border-gray-600 text-center text-xs whitespace-nowrap">{{ $cat->code }}</th>
                 @endforeach
+                
+                <th class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-50/50 dark:bg-gray-800/50">STO</th>
 
                 @if($categories->count() === 0)
                 <th class="px-6 py-3 border-b dark:border-gray-600 text-center text-xs">-</th>
@@ -157,16 +158,39 @@
                             indicator = '<span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>';
                         }
 
-                        return `<div class="flex items-center justify-center ${colorClass}">${indicator}${data}</div>`;
+                        const mainVal = row.balance_pcs;
+                        const unitSub = row.current_qty + ' ' + row.balance_unit;
+                        const breakdown = `In: ${row.total_in} | Out: ${row.total_out} | STO: ${row.sto_gap_plain}`;
+
+                        return `
+                            <div class="flex flex-col items-center justify-center ${colorClass}" title="${breakdown}">
+                                <div class="flex items-center">
+                                    ${indicator}
+                                    <span>${mainVal}</span>
+                                </div>
+                                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal">(${unitSub})</span>
+                            </div>
+                        `;
                     }
                     return data;
                 }
-            },
-            {
-                data: 'balance_unit',
-                className: 'text-center text-xs text-gray-500'
             }
         ];
+
+        const stoColumnDef = {
+            data: 'sto_gap_display',
+            className: 'text-center font-bold',
+            render: function(data, type, row) {
+                if (type === 'display') {
+                    if (data === '-') return data;
+                    let colorClass = 'text-gray-600 dark:text-gray-400';
+                    if (parseFloat(row.sto_gap) > 0) colorClass = 'text-green-600 dark:text-green-400';
+                    else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-red-600 dark:text-red-400';
+                    return `<span class="${colorClass}">${data}</span>`;
+                }
+                return data;
+            }
+        };
 
         const categories = <?php echo json_encode(isset($categories) ? $categories->values() : []); ?>;
 
@@ -176,7 +200,7 @@
                 let safeCode = cat.code.replace(/[^a-zA-Z0-9]/g, '_');
                 let alias = 'usage_' + safeCode;
 
-                if (cat.code.toUpperCase().includes('TRIAL')) {
+                if (cat.is_trial) {
                     columns.push({
                         data: alias,
                         className: 'text-center',
@@ -200,9 +224,14 @@
                     });
                 }
             });
-        } else {
+        }
+        
+        // Push STO Column after Categories
+        columns.push(stoColumnDef);
+
+        if (!(Array.isArray(categories) && categories.length > 0)) {
             // Add a placeholder column to match the header when no categories are defined
-            columns.push({
+            columns.splice(columns.length - 1, 0, { // Insert before STO
                 data: null,
                 defaultContent: '-',
                 className: 'text-center'
@@ -241,6 +270,13 @@
                 }
             }
         });
+
+        // Search from URL parameter initialization
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchVal = urlParams.get('search');
+        if (searchVal) {
+            table.search(searchVal).draw();
+        }
 
         $(document).on('mouseenter', '.hover-trigger', function(e) {
             const el = $(this);

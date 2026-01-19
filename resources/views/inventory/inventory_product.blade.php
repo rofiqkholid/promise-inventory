@@ -21,18 +21,19 @@
     <x-table id="inventoryProductTable">
         <thead>
             <tr>
-                <th scope="col" class="px-6 py-3 w-16">No</th>
-                <th scope="col" class="px-6 py-3">Part No</th>
-                <th scope="col" class="px-6 py-3">Customer</th>
-                <th scope="col" class="px-6 py-3">Model</th>
-                <th scope="col" class="px-6 py-3">Material</th>
-                <th scope="col" class="px-6 py-3">Size (TxWxL)</th>
-                <th scope="col" class="px-6 py-3">Pcs/Unit</th>
-                <th scope="col" class="px-6 py-3">Unit/Car</th>
-                <th scope="col" class="px-6 py-3">Rank</th>
-                <th scope="col" class="px-6 py-3">Coil Center</th>
-                <th scope="col" class="px-6 py-3">Remark</th>
-                <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                <th scope="col" class="px-4 py-3 w-16 text-center">No</th>
+                <th scope="col" class="px-4 py-3 whitespace-nowrap">Part No</th>
+                <th scope="col" class="px-4 py-3">Customer</th>
+                <th scope="col" class="px-4 py-3">Model</th>
+                <th scope="col" class="px-4 py-3 whitespace-nowrap">Material</th>
+                <th scope="col" class="px-4 py-3 whitespace-nowrap">Dimensions</th>
+                <th scope="col" class="px-4 py-3 text-center">Pcs/Unit</th>
+                <th scope="col" class="px-4 py-3 text-center">Unit/Car</th>
+                <th scope="col" class="px-4 py-3 text-center">Rank</th>
+                <th scope="col" class="px-4 py-3 whitespace-nowrap">Coil Center</th>
+                <th scope="col" class="px-4 py-3">Remark</th>
+                <th scope="col" class="px-4 py-3 whitespace-nowrap">Updated At</th>
+                <th scope="col" class="px-4 py-3 text-center w-[100px]">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -106,9 +107,9 @@
                                 <p id="error-coil_center_id" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sub Contractor</label>
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Supplier</label>
                                 <select name="subcont_id" id="subcont_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                                    <option value="">Select Sub Contractor</option>
+                                    <option value="">Select Supplier</option>
                                 </select>
                                 <p id="error-subcont_id" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
@@ -142,7 +143,7 @@
                                 <input type="number" name="length_2" id="length_2" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-length_2" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            <div>
+                            <div id="pitchContainer">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pitch</label>
                                 <input type="number" name="pitch" id="pitch" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-pitch" class="text-red-500 text-xs mt-1 hidden"></p>
@@ -322,46 +323,62 @@ $(function() {
             data: d => { d.search = d.search.value; }
         },
         columns: [
-            { data: null, render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
-            { data: 'part_no' },
-            { data: 'customer' },
-            { data: 'model' },
+            { data: null, className: 'px-4 py-3 text-center', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
+            { data: 'part_no', className: 'px-4 py-3 whitespace-nowrap font-medium' },
+            { data: 'customer', className: 'px-4 py-3 text-center' },
+            { data: 'model', className: 'px-4 py-3 text-center' },
             { 
                 data: null, 
+                className: 'px-4 py-3 whitespace-nowrap',
                 render: row => `${row.material_spec} <br> <span class="text-xs text-gray-500 dark:text-gray-400">(${row.coating_type || '-'})</span>` 
             },
             { 
                 data: null, 
+                className: 'px-4 py-3 whitespace-nowrap font-mono text-xs',
                 render: row => {
                     const t = parseFloat(row.thickness) || 0;
                     const w = parseFloat(row.width) || 0;
                     const l = parseFloat(row.length) || 0;
                     const l2 = parseFloat(row.length_2) || 0;
                     const p = parseFloat(row.pitch) || 0;
+                    const unitName = (row.unit_name || '').toLowerCase();
                     
                     let size = `${t} x ${w} x ${l}`;
-                    if (l2 > 0) size += ` x ${l2}`;
-                    if (p > 0) size += ` x ${p}`;
                     
-                    return size;
+                    if (unitName === 'trapezoid' && l2 > 0) {
+                        size += ` / ${l2}`;
+                    }
+                    
+                    let html = `<div class="flex flex-col leading-tight"><span>${size}</span>`;
+                    if (p > 0) {
+                        html += `<span class="text-sm text-blue-500 dark:text-blue-400 font-bold">P: ${p}</span>`;
+                    }
+                    html += `</div>`;
+                    
+                    return html;
                 }
             },
-            { data: 'pcs_per_unit' },
-            { data: 'unit_per_car' },
-            { data: 'rank' },
-            { data: 'coil_center' },
+            { data: 'pcs_per_unit', className: 'px-4 py-3 text-center' },
+            { data: 'unit_per_car', className: 'px-4 py-3 text-center' },
+            { data: 'rank', className: 'px-4 py-3 text-center' },
+            { data: 'coil_center', className: 'px-4 py-3 text-center' },
             { 
                 data: 'remark', 
                 defaultContent: '-', 
-                className: 'text-xs text-gray-500 dark:text-gray-400',
+                className: 'px-4 py-3 text-xs text-gray-500 dark:text-gray-400',
                 orderable: false,
+                render: (d) => d || '-'
+            },
+            { 
+                data: 'updated_at',
+                className: 'px-4 py-3 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400',
                 render: (d) => d || '-'
             },
             {
                 data: null,
                 orderable: false,
                 searchable: false,
-                className: 'text-center',
+                className: 'px-4 py-3 text-center',
                 width: '100px',
                 render: row => `
                     <div class="flex items-center justify-center gap-2">
@@ -400,7 +417,7 @@ $(function() {
         $('#product_id').val(null).trigger('change');
         $('#unit_id').val('').trigger('change');
         $('[id^="error-"]').addClass('hidden').text('');
-        toggleLength2();
+        toggleUnitFields();
         showModal(formModal);
     });
 
@@ -451,27 +468,27 @@ $(function() {
 
         $.get(`{{ url('inventory/product') }}/${id}`, function(data) {
             $('#revision').val(data.revision).trigger('change');
-            $('#subcont_id').val(data.subcont_id).trigger('change');
-            $('#coil_center_id').val(data.coil_center_id).trigger('change');
-            $('#material_spec_id').val(data.material_spec_id).trigger('change');
+            $('#subcont_id').val(data.sub_contractor ? data.sub_contractor.hash_id : '').trigger('change');
+            $('#coil_center_id').val(data.coil_center ? data.coil_center.hash_id : '').trigger('change');
+            $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
             $('#thickness').val(data.thickness);
             $('#width').val(data.width);
             $('#length').val(data.length);
             $('#length_2').val(data.length_2);
             $('#pitch').val(data.pitch);
-            $('#unit_id').val(data.unit_id).trigger('change');
-            $('#rank_id').val(data.rank_id).trigger('change');
+            $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
+            $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
             $('#pcs_per_unit').val(data.pcs_per_unit);
             $('#unit_per_car').val(data.unit_per_car);
             $('#min_stock').val(data.min_stock);
             $('#remark').val(data.remark);
 
             if (data.product) {
-                const opt = new Option(`${data.product.part_no} - ${data.product.part_name}`, data.product_id, true, true);
+                const opt = new Option(`${data.product.part_no} - ${data.product.part_name}`, data.product.hash_id || data.product_id, true, true);
                 $('#product_id').append(opt).trigger('change');
             }
             
-            toggleLength2();
+            toggleUnitFields();
             showModal(formModal);
         });
     });
@@ -483,19 +500,25 @@ $(function() {
     });
 
 
-    // Toggle Length 2 visibility
-    function toggleLength2() {
+    // Toggle Unit fields visibility (Length 2 & Pitch)
+    function toggleUnitFields() {
         const unitId = $('#unit_id').val();
-        if (unitId == '3') {
+        const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
+        const unitName = selectedUnit ? selectedUnit.name : '';
+
+        if (unitName === 'Trapezoid' || unitName === 'trapezoid') {
             $('#length2Container').show();
+            $('#pitchContainer').hide();
+            if (!isEditMode) $('#pitch').val('');
         } else {
             $('#length2Container').hide();
+            $('#pitchContainer').show();
             if (!isEditMode) $('#length_2').val('');
         }
     }
 
     $('#unit_id').on('change', function() {
-        toggleLength2();
+        toggleUnitFields();
     });
 
     // Auto-calculate min stock

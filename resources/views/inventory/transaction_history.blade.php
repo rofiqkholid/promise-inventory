@@ -258,7 +258,7 @@
                         if (dateRange && dateRange.includes(' - ')) {
                             d.date_range = dateRange;
                         } else {
-                            delete d.date_range; // ⬅️ PENTING
+                            delete d.date_range;
                         }
                     }
                 },
@@ -338,7 +338,7 @@
                         title: 'Transaction History',
                         filename: 'transaction-history',
                         exportOptions: {
-                            columns: ':not(:last-child)' // ❌ exclude Action
+                            columns: ':not(:last-child)'
                         }
                     },
                     {

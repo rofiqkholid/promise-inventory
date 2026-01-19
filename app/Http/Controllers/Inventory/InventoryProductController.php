@@ -85,8 +85,10 @@ class InventoryProductController extends Controller
                 DB::raw("COALESCE(ms.spec_name,'') as material_spec_name"),
                 DB::raw("COALESCE(ms.coating_type,'') as coating_type"),
                 DB::raw("COALESCE(u.code,'') as unit_code"),
+                DB::raw("COALESCE(u.name,'') as unit_name"),
                 DB::raw("COALESCE(r.code,'') as rank_code"),
                 'p.remark',
+                'p.updated_at',
             ]);
 
         $recordsTotal = (clone $query)->count();
@@ -131,9 +133,7 @@ class InventoryProductController extends Controller
             ->get()
             ->map(fn($r) => [
                 'id' => $hashids->encode($r->id),
-                'product_id' => $r->product_id, // This is raw, but maybe not used or needs hashing too? Let's leave for now or hash if it's Products ID.
-                // Wait, product_id is foreign key to Products. If we want full obfuscation, this should be hashed too.
-                // But let's stick to primary ID first. User said "product... hashing".
+                'product_id' => $r->product_id,
                 'part_no' => $r->part_no . ($r->revision ? ' - ' . $r->revision : ''),
                 'part_name' => $r->part_name,
                 'customer' => $r->customer_code,
@@ -149,6 +149,7 @@ class InventoryProductController extends Controller
                 'length_2' => (float)$r->length_2,
                 'pitch' => (float)$r->pitch,
                 'unit' => $r->unit_code,
+                'unit_name' => $r->unit_name,
                 'rank' => $r->rank_code,
                 'current_stock_qty' => $r->current_stock_qty,
                 'trial_usage_qty' => $r->trial_usage_qty,
@@ -156,6 +157,7 @@ class InventoryProductController extends Controller
                 'pcs_per_unit' => $r->pcs_per_unit,
                 'unit_per_car' => $r->unit_per_car,
                 'remark' => $r->remark,
+                'updated_at' => $r->updated_at ? \Carbon\Carbon::parse($r->updated_at)->format('d M y, H:i') : '-',
             ]);
 
         return response()->json([
@@ -172,12 +174,7 @@ class InventoryProductController extends Controller
     public function getDropdownData()
     {
         return response()->json([
-            'subContractors' => SubContractor::select('id', 'code', 'name')->get(), // These use Models so hash_id is appended automatically if I used 'get()'. 
-            // BUT select('id',...) creates models with ONLY those attrs. appends might fail if they rely on attributes not selected? 
-            // HasHashId depends on 'id', which is selected. Good. 
-            // Appends are applied when toArray/toJson is called.
-            // So these should already have hash_id if Models have trait.
-            // I updated SubContractor and others earlier.
+            'subContractors' => SubContractor::select('id', 'code', 'name')->get(),
             'coilCenters' => CoilCenter::select('id', 'code', 'name')->get(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::select('id', 'code', 'name')->get(),
@@ -280,9 +277,7 @@ class InventoryProductController extends Controller
     public function show($id)
     {
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
-        $inventoryProduct->load(['product', 'coilCenter', 'materialSpec', 'unit', 'rank']);
-        // Ensure relations also have hash_id appended? Yes, default.
-        // But for product (Products model), I just added it.
+        $inventoryProduct->load(['product', 'coilCenter', 'materialSpec', 'unit', 'rank', 'subContractor']);
         return response()->json($inventoryProduct);
     }
 

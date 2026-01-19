@@ -106,4 +106,12 @@ class InventoryProduct extends Model
     {
         return $this->belongsTo(Rank::class, 'rank_id');
     }
+
+    /**
+     * Get the sub contractor that owns the product.
+     */
+    public function subContractor()
+    {
+        return $this->belongsTo(SubContractor::class, 'subcont_id');
+    }
 }

@@ -48,30 +48,30 @@
         <div class="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm">
             <div class="flex items-center gap-2">
                 <span class="text-gray-600 dark:text-gray-400">Total:</span>
-                <span class="font-bold text-base md:text-lg text-blue-600 dark:text-blue-400">{{ $stats['total_items'] }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $progress }}%)</span>
+                <span id="stat-total-items" class="font-bold text-base md:text-lg text-blue-600 dark:text-blue-400">{{ $stats['total_items'] }}</span>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">(<span id="stat-progress">{{ $progress }}</span>%)</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-green-600 dark:text-green-400">Inc:</span>
-                <span class="font-bold text-green-700 dark:text-green-300">+{{ number_format($stats['total_increase'], 2) }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $stats['count_increase'] }})</span>
+                <span id="stat-total-increase" class="font-bold text-green-700 dark:text-green-300">+{{ number_format($stats['total_increase'], 2) }}</span>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">(<span id="stat-count-increase">{{ $stats['count_increase'] }}</span>)</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-red-600 dark:text-red-400">Dec:</span>
-                <span class="font-bold text-red-700 dark:text-red-300">{{ number_format($stats['total_decrease'], 2) }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $stats['count_decrease'] }})</span>
+                <span id="stat-total-decrease" class="font-bold text-red-700 dark:text-red-300">{{ number_format($stats['total_decrease'], 2) }}</span>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">(<span id="stat-count-decrease">{{ $stats['count_decrease'] }}</span>)</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-purple-600 dark:text-purple-400">Net:</span>
-                <span class="font-bold text-purple-700 dark:text-purple-300">{{ $netAdjustment >= 0 ? '+' : '' }}{{ number_format($netAdjustment, 2) }}</span>
+                <span id="stat-net-adjustment" class="font-bold text-purple-700 dark:text-purple-300">{{ $netAdjustment >= 0 ? '+' : '' }}{{ number_format($netAdjustment, 2) }}</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-gray-600 dark:text-gray-400">Match:</span>
-                <span class="font-bold text-gray-700 dark:text-gray-300">{{ $stats['total_matched'] }}</span>
+                <span id="stat-total-matched" class="font-bold text-gray-700 dark:text-gray-300">{{ $stats['total_matched'] }}</span>
             </div>
         </div>
     </div>
@@ -153,12 +153,12 @@
                 <div class="flex items-center gap-2 md:gap-3 text-xs md:text-sm font-bold">
                     <span class="flex items-center gap-1 md:gap-1.5 text-green-600 bg-green-50 dark:bg-green-900/20 px-2 md:px-3 py-1 rounded-full border border-green-100 dark:border-green-800 whitespace-nowrap">
                         <i class="fa-solid fa-circle-check text-xs"></i> 
-                        <span>{{ $stats['total_matched'] }}</span>
+                        <span id="table-total-matched">{{ $stats['total_matched'] }}</span>
                         <span class="hidden sm:inline ml-1">Match</span>
                     </span>
                     <span class="flex items-center gap-1 md:gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/20 px-2 md:px-3 py-1 rounded-full border border-red-100 dark:border-red-800 whitespace-nowrap">
                         <i class="fa-solid fa-circle-exclamation text-xs"></i> 
-                        <span>{{ $stats['total_diff'] }}</span>
+                        <span id="table-total-diff">{{ $stats['total_diff'] }}</span>
                         <span class="hidden sm:inline ml-1">Mismatch</span>
                     </span>
                 </div>
@@ -265,6 +265,11 @@
                         setTimeout(() => $input.removeClass('border-green-500'), 1000);
                         $input.data('original-value', newQty); // Update original value
                         table.ajax.reload(null, false); // Reload without resetting pagination
+                        
+                        if (data.stats && window.updateStatsCard) {
+                            window.updateStatsCard(data.stats);
+                        }
+
                         if (window.showToast) {
                             window.showToast('Quantity updated', 'success');
                         }
@@ -333,6 +338,11 @@
                         $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-green-500');
                         setTimeout(() => $input.removeClass('border-green-500'), 1000);
                         $input.data('original-value', newRemark);
+
+                        if (data.stats && window.updateStatsCard) {
+                            window.updateStatsCard(data.stats);
+                        }
+
                         if (window.showToast) {
                             window.showToast('Remark saved', 'success');
                         }
@@ -471,6 +481,9 @@
                 .then(data => {
                     if (data.success) {
                         Swal.fire('Deleted!', 'Item has been deleted.', 'success').then(() => {
+                            if (data.stats && window.updateStatsCard) {
+                                window.updateStatsCard(data.stats);
+                            }
                             if (table) table.ajax.reload();
                             else location.reload();
                         });
@@ -569,6 +582,9 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                if (data.stats && window.updateStatsCard) {
+                    window.updateStatsCard(data.stats);
+                }
                 if (table) {
                     table.ajax.reload();
                     if (resultArea) resultArea.classList.add('hidden');
@@ -652,6 +668,39 @@
             }
         });
     }
+
+    // Helper to update Statistics Card dynamically
+    window.updateStatsCard = function(data) {
+        if (!data || !data.stats) return;
+        
+        const stats = data.stats;
+        const net = data.netAdjustment;
+        const prog = data.progress;
+
+        const updateEl = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val;
+        };
+
+        const formatNum = (num) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
+
+        updateEl('stat-total-items', stats.total_items);
+        updateEl('stat-progress', prog);
+        updateEl('stat-total-matched', stats.total_matched);
+        updateEl('table-total-matched', stats.total_matched);
+        updateEl('table-total-diff', stats.total_diff);
+        updateEl('stat-count-increase', stats.count_increase);
+        updateEl('stat-count-decrease', stats.count_decrease);
+        
+        const totalIncEl = document.getElementById('stat-total-increase');
+        if (totalIncEl) totalIncEl.innerText = '+' + formatNum(stats.total_increase);
+        
+        const totalDecEl = document.getElementById('stat-total-decrease');
+        if (totalDecEl) totalDecEl.innerText = formatNum(stats.total_decrease);
+        
+        const netEl = document.getElementById('stat-net-adjustment');
+        if (netEl) netEl.innerText = (net >= 0 ? '+' : '') + formatNum(net);
+    };
 
 </script>
 
