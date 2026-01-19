@@ -60,7 +60,7 @@
 
         /* Standardize SweetAlert Backdrop - Modals Only */
         /* Targets the backdrop when a modal is shown */
-        .swal2-container.swal2-backdrop-show, 
+        .swal2-container.swal2-backdrop-show,
         .swal2-container.swal2-center.swal2-backdrop-show {
             background: rgba(15, 23, 42, 0.5) !important;
             backdrop-filter: none !important;
@@ -74,7 +74,13 @@
         }
 
         .swal2-popup {
-            border-radius: 0.75rem !important; /* rounded-xl */
+            border-radius: 0.75rem !important;
+            /* rounded-xl */
+        }
+
+        #filter_date_range {
+            padding-left: 2.5rem !important;
+            /* = pl-10 */
         }
     </style>
 

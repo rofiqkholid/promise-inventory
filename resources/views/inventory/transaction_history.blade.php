@@ -22,26 +22,33 @@
 
             {{-- DATE RANGE --}}
             <div class="relative min-w-[160px]">
-                <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                <i class="fa-regular fa-calendar absolute left-3 top-1/2
+              -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+
                 <input type="text"
                     id="filter_date_range"
                     readonly
-                    class="w-full h-[42px] pl-9 pr-3 text-sm
-           bg-gray-50 border border-gray-300 rounded-lg
-           focus:outline-none focus:ring-2 focus:ring-blue-500
-           dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                    placeholder="Select Date Range">
-                <input type="hidden" id="filter_date_from">
-                <input type="hidden" id="filter_date_to">
+                    class="w-full h-[42px] pl-10 pr-3 text-sm
+               bg-gray-50 border border-gray-300 rounded-lg
+               focus:outline-none focus:ring-2 focus:ring-blue-500
+               dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Select Range">
             </div>
+
+
 
             {{-- PRODUCT --}}
             <select id="filter_product" class="select2-filter min-w-[160px]">
                 <option value="">All Product</option>
                 @foreach($products as $product)
                 <option value="{{ $product->hash_id }}">
-                    {{ $product->part_no }} - {{ $product->part_name }}
+                    {{ $product->part_no }}
+                    @if($product->revision)
+                    - {{ $product->revision }}
+                    @endif
+                    - {{ $product->part_name }}
                 </option>
+
                 @endforeach
             </select>
 
@@ -210,19 +217,19 @@
             $('#filter_product').select2({
                 width: '100%',
                 placeholder: 'Select Product',
-                allowClear: true
+
             });
 
             $('#filter_category').select2({
                 width: '100%',
                 placeholder: 'Select Category',
-                allowClear: true
+
             });
 
             $('#filter_pic').select2({
                 width: '100%',
                 placeholder: 'Select PIC',
-                allowClear: true
+
             });
 
 
@@ -258,7 +265,7 @@
                         if (dateRange && dateRange.includes(' - ')) {
                             d.date_range = dateRange;
                         } else {
-                            delete d.date_range;
+                            delete d.date_range; // ⬅️ PENTING
                         }
                     }
                 },
@@ -338,7 +345,7 @@
                         title: 'Transaction History',
                         filename: 'transaction-history',
                         exportOptions: {
-                            columns: ':not(:last-child)'
+                            columns: ':not(:last-child)' // ❌ exclude Action
                         }
                     },
                     {
@@ -484,11 +491,11 @@
                 });
             }
 
-            function closeModal() {
+            window.closeModal = function() {
                 $('#editTransactionModal')
                     .addClass('hidden')
                     .removeClass('flex');
-            }
+            };
         });
     </script>
 
