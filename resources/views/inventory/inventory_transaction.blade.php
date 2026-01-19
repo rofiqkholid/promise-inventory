@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Inventory Transaction')
+@section('page_title', 'Transactions')
 @section('header-title', 'Inventory Transaction')
 
 @section('content')
@@ -115,48 +116,10 @@
 </div>
 
 {{-- Scanner Modal --}}
-<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-black/60 backdrop-blur-sm flex p-4">
-    <div class="relative w-full max-w-lg h-auto">
-        <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 p-4">
-            <div class="flex items-center justify-between mb-4 px-2">
-                <h3 class="text-xl font-medium text-gray-900 dark:text-white">QR Code Scanner</h3>
-                <div class="flex items-center gap-2">
-                    <button type="button" id="toggleMirror" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white p-1.5 transition-colors" title="Mirror Camera">
-                        <i class="fa-solid fa-arrows-left-right w-5 h-5"></i>
-                    </button>
-                    <button type="button" id="closeScanner" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                        <i class="fa-solid fa-xmark w-6 h-6"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="relative">
-                <div id="qr-reader" class="w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-black"></div>
-                {{-- Scanning Line Animation --}}
-                <div id="scanner-line" class="hidden absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)] z-10 animate-scan"></div>
-            </div>
-            <div id="qr-status" class="mt-4 text-center text-sm font-medium text-blue-600 dark:text-blue-400 p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30">
-                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Initializing Camera...
-            </div>
-            <div id="qr-reader-results" class="hidden"></div>
-            <p class="mt-4 text-xs text-gray-500 text-center italic">Point your camera at the QR code on the product label.</p>
-        </div>
-    </div>
-</div>
+@include('components.scanner-modal')
 @endsection
 
 @push('style')
-<style>
-    @keyframes scan {
-        0% { top: 0; }
-        100% { top: 100%; }
-    }
-    .animate-scan {
-        animation: scan 2s linear infinite;
-    }
-    #qr-reader video {
-        border-radius: 0.5rem;
-    }
-</style>
 @endpush
 
 @push('scripts')
@@ -226,93 +189,15 @@
             table.ajax.reload();
         });
 
-        // Process QR/Scan Input (New Helper)
-        function processQRInput(input) {
-            input = input.trim();
-            if (!input) return;
-
-            console.log("[SCANNER] Processing:", input);
-            let finalId = input;
-            let displayPartNo = "";
-
-            // 1. Detect JSON Format
-            if (input.startsWith('{') && input.endsWith('}')) {
-                try {
-                    const data = JSON.parse(input);
-                    if (data.id) {
-                        displayPartNo = data.pn || '';
-                        
-                        // Check if it's a HashID (alphanumeric) or Base64 (Legacy)
-                        // If it's a hash, we use it directly. If it looks like base64, we try decoding.
-                        // Actually, our robust logic is to check BOTH against the select options.
-                        
-                        // Try finding option by Hash (Value)
-                        let matchHash = $(`#product_detail_id option[value="${data.id}"]`);
-                        if (matchHash.length > 0) {
-                            finalId = matchHash.val(); // Get HashID (same as data.id)
-                            console.log("[SCANNER] Matched via HashID:", data.id);
-                        } else {
-                            // HashID mismatch
-                            console.log("[SCANNER] HashID mismatch for:", data.id);
-                        }
-                    }
-                } catch (e) {
-                    console.error("[SCANNER] JSON Parse Error:", e);
-                }
-            }
-
-            // 2. Auto-Select Product
-            let option = $(`#product_detail_id option[value="${finalId}"]`);
-            
-            if (option.length > 0) {
-                $('#product_detail_id').val(finalId).trigger('change');
-                
-                // Visual feedback via toast
-                toast('success', 'Product Selected', displayPartNo || option.text().split(' - ')[0]);
-                
-                // Focus Qty field
-                setTimeout(() => $('#qty').focus(), 300);
-                
-                return true;
-            } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Product Not Found',
-                    text: `ID/Part No "${finalId}" does not exist in the current list.`,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                return false;
-            }
+        // Initialize Global Scanner Service (Unified)
+        if (typeof InventoryScanner !== 'undefined') {
+            new InventoryScanner({
+                selectId: '#product_detail_id',
+                scanButtonId: '#btn-scan',
+                qtyInputId: '#qty',
+                modalId: '#scannerModal'
+            });
         }
-
-        // Global Hardware Scanner Listener (Wedge)
-        let scannerBuffer = "";
-        let scannerTimeout = null;
-
-        $(document).on('keypress', function(e) {
-            // Ignore if user is typing in a textarea or certain inputs
-            if ($(e.target).is('textarea') || $(e.target).is('input[type="text"]:not(#qty)')) {
-                return;
-            }
-
-            // Detect fast typing (typical of hardware scanners)
-            if (scannerTimeout) clearTimeout(scannerTimeout);
-            
-            if (e.which === 13) { // Enter usually marks end of scan
-                if (scannerBuffer.length > 2) {
-                    e.preventDefault();
-                    processQRInput(scannerBuffer);
-                    scannerBuffer = "";
-                }
-            } else {
-                scannerBuffer += String.fromCharCode(e.which);
-            }
-
-            scannerTimeout = setTimeout(() => {
-                scannerBuffer = "";
-            }, 50); // Scanners are very fast, 50ms is enough to clear human typing
-        });
 
         // Form Submit
         $('#transactionForm').submit(function(e) {
@@ -354,119 +239,6 @@
             });
         });
 
-        // Camera Scanner Logic
-        let html5QrCode = null;
-        let isMirrored = false;
-
-        $('#btn-scan').on('click', function() {
-            // Mobile browsers require HTTPS for camera access
-            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'HTTPS Required',
-                    text: 'Mobile browsers strictly require a secure (HTTPS) connection to access the camera. Please use HTTPS or access via localhost.',
-                    footer: '<a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#security_requirements" target="_blank" class="text-blue-600 underline">Learn more about camera security</a>'
-                });
-                return;
-            }
-
-            $('#scannerModal').removeClass('hidden').addClass('flex');
-            
-            if (html5QrCode === null) {
-                html5QrCode = new Html5Qrcode("qr-reader", { verbose: false });
-            }
-
-            const config = { 
-                fps: 25, // Increased for smoother detection
-                qrbox: (viewfinderWidth, viewfinderHeight) => {
-                    // Make the box larger (85% of smaller edge) for easier alignment
-                    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                    let qrboxSize = Math.floor(minEdgeSize * 0.85);
-                    return { width: qrboxSize, height: qrboxSize };
-                },
-                aspectRatio: 1.0,
-                showTorchButtonIfSupported: true,
-                rememberLastUsedCamera: true,
-                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true
-                },
-                // Use a higher resolution for better detail capture
-                videoConstraints: {
-                    facingMode: "environment",
-                    width: { min: 640, ideal: 1280, max: 1920 },
-                    height: { min: 480, ideal: 720, max: 1080 },
-                    focusMode: "continuous"
-                }
-            };
-
-            html5QrCode.start(
-                config.videoConstraints,
-                config,
-                (decodedText) => {
-                    decodedText = decodedText.trim();
-                    console.log("[SCANNER] Found QR Code:", decodedText);
-                    
-                    // Stop scanning immediately on success
-                    html5QrCode.stop().then(() => {
-                        $('#scannerModal').addClass('hidden').removeClass('flex');
-                        processQRInput(decodedText);
-                    }).catch(err => {
-                        console.error("[SCANNER] Stop failed:", err);
-                        $('#scannerModal').addClass('hidden').removeClass('flex');
-                        processQRInput(decodedText);
-                    });
-                },
-                (errorMessage) => {
-                    // Log errors occasionally or only if they are not "NotFound"
-                    // Too many logs here can slow down the browser
-                }
-            ).then(() => {
-                console.log("[SCANNER] Camera started successfully");
-                $('#qr-status').html('<i class="fa-solid fa-expand fa-beat mr-2"></i> Scanning... Move camera to focus')
-                    .removeClass('bg-blue-50 dark:bg-blue-900/30')
-                    .addClass('bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400');
-                $('#scanner-line').removeClass('hidden');
-                applyMirror();
-            }).catch((err) => {
-                console.error("[SCANNER] Start failed:", err);
-                $('#scanner-line').addClass('hidden');
-                $('#qr-status').html('<span class="text-red-500"><i class="fa-solid fa-circle-exclamation mr-2"></i> Camera Error</span>')
-                    .removeClass('bg-blue-50 dark:bg-blue-900/30')
-                    .addClass('bg-red-50 dark:bg-red-900/30');
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Camera Error',
-                    text: 'Unable to start camera. Error: ' + err
-                });
-                $('#scannerModal').addClass('hidden').removeClass('flex');
-            });
-        });
-
-        function applyMirror() {
-            const video = $('#qr-reader video')[0];
-            if (video) {
-                console.log("[SCANNER] Applying mirror state:", isMirrored);
-                video.style.transform = isMirrored ? 'scaleX(-1)' : 'scaleX(1)';
-            }
-        }
-
-        $('#toggleMirror').on('click', function() {
-            isMirrored = !isMirrored;
-            applyMirror();
-            $(this).toggleClass('text-blue-600 dark:text-blue-400', isMirrored);
-        });
-
-        $('#closeScanner').on('click', function() {
-            $('#scanner-line').addClass('hidden');
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().then(() => {
-                    $('#scannerModal').addClass('hidden').removeClass('flex');
-                });
-            } else {
-                $('#scannerModal').addClass('hidden').removeClass('flex');
-            }
-        });
     });
 </script>
 @endpush

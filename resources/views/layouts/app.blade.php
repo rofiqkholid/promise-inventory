@@ -21,6 +21,15 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('assets/css/app.css?v=2') }}">
 
+    <script>
+        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
     <style>
         [x-cloak] {
             display: none !important;
@@ -48,13 +57,32 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
+
+        /* Standardize SweetAlert Backdrop - Modals Only */
+        /* Targets the backdrop when a modal is shown */
+        .swal2-container.swal2-backdrop-show, 
+        .swal2-container.swal2-center.swal2-backdrop-show {
+            background: rgba(15, 23, 42, 0.5) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        /* Explicitly remove backdrop for Toasts */
+        body.swal2-toast-shown .swal2-container.swal2-backdrop-show,
+        .swal2-container.swal2-top-end.swal2-backdrop-show {
+            background: transparent !important;
+        }
+
+        .swal2-popup {
+            border-radius: 0.75rem !important; /* rounded-xl */
+        }
     </style>
 
     @yield('css')
     @stack('styles')
 </head>
 
-<body class="bg-background text-slate-800 antialiased">
+<body class="bg-background dark:bg-gray-900 text-slate-800 dark:text-gray-200 antialiased">
     <div x-data="{ 
             sidebarReady: false,
             sidebarExpanded: localStorage.getItem('sidebarExpanded') !== 'false',
@@ -71,7 +99,7 @@
         x-init="sidebarExpanded = localStorage.getItem('sidebarExpanded') !== 'false'"
         class="flex h-screen overflow-hidden">
 
-        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar border-r border-slate-200 transition-all duration-300 ease-in-out w-64"
+        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 transition-all duration-300 ease-in-out w-64"
             :class="{
                 'w-64': sidebarExpanded && window.innerWidth >= 1024, 
                 'w-20': !sidebarExpanded && window.innerWidth >= 1024,
@@ -89,7 +117,7 @@
 
             @include('layouts.header')
 
-            <main class="bg-gray-100 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth flex flex-col">
+            <main class="bg-gray-100 dark:bg-gray-900 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth flex flex-col">
                 @include('components.toast')
 
                 <div class="flex-grow">
@@ -101,7 +129,10 @@
         </div>
 
         <div x-show="sidebarMobileOpen" @click="sidebarMobileOpen = false" x-transition.opacity
-            class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 lg:hidden" style="display: none;"></div>
+            class="fixed inset-0 bg-slate-900/50 z-40 lg:hidden" style="display: none;"></div>
+
+        <!-- Global Stock Alert Modal -->
+        @include('components.stock-alert-modal')
     </div>
 
     <div id="toast-container" class="fixed top-5 right-5 z-[100] flex flex-col gap-2"></div>

@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Inventory Master Data')
+@section('page_title', 'Master Data')
 @section('header-title', 'Inventory Master')
 
 @section('content')
@@ -18,7 +19,7 @@
             <nav aria-label="Tabs" class="relative">
                 <div class="segmented-tabs inline-flex bg-gray-200 dark:bg-gray-700/50 rounded-lg p-1 relative overflow-x-auto max-w-full no-scrollbar" role="tablist">
                     {{-- Sliding Highlight --}}
-                    <div id="tab-highlight" class="absolute bg-white dark:bg-gray-800 rounded-md shadow-sm transition-all duration-300 ease-in-out z-0"></div>
+                    <div id="tab-highlight" class="absolute bg-white dark:bg-gray-600 rounded-md shadow-sm transition-all duration-300 ease-in-out z-0 border border-gray-100 dark:border-gray-500"></div>
                     
                     <button data-tab="coil-center" role="tab" aria-selected="true" class="tab-button segmented-btn active rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Coil Center
@@ -49,7 +50,7 @@
     {{-- Tab Content: Coil Center --}}
     <div id="tab-coil-center" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="coil-center">
+            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition ease-in-out duration-150" data-target="coil-center">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>

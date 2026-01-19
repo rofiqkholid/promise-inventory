@@ -121,9 +121,13 @@ class InventoryProductController extends Controller
         $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
         $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
 
+        $perPage = $request->input('length', 10);
+        $start = $request->input('start', 0);
+        $draw = $request->input('draw', 1);
+
         $data = $query->orderByRaw("$orderCol $orderDir")
             ->skip($start)
-            ->take($length)
+            ->take($perPage)
             ->get()
             ->map(fn($r) => [
                 'id' => $hashids->encode($r->id),

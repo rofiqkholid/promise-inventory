@@ -18,6 +18,7 @@
     <x-table id="stoEventsTable">
         <thead>
             <tr>
+                <th class="px-4 md:px-6 py-2 md:py-3 w-10 text-center">No</th>
                 <th class="px-4 md:px-6 py-2 md:py-3">Code</th>
                 <th class="px-4 md:px-6 py-2 md:py-3">Name</th>
                 <th class="px-4 md:px-6 py-2 md:py-3">Period</th>
@@ -39,8 +40,9 @@
             window.defaultDataTable('stoEventsTable', {
                 serverSide: true,
                 ajax: "{{ route('inventory.sto.index') }}",
-                order: [[0, 'desc']], // Sort by Code/Created Desc
+                order: [[1, 'desc']], // Sort by Code/Row Num is 0
                 columns: [
+                    { className: 'px-4 md:px-6 py-3 md:py-4 text-center text-gray-500 font-medium', orderable: false, searchable: false },
                     { className: 'px-4 md:px-6 py-3 md:py-4 font-medium text-gray-800 dark:text-gray-200' },
                     { className: 'px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400' },
                     { className: 'px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap' },
@@ -57,7 +59,7 @@
 <!-- Create Modal -->
 <div id="createEventModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="document.getElementById('createEventModal').classList.add('hidden')"></div>
+        <div class="fixed inset-0 bg-slate-900/50 transition-opacity" aria-hidden="true" onclick="document.getElementById('createEventModal').classList.add('hidden')"></div>
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-10" onclick="event.stopPropagation()">
             <form action="{{ route('inventory.sto.store') }}" method="POST">

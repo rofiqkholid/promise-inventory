@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Stock Monitoring')
+@section('page_title', 'Stock Monitoring')
 @section('header-title', 'Stock Monitoring')
 
 @section('content')
@@ -13,7 +14,7 @@
 
         {{-- Legend Popover --}}
         <div class="relative mt-4 sm:mt-0">
-            <button id="toggleLegend" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-700">
+            <button id="toggleLegend" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700">
                 <i class="fa-solid fa-circle-question mr-1.5 text-blue-500"></i> Legend
             </button>
 
@@ -63,8 +64,8 @@
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Part No</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Spec & Size</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle">Remark</th>
-                <th colspan="2" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-600">Current Balance</th>
-                <th colspan="{{ max(1, $categories->count()) }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/20">Usage History (Pcs / Unit)</th>
+                <th colspan="2" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-gray-100 dark:bg-gray-700 dark:text-gray-200">Current Balance</th>
+                <th colspan="{{ max(1, $categories->count()) }}" class="px-6 py-3 border-b dark:border-gray-600 text-center bg-red-50 dark:bg-red-900/40 dark:text-red-200">Usage History (Pcs / Unit)</th>
                 <th rowspan="2" class="px-6 py-3 border-b dark:border-gray-600 align-middle text-center">Action</th>
             </tr>
             <tr>

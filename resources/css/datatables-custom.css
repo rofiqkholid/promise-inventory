@@ -19,7 +19,7 @@
 
 .dark .custom-table thead th {
     background-color: #1e293b !important;
-    color: #64748b !important;
+    color: #94a3b8 !important;
     border-bottom-color: #334155 !important;
 }
 
@@ -220,7 +220,7 @@ table.dataTable thead th.sorting_desc::before {
 }
 
 .dark .dataTables_wrapper .dataTables_filter input[type="search"]::placeholder {
-    color: #64748b !important;
+    color: #94a3b8 !important;
 }
 
 /* DataTable Info Text */
@@ -231,7 +231,7 @@ table.dataTable thead th.sorting_desc::before {
 }
 
 .dark .dataTables_wrapper .dataTables_info {
-    color: #94a3b8 !important;
+    color: #cbd5e1 !important;
 }
 
 /* DataTable Processing/Loading - Linear Top Bar */
@@ -331,13 +331,13 @@ div.dataTables_processing::after {
 .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
     background: #1e293b !important;
     border-color: #334155 !important;
-    color: #94a3b8 !important;
+    color: #cbd5e1 !important;
 }
 
 .dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
     background: #334155 !important;
-    border-color: #475569 !important;
-    color: #e2e8f0 !important;
+    border-color: #4b5563 !important;
+    color: #ffffff !important;
 }
 
 .dark .dataTables_wrapper .dataTables_paginate .paginate_button.current {

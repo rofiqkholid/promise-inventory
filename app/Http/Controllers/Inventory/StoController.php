@@ -64,7 +64,8 @@ class StoController extends Controller
             $data = $query->skip($start)->take($limit)->get();
 
             // Transform Data for View
-            $transformedData = $data->map(function ($event) {
+            $rowNumber = $start + 1;
+            $transformedData = $data->map(function ($event) use (&$rowNumber) {
                 $period = $event->period_start->format('d M Y');
                 if ($event->period_end && $event->status === 'CLOSED') {
                     $period .= ' - ' . $event->period_end->format('d M Y');
@@ -76,9 +77,12 @@ class StoController extends Controller
                 
                 $statusBadge = '<span class="px-2 py-1 text-xs rounded-full whitespace-nowrap ' . $statusClass . '">' . $event->status . '</span>';
                 
-                $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-semibold text-sm">' . ($event->status === 'OPEN' ? 'Manage' : 'View') . '</a>';
+                $actionBtn = $event->status === 'OPEN' 
+                    ? '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-list-check"></i> Manage</a>'
+                    : '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm" style="background-color: #334155; color: white;"><i class="fa-solid fa-eye"></i> View</a>';
 
                 return [
+                    $rowNumber++,
                     $event->code,
                     $event->name,
                     $period,
@@ -138,28 +142,28 @@ class StoController extends Controller
         return redirect()->route('inventory.sto.index')->with('success', 'STO Event created successfully.');
     }
 
-    /**
-     * Display the specified resource (Worksheet).
-     */
     public function show($id)
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        // Load Details with Product Info - Fix N+1 query by eager loading
-        $details = StoDetail::with(['product.product', 'product.unit', 'auditor'])
-            ->where('event_id', $stoEvent->id)
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
+        // Stats calculation remains here or can be deferred, but for now we keep it
         $stats = [
-            'total_items' => $details->count(),
-            'total_diff' => $details->where('diff_qty', '!=', 0)->count(),
-            'total_matched' => $details->where('diff_qty', 0)->count(),
+            'total_items' => StoDetail::where('event_id', $stoEvent->id)->count(),
+            'total_diff' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '!=', 0)->count(),
+            'total_matched' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', 0)->count(),
+            'total_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->sum('diff_qty'),
+            'total_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->sum('diff_qty'),
+            'count_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->count(),
+            'count_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->count(),
         ];
+
+        $netAdjustment = StoDetail::where('event_id', $stoEvent->id)->sum('diff_qty');
+        $totalProducts = InventoryProduct::where('is_active', 1)->count();
+        $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
 
         // Fetch all products for Select2 options (Similar to InventoryTransaction)
         // EXCLUDE products already counted in this event
-        $countedIds = $details->pluck('product_detail_id')->toArray();
+        $countedIds = StoDetail::where('event_id', $stoEvent->id)->pluck('product_detail_id')->toArray();
 
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
             ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
@@ -168,7 +172,141 @@ class StoController extends Controller
             ->orderBy('products.part_no')
             ->get();
 
-        return view('inventory.sto.show', compact('stoEvent', 'details', 'stats', 'products'));
+        return view('inventory.sto.show', compact('stoEvent', 'stats', 'products', 'netAdjustment', 'progress'));
+    }
+
+    /**
+     * Get STO Details for DataTables.
+     */
+    public function detailsData(Request $request, $id)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+        
+        $query = StoDetail::with(['product.product', 'product.unit', 'auditor'])
+            ->where('event_id', $stoEvent->id);
+
+        // Searching
+        if ($search = $request->input('search.value')) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product.product', function($sq) use ($search) {
+                    $sq->where('part_no', 'like', "%{$search}%")
+                       ->orWhere('part_name', 'like', "%{$search}%");
+                })->orWhere('remark', 'like', "%{$search}%");
+            });
+        }
+
+        // Ordering
+        $columns = ['row_number', 'updated_at', 'product_id', 'system_qty_snapshot', 'real_qty_input', 'diff_qty', 'remark', 'action']; 
+        $colIndex = $request->input('order.0.column', 0);
+        $dir = $request->input('order.0.dir', 'desc');
+        $colName = $columns[$colIndex] ?? 'updated_at';
+
+        if ($colName === 'product_id') {
+             $query->join('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
+                    ->join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
+                    ->orderBy('products.part_no', $dir)
+                    ->select('inv_t_sto_detail.*'); // Avoid column collision
+        } elseif ($colName !== 'action' && $colName !== 'row_number' && $colName !== 'remark') {
+             $query->orderBy($colName, $dir);
+        } else {
+             $query->orderBy('updated_at', 'desc');
+        }
+
+        $recordsTotal = StoDetail::where('event_id', $stoEvent->id)->count();
+        $recordsFiltered = $query->count();
+
+        $limit = $request->input('length', 10);
+        $start = $request->input('start', 0);
+        $data = $query->skip($start)->take($limit)->get();
+        
+        // Calculate starting row number for this page
+        $rowNumber = $start + 1;
+
+        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber) {
+            $diff = $detail->real_qty_input - $detail->system_qty_snapshot;
+            
+            $productInfo = '
+                <div class="flex flex-col">
+                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">' . ($detail->product->product->part_no ?? '-') . '</span>
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">' . ($detail->product->product->part_name ?? '-') . '</span>';
+            
+            // Remark is now in Product Info section (removed from here)
+            
+            if ($detail->auditor) {
+                $productInfo .= '
+                    <div class="mt-1 flex items-center gap-1 text-[10px] text-blue-500 font-semibold">
+                        <i class="fa-solid fa-user-check"></i> ' . $detail->auditor->name . '
+                    </div>';
+            }
+            $productInfo .= '</div>';
+
+            $diffHtml = '';
+            if ($diff > 0) {
+                $diffHtml = '<span class="text-sm font-bold text-green-600">+' . ($diff + 0) . '</span>';
+            } elseif ($diff < 0) {
+                $diffHtml = '<span class="text-sm font-bold text-red-600">' . ($diff + 0) . '</span>';
+            } else {
+                $diffHtml = '<span class="text-sm font-medium text-gray-300">-</span>';
+            }
+
+           // Inline editable QTY field for OPEN status
+            $qtyHtml = '';
+            if ($stoEvent->status === 'OPEN') {
+                $qtyHtml = '<input type="number" step="any" 
+                    class="qty-input text-center font-bold text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400" 
+                    style="width: 120px; min-width: 120px;"
+                    data-detail-id="' . $detail->hash_id . '" 
+                    data-product-id="' . $detail->product->hash_id . '"
+                    value="' . ($detail->real_qty_input + 0) . '" />';
+            } else {
+                $qtyHtml = '<span class="font-bold text-blue-600 dark:text-blue-400">' . ($detail->real_qty_input + 0) . '</span>';
+            }
+            
+            // Inline editable REMARK field
+            $remarkHtml = '';
+            if ($stoEvent->status === 'OPEN') {
+                $remarkValue = htmlspecialchars($detail->remark ?? '', ENT_QUOTES);
+                $remarkHtml = '<input type="text" 
+                    class="remark-input text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" 
+                    style="width: 180px; min-width: 180px;"
+                    data-detail-id="' . $detail->hash_id . '" 
+                    value="' . $remarkValue . '" 
+                    placeholder="Add note..." />';
+            } else {
+                $remarkHtml = '<span class="text-xs text-gray-600 dark:text-gray-400">' . ($detail->remark ?: '-') . '</span>';
+            }
+
+            $actionHtml = '';
+            if ($stoEvent->status === 'OPEN') {
+                $actionHtml = '
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="deleteItem(\'' . $detail->hash_id . '\')" 
+                                class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Delete">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>';
+            }
+            
+            $currentRow = $rowNumber++;
+
+            return [
+                'row_number' => $currentRow,
+                'updated_at' => $detail->updated_at->format('H:i'),
+                'product_info' => $productInfo,
+                'system_qty' => $detail->system_qty_snapshot + 0,
+                'real_qty' => $qtyHtml,
+                'diff' => $diffHtml,
+                'remark' => $remarkHtml,
+                'action' => $actionHtml
+            ];
+        });
+
+        return response()->json([
+            "draw" => intval($request->input('draw')),
+            "recordsTotal" => $recordsTotal,
+            "recordsFiltered" => $recordsFiltered,
+            "data" => $transformedData
+        ]);
     }
 
     /**
@@ -252,7 +390,9 @@ class StoController extends Controller
         $productId = InventoryProduct::decodeHash($request->product_id_hash);
         $product = InventoryProduct::find($productId);
         
-        if (!$product) abort(404, 'Product not found');
+        if (!$product) {
+            return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+        }
 
         // Upsert Detail
         $detail = StoDetail::where('event_id', $stoEvent->id)
@@ -270,11 +410,9 @@ class StoController extends Controller
         $detail->real_qty_input = $request->real_qty;
         $detail->remark = $request->remark;
         
-        // Calculate diff_qty
-        $detail->diff_qty = $request->real_qty - $detail->system_qty_snapshot;
+        // diff_qty is a computed column in SQL Server - it auto-calculates
         
-        // Attempt to find PIC based on Auth User (assuming User Name matches PIC Name or similar, or just leave null if not linked)
-        // Ideally User model should have 'pic_id' or we search by name.
+        // Attempt to find PIC based on Auth User
         $user = auth()->user();
         if ($user) {
             $pic = PIC::where('name', $user->name)->first();

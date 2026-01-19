@@ -97,6 +97,7 @@ Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Inventory\StoController::class, 'index'])->name('index');
     Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
     Route::get('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'show'])->name('show');
+    Route::get('/{id}/details-data', [\App\Http\Controllers\Inventory\StoController::class, 'detailsData'])->name('detailsData');
     Route::post('/{id}/scan', [\App\Http\Controllers\Inventory\StoController::class, 'scan'])->name('scan');
     Route::post('/{id}/save-count', [\App\Http\Controllers\Inventory\StoController::class, 'saveCount'])->name('saveCount');
     Route::delete('/{id}/detail/{detailId}', [\App\Http\Controllers\Inventory\StoController::class, 'deleteDetail'])->name('deleteDetail');

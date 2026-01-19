@@ -1,4 +1,7 @@
 @import 'tailwindcss';
+@config '../../tailwind.config.js';
+@source '../../resources/views/**/*.blade.php';
+@source '../../resources/js/**/*.js';
 @import './style-bundle.css';
 @import './datatables-custom.css';
 
@@ -56,6 +59,48 @@ select {
     padding-right: 2.5rem;
 }
 
+/* Dark mode for form inputs */
+.dark input[type='text'],
+.dark input[type='email'],
+.dark input[type='url'],
+.dark input[type='password'],
+.dark input[type='number'],
+.dark input[type='date'],
+.dark input[type='datetime-local'],
+.dark input[type='month'],
+.dark input[type='search'],
+.dark input[type='tel'],
+.dark input[type='time'],
+.dark input[type='week'],
+.dark textarea,
+.dark select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #e5e7eb;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #9ca3af;
+}
+
+.dark select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
 #main-content {
     visibility: hidden;
     opacity: 0;
@@ -108,12 +153,27 @@ button:disabled:hover {
     background: transparent;
 }
 
-.bg-blue-50 {
-    background-color: #f8fafc;
+
+/* Force Dark Mode Visibility Fixes */
+.dark .dark\:bg-blue-900\/40 {
+    background-color: rgba(30, 58, 138, 0.4) !important;
 }
 
-.dark .bg-blue-900 {
-    background-color: #1e293b;
+.dark .dark\:bg-blue-900\/30 {
+    background-color: rgba(30, 58, 138, 0.3) !important;
+}
+
+.dark .dark\:bg-gray-800 {
+    background-color: #1f2937 !important;
+}
+
+.dark .dark\:bg-gray-700 {
+    background-color: #374151 !important;
+}
+
+.dark #tab-highlight {
+    background-color: #4b5563 !important;
+    border-color: #6b7280 !important;
 }
 
 .search-menu-item {

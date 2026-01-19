@@ -10,7 +10,7 @@
                     <i class="fa-solid fa-arrow-left"></i> Back
                 </a>
                 <span class="text-gray-300">|</span>
-                <span class="px-2 py-0.5 text-xs rounded font-bold uppercase {{ $stoEvent->status === 'OPEN' ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-800' }}">
+                <span class="px-2 py-0.5 text-xs rounded font-bold uppercase {{ $stoEvent->status === 'OPEN' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
                     {{ $stoEvent->status }}
                 </span>
             </div>
@@ -19,39 +19,33 @@
         </div>
 
         <div class="flex flex-wrap gap-2 w-full md:w-auto">
-            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm text-sm">
-                <i class="fa-solid fa-download"></i> <span class="hidden sm:inline">Export</span>
+            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="flex-none bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm text-sm">
+                <i class="fa-solid fa-download"></i> Export
             </a>
             @if($stoEvent->status === 'CLOSED')
-            <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="flex-1 md:flex-none">
+            <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="flex-none">
                 @csrf
-                <button type="button" onclick="confirmReopen()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm text-sm">
+                <button type="button" onclick="confirmReopen()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm text-sm">
                     <i class="fa-solid fa-rotate-left"></i> <span class="hidden sm:inline">Reopen</span>
                 </button>
             </form>
             @endif
             @if($stoEvent->status === 'OPEN')
-            <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="flex-1 md:flex-none">
+            <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="flex-1 w-full md:w-auto min-w-[140px]">
                 @csrf
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-3 md:px-4 py-2 rounded-lg flex items-center justify-center gap-2 shadow-sm text-sm">
-                    <i class="fa-solid fa-lock"></i> <span class="hidden sm:inline">Finalize</span>
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm font-medium">
+                    <i class="fa-solid fa-lock"></i> Finalize
                 </button>
             </form>
             @endif
         </div>
     </div>
 
-    @php
-        $totalIncrease = $details->where('diff_qty', '>', 0)->sum('diff_qty');
-        $totalDecrease = $details->where('diff_qty', '<', 0)->sum('diff_qty');
-        $netAdjustment = $details->sum('diff_qty');
-        $totalProducts = \App\Models\InventoryModel\InventoryProduct::where('is_active', 1)->count();
-        $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
-    @endphp
+    {{-- Statistics calculated in Controller --}}
 
-    <!-- Statistics Dashboard - Compact Horizontal & Mobile Friendly -->
-    <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-lg p-3 md:p-4 mb-4 md:mb-6 border border-gray-200 dark:border-gray-600 overflow-x-auto">
-        <div class="flex items-center gap-4 md:gap-6 text-xs md:text-sm whitespace-nowrap">
+    <!-- Statistics Dashboard - Horizontal with Wrap (No Scroll) -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6 border border-gray-200 dark:border-gray-600">
+        <div class="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm">
             <div class="flex items-center gap-2">
                 <span class="text-gray-600 dark:text-gray-400">Total:</span>
                 <span class="font-bold text-base md:text-lg text-blue-600 dark:text-blue-400">{{ $stats['total_items'] }}</span>
@@ -60,14 +54,14 @@
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-green-600 dark:text-green-400">Inc:</span>
-                <span class="font-bold text-green-700 dark:text-green-300">+{{ number_format($totalIncrease, 2) }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $details->where('diff_qty', '>', 0)->count() }})</span>
+                <span class="font-bold text-green-700 dark:text-green-300">+{{ number_format($stats['total_increase'], 2) }}</span>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $stats['count_increase'] }})</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-red-600 dark:text-red-400">Dec:</span>
-                <span class="font-bold text-red-700 dark:text-red-300">{{ number_format($totalDecrease, 2) }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $details->where('diff_qty', '<', 0)->count() }})</span>
+                <span class="font-bold text-red-700 dark:text-red-300">{{ number_format($stats['total_decrease'], 2) }}</span>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">({{ $stats['count_decrease'] }})</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
@@ -83,15 +77,15 @@
     </div>
 
     @if($stoEvent->status === 'OPEN')
-    <!-- SCANNER SECTION - Responsive -->
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 md:p-6 mb-4 md:mb-6">
-        <label class="block text-xs md:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            <i class="fa-solid fa-barcode"></i> Select or Scan Product
+    <!-- SCANNER SECTION - Mobile Optimized -->
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 md:p-6 mb-4 md:mb-6">
+        <label class="block text-sm md:text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">
+            <i class="fa-solid fa-barcode mr-1"></i> Select or Scan Product
         </label>
         
         <div class="flex gap-2">
-            <div class="flex-1">
-                <select id="product_detail_id" class="select2 w-full text-sm" data-placeholder="Select Product via Search or Scanner...">
+            <div class="flex-1 min-w-0">
+                <select id="product_detail_id" class="select2 w-full" data-placeholder="Select Product via Search or Scanner...">
                     <option value="">Select Product via Search or Scanner...</option>
                     @foreach($products as $product)
                         <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}">
@@ -100,38 +94,45 @@
                     @endforeach
                 </select>
             </div>
-            <button id="btn-scan" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border border-gray-300 transition-colors" title="Open Scanner">
-                <i class="fa-solid fa-camera"></i>
+            <button id="btn-scan" class="flex-shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 md:px-4 py-2 rounded-lg border border-gray-300 transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:border-gray-600" title="Open Scanner">
+                <i class="fa-solid fa-camera text-lg"></i>
             </button>
         </div>
 
         <!-- Clean Result / Input Form -->
-        <div class="mt-6 hidden" id="scanResultArea">
-             <div class="flex flex-col md:flex-row items-center gap-4 text-sm">
-                 <!-- Product Info - Simplified -->
-                 <div class="flex-1 w-full space-y-1">
-                    <div class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight" id="resPartNo">-</div>
-                    <div class="text-base font-semibold text-gray-800 dark:text-gray-200" id="resPartName">-</div>
-                    <div class="flex gap-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span>Unit: <span class="font-bold text-gray-700 dark:text-gray-300" id="resUnit">-</span></span>
-                        <span>Stock: <span class="font-bold text-gray-700 dark:text-gray-300" id="resSystemQty">0</span></span>
-                        <span>Prev: <span class="font-bold text-gray-700 dark:text-gray-300" id="resPrevReal">0</span></span>
+        <div class="mt-4 hidden" id="scanResultArea">
+             
+             <div class="flex flex-col md:flex-row items-start md:items-center gap-4 text-sm bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <!-- Product Info -->
+                 <div class="flex-1 w-full text-left">
+                    <div class="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1" id="resPartNo">-</div>
+                    <div class="text-base md:text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight mb-3" id="resPartName">-</div>
+                    <div class="flex flex-wrap gap-2 text-xs">
+                        <span class="px-2 py-1 rounded bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300">
+                            Unit: <span class="text-gray-900 dark:text-gray-100 font-semibold" id="resUnit">-</span>
+                        </span>
+                        <span class="px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                            Stock: <span class="font-semibold" id="resSystemQty">0</span>
+                        </span>
+                        <span class="px-2 py-1 rounded bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                            Prev: <span class="font-semibold" id="resPrevReal">0</span>
+                        </span>
                     </div>
                  </div>
                  
-                 <!-- Actions - Inline-ish -->
-                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-                    <div class="flex w-full sm:w-32">
+                 <!-- Actions -->
+                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+                    <div class="flex w-full sm:w-24 relative">
                         <input type="number" id="realQtyInput" step="any" 
-                               class="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-center font-bold px-2 py-2" 
+                               class="w-full rounded-md border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-center font-semibold px-3 py-2" 
                                placeholder="Qty">
                     </div>
-                    <div class="flex w-full sm:w-48">
+                    <div class="flex w-full sm:w-56">
                         <input type="text" id="remarkInput" 
-                               class="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm px-3 py-2" 
+                               class="w-full rounded-md border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm px-3 py-2" 
                                placeholder="Note (Optional)">
                     </div>
-                    <button id="btnSaveCount" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold transition flex items-center justify-center gap-2">
+                    <button id="btnSaveCount" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-semibold transition flex items-center justify-center gap-2">
                         SAVE <i class="fa-solid fa-check"></i>
                     </button>
                  </div>
@@ -144,17 +145,23 @@
     
     @include('components.scanner-modal')
 
-    <!-- RESULTS TABLE - Elegant Dashboard Style -->
-    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden mt-8">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
-            <h3 class="font-bold text-gray-800 dark:text-gray-200">Counted Items</h3>
-            <div class="flex items-center gap-4 text-xs font-bold">
-                <span class="flex items-center gap-1.5 text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-100 dark:border-green-800">
-                    <i class="fa-solid fa-circle-check"></i> {{ $stats['total_matched'] }} Match
-                </span>
-                <span class="flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-100 dark:border-red-800">
-                    <i class="fa-solid fa-circle-exclamation"></i> {{ $stats['total_diff'] }} Mismatch
-                </span>
+    <!-- RESULTS TABLE - Mobile Optimized -->
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden mt-6 md:mt-8">
+        <div class="px-4 md:px-6 py-3 md:py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <h3 class="font-bold text-base md:text-lg text-gray-800 dark:text-gray-200">Counted Items</h3>
+                <div class="flex items-center gap-2 md:gap-3 text-xs md:text-sm font-bold">
+                    <span class="flex items-center gap-1 md:gap-1.5 text-green-600 bg-green-50 dark:bg-green-900/20 px-2 md:px-3 py-1 rounded-full border border-green-100 dark:border-green-800 whitespace-nowrap">
+                        <i class="fa-solid fa-circle-check text-xs"></i> 
+                        <span>{{ $stats['total_matched'] }}</span>
+                        <span class="hidden sm:inline ml-1">Match</span>
+                    </span>
+                    <span class="flex items-center gap-1 md:gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/20 px-2 md:px-3 py-1 rounded-full border border-red-100 dark:border-red-800 whitespace-nowrap">
+                        <i class="fa-solid fa-circle-exclamation text-xs"></i> 
+                        <span>{{ $stats['total_diff'] }}</span>
+                        <span class="hidden sm:inline ml-1">Mismatch</span>
+                    </span>
+                </div>
             </div>
         </div>
         
@@ -163,93 +170,19 @@
             <x-table id="stoDetailsTable" class="mb-6 mt-3">
                 <thead class="bg-slate-50/50">
                     <tr>
+                        <th class="px-6 py-4">No</th>
                         <th class="px-6 py-4">Time</th>
                         <th class="px-6 py-4">Product Details</th>
                         <th class="px-6 py-4 text-center">System</th>
-                        <th class="px-6 py-4 text-center">Real</th>
+                        <th class="px-4 py-4 text-center w-36 sm:w-40 md:w-44">Real</th>
                         <th class="px-6 py-4 text-center">Diff</th>
-                        <th class="px-6 py-4">Status</th>
+                        <th class="px-4 py-4 w-48 sm:w-56 md:w-64">Remark</th>
                         @if($stoEvent->status === 'OPEN')
                         <th class="px-6 py-4 text-right">Action</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody id="stoTableBody" class="">
-                    @forelse($details as $detail)
-                    <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td class="px-6 py-4">
-                            <span class="text-xs font-medium text-gray-400 dark:text-gray-500">{{ $detail->updated_at->format('H:i') }}</span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $detail->product->product->part_no }}</span>
-                                <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">{{ $detail->product->product->part_name }}</span>
-                                @if($detail->remark)
-                                    <div class="mt-1 flex items-center gap-1 text-[10px] text-gray-400 bg-gray-100 dark:bg-gray-700 w-fit px-1.5 py-0.5 rounded capitalize">
-                                        <i class="fa-solid fa-message"></i> {{ $detail->remark }}
-                                    </div>
-                                @endif
-                                @if($detail->auditor)
-                                    <div class="mt-1 flex items-center gap-1 text-[10px] text-blue-500 font-semibold">
-                                        <i class="fa-solid fa-user-check"></i> {{ $detail->auditor->name }}
-                                    </div>
-                                @endif
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-center font-mono text-sm text-gray-600 dark:text-gray-400">
-                            {{ $detail->system_qty_snapshot + 0 }}
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <span class="font-mono text-sm font-black text-blue-600 dark:text-blue-400">
-                                {{ $detail->real_qty_input + 0 }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            @php $diff = $detail->real_qty_input - $detail->system_qty_snapshot; @endphp
-                            @if($diff > 0)
-                                <span class="text-sm font-bold text-green-600">+{{ $diff + 0 }}</span>
-                            @elseif($diff < 0)
-                                <span class="text-sm font-bold text-red-600">{{ $diff + 0 }}</span>
-                            @else
-                                <span class="text-sm font-medium text-gray-300">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($diff == 0)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 uppercase">
-                                    MATCH
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 uppercase border border-red-200 dark:border-red-900/50">
-                                    MISMATCH
-                                </span>
-                            @endif
-                        </td>
-                        @if($stoEvent->status === 'OPEN')
-                        <td class="px-6 py-4 text-right">
-                            <div class="flex justify-end gap-3">
-                                <button type="button" onclick="editItem('{{ $detail->product->hash_id }}')" 
-                                        class="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" title="Edit Count">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </button>
-                                <button type="button" onclick="deleteItem('{{ $detail->hash_id }}')" 
-                                        class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Delete">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                        </td>
-                        @endif
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="{{ $stoEvent->status === 'OPEN' ? '7' : '6' }}" class="px-6 py-12 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <i class="fa-solid fa-clipboard-list text-gray-200 dark:text-gray-700 text-4xl"></i>
-                                <span class="text-sm text-gray-400 italic">No items scanned yet.</span>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
                 </tbody>
             </x-table>
         </div>
@@ -263,14 +196,165 @@
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
 
+    let table;
     // Initialize DataTable
     document.addEventListener('DOMContentLoaded', function() {
         if (window.defaultDataTable) {
-            window.defaultDataTable('stoDetailsTable', {
-                order: [[0, 'desc']], // Latest Time first
-                columnDefs: [
-                    { orderable: false, targets: [-1] } // Disable sort on last column (Action or Status if closed)
-                ]
+            table = window.defaultDataTable('stoDetailsTable', {
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('inventory.sto.detailsData', $stoEvent->hash_id) }}",
+                    type: 'GET'
+                },
+                columns: [
+                    { data: 'row_number', className: 'px-6 py-4 text-center text-gray-600 dark:text-gray-400', orderable: false, searchable: false },
+                    { data: 'updated_at', className: 'px-6 py-4' },
+                    { data: 'product_info', orderable: true },
+                    { data: 'system_qty', className: 'px-6 py-4 text-center font-mono text-sm text-gray-600 dark:text-gray-400' },
+                    { data: 'real_qty', className: 'px-4 py-4 text-center', orderable: false },
+                    { data: 'diff', className: 'px-6 py-4 text-center' },
+                    { data: 'remark', className: 'px-4 py-4', orderable: false },
+                    @if($stoEvent->status === 'OPEN')
+                    { data: 'action', className: 'px-6 py-4 text-right', orderable: false }
+                    @endif
+                ],
+                order: [[1, 'desc']], // Time column first
+            });
+
+            // Inline Editing for QTY - Save on Enter or blur
+            $('#stoDetailsTable').on('keydown', '.qty-input', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $(this).blur(); // Trigger save
+                }
+            });
+
+            $('#stoDetailsTable').on('blur', '.qty-input', function() {
+                const $input = $(this);
+                const detailId = $input.data('detail-id');
+                const productId = $input.data('product-id');
+                const newQty = $input.val();
+                const originalQty = $input.data('original-value');
+
+                // Skip if value hasn't changed
+                if (newQty === originalQty || !newQty || newQty === '') return;
+
+                // Get existing remark from the same row
+                const $row = $input.closest('tr');
+                const $remarkInput = $row.find('.remark-input');
+                const existingRemark = $remarkInput.length ? $remarkInput.val() : '';
+
+                // Visual feedback
+                $input.addClass('border-yellow-500 bg-yellow-50');
+
+                // Save inline edit
+                fetch(saveUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({ 
+                        product_id_hash: productId, 
+                        real_qty: newQty,
+                        remark: existingRemark
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-green-500');
+                        setTimeout(() => $input.removeClass('border-green-500'), 1000);
+                        $input.data('original-value', newQty); // Update original value
+                        table.ajax.reload(null, false); // Reload without resetting pagination
+                        if (window.showToast) {
+                            window.showToast('Quantity updated', 'success');
+                        }
+                    } else {
+                        $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-red-500');
+                        if (window.showToast) {
+                            window.showToast('Error: ' + data.message, 'error');
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Save error:', err);
+                    $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-red-500');
+                    if (window.showToast) {
+                        window.showToast('Failed to save quantity', 'error');
+                    }
+                });
+            });
+
+            // Inline Editing for Remark - Save on Enter or blur (same as QTY)
+            $('#stoDetailsTable').on('keydown', '.remark-input', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    $(this).blur(); // Trigger save
+                }
+            });
+
+            $('#stoDetailsTable').on('blur', '.remark-input', function() {
+                const $input = $(this);
+                const detailId = $input.data('detail-id');
+                const newRemark = $input.val();
+                const originalRemark = $input.data('original-value') || '';
+
+                // Skip if value hasn't changed
+                if (newRemark === originalRemark) return;
+
+                // Get the current qty from this row
+                const $row = $input.closest('tr');
+                const $qtyInput = $row.find('.qty-input');
+                const productId = $qtyInput.data('product-id');
+                const currentQty = $qtyInput.val();
+
+                if (!currentQty) {
+                    if (window.showToast) {
+                        window.showToast('Quantity is required', 'warning');
+                    }
+                    return;
+                }
+
+                // Visual feedback
+                $input.addClass('border-yellow-500 bg-yellow-50');
+
+                // Save remark update
+                fetch(saveUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                    body: JSON.stringify({ 
+                        product_id_hash: productId, 
+                        real_qty: currentQty,
+                        remark: newRemark
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-green-500');
+                        setTimeout(() => $input.removeClass('border-green-500'), 1000);
+                        $input.data('original-value', newRemark);
+                        if (window.showToast) {
+                            window.showToast('Remark saved', 'success');
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Save error:', err);
+                    $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-red-500');
+                    if (window.showToast) {
+                        window.showToast('Failed to save remark', 'error');
+                    }
+                });
+            });
+
+            // Store original values when table is drawn
+            table.on('draw', function() {
+                $('#stoDetailsTable .qty-input').each(function() {
+                    $(this).data('original-value', $(this).val());
+                });
+                $('#stoDetailsTable .remark-input').each(function() {
+                    $(this).data('original-value', $(this).val());
+                });
             });
         }
     });
@@ -386,7 +470,10 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        Swal.fire('Deleted!', 'Item has been deleted.', 'success').then(() => location.reload());
+                        Swal.fire('Deleted!', 'Item has been deleted.', 'success').then(() => {
+                            if (table) table.ajax.reload();
+                            else location.reload();
+                        });
                     } else {
                         Swal.fire('Error!', data.message, 'error');
                     }
@@ -402,14 +489,14 @@
         resultArea.classList.remove('hidden');
         resPartName.innerText = data.part_name;
         resPartNo.innerText = data.part_no;
-        resUnit.innerText = data.unit_name;
-        resSystemQty.innerText = (data.current_stock_qty || 0) + 0;
-        resPrevReal.innerText = (data.last_real_qty || 0) + 0;
-        currentHashId.value = data.hash_id;
+        resUnit.innerText = data.unit || 'PCS';
+        resSystemQty.innerText = (data.system_qty || 0) + 0;
+        resPrevReal.innerText = (data.prev_real_qty || 0) + 0;
+        currentHashId.value = data.product_id_hash;
         
         // Populate existing values if any
-        realQtyInput.value = data.last_real_qty || '';
-        document.getElementById('remarkInput').value = data.last_remark || '';
+        realQtyInput.value = data.prev_real_qty || '';
+        document.getElementById('remarkInput').value = '';
         
         setTimeout(() => realQtyInput.focus(), 100);
     }
@@ -482,7 +569,13 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                location.reload(); 
+                if (table) {
+                    table.ajax.reload();
+                    if (resultArea) resultArea.classList.add('hidden');
+                    if (productSelect.length) productSelect.val(null).trigger('change');
+                } else {
+                    location.reload(); 
+                }
             } else {
                 alert('Error saving: ' + data.message);
             }
@@ -498,8 +591,10 @@
             
             const totalItems = {{ $stats['total_items'] }};
             const totalDiff = {{ $stats['total_diff'] }};
-            const totalIncrease = {{ $details->where('diff_qty', '>', 0)->count() }};
-            const totalDecrease = {{ $details->where('diff_qty', '<', 0)->count() }};
+            const countIncrease = {{ $stats['count_increase'] }};
+            const countDecrease = {{ $stats['count_decrease'] }};
+            const totalIncrease = {{ $stats['total_increase'] }};
+            const totalDecrease = {{ $stats['total_decrease'] }};
             const netAdjustment = {{ $netAdjustment }};
 
             if (totalItems === 0) {
@@ -513,8 +608,8 @@
                     <p>Matched (No Change): <span class="text-green-600">{{ $stats['total_matched'] }}</span></p>
                     <p>Mismatched: <span class="text-red-600">${totalDiff}</span></p>
                     <hr class="my-2">
-                    <p>Stock Increases: <span class="text-green-600">${totalIncrease} items (+{{ number_format($totalIncrease, 2) }})</span></p>
-                    <p>Stock Decreases: <span class="text-red-600">${totalDecrease} items ({{ number_format($totalDecrease, 2) }})</span></p>
+                    <p>Stock Increases: <span class="text-green-600">${countIncrease} items (+${totalIncrease.toFixed(2)})</span></p>
+                    <p>Stock Decreases: <span class="text-red-600">${countDecrease} items (${totalDecrease.toFixed(2)})</span></p>
                     <p class="font-semibold">Net Adjustment: <span class="text-purple-600">${netAdjustment >= 0 ? '+' : ''}${netAdjustment.toFixed(2)}</span></p>
                     <hr class="my-2">
                     <p class="text-sm text-gray-600">This will <strong>LOCK</strong> the event and <strong>UPDATE</strong> stock levels.</p>
@@ -559,6 +654,29 @@
     }
 
 </script>
+
+<style>
+    /* Fix Select2 clear button overlapping with dropdown arrow */
+    .select2-container .select2-selection--single .select2-selection__clear {
+        position: absolute;
+        right: 28px !important; /* Move clear button closer to arrow */
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        margin-right: 0 !important;
+    }
+    
+    /* Add more padding to right side when clear button is visible */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-right: 45px !important;
+    }
+    
+    /* Ensure dropdown arrow stays in place but not too close to edge */
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        right: 10px !important; /* Move arrow away from edge */
+    }
+</style>
+
 @endpush
 @endsection
 

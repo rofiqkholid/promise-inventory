@@ -124,6 +124,8 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+
+
         $initialModels = [];
         if (!empty($selectedModels)) {
             $initialModels = DB::table('models')
@@ -160,6 +162,7 @@ class DashboardController extends Controller
                 'usage' => $usageStatusTable,
                 'history' => $transactionHistory
             ],
+
             'filters' => [
                 'initial_models' => $initialModels,
                 'initial_customers' => $initialCustomers,

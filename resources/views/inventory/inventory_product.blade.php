@@ -1,5 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Inventory Product Management')
+@section('page_title', 'Product Master')
 @section('header-title', 'Inventory Product')
 
 @section('content')
@@ -39,15 +40,13 @@
 </div>
 
 {{-- Add/Edit Modal --}}
-<div id="formModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-black bg-opacity-50 flex">
+<div id="formModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
     <div class="relative p-4 w-full max-w-4xl max-h-[95vh]">
-        <div class="relative text-left bg-white rounded-lg shadow dark:bg-gray-800 flex flex-col max-h-[90vh]">
-            <div class="flex items-center justify-between p-4 border-b rounded-t dark:border-gray-600">
-                <h3 class="text-xl font-medium text-gray-900 dark:text-white" id="modalTitle">Add Inventory Product</h3>
-                <button type="button" class="close-modal-button text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                    <i class="fa-solid fa-xmark w-5 h-5"></i>
-                </button>
-            </div>
+        <div class="relative text-left bg-white rounded-lg shadow dark:bg-gray-800 flex flex-col max-h-[90vh] p-4 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white z-10">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+            </button>
+            <h3 class="text-xl text-center font-medium text-gray-900 dark:text-white mb-4" id="modalTitle">Add Inventory Product</h3>
 
             <form id="productForm" method="POST" class="flex flex-col overflow-hidden h-full">
                 @csrf
@@ -217,7 +216,7 @@
 </div>
 
 {{-- Delete Modal --}}
-<div id="deleteModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+<div id="deleteModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-slate-900/50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -329,7 +328,7 @@ $(function() {
             { data: 'model' },
             { 
                 data: null, 
-                render: row => `${row.material_spec} <br> <span class="text-xs text-gray-500">(${row.coating_type || '-'})</span>` 
+                render: row => `${row.material_spec} <br> <span class="text-xs text-gray-500 dark:text-gray-400">(${row.coating_type || '-'})</span>` 
             },
             { 
                 data: null, 
@@ -354,7 +353,7 @@ $(function() {
             { 
                 data: 'remark', 
                 defaultContent: '-', 
-                className: 'text-xs text-gray-500',
+                className: 'text-xs text-gray-500 dark:text-gray-400',
                 orderable: false,
                 render: (d) => d || '-'
             },
@@ -366,13 +365,13 @@ $(function() {
                 width: '100px',
                 render: row => `
                     <div class="flex items-center justify-center gap-2">
-                        <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-green-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Print Label">
+                        <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-green-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900" data-id="${row.id}" title="Print Label">
                             <i class="fa-solid fa-print text-sm"></i>
                         </button>
-                        <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Edit">
+                        <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-blue-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900" data-id="${row.id}" title="Edit">
                             <i class="fa-solid fa-pen-to-square text-sm"></i>
                         </button>
-                        <button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${row.id}" title="Delete">
+                        <button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-red-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900" data-id="${row.id}" title="Delete">
                             <i class="fa-solid fa-trash-can text-sm"></i>
                         </button>
                     </div>`

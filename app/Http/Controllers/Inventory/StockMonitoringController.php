@@ -124,12 +124,24 @@ class StockMonitoringController extends Controller
             });
         }
 
-        // Sorting
-        $query->orderBy('products.part_no', 'asc');
+        $recordsTotal = InventoryProduct::where('is_active', 1)->count();
+        $filteredRecords = $query->count();
 
-        // Pagination
-        $totalRecords = InventoryProduct::count();
-        $filteredRecords = $query->get()->count();
+        // Sorting
+        $columns = ['hash_id', 'part_no', 'spec_size', 'remark', 'balance_unit', 'balance_pcs'];
+        $orderColIdx = $request->input('order.0.column', 1);
+        $orderDir = $request->input('order.0.dir', 'asc');
+        $orderCol = $columns[$orderColIdx] ?? 'products.part_no';
+
+        if ($orderCol === 'part_no') {
+            $query->orderBy('products.part_no', $orderDir);
+        } elseif ($orderCol === 'spec_size') {
+            $query->orderBy('inv_m_material_spec.spec_name', $orderDir);
+        } elseif ($orderCol === 'balance_unit' || $orderCol === 'balance_pcs') {
+            $query->orderBy('inv_t_product_detail.current_stock_qty', $orderDir);
+        } else {
+            $query->orderBy('products.part_no', 'asc');
+        }
 
         $perPage = $request->input('length', 10);
         $start = $request->input('start', 0);
@@ -205,7 +217,7 @@ class StockMonitoringController extends Controller
 
         return response()->json([
             'draw' => $request->input('draw'),
-            'recordsTotal' => $totalRecords,
+            'recordsTotal' => $recordsTotal,
             'recordsFiltered' => $filteredRecords,
             'data' => $formattedData
         ]);

@@ -14,6 +14,8 @@
                 apiBase: '{{ url("inventory/master/coil-center") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -50,6 +52,8 @@
                 apiBase: '{{ url("inventory/master/material-spec") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -82,6 +86,8 @@
                 apiBase: '{{ url("inventory/master/unit") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -114,6 +120,8 @@
                 apiBase: '{{ url("inventory/master/rank") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -149,6 +157,8 @@
                 apiBase: '{{ url("inventory/master/sub-contractor") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -184,6 +194,8 @@
                 apiBase: '{{ url("inventory/master/transaction-category") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -224,6 +236,8 @@
                 apiBase: '{{ url("inventory/master/pic") }}',
                 columns: [{
                         data: null,
+                        orderable: false,
+                        searchable: false,
                         render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
                     },
                     {
@@ -257,7 +271,12 @@
             if (!config || initializedTabs[tabName]) return;
 
             tables[config.table] = window.defaultDataTable(`#${config.table}`, {
-                url: config.dataUrl,
+                ajax: {
+                    url: config.dataUrl,
+                    type: 'GET'
+                },
+                serverSide: true,
+                processing: true,
                 columns: config.columns,
                 order: [[1, 'asc']]
             });

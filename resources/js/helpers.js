@@ -27,25 +27,25 @@ window.defaultDataTable = function (selector, userConfig = {}) {
             {
                 extend: 'excel',
                 text: '<i class="fa-solid fa-file-excel"></i>',
-                className: 'px-3 py-1.5 bg-green-50 text-green-600 border border-green-100 rounded-lg hover:bg-green-100 transition-colors',
+                className: 'px-3 py-1.5 bg-green-50 text-green-600 border border-green-100 rounded-lg hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900/50 dark:hover:bg-green-900/50 transition-colors',
                 titleAttr: 'Export to Excel'
             },
             {
                 extend: 'pdf',
                 text: '<i class="fa-solid fa-file-pdf"></i>',
-                className: 'px-3 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-colors',
+                className: 'px-3 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/50 transition-colors',
                 titleAttr: 'Export to PDF'
             },
             {
                 extend: 'csv',
                 text: '<i class="fa-solid fa-file-csv"></i>',
-                className: 'px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors',
+                className: 'px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-900/50 dark:hover:bg-blue-900/50 transition-colors',
                 titleAttr: 'Export to CSV'
             },
             {
                 extend: 'print',
                 text: '<i class="fa-solid fa-print"></i>',
-                className: 'px-3 py-1.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors',
+                className: 'px-3 py-1.5 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors',
                 titleAttr: 'Print Table'
             }
         ],
