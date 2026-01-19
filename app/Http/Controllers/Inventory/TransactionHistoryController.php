@@ -70,14 +70,18 @@ class TransactionHistoryController extends Controller
      * FILTER: DATE RANGE
      * format: YYYY-MM-DD - YYYY-MM-DD
      * ===================================================== */
-    if (!empty($request->date_range)) {
-        [$start, $end] = explode(' - ', $request->date_range);
+   if ($request->filled('date_range') && str_contains($request->date_range, ' - ')) {
 
+    [$start, $end] = explode(' - ', $request->date_range);
+
+    if ($start && $end) {
         $query->whereBetween('transaction_date', [
             Carbon::parse($start)->startOfDay(),
             Carbon::parse($end)->endOfDay()
         ]);
     }
+}
+
 
     /* =====================================================
      * GLOBAL SEARCH (DATATABLE)
@@ -150,7 +154,7 @@ class TransactionHistoryController extends Controller
     });
 
     return response()->json([
-        'draw' => intval($request->draw),
+        'draw' => intval($request->input('draw', 1)),
         'recordsTotal' => $totalData,
         'recordsFiltered' => $filteredData,
         'data' => $data

@@ -85,13 +85,16 @@
             </div>
         </div>
 
-        {{-- TASKS --}}
-        <a href="{{ route('inventory.transactionHistory') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-list-check w-6 text-center text-lg text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300"></i>
-            <span x-show="sidebarExpanded" class="text-sm">Transaction History</span>
-             {{-- Tooltip for Minimized --}}
-             <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
+        {{-- TRANSACTION HISTORY --}}
+         <a href="{{ route('transactionHistory') }}"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+           {{ request()->routeIs('transactionHistory') ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-slate-50 hover:text-slate-900' }}"
+           :class="!sidebarExpanded ? 'justify-center' : ''">
+            <i class="fa-solid fa-arrow-right-arrow-left w-6 text-center text-lg {{ request()->routeIs('transactionHistory') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600' }}"></i>
+            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Transaction History</span>
+            
+            {{-- Tooltip for Minimized --}}
+            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
                 Transaction History
             </div>
         </a>

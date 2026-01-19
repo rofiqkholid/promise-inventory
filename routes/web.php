@@ -108,10 +108,10 @@ Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
 #End region
 
 #Region Transaction History
-Route::get('/inventory/transaction-history', [TransactionHistoryController::class, 'index'])->name('inventory.transactionHistory');
-Route::get('/inventory/transaction-history/getData', [TransactionHistoryController::class, 'getData'])->name('inventory.transactionHistory.getData');
-Route::get('/inventory/transaction-history/{id}/edit', [TransactionHistoryController::class, 'edit']);
-Route::put('/inventory/transaction-history/{id}', [TransactionHistoryController::class, 'update'])->name('inventory.transactionHistory.update');
+Route::get('transaction-history', [TransactionHistoryController::class, 'index'])->name('transactionHistory');
+Route::get('transaction-history/getData', [TransactionHistoryController::class, 'getData'])->name('transactionHistory.getData');
+Route::get('transaction-history/{id}/edit', [TransactionHistoryController::class, 'edit'])->name('transactionHistory.edit');
+Route::put('transaction-history/{id}', [TransactionHistoryController::class, 'update'])->name('transactionHistory.update');
 # endregion
 
 #Region Dashboard API
