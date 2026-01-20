@@ -14,11 +14,40 @@ class DashboardController extends Controller
         $selectedModels = $request->input('model', []);
         $selectedCustomers = $request->input('customer', []);
         $selectedStatusBalance = $request->input('status_balance', []);
-        $selectedStatusUsage = $request->input('status_usage', []);
+        $selectedStatusUsage = $request->input('status_usage', []); // Assuming same logic for now or we can implement separate if needed
 
         $inCategories = TransactionCategory::where('effect', 1)->pluck('code');
         $outCategories = TransactionCategory::where('effect', -1)->pluck('code');
 
+        // Helper for Status Filtering
+        $applyStatusFilter = function($query, $statuses) {
+            if (empty($statuses)) return;
+            $query->where(function($q) use ($statuses) {
+                 foreach ($statuses as $status) {
+                     if ($status === 'Critical') {
+                         $q->orWhere(function($w) {
+                             $w->whereColumn('p.current_stock_qty', '<', 'p.min_stock')
+                               ->where('p.min_stock', '>', 0);
+                         });
+                     } elseif ($status === 'Over') {
+                         $q->orWhere(function($w) {
+                             $w->whereColumn('p.current_stock_qty', '>', DB::raw('p.min_stock * 3'))
+                               ->where('p.min_stock', '>', 0);
+                         });
+                     } elseif ($status === 'Safe') {
+                         $q->orWhere(function($w) {
+                              $w->where(function($inner) {
+                                  $inner->whereColumn('p.current_stock_qty', '>=', 'p.min_stock')
+                                        ->whereColumn('p.current_stock_qty', '<=', DB::raw('p.min_stock * 3'));
+                              })->orWhere('p.min_stock', '<=', 0)
+                                ->orWhereNull('p.min_stock');
+                         });
+                     }
+                 }
+            });
+        };
+
+        // 1. Stock Query (Filtered)
         $stockQuery = DB::table('inv_t_product_detail as p')
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'prod.model_id')
@@ -26,17 +55,24 @@ class DashboardController extends Controller
 
         if (!empty($selectedModels)) $stockQuery->whereIn('prod.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $stockQuery->whereIn('prod.customer_id', $selectedCustomers);
+        $applyStatusFilter($stockQuery, $selectedStatusBalance);
 
         $totalStockPcs = $stockQuery->sum(DB::raw('p.current_stock_qty * p.pcs_per_unit'));
 
-        $queryTrans = DB::table('inv_t_inventory_transaction as t')
+        // 2. Base Transaction Query (For Recent History - UNFILTERED except maybe strict scope if needed, but user asked to exclude filters)
+        // actually we should probably respect NO filters for "Recent Transactions" to show global activity.
+        $recentTransQuery = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
             ->join('products as prod', 'prod.id', '=', 'p.product_id');
+        
+        // 3. Filtered Transaction Query (For Charts/Stats)
+        $queryTrans = clone $recentTransQuery;
 
         if (!empty($selectedModels)) $queryTrans->whereIn('prod.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $queryTrans->whereIn('prod.customer_id', $selectedCustomers);
         if ($monthYear) $queryTrans->where('t.transaction_date', 'like', "$monthYear%");
+        $applyStatusFilter($queryTrans, $selectedStatusBalance);
 
         $materialInSum = (clone $queryTrans)->whereIn('tc.code', $inCategories)->sum(DB::raw('t.qty * p.pcs_per_unit'));
         $materialOutSum = (clone $queryTrans)->whereIn('tc.code', $outCategories)->sum(DB::raw('t.qty * p.pcs_per_unit'));
@@ -53,7 +89,7 @@ class DashboardController extends Controller
 
         $stockDataGrouped = [];
         foreach ($allProducts as $prd) {
-            $key = ($prd->model_name ?? 'N/A') . ' ' . ($prd->customer_code ?? 'N/A');
+            $key = ($prd->model_name ?? 'N/A') . '|' . ($prd->customer_code ?? 'N/A');
             if (!isset($stockDataGrouped[$key])) {
                 $stockDataGrouped[$key] = ['critical' => 0, 'over' => 0, 'safe' => 0];
             }
@@ -76,21 +112,42 @@ class DashboardController extends Controller
             ->join('customers as c', 'c.id', '=', 'prod.customer_id')
             ->whereIn('tc.code', $outCategories)
             ->select(
-                DB::raw("m.name + ' ' + c.code as label"),
+                DB::raw("m.name + '|' + c.code as label"),
                 DB::raw('SUM(t.qty * p.pcs_per_unit) as total')
             )
             ->groupBy('m.name', 'c.code')
             ->get();
 
-        $trendlineByCat = (clone $queryTrans)
+        // Trend Line (Filtered by Year of selected Month)
+        $trendQuery = clone $queryTrans;
+        // Reset month filter from $queryTrans if it was exact match, we need YEAR match
+        // But $queryTrans has `where(..., like, $monthYear%)`. We need to replace or ensure we match the YEAR.
+        // Actually, $queryTrans alrdy restricts to that MONTH. User said "transaction trend sebaiknya perbulan".
+        // If user selects "Jan 2024", trend chart showing "Jan" with data is fine, but usually trend shows WHOLE YEAR?
+        // "Transaction trend usually per month" implied showing multiple months.
+        // If I limit $queryTrans to Jan, trend chart only shows Jan.
+        // So I must remove the month filter for the trend query, but keep other filters.
+        
+        $trendQuery = clone $recentTransQuery; // Start fresh from base (no month filter)
+        if (!empty($selectedModels)) $trendQuery->whereIn('prod.model_id', $selectedModels);
+        if (!empty($selectedCustomers)) $trendQuery->whereIn('prod.customer_id', $selectedCustomers);
+        $applyStatusFilter($trendQuery, $selectedStatusBalance);
+        
+        $trendlineByCat = $trendQuery
+            ->whereYear('t.transaction_date', substr($monthYear, 0, 4))
             ->select(
-                't.transaction_date',
+                DB::raw("MONTH(t.transaction_date) as month_num"),
                 'tc.code as category',
-                DB::raw('COUNT(*) as total')
+                DB::raw('SUM(t.qty * p.pcs_per_unit) as total')
             )
-            ->groupBy('t.transaction_date', 'tc.code')
-            ->orderBy('t.transaction_date')
-            ->get();
+            ->groupBy(DB::raw("MONTH(t.transaction_date)"), 'tc.code')
+            ->orderBy(DB::raw("MONTH(t.transaction_date)"))
+            ->get()
+            ->map(function ($item) {
+                $dateObj = \DateTime::createFromFormat('!m', $item->month_num);
+                $item->transaction_date = $dateObj ? $dateObj->format('M') : '-';
+                return $item;
+            });
 
         $usageByMaker = (clone $queryTrans)
             ->join('inv_m_coil_center as cc', 'cc.id', '=', 'p.coil_center_id')
@@ -104,26 +161,27 @@ class DashboardController extends Controller
             ->limit(10)
             ->get()
             ->map(function ($item) {
-                $current = floatval($item->current_stock_qty);
-                $min = floatval($item->min_stock);
-                if ($min > 0) {
-                    if ($current > $min * 3) $item->status = 'Over';
-                    elseif ($current < $min) $item->status = 'Critical';
-                    else $item->status = 'Safe';
-                } else {
-                    $item->status = 'Safe';
-                }
-                return $item;
+                // Re-calculate status for display
+                 $current = floatval($item->current_stock_qty);
+                 $min = floatval($item->min_stock);
+                 if ($min > 0) {
+                     if ($current > $min * 3) $item->status = 'Over';
+                     elseif ($current < $min) $item->status = 'Critical';
+                     else $item->status = 'Safe';
+                 } else {
+                     $item->status = 'Safe';
+                 }
+                 return $item;
             });
 
         $usageStatusTable = (clone $balanceStatusTable);
 
-        $transactionHistory = (clone $queryTrans)
+        // Recent Transactions (Unfiltered Global)
+        $transactionHistory = (clone $recentTransQuery)
             ->select('prod.part_no', 'p.revision', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
             ->orderByDesc('t.transaction_date')
             ->limit(10)
             ->get();
-
 
 
         $initialModels = [];
@@ -140,6 +198,30 @@ class DashboardController extends Controller
                 ->whereIn('id', $selectedCustomers)
                 ->select('id', 'code', 'name')
                 ->get();
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'stats' => [
+                    'total_stock' => $totalStockPcs,
+                    'material_in' => $materialInSum,
+                    'material_out' => $materialOutSum,
+                    'out_pp' => $materialOutPPSum,
+                    'out_event' => $materialOutEventSum,
+                    'out_trial' => $materialOutTrialSum,
+                ],
+                'charts' => [
+                    'stock_grouped' => $stockDataGrouped,
+                    'usage_model' => $usageByModel,
+                    'trendline' => $trendlineByCat,
+                    'maker' => $usageByMaker
+                ],
+                'tables' => [
+                    'balance' => $balanceStatusTable,
+                    'usage' => $usageStatusTable,
+                    'history' => $transactionHistory
+                ]
+            ]);
         }
 
         return view('dashboard', [
@@ -178,13 +260,21 @@ class DashboardController extends Controller
     public function getModels(Request $request)
     {
         $term = $request->term;
-        $query = DB::table('models')->select('id', 'name as text');
+        $customerIds = $request->input('customer_id');
 
-        if ($term) {
-            $query->where('name', 'like', '%' . $term . '%');
+        $query = DB::table('models')->select('models.id', 'models.name as text');
+
+        if (!empty($customerIds)) {
+            $query->join('products', 'products.model_id', '=', 'models.id')
+                  ->whereIn('products.customer_id', (array)$customerIds)
+                  ->distinct();
         }
 
-        $data = $query->orderBy('name')->simplePaginate(20);
+        if ($term) {
+            $query->where('models.name', 'like', '%' . $term . '%');
+        }
+
+        $data = $query->orderBy('models.name')->simplePaginate(20);
 
         return response()->json([
             'results' => $data->items(),

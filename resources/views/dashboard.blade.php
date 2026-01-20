@@ -7,12 +7,12 @@
 <div class="dashboard-container min-h-screen flex flex-col">
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
         @foreach([
-        ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50'],
-        ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50'],
-        ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50'],
-        ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50'],
-        ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50'],
-        ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50'],
+        ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50', 'id' => 'stat_total_stock'],
+        ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'id' => 'stat_material_in'],
+        ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'id' => 'stat_material_out'],
+        ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50', 'id' => 'stat_out_pp'],
+        ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50', 'id' => 'stat_out_event'],
+        ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50', 'id' => 'stat_out_trial'],
         ] as $stat)
         <div class="stat-card flex flex-col justify-between h-full p-3 bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 duration-200">
             <div class="flex gap-2">
@@ -21,7 +21,7 @@
                 </div>
                 <div class="flex flex-col">
                     <div class="text-sm font-base text-slate-400 dark:text-gray-400 tracking-wide">{{ $stat['label'] }}</div>
-                    <div class="value font-bold text-2xl text-slate-800 dark:text-gray-100 tracking-tight">{{ $stat['val'] }}</div>
+                    <div class="value font-bold text-2xl text-slate-800 dark:text-gray-100 tracking-tight" id="{{ $stat['id'] }}">{{ $stat['val'] }}</div>
                 </div>
             </div>
         </div>
@@ -45,20 +45,20 @@
                             class="modern-input w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg h-[38px] px-3 text-gray-600 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
                     </div>
                     <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Model</label>
-                        <select id="filterModel" class="w-full"></select>
+                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Customer</label>
+                        <select id="filterCustomer" name="customer[]" class="w-full"></select>
                     </div>
                     <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Customer</label>
-                        <select id="filterCustomer" class="w-full"></select>
+                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Model</label>
+                        <select id="filterModel" name="model[]" class="w-full"></select>
                     </div>
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Balance Status</label>
-                        <select id="filterBalance" class="w-full"></select>
+                        <select id="filterBalance" name="status_balance[]" class="w-full"></select>
                     </div>
                     <div class="space-y-1">
                         <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Usage Status</label>
-                        <select id="filterUsage" class="w-full"></select>
+                        <select id="filterUsage" name="status_usage[]" class="w-full"></select>
                     </div>
                 </div>
 
@@ -136,7 +136,7 @@
                                 <th class="py-1.5 px-3 text-right font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody id="balanceTableBody" class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($tables['balance'] as $row)
                             <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
                                 <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
@@ -178,7 +178,7 @@
                                 <th class="py-1.5 px-3 text-right font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                        <tbody id="usageTableBody" class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($tables['usage'] as $row)
                             <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
                                 <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
@@ -187,7 +187,14 @@
                                 </td>
                                 <td class="p-3 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
                                 <td class="p-3 text-right">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold {{ $row->status == 'Over' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' }}">
+                                    @php
+                                        $colorClass = match($row->status) {
+                                            'Critical' => 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400',
+                                            'Over' => 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
+                                            default => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
+                                        };
+                                    @endphp
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold {{ $colorClass }}">
                                         {{ $row->status }}
                                     </span>
                                 </td>
@@ -274,73 +281,13 @@
         Chart.defaults.font.family = "'Inter', sans-serif";
         
         const chartsData = {
-            stockLabels: ['Model X - CUST01', 'Model Y - CUST02', 'Model Z - CUST01', 'Model A - CUST03'],
-            stockData: [{
-                    critical: 5,
-                    over: 10,
-                    safe: 85
-                },
-                {
-                    critical: 2,
-                    over: 5,
-                    safe: 93
-                },
-                {
-                    critical: 0,
-                    over: 20,
-                    safe: 80
-                },
-                {
-                    critical: 8,
-                    over: 2,
-                    safe: 90
-                }
-            ],
-            usageModelLabels: ['Model X', 'Model Y', 'Model Z', 'Model A', 'Model B'],
-            usageModelData: [1200, 1900, 800, 1500, 2100],
-            trendData: [{
-                    transaction_date: '2024-01-01',
-                    category: 'IN',
-                    total: 50
-                },
-                {
-                    transaction_date: '2024-01-01',
-                    category: 'OUT-PP',
-                    total: 30
-                },
-                {
-                    transaction_date: '2024-01-02',
-                    category: 'IN',
-                    total: 60
-                },
-                {
-                    transaction_date: '2024-01-02',
-                    category: 'OUT-PP',
-                    total: 40
-                },
-                {
-                    transaction_date: '2024-01-03',
-                    category: 'IN',
-                    total: 45
-                },
-                {
-                    transaction_date: '2024-01-03',
-                    category: 'OUT-PP',
-                    total: 55
-                },
-                {
-                    transaction_date: '2024-01-04',
-                    category: 'IN',
-                    total: 80
-                },
-                {
-                    transaction_date: '2024-01-04',
-                    category: 'OUT-PP',
-                    total: 20
-                }
-            ],
-            makerLabels: ['MKER01', 'MKER02', 'MKER03', 'MKER04'],
-            makerData: [5000, 3000, 4500, 2000]
+            stockLabels: @json(array_keys($charts['stock_grouped'])).map(l => l.split('|')),
+            stockData: @json(array_values($charts['stock_grouped'])),
+            usageModelLabels: @json($charts['usage_model']->pluck('label')).map(l => l.split('|')),
+            usageModelData: @json($charts['usage_model']->pluck('total')),
+            trendData: @json($charts['trendline']),
+            makerLabels: @json($charts['maker']->pluck('code')),
+            makerData: @json($charts['maker']->pluck('total'))
         };
         $('#filterModel').select2({
             dropdownParent: $('#filterModel').parent(),
@@ -356,6 +303,7 @@
                     return {
                         term: params.term,
                         page: params.page,
+                        customer_id: $('#filterCustomer').val(),
                         _token: '{{ csrf_token() }}'
                     };
                 },
@@ -429,11 +377,176 @@
             }
         });
 
-        $('#btnApply').on('click', () => window.location.href = window.location.pathname + "?" + $('#filterForm').serialize());
-        $('#btnReset').on('click', () => window.location.href = window.location.pathname);
+            function fetchDashboardData(formData, btn) {
+                const originalText = btn.html();
+                console.log('Sending Filter Data:', formData); // Debug
+                
+                btn.html('<i class="fa-solid fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                $.ajax({
+                    url: window.location.pathname,
+                    data: formData,
+                    dataType: 'json',
+                    success: function(response) {
+                        // 1. Update Stats
+                        $('#stat_total_stock').text(new Intl.NumberFormat().format(response.stats.total_stock));
+                        $('#stat_material_in').text(new Intl.NumberFormat().format(response.stats.material_in));
+                        $('#stat_material_out').text(new Intl.NumberFormat().format(response.stats.material_out));
+                        $('#stat_out_pp').text(new Intl.NumberFormat().format(response.stats.out_pp));
+                        $('#stat_out_event').text(new Intl.NumberFormat().format(response.stats.out_event));
+                        $('#stat_out_trial').text(new Intl.NumberFormat().format(response.stats.out_trial));
+
+                        // 2. Update Charts
+                        updateChartData(stockStatusChart, 
+                             Object.keys(response.charts.stock_grouped).map(l => l.split('|')), 
+                             Object.values(response.charts.stock_grouped).map(d => d.critical),
+                             Object.values(response.charts.stock_grouped).map(d => d.over),
+                             Object.values(response.charts.stock_grouped).map(d => d.safe)
+                        );
+                        
+                        updateChartDataSingle(usageModelChart, 
+                            response.charts.usage_model.map(i => i.label.split('|')), 
+                            response.charts.usage_model.map(i => i.total)
+                        );
+                        
+                        updateChartDataSingle(makerChart, 
+                            response.charts.maker.map(i => i.code), 
+                            response.charts.maker.map(i => i.total)
+                        );
+
+                        const trends = response.charts.trendline;
+                        const dates = [...new Set(trends.map(d => d.transaction_date))]; // X Axis
+                        const cats = [...new Set(trends.map(d => d.category))]; // Legend
+                        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                        
+                        const newDatasets = cats.map((cat, idx) => ({
+                            label: cat,
+                            data: dates.map(d => (trends.find(td => td.transaction_date === d && td.category === cat) || {total: 0}).total),
+                            borderColor: colors[idx] || '#cbd5e1',
+                            backgroundColor: (colors[idx] || '#cbd5e1') + '40',
+                            fill: true,
+                            tension: 0.4
+                        }));
+                        
+                        trendlineChart.data.labels = dates;
+                        trendlineChart.data.datasets = newDatasets;
+                        trendlineChart.update();
+
+                        // 3. Update Tables
+                        renderTable('#balanceTableBody', response.tables.balance, generateBalanceRow);
+                        renderTable('#usageTableBody', response.tables.usage, generateUsageRow);
+                    },
+                    error: function(err) {
+                        console.error('Filter Error', err);
+                        alert('Failed to filter data.');
+                    },
+                    complete: function() {
+                        btn.html(originalText).prop('disabled', false);
+                    }
+                });
+            }
+
+            $('#btnApply').on('click', function() {
+                fetchDashboardData($('#filterForm').serialize(), $(this));
+            });
+
+            $('#btnReset').on('click', function() {
+                const btn = $(this);
+                // Reset Form
+                $('#month_picker').val('{{ date("Y-m") }}'); // Default to current month
+                $('#filterCustomer').val(null).trigger('change');
+                $('#filterModel').val(null).trigger('change');
+                $('#filterBalance').val(null).trigger('change');
+                $('#filterUsage').val(null).trigger('change');
+                
+                // Fetch Data with reset form
+                fetchDashboardData($('#filterForm').serialize(), btn);
+            });
+
+
+
+            // Chart Globals
+            let stockStatusChart, usageModelChart, trendlineChart, makerChart;
+
+            // Helper functions
+            function updateChartData(chart, labels, data1, data2, data3) {
+                if(!chart) return;
+                chart.data.labels = labels;
+                if(data1) chart.data.datasets[0].data = data1;
+                if(data2) chart.data.datasets[1].data = data2;
+                if(data3) chart.data.datasets[2].data = data3;
+                chart.update();
+            }
+            function updateChartDataSingle(chart, labels, data) {
+                 if(!chart) return;
+                 chart.data.labels = labels;
+                 chart.data.datasets[0].data = data;
+                 chart.update();
+            }
+            function renderTable(selector, data, rowGenerator) {
+                const tbody = $(selector);
+                tbody.empty();
+                if (data.length === 0) {
+                    tbody.append('<tr><td colspan="3" class="p-4 text-center text-slate-400 dark:text-gray-500 italic">No data found</td></tr>');
+                    return;
+                }
+                data.forEach(item => {
+                    tbody.append(rowGenerator(item));
+                });
+            }
+            // Row Generators
+            function generateBalanceRow(row) {
+                 const statusColors = {
+                     'Critical': 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400',
+                     'Over': 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
+                     'Safe': 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'
+                 };
+                 const colorClass = statusColors[row.status] || statusColors['Safe'];
+                 let partName = row.part_no + (row.revision ? ' - ' + row.revision : '');
+                 
+                 return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                        <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
+                            <div class="truncate max-w-[120px]" title="${partName}">${partName}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">${row.model_name || '-'}</div>
+                        </td>
+                        <td class="p-3 text-slate-600 dark:text-gray-400">${row.customer_code || '-'}</td>
+                        <td class="p-3 text-right">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold ${colorClass}">
+                                ${row.status}
+                            </span>
+                        </td>
+                    </tr>
+                 `;
+            }
+            function generateUsageRow(row) {
+                 const statusColors = {
+                     'Critical': 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400',
+                     'Over': 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
+                     'Safe': 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400' 
+                 };
+                 const colorClass = statusColors[row.status] || statusColors['Safe'];
+                 let partName = row.part_no + (row.revision ? ' - ' + row.revision : '');
+
+                 return `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
+                        <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
+                            <div class="truncate max-w-[120px]" title="${partName}">${partName}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">${row.model_name || '-'}</div>
+                        </td>
+                        <td class="p-3 text-slate-600 dark:text-gray-400">${row.customer_code || '-'}</td>
+                        <td class="p-3 text-right">
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold ${colorClass}">
+                                ${row.status}
+                            </span>
+                        </td>
+                    </tr>
+                 `;
+            }
+
 
         if (document.getElementById('stockStatusChart')) {
-            new Chart(document.getElementById('stockStatusChart'), {
+            stockStatusChart = new Chart(document.getElementById('stockStatusChart'), {
                 type: 'bar',
                 data: {
                     labels: chartsData.stockLabels,
@@ -463,7 +576,7 @@
                             ticks: {
                                 color: isDark ? '#94a3b8' : '#64748b',
                                 font: {
-                                    size: 8
+                                    size: 11
                                 }
                             }
                         },
@@ -482,7 +595,7 @@
         }
 
         if (document.getElementById('usageModelChart')) {
-            new Chart(document.getElementById('usageModelChart'), {
+            usageModelChart = new Chart(document.getElementById('usageModelChart'), {
                 type: 'bar',
                 data: {
                     labels: chartsData.usageModelLabels,
@@ -500,7 +613,7 @@
                             ticks: {
                                 color: isDark ? '#94a3b8' : '#64748b',
                                 font: {
-                                    size: 8
+                                    size: 11
                                 }
                             }
                         },
@@ -523,7 +636,7 @@
             const cats = trendData ? [...new Set(trendData.map(d => d.category))] : [];
             const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-            new Chart(document.getElementById('trendlineChart'), {
+            trendlineChart = new Chart(document.getElementById('trendlineChart'), {
                 type: 'line',
                 data: {
                     labels: dates,
@@ -560,7 +673,7 @@
         }
 
         if (document.getElementById('makerChart')) {
-            new Chart(document.getElementById('makerChart'), {
+            makerChart = new Chart(document.getElementById('makerChart'), {
                 type: 'bar',
                 data: {
                     labels: chartsData.makerLabels,

@@ -146,14 +146,11 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        // Stats calculation remains here or can be deferred, but for now we keep it
         $statsData = $this->getStoStats($stoEvent);
         $stats = $statsData['stats'];
         $netAdjustment = $statsData['netAdjustment'];
         $progress = $statsData['progress'];
 
-        // Fetch all products for Select2 options (Similar to InventoryTransaction)
-        // EXCLUDE products already counted in this event
         $countedIds = StoDetail::where('event_id', $stoEvent->id)->pluck('product_detail_id')->toArray();
 
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
@@ -173,7 +170,7 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        $query = StoDetail::with(['product.product', 'product.unit', 'auditor'])
+        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'auditor'])
             ->where('event_id', $stoEvent->id);
 
         // Searching
@@ -214,14 +211,36 @@ class StoController extends Controller
         $rowNumber = $start + 1;
 
         $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber) {
+            $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
+            $unitCode = $detail->product->unit->code ?? 'PCS';
+
+            $formatQty = function($qty, $pcsPerUnit, $unitCode, $prefix = '') {
+                // Formatting helper
+                $qty = floatval($qty);
+                $pcs = $qty * $pcsPerUnit;
+                
+                $pcsDisplay = number_format($pcs, 0);
+                
+                if ($pcsPerUnit == 1) {
+                    return "<span class='font-bold'>{$prefix}{$pcsDisplay}</span>";
+                }
+                
+                $unitDisplay = number_format($qty, 0); 
+                return "
+                    <div class='flex flex-col items-center justify-center'>
+                        <span class='font-bold'>{$prefix}{$pcsDisplay}</span>
+                        <span class='text-[10px] text-gray-400 leading-none mt-0.5'>({$unitDisplay} {$unitCode})</span>
+                    </div>
+                ";
+            };
+
             $diff = $detail->real_qty_input - $detail->system_qty_snapshot;
             
             $productInfo = '
                 <div class="flex flex-col">
-                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">' . ($detail->product->product->part_no ?? '-') . '</span>
+                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">' . ($detail->product->product->part_no ?? '-') . ' - ' . ($detail->product->revision ?? '') . '</span>
                     <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">' . ($detail->product->product->part_name ?? '-') . '</span>';
             
-            // Remark is now in Product Info section (removed from here)
             
             if ($detail->auditor) {
                 $productInfo .= '
@@ -232,10 +251,11 @@ class StoController extends Controller
             $productInfo .= '</div>';
 
             $diffHtml = '';
+            
             if ($diff > 0) {
-                $diffHtml = '<span class="text-sm font-bold text-green-600">+' . ($diff + 0) . '</span>';
+                $diffHtml = '<div class="text-green-600">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '+') . '</div>';
             } elseif ($diff < 0) {
-                $diffHtml = '<span class="text-sm font-bold text-red-600">' . ($diff + 0) . '</span>';
+                $diffHtml = '<div class="text-red-600">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '-') . '</div>';
             } else {
                 $diffHtml = '<span class="text-sm font-medium text-gray-300">-</span>';
             }
@@ -243,14 +263,19 @@ class StoController extends Controller
            // Inline editable QTY field for OPEN status
             $qtyHtml = '';
             if ($stoEvent->status === 'OPEN') {
-                $qtyHtml = '<input type="number" step="any" 
-                    class="qty-input text-center font-bold text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400" 
-                    style="width: 120px; min-width: 120px;"
-                    data-detail-id="' . $detail->hash_id . '" 
-                    data-product-id="' . $detail->product->hash_id . '"
-                    value="' . ($detail->real_qty_input + 0) . '" />';
+                $qtyHtml = '
+                    <div class="flex items-center justify-center gap-1">
+                        <input type="number" step="any" 
+                            class="qty-input text-center font-bold text-sm px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400" 
+                            style="width: 80px; min-width: 80px;"
+                            data-detail-id="' . $detail->hash_id . '" 
+                            data-product-id="' . $detail->product->hash_id . '"
+                            value="' . ($detail->real_qty_input + 0) . '" 
+                            placeholder="Qty" />
+                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400">' . $unitCode . '</span>
+                    </div>';
             } else {
-                $qtyHtml = '<span class="font-bold text-blue-600 dark:text-blue-400">' . ($detail->real_qty_input + 0) . '</span>';
+                $qtyHtml = '<div class="text-blue-600 dark:text-blue-400">' . $formatQty($detail->real_qty_input, $pcsPerUnit, $unitCode) . '</div>';
             }
             
             // Inline editable REMARK field
@@ -284,7 +309,7 @@ class StoController extends Controller
                 'row_number' => $currentRow,
                 'updated_at' => $detail->updated_at->format('H:i'),
                 'product_info' => $productInfo,
-                'system_qty' => $detail->system_qty_snapshot + 0,
+                'system_qty' => $formatQty($detail->system_qty_snapshot, $pcsPerUnit, $unitCode),
                 'real_qty' => $qtyHtml,
                 'diff' => $diffHtml,
                 'remark' => $remarkHtml,
@@ -351,7 +376,7 @@ class StoController extends Controller
             'success' => true,
             'data' => [
                 'product_id_hash' => $product->hash_id,
-                'part_no' => $product->product->part_no ?? '-',
+                'part_no' => ($product->product->part_no ?? '-') . ' - ' . ($product->revision ?? ''),
                 'part_name' => $product->product->part_name ?? '-',
                 'unit' => $product->unit->code ?? 'PCS',
                 'system_qty' => $systemQty,

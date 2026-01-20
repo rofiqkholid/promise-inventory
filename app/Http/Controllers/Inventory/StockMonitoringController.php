@@ -61,6 +61,7 @@ class StockMonitoringController extends Controller
             ->leftJoin(DB::raw("(SELECT sd.product_detail_id, sd.diff_qty as sto_gap 
                          FROM inv_t_sto_detail sd 
                          WHERE sd.event_id = (SELECT TOP 1 id FROM inv_t_sto_event ORDER BY created_at DESC)
+                         AND sd.is_adjusted = 1
                         ) as latest_sto"), 'latest_sto.product_detail_id', '=', 'inv_t_product_detail.id')
             // Selects
             ->select([

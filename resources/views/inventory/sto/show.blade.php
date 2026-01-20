@@ -102,7 +102,7 @@
         <!-- Clean Result / Input Form -->
         <div class="mt-4 hidden" id="scanResultArea">
              
-             <div class="flex flex-col md:flex-row items-start md:items-center gap-4 text-sm bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+             <div class="flex flex-col md:flex-row items-end gap-4 text-sm bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
                  <!-- Product Info -->
                  <div class="flex-1 w-full text-left">
                     <div class="text-[10px] md:text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1" id="resPartNo">-</div>
@@ -121,18 +121,19 @@
                  </div>
                  
                  <!-- Actions -->
-                 <div class="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-                    <div class="flex w-full sm:w-24 relative">
+                 <div class="flex flex-col sm:flex-row items-end gap-2 w-full md:w-auto mt-2 md:mt-0">
+                    <div class="w-full sm:w-44 flex flex-col">
+                        <div id="unitHelperLabel" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 mb-1 uppercase tracking-tight hidden">Input in Unit</div>
                         <input type="number" id="realQtyInput" step="any" 
-                               class="w-full rounded-md border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-center font-semibold px-3 py-2" 
+                               class="w-full h-[42px] rounded-md border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-center font-semibold px-3" 
                                placeholder="Qty">
                     </div>
-                    <div class="flex w-full sm:w-56">
+                    <div class="w-full sm:w-72">
                         <input type="text" id="remarkInput" 
-                               class="w-full rounded-md border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm px-3 py-2" 
+                               class="w-full h-[42px] rounded-md border border-gray-300 dark:border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm px-3" 
                                placeholder="Note (Optional)">
                     </div>
-                    <button id="btnSaveCount" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-semibold transition flex items-center justify-center gap-2">
+                    <button id="btnSaveCount" class="w-full sm:w-auto h-[42px] bg-green-600 hover:bg-green-700 text-white px-6 rounded-md font-semibold transition flex items-center justify-center gap-2">
                         SAVE <i class="fa-solid fa-check"></i>
                     </button>
                  </div>
@@ -176,7 +177,7 @@
                         <th class="px-6 py-4 text-center">System</th>
                         <th class="px-4 py-4 text-center w-36 sm:w-40 md:w-44">Real</th>
                         <th class="px-6 py-4 text-center">Diff</th>
-                        <th class="px-4 py-4 w-48 sm:w-56 md:w-64">Remark</th>
+                        <th class="px-4 py-4 w-48 sm:w-56 md:w-56">Remark</th>
                         @if($stoEvent->status === 'OPEN')
                         <th class="px-6 py-4 text-right">Action</th>
                         @endif
@@ -190,7 +191,6 @@
 </div>
 
 @push('scripts')
-{{-- scanner-modal partial already includes html5-qrcode and inventory-scanner.js --}}
 <script>
     const scanUrl = "{{ route('inventory.sto.scan', $stoEvent->hash_id) }}";
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
@@ -263,8 +263,8 @@
                     if (data.success) {
                         $input.removeClass('border-yellow-500 bg-yellow-50').addClass('border-green-500');
                         setTimeout(() => $input.removeClass('border-green-500'), 1000);
-                        $input.data('original-value', newQty); // Update original value
-                        table.ajax.reload(null, false); // Reload without resetting pagination
+                        $input.data('original-value', newQty);
+                        table.ajax.reload(null, false);
                         
                         if (data.stats && window.updateStatsCard) {
                             window.updateStatsCard(data.stats);
@@ -509,6 +509,16 @@
         
         // Populate existing values if any
         realQtyInput.value = data.prev_real_qty || '';
+        // Explicitly set placeholder to include Unit
+        realQtyInput.placeholder = 'Qty in ' + (data.unit || 'Unit');
+        
+        // Update helper label
+        const unitHelper = document.getElementById('unitHelperLabel');
+        if (unitHelper) {
+            unitHelper.innerHTML = 'Input in <span class="text-blue-600 dark:text-blue-400">' + (data.unit || 'Unit') + '</span>';
+            unitHelper.classList.remove('hidden');
+        }
+
         document.getElementById('remarkInput').value = '';
         
         setTimeout(() => realQtyInput.focus(), 100);
