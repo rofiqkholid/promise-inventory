@@ -5,7 +5,7 @@ namespace App\Models\InventoryModel;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasHashId;
 
-class SubContractor extends Model
+class Supplier extends Model
 {
     use HasHashId;
 
@@ -14,7 +14,7 @@ class SubContractor extends Model
      *
      * @var string
      */
-    protected $table = 'inv_m_sub_contractor';
+    protected $table = 'inv_m_suppliers';
     protected $appends = ['hash_id'];
     protected $hidden = ['id'];
 
@@ -24,9 +24,12 @@ class SubContractor extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'promise_supp_id',
         'code',
         'name',
-        'service_type',
+        'email',
+        'phone',
+        'address',
     ];
 
     /**
@@ -35,6 +38,7 @@ class SubContractor extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'promise_supp_id' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

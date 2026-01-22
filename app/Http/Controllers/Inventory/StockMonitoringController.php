@@ -73,11 +73,15 @@ class StockMonitoringController extends Controller
                 'inv_t_product_detail.revision',
                 'inv_t_product_detail.remark',
                 'inv_m_unit.code as unit_code',
+                'inv_m_unit.name as unit_name',
                 'inv_m_material_spec.spec_name',
                 'inv_m_material_spec.coating_type',
                 'inv_t_product_detail.thickness',
                 'inv_t_product_detail.width',
                 'inv_t_product_detail.length',
+                'inv_t_product_detail.length_2',
+                'inv_t_product_detail.pitch',
+                'inv_t_product_detail.weight_kg',
                 'models.name as model_name',
                 'customers.code as customer_code',
                 'inv_m_rank.code as rank_code',
@@ -150,12 +154,32 @@ class StockMonitoringController extends Controller
             // Generate HashID
             $hashId = $hashids->encode($item->id);
 
-            // Format Size: T x W x L (or just T x W if L is 0/null)
-            $size = floatval($item->thickness);
-            if (floatval($item->width) > 0) $size .= ' x ' . floatval($item->width);
-            if (floatval($item->length) > 0) $size .= ' x ' . floatval($item->length);
+            // Format Size: T x W x L [/ L2] [(P: pitch)]
+            $t = floatval($item->thickness);
+            $w = floatval($item->width);
+            $l = floatval($item->length);
+            $l2 = floatval($item->length_2);
+            $p = floatval($item->pitch);
+            $weight = floatval($item->weight_kg);
+            $unitName = strtolower($item->unit_name ?? '');
 
-            $specSize = ($item->spec_name ?? '-') . ' <br><span class="text-xs text-gray-500">' . $size . '</span>';
+            $size = $t;
+            if ($w > 0) $size .= ' x ' . $w;
+            if ($l > 0) $size .= ' x ' . $l;
+
+            if (($unitName === 'trapezoid') && $l2 > 0) {
+                $size .= ' / ' . $l2;
+            }
+
+            $sizeHtml = '<span class="text-xs text-gray-500">' . $size . '</span>';
+            if ($p > 0) {
+                $sizeHtml .= ' <span class="text-[10px] text-blue-500 font-bold">(P: ' . $p . ')</span>';
+            }
+            if ($weight > 0) {
+                $sizeHtml .= ' <span class="text-[10px] text-emerald-600 font-bold ml-1">(Wt: ' . $weight . ' kg)</span>';
+            }
+
+            $specSize = ($item->spec_name ?? '-') . ' <br>' . $sizeHtml;
 
             $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
 

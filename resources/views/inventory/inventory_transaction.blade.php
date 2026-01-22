@@ -46,6 +46,28 @@
                             </select>
                         </div>
 
+                        {{-- Coil Center (For IN) --}}
+                        <div class="mb-4 hidden" id="coilCenterContainer">
+                            <label for="coil_center_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Coil Center <span class="text-red-500">*</span></label>
+                            <select name="coil_center_id" id="coil_center_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" style="width: 100%">
+                                <option value="">Select Coil Center...</option>
+                                @foreach($coilCenters as $cc)
+                                    <option value="{{ $cc->hash_id }}">{{ $cc->code }} - {{ $cc->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Supplier (For OUT) --}}
+                        <div class="mb-4 hidden" id="supplierContainer">
+                            <label for="supplier_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Supplier (Destination) <span class="text-red-500">*</span></label>
+                            <select name="supplier_id" id="supplier_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" style="width: 100%">
+                                <option value="">Select Supplier...</option>
+                                @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->hash_id }}">{{ $supplier->code }} - {{ $supplier->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         {{-- Qty & Date Row --}}
                         <div class="grid grid-cols-2 gap-4 mb-4">
                             <div>
@@ -127,10 +149,6 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
     $(document).ready(function() {
-        // Initialize Select2 for Product (Searchable)
-        // Note: Generic initialization is handled in helpers.js
-        
-        // Add Custom formatting for Category if select2 is present
         if ($.fn.select2) {
             function formatCategory(state) {
                 if (!state.id) return state.text;
@@ -149,10 +167,32 @@
                 templateResult: formatCategory,
                 templateSelection: formatCategory,
                 width: '100%'
+            }).on('change', function() {
+                let selected = $(this).select2('data')[0];
+                let element = $(selected.element);
+                let effect = element.data('effect');
+                
+                // Reset
+                $('#coilCenterContainer').addClass('hidden');
+                $('#supplierContainer').addClass('hidden');
+                $('#coil_center_id').prop('required', false);
+                $('#supplier_id').prop('required', false);
+
+                if (effect == 1) { // IN
+                    $('#coilCenterContainer').removeClass('hidden');
+                    $('#coil_center_id').prop('required', true);
+                } else if (effect == -1) { // OUT
+                    $('#supplierContainer').removeClass('hidden');
+                     // Supplier Required for OUT
+                    $('#supplier_id').prop('required', true);
+                }
             });
+
+            // Initialize extra Select2
+            $('#coil_center_id').select2({ width: '100%', placeholder: 'Select Coil Center...' });
+            $('#supplier_id').select2({ width: '100%', placeholder: 'Select Supplier...' });
         }
 
-        // DataTable
         // DataTable
         var table = window.defaultDataTable('recentTransactionTable', {
             processing: true,
@@ -167,8 +207,6 @@
                 { 
                     data: 'category',
                     render: (d, t, r) => {
-                        // Color label based on category (simple check or passed logic)
-                        // Ideally we pass effect in data, but for now simple check
                         let color = d.includes('IN') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
                         return `<span class="${color} text-xs font-medium px-2 py-0.5 rounded">${d}</span>`;
                     }
@@ -177,10 +215,8 @@
                 { data: 'pic_name' },
                 { data: 'remark', render: (d) => d || '-' }
             ],
-            order: [[0, 'desc']], // Order by date desc
+            order: [[0, 'desc']],
             pageLength: 10,
-            
-            // Custom simplified layout for this widget-like table
             dom: "<'flex flex-col md:flex-row justify-between items-center mb-4'rt><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4 px-2'i p>",
             searching: false
         });
@@ -203,7 +239,6 @@
         $('#transactionForm').submit(function(e) {
             e.preventDefault();
             
-            // Basic Frontend Validation
             if (!$('#product_detail_id').val()) {
                 Swal.fire('Error', 'Please select a product', 'error');
                 return;
@@ -227,7 +262,12 @@
                     // Reset Form
                     $('#transactionForm')[0].reset();
                     $('#product_detail_id').val('').trigger('change'); // Reset Select2
+                    $('#transaction_category_id').val('').trigger('change'); // Reset Category
                     $('#transaction_date').val(new Date().toISOString().split('T')[0]); // Reset Date to today
+                    $('#coil_center_id').val('').trigger('change');
+                    $('#supplier_id').val('').trigger('change');
+                    $('#coilCenterContainer').addClass('hidden');
+                    $('#supplierContainer').addClass('hidden');
                     
                     // Reload Table
                     table.ajax.reload();

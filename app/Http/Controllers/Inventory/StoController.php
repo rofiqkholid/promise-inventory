@@ -344,14 +344,9 @@ class StoController extends Controller
         // Attempt JSON Parse
         $decodedJson = json_decode($input, true);
         if (json_last_error() === JSON_ERROR_NONE && isset($decodedJson['id'])) {
-             // HashID from JSON
              $productId = InventoryProduct::decodeHash($decodedJson['id']);
         } else {
-             // Try HashID direct
              $productId = InventoryProduct::decodeHash($input);
-             
-             // Fallback logic if needed (e.g. user insists on old scanners, but we removed base64 support per task).
-             // But let's assume valid JSON or HashID.
         }
 
         if (!$productId) {
@@ -580,7 +575,6 @@ class StoController extends Controller
                 if ($product) {
                     $oldStock = $product->current_stock_qty;
                     
-                    // Reverse the adjustment (subtract what was added, add what was subtracted)
                     $product->current_stock_qty -= $diff;
                     $product->save();
                     
@@ -594,7 +588,6 @@ class StoController extends Controller
             $stoEvent->period_end = null;
             $stoEvent->save();
             
-            // Refresh to ensure latest data
             $stoEvent->refresh();
 
             DB::commit();
@@ -613,7 +606,6 @@ class StoController extends Controller
      */
     public function exportExcel($id)
     {
-        // Explicitly call the static method on the model class
         $stoEvent = \App\Models\InventoryModel\StoEvent::findByHashOrFail($id);
         $stoEvent->load(['details.product.product', 'details.auditor', 'pic']);
 
@@ -624,24 +616,36 @@ class StoController extends Controller
 
     private function getStoStats($stoEvent)
     {
+        $baseQuery = StoDetail::where('event_id', $stoEvent->id);
+
+        $pcsStats = StoDetail::leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
+            ->where('inv_t_sto_detail.event_id', $stoEvent->id)
+            ->select(
+                DB::raw('SUM(CASE WHEN inv_t_sto_detail.diff_qty > 0 THEN inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit ELSE 0 END) as inc_pcs'),
+                DB::raw('SUM(CASE WHEN inv_t_sto_detail.diff_qty < 0 THEN inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit ELSE 0 END) as dec_pcs'),
+                DB::raw('SUM(inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit) as net_pcs')
+            )
+            ->first();
+
         $stats = [
-            'total_items' => StoDetail::where('event_id', $stoEvent->id)->count(),
-            'total_diff' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '!=', 0)->count(),
-            'total_matched' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', 0)->count(),
-            'total_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->sum('diff_qty'),
-            'total_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->sum('diff_qty'),
-            'count_increase' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '>', 0)->count(),
-            'count_decrease' => StoDetail::where('event_id', $stoEvent->id)->where('diff_qty', '<', 0)->count(),
+            'total_items' => (clone $baseQuery)->count(),
+            'total_diff' => (clone $baseQuery)->where('diff_qty', '!=', 0)->count(),
+            'total_matched' => (clone $baseQuery)->where('diff_qty', 0)->count(),
+            'total_increase' => (clone $baseQuery)->where('diff_qty', '>', 0)->sum('diff_qty'),
+            'total_decrease' => (clone $baseQuery)->where('diff_qty', '<', 0)->sum('diff_qty'),
+            'count_increase' => (clone $baseQuery)->where('diff_qty', '>', 0)->count(),
+            'count_decrease' => (clone $baseQuery)->where('diff_qty', '<', 0)->count(),
+            
+            'total_increase_pcs' => $pcsStats->inc_pcs ?? 0,
+            'total_decrease_pcs' => $pcsStats->dec_pcs ?? 0,
+            'net_adjustment_pcs' => $pcsStats->net_pcs ?? 0,
         ];
 
-        $netAdjustment = StoDetail::where('event_id', $stoEvent->id)->sum('diff_qty');
+        $netAdjustment = (clone $baseQuery)->sum('diff_qty');
+        
         $totalProducts = InventoryProduct::where('is_active', 1)->count();
         $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
 
-        return [
-            'stats' => $stats,
-            'netAdjustment' => $netAdjustment,
-            'progress' => $progress
-        ];
+        return ['stats' => $stats, 'netAdjustment' => $netAdjustment, 'progress' => $progress];
     }
 }

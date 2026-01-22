@@ -21,14 +21,20 @@ trait HasHashId
         return new \Hashids\Hashids($salt, $length, $alphabet);
     }
 
-    /**
-     * Get the hash ID for the model.
-     *
-     * @return string
-     */
     public function getHashIdAttribute()
     {
-        return self::getHashidsInstance()->encode($this->attributes['id']);
+        return self::encodeHash($this->attributes['id']);
+    }
+
+    /**
+     * Encode an ID to a hash.
+     *
+     * @param int $id
+     * @return string
+     */
+    public static function encodeHash($id)
+    {
+        return self::getHashidsInstance()->encode($id);
     }
 
     /**

@@ -106,7 +106,7 @@
                 <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-sm border border-gray-200 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm text-slate-700 dark:text-gray-200 tracking-wider">Usage by Makers</span>
+                            <span class="font-bold text-sm text-slate-700 dark:text-gray-200 tracking-wider">Supply by Makers (IN)</span>
                         </div>
                     </div>
                     <div class="h-64"><canvas id="makerChart"></canvas></div>
@@ -379,8 +379,6 @@
 
             function fetchDashboardData(formData, btn) {
                 const originalText = btn.html();
-                console.log('Sending Filter Data:', formData); // Debug
-                
                 btn.html('<i class="fa-solid fa-spinner fa-spin"></i>').prop('disabled', true);
 
                 $.ajax({
@@ -388,7 +386,7 @@
                     data: formData,
                     dataType: 'json',
                     success: function(response) {
-                        // 1. Update Stats
+                        // Update Stats
                         $('#stat_total_stock').text(new Intl.NumberFormat().format(response.stats.total_stock));
                         $('#stat_material_in').text(new Intl.NumberFormat().format(response.stats.material_in));
                         $('#stat_material_out').text(new Intl.NumberFormat().format(response.stats.material_out));
@@ -396,7 +394,7 @@
                         $('#stat_out_event').text(new Intl.NumberFormat().format(response.stats.out_event));
                         $('#stat_out_trial').text(new Intl.NumberFormat().format(response.stats.out_trial));
 
-                        // 2. Update Charts
+                        // Update Charts
                         updateChartData(stockStatusChart, 
                              Object.keys(response.charts.stock_grouped).map(l => l.split('|')), 
                              Object.values(response.charts.stock_grouped).map(d => d.critical),
@@ -432,7 +430,7 @@
                         trendlineChart.data.datasets = newDatasets;
                         trendlineChart.update();
 
-                        // 3. Update Tables
+                        // Update Tables
                         renderTable('#balanceTableBody', response.tables.balance, generateBalanceRow);
                         renderTable('#usageTableBody', response.tables.usage, generateUsageRow);
                     },

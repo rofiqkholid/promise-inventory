@@ -150,8 +150,8 @@ class DashboardController extends Controller
             });
 
         $usageByMaker = (clone $queryTrans)
-            ->join('inv_m_coil_center as cc', 'cc.id', '=', 'p.coil_center_id')
-            ->whereIn('tc.code', $outCategories)
+            ->join('inv_m_coil_center as cc', 'cc.id', '=', 't.coil_center_id')
+            ->whereIn('tc.code', $inCategories)
             ->select('cc.code', DB::raw('SUM(t.qty * p.pcs_per_unit) as total'))
             ->groupBy('cc.code')
             ->get();

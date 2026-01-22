@@ -26,8 +26,7 @@ class InventoryProduct extends Model
      */
     protected $fillable = [
         'product_id',
-        'subcont_id',
-        'coil_center_id',
+        'product_id',
         'material_spec_id',
         'unit_id',
         'rank_id',
@@ -44,6 +43,8 @@ class InventoryProduct extends Model
         'trial_usage_qty',
         'is_active',
         'remark',
+        'density',
+        'weight_kg',
     ];
 
     /**
@@ -65,6 +66,8 @@ class InventoryProduct extends Model
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'density' => 'float',
+        'weight_kg' => 'float',
     ];
 
     /**
@@ -75,13 +78,7 @@ class InventoryProduct extends Model
         return $this->belongsTo(\App\Models\Products::class, 'product_id');
     }
 
-    /**
-     * Get the coil center that owns the product.
-     */
-    public function coilCenter()
-    {
-        return $this->belongsTo(CoilCenter::class, 'coil_center_id');
-    }
+
 
     /**
      * Get the material spec that owns the product.
@@ -107,11 +104,5 @@ class InventoryProduct extends Model
         return $this->belongsTo(Rank::class, 'rank_id');
     }
 
-    /**
-     * Get the sub contractor that owns the product.
-     */
-    public function subContractor()
-    {
-        return $this->belongsTo(SubContractor::class, 'subcont_id');
-    }
+
 }

@@ -108,7 +108,6 @@
 
         const tooltip = $('#global-tooltip-portal');
 
-        // Dynamic Columns Definition
         let columns = [{
                 data: null,
                 render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
@@ -226,12 +225,10 @@
             });
         }
         
-        // Push STO Column after Categories
         columns.push(stoColumnDef);
 
         if (!(Array.isArray(categories) && categories.length > 0)) {
-            // Add a placeholder column to match the header when no categories are defined
-            columns.splice(columns.length - 1, 0, { // Insert before STO
+            columns.splice(columns.length - 1, 0, {
                 data: null,
                 defaultContent: '-',
                 className: 'text-center'
@@ -259,7 +256,6 @@
             ajax: "{{ route('inventory.stockMonitoring.data') }}",
             columns: columns,
             pageLength: 25,
-            // scrollX handled by defaultDataTable, but explicit is fine
             createdRow: function(row, data, dataIndex) {
                 if (data.stock_status === 'danger') {
                     $(row).addClass('bg-red-50 dark:bg-red-900/10');
@@ -335,20 +331,17 @@
             e.stopPropagation();
         });
 
-        // 1. Deteksi klik pada tombol hamburger menu (menggunakan Alpine.js toggleSidebar)
         $(document).on('click', 'button[\\@click*="toggleSidebar"]', function() {
             setTimeout(function() {
                 if ($.fn.dataTable) {
-                    // Kita gunakan cara global agar lebih aman
                     $.fn.dataTable.tables({
                         visible: true,
                         api: true
                     }).columns.adjust();
                 }
-            }, 300); // 300ms sesuai durasi transisi sidebar
+            }, 300);
         });
 
-        // 2. Deteksi perubahan ukuran window
         $(window).on('resize', function() {
             if ($.fn.dataTable) {
                 $.fn.dataTable.tables({
@@ -361,7 +354,6 @@
         // Print Balance Button Handler
         $(document).on('click', '.print-balance-button', function() {
             const id = $(this).data('id');
-            // Route: inventory/stock-monitoring/{hash}/print-balance
             window.open(`{{ url('inventory/stock-monitoring') }}/${id}/print-balance`, '_blank');
         });
     });

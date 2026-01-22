@@ -8,7 +8,7 @@ use App\Http\Controllers\Inventory\CoilCenterController;
 use App\Http\Controllers\Inventory\MaterialSpecController;
 use App\Http\Controllers\Inventory\UnitController;
 use App\Http\Controllers\Inventory\RankController;
-use App\Http\Controllers\Inventory\SubContractorController;
+use App\Http\Controllers\Inventory\SupplierController;
 use App\Http\Controllers\Inventory\TransactionCategoryController;
 use App\Http\Controllers\Inventory\PICController;
 use App\Http\Controllers\Inventory\InventoryProductController;
@@ -60,9 +60,11 @@ Route::resource('inventory/master/unit', UnitController::class)->names('inventor
 Route::get('/inventory/rank/data', [RankController::class, 'data'])->name('inventory.rank.data');
 Route::resource('inventory/master/rank', RankController::class)->names('inventory.rank')->except(['create', 'edit', 'index']);
 
-// Sub Contractor
-Route::get('/inventory/sub-contractor/data', [SubContractorController::class, 'data'])->name('inventory.subContractor.data');
-Route::resource('inventory/master/sub-contractor', SubContractorController::class)->names('inventory.subContractor')->parameters(['sub-contractor' => 'subContractor'])->except(['create', 'edit', 'index']);
+// Supplier
+Route::get('/inventory/supplier/data', [SupplierController::class, 'data'])->name('inventory.supplier.data');
+Route::get('/inventory/supplier/global', [SupplierController::class, 'getGlobal'])->name('inventory.supplier.getGlobal');
+Route::get('/inventory/supplier/global/{id}', [SupplierController::class, 'getGlobalDetail'])->name('inventory.supplier.getGlobalDetail');
+Route::resource('inventory/master/supplier', SupplierController::class)->names('inventory.supplier')->parameters(['supplier' => 'supplier'])->except(['create', 'edit', 'index']);
 
 // Transaction Category
 Route::get('/inventory/transaction-category/data', [TransactionCategoryController::class, 'data'])->name('inventory.transactionCategory.data');
@@ -77,6 +79,7 @@ Route::get('/inventory/product', [InventoryProductController::class, 'index'])->
 Route::get('/inventory/product/data', [InventoryProductController::class, 'data'])->name('inventory.product.data');
 Route::get('/inventory/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('inventory.product.dropdownData');
 Route::get('/inventory/product/get-products', [InventoryProductController::class, 'getProducts'])->name('inventory.product.getProducts');
+Route::get('/inventory/product/used-revisions/{productId}', [InventoryProductController::class, 'getUsedRevisions'])->name('inventory.product.usedRevisions');
 Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');
 Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');
 Route::resource('inventory/product', InventoryProductController::class)->names('inventory.product')->parameters(['product' => 'inventoryProduct'])->except(['create', 'edit', 'index']);

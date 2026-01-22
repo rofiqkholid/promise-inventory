@@ -7,6 +7,8 @@ use App\Models\InventoryModel\InventoryTransaction;
 use App\Models\InventoryModel\InventoryProduct;
 use App\Models\InventoryModel\TransactionCategory;
 use App\Models\InventoryModel\PIC;
+use App\Models\InventoryModel\CoilCenter;
+use App\Models\InventoryModel\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -27,8 +29,11 @@ class InventoryTransactionController extends Controller
         
         $categories = TransactionCategory::select('id', 'code', 'name', 'effect')->orderBy('name')->get();
         $pics = PIC::where('is_active', 1)->orderBy('name')->get();
+        
+        $coilCenters = CoilCenter::select('id', 'code', 'name')->orderBy('code')->get();
+        $suppliers = Supplier::select('id', 'code', 'name')->orderBy('code')->get();
 
-        return view('inventory.inventory_transaction', compact('products', 'categories', 'pics'));
+        return view('inventory.inventory_transaction', compact('products', 'categories', 'pics', 'coilCenters', 'suppliers'));
     }
 
     public function data(Request $request)
@@ -37,7 +42,6 @@ class InventoryTransactionController extends Controller
 
         // Filter by Product
         if ($request->has('product_detail_id') && !empty($request->product_detail_id)) {
-            // Decode HashID if provided
             $prodId = $request->product_detail_id;
             if (!is_numeric($prodId)) {
                 $decoded = \App\Models\InventoryModel\InventoryProduct::decodeHash($prodId);
@@ -80,7 +84,7 @@ class InventoryTransactionController extends Controller
         // Transform for DataTable
         $data = $transactions->map(function($item) {
             return [
-                'id' => $item->hash_id, // Return HashID
+                'id' => $item->hash_id,
                 'transaction_date' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
                 'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision : ''),
                 'product_name' => $item->product->product->part_name ?? '-',
@@ -113,6 +117,12 @@ class InventoryTransactionController extends Controller
         if (isset($data['pic_id']) && !is_numeric($data['pic_id'])) {
             $data['pic_id'] = \App\Models\InventoryModel\PIC::decodeHash($data['pic_id']);
         }
+        if (isset($data['coil_center_id']) && !is_numeric($data['coil_center_id'])) {
+            $data['coil_center_id'] = \App\Models\InventoryModel\CoilCenter::decodeHash($data['coil_center_id']);
+        }
+        if (isset($data['supplier_id']) && !is_numeric($data['supplier_id'])) {
+            $data['supplier_id'] = \App\Models\InventoryModel\Supplier::decodeHash($data['supplier_id']);
+        }
 
         // Replace request data
         $request->merge($data);
@@ -124,6 +134,8 @@ class InventoryTransactionController extends Controller
             'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
             'pic_id' => 'required|exists:inv_m_pic,id',
             'remark' => 'nullable|string',
+            'coil_center_id' => 'nullable|exists:inv_m_coil_center,id',
+            'supplier_id' => 'nullable|exists:inv_m_suppliers,id',
         ]);
 
         DB::beginTransaction();
@@ -139,6 +151,8 @@ class InventoryTransactionController extends Controller
                 'transaction_category_id' => $request->transaction_category_id,
                 'pic_id' => $request->pic_id,
                 'remark' => $request->remark,
+                'coil_center_id' => $request->coil_center_id,
+                'supplier_id' => $request->supplier_id,
             ]);
 
             // Update Stock
@@ -160,7 +174,6 @@ class InventoryTransactionController extends Controller
     public function getCategories()
     {
         $categories = TransactionCategory::select('id', 'code', 'name', 'effect')->orderBy('name')->get();
-        // Return encoded IDs for consistency if needed, but select2 options in blade loop usually use View data
         return response()->json($categories);
     }
 }

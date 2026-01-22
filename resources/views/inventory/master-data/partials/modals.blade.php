@@ -259,30 +259,95 @@
     </div>
 </div>
 
-{{-- Sub Contractor Modals --}}
-<div id="modal-sub-contractor-add" class="modal-container hidden">
+{{-- Supplier Modals --}}
+<div id="modal-supplier-add" class="modal-container hidden">
     <div class="relative p-4 w-full max-w-md">
         <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <button type="button" class="close-modal text-gray-400 absolute top-2.5 right-2.5 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white">
                 <i class="fa-solid fa-xmark w-5 h-5"></i>
             </button>
-            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Add Sub Contractor</h3>
-            <form class="modal-form" data-action="{{ route('inventory.subContractor.store') }}" data-table="subContractorTable">
+            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Add Supplier</h3>
+            <form class="modal-form" data-action="{{ route('inventory.supplier.store') }}" data-table="supplierTable">
                 @csrf
                 <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Code <span class="text-red-600">*</span></label>
-                    <input type="text" name="code" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g. SC001">
-                    <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Source</label>
+                    <div class="flex gap-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="source_type" value="manual" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">New (Manual)</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="source_type" value="global" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">From Global (Promise)</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
-                    <input type="text" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g. PT Example">
-                    <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+
+                <div id="global-supplier-container" class="mb-4 hidden">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Search Global Supplier</label>
+                    <select id="global_supplier_search" class="select2-global-supplier w-full">
+                        <option value="">Search by code or name...</option>
+                    </select>
+
+                    {{-- Card Preview for Global Supplier --}}
+                    <div id="supplier-card-preview" class="mt-4 hidden relative p-4 bg-blue-50 dark:bg-gray-700 rounded-lg border border-blue-100 dark:border-gray-600">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h4 class="text-base font-semibold text-blue-900 dark:text-white" id="card-name">-</h4>
+                                <p class="text-sm text-blue-700 dark:text-blue-300" id="card-code">-</p>
+                            </div>
+                            <div class="p-2 bg-blue-100 dark:bg-gray-600 rounded-full">
+                                <i class="fa-solid fa-cloud text-blue-600 dark:text-blue-400"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+                            <div>
+                                <span class="block text-xs text-gray-500 dark:text-gray-400">Email</span>
+                                <span class="font-medium text-gray-900 dark:text-gray-200" id="card-email">-</span>
+                            </div>
+                            <div>
+                                <span class="block text-xs text-gray-500 dark:text-gray-400">Phone</span>
+                                <span class="font-medium text-gray-900 dark:text-gray-200" id="card-phone">-</span>
+                            </div>
+                            <div class="col-span-2">
+                                <span class="block text-xs text-gray-500 dark:text-gray-400">Address</span>
+                                <span class="font-medium text-gray-900 dark:text-gray-200" id="card-address">-</span>
+                            </div>
+                        </div>
+                        <input type="hidden" name="promise_supp_id" id="add_promise_supp_id">
+                    </div>
                 </div>
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Service Type</label>
-                    <input type="text" name="service_type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g. Slitting">
-                    <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+
+                <div id="supplier-detail-fields" class="mt-4">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="col-span-2">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Code <span class="text-red-600">*</span></label>
+                            <input type="text" name="code" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="e.g. SUP001">
+                            <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+                        <input type="text" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Supplier Name">
+                        <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                            <input type="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
+                            <input type="text" name="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+                        <textarea name="address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                        <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
                 </div>
                 <div class="flex gap-4">
                     <button type="button" class="close-modal flex-1 px-5 py-2.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600">Cancel</button>
@@ -293,30 +358,49 @@
     </div>
 </div>
 
-<div id="modal-sub-contractor-edit" class="modal-container hidden">
+<div id="modal-supplier-edit" class="modal-container hidden">
     <div class="relative p-4 w-full max-w-md">
         <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <button type="button" class="close-modal text-gray-400 absolute top-2.5 right-2.5 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white">
                 <i class="fa-solid fa-xmark w-5 h-5"></i>
             </button>
-            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Edit Sub Contractor</h3>
-            <form class="modal-form" data-table="subContractorTable">
+            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Edit Supplier</h3>
+            <form class="modal-form" data-table="supplierTable">
                 @csrf
                 @method('PUT')
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Code <span class="text-red-600">*</span></label>
-                    <input type="text" name="code" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
-                    <input type="text" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Service Type</label>
-                    <input type="text" name="service_type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                {{-- Hidden promise_supp_id --}}
+                <input type="hidden" name="promise_supp_id" id="edit_promise_supp_id">
+
+                <div id="supplier-edit-detail-fields">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="col-span-2">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Code <span class="text-red-600">*</span></label>
+                            <input type="text" name="code" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Name</label>
+                        <input type="text" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                            <input type="email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Phone</label>
+                            <input type="text" name="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+                        <textarea name="address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                        <p class="error-msg text-red-500 text-xs mt-1 hidden"></p>
+                    </div>
                 </div>
                 <div class="flex gap-4">
                     <button type="button" class="close-modal flex-1 px-5 py-2.5 text-sm font-medium text-gray-500 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:bg-gray-600">Cancel</button>

@@ -151,10 +151,10 @@
                     }
                 ]
             },
-            'sub-contractor': {
-                table: 'subContractorTable',
-                dataUrl: '{{ route("inventory.subContractor.data") }}',
-                apiBase: '{{ url("inventory/master/sub-contractor") }}',
+            'supplier': {
+                table: 'supplierTable',
+                dataUrl: '{{ route("inventory.supplier.data") }}',
+                apiBase: '{{ url("inventory/master/supplier") }}',
                 columns: [{
                         data: null,
                         orderable: false,
@@ -165,10 +165,22 @@
                         data: 'code'
                     },
                     {
-                        data: 'name'
+                        data: 'name',
+                        render: (d, t, r) => {
+                            if (r.is_linked == 1) {
+                                return `<div class="flex items-center gap-2">
+                                            <span>${d}</span>
+                                            <i class="fa-solid fa-cloud text-blue-500" title="Linked to Promise Global"></i>
+                                        </div>`;
+                            }
+                            return d;
+                        }
                     },
                     {
-                        data: 'service_type'
+                        data: 'email'
+                    },
+                    {
+                        data: 'phone'
                     },
                     {
                         data: null,
@@ -178,10 +190,10 @@
                         width: '100px',
                         render: (d, t, r) => `
                     <div class="flex items-center justify-center gap-2">
-                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.hash_id}" data-type="sub-contractor" title="Edit">
+                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.hash_id}" data-type="supplier" title="Edit">
                             <i class="fa-solid fa-pen-to-square text-sm"></i>
                         </button>
-                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.hash_id}" data-type="sub-contractor" title="Delete">
+                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.hash_id}" data-type="supplier" title="Delete">
                             <i class="fa-solid fa-trash-can text-sm"></i>
                         </button>
                     </div>`
@@ -263,7 +275,6 @@
             }
         };
 
-        // Lazy initialization for DataTables (only init when tab is shown)
         let initializedTabs = {};
 
         function initTable(tabName) {
@@ -285,9 +296,7 @@
         }
 
         // Listener untuk transisi sidebar
-        // 1. Deteksi klik pada tombol hamburger menu Anda
         $(document).on('click', 'button[\\@click*="toggleSidebar"]', function() {
-            // Beri waktu 300ms agar animasi transisi sidebar Tailwind selesai dulu
             setTimeout(function() {
                 if ($.fn.dataTable) {
                     $.fn.dataTable.tables({
@@ -298,7 +307,6 @@
             }, 300);
         });
 
-        // 2. Tetap simpan Resize Listener (untuk jaga-jaga jika layar di-resize)
         $(window).on('resize', function() {
             if ($.fn.dataTable) {
                 $.fn.dataTable.tables({
@@ -430,9 +438,112 @@
         // Add Button
         $('.add-button').on('click', function() {
             const type = $(this).data('target');
-            $(`#modal-${type}-add form`)[0].reset();
-            $(`#modal-${type}-add .error-msg`).addClass('hidden');
+            const $form = $(`#modal-${type}-add form`);
+            $form[0].reset();
+            $form.find('.error-msg').addClass('hidden');
+
+            if (type === 'supplier') {
+                // Reset source selection and global container
+                $form.find('input[name="source_type"][value="manual"]').prop('checked', true).trigger('change');
+                $('#global_supplier_search').val(null).trigger('change');
+            }
+
             showModal(`modal-${type}-add`);
+        });
+
+        // Supplier Source Toggle
+        $(document).on('change', 'input[name="source_type"]', function() {
+            const val = $(this).val();
+            const $gContainer = $('#global-supplier-container');
+            const $detailFields = $('#supplier-detail-fields');
+            const $cardPreview = $('#supplier-card-preview');
+            const $form = $(this).closest('form');
+
+            if (val === 'global') {
+                $gContainer.removeClass('hidden');
+                $detailFields.addClass('hidden'); // Hide manual inputs
+                $cardPreview.addClass('hidden'); // Hide card initially
+                initGlobalSupplierSelect2();
+            } else {
+                $gContainer.addClass('hidden');
+                $detailFields.removeClass('hidden'); // Show manual inputs
+                $cardPreview.addClass('hidden');
+                $('#add_promise_supp_id').val(''); 
+                $form.find('#supplier-detail-fields input, #supplier-detail-fields textarea').val('');
+            }
+        });
+
+        function initGlobalSupplierSelect2() {
+            $('.select2-global-supplier').select2({
+                placeholder: 'Select Global Supplier...',
+                allowClear: true,
+                dropdownParent: $('#modal-supplier-add'),
+                ajax: {
+                    url: '{{ route("inventory.supplier.getGlobal") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term || '',
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function(data, params) {
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.pagination.more
+                            }
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 0
+            }).on('select2:open', function() {
+                // Ensure it triggers search on open if empty
+                if (!$('.select2-search__field').val()) {
+                    $(this).data('select2').trigger('query', { term: '' });
+                }
+            });
+        }
+
+        // Global Supplier Selection Change
+        $(document).on('change', '#global_supplier_search', function() {
+            const id = $(this).val();
+            const $form = $(this).closest('form');
+            const $card = $('#supplier-card-preview');
+            const $detailFields = $('#supplier-detail-fields');
+
+            if (!id) {
+                $('#add_promise_supp_id').val('');
+                $card.addClass('hidden');
+                return;
+            }
+
+            // Set ID immediately
+            $('#add_promise_supp_id').val(id);
+
+            // Fetch detail and auto-fill
+            $.get(`{{ url('inventory/supplier/global') }}/${id}`, function(data) {
+                if (data) {
+                    // Fill hidden form inputs for submission
+                    $form.find('input[name="code"]').val(data.code || '');
+                    $form.find('input[name="name"]').val(data.name || '');
+                    $form.find('input[name="email"]').val(data.email || '');
+                    $form.find('input[name="phone"]').val(data.phone || '');
+                    $form.find('textarea[name="address"]').val(data.address || ''); // Assuming address is textarea? Checked modal: textarea has name="address"
+
+                    // Fill Card Preview
+                    $('#card-code').text(data.code || '-');
+                    $('#card-name').text(data.name || '-');
+                    $('#card-email').text(data.email || '-');
+                    $('#card-phone').text(data.phone || '-');
+                    $('#card-address').text(data.address || '-');
+
+                    // Show Card
+                    $card.removeClass('hidden');
+                }
+            });
         });
 
         // Form Submit
@@ -457,7 +568,6 @@
                         if (tables[tableName]) {
                             tables[tableName].ajax.reload();
                         } else {
-                            // If table hasn't been initialized yet, initialize it and then reload
                             const tabName = Object.keys(tabConfig).find(k => tabConfig[k].table === tableName);
                             if (tabName) {
                                 initTable(tabName);
@@ -497,6 +607,12 @@
                     $modal.find(`[name="${key}"]`).val(data[key]);
                 });
                 $modal.find('form').attr('action', `${config.apiBase}/${id}`).data('table', config.table);
+
+                // Specific visibility for Supplier - Removed hiding fields
+                if (type === 'supplier') {
+                    $('#supplier-edit-detail-fields').removeClass('hidden');
+                }
+
                 showModal(`modal-${type}-edit`);
             });
         });

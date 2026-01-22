@@ -33,7 +33,7 @@
                     <button data-tab="rank" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Rank
                     </button>
-                    <button data-tab="sub-contractor" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
+                    <button data-tab="supplier" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Supplier
                     </button>
                     <!-- <button data-tab="transaction-category" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
@@ -129,20 +129,21 @@
         </x-table>
     </div>
 
-    {{-- Tab Content: Sub Contractor/Supplier --}}
-    <div id="tab-sub-contractor" class="tab-content hidden">
+    {{-- Tab Content: Supplier --}}
+    <div id="tab-supplier" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="sub-contractor">
+            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="supplier">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
-        <x-table id="subContractorTable">
+        <x-table id="supplierTable">
             <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
                 <tr>
                     <th scope="col" class="px-6 py-3 w-16">No</th>
                     <th scope="col" class="px-6 py-3">Code</th>
                     <th scope="col" class="px-6 py-3">Name</th>
-                    <th scope="col" class="px-6 py-3">Service Type</th>
+                    <th scope="col" class="px-6 py-3">Email</th>
+                    <th scope="col" class="px-6 py-3">Phone</th>
                     <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
                 </tr>
             </thead>

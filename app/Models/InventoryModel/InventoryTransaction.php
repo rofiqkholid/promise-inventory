@@ -23,7 +23,9 @@ class InventoryTransaction extends Model
         'qty',
         'transaction_category_id',
         'pic_id',
-        'remark'
+        'remark',
+        'coil_center_id',
+        'supplier_id'
     ];
 
     protected $casts = [
@@ -44,5 +46,15 @@ class InventoryTransaction extends Model
     public function pic()
     {
         return $this->belongsTo(PIC::class, 'pic_id');
+    }
+
+    public function coilCenter()
+    {
+        return $this->belongsTo(CoilCenter::class, 'coil_center_id');
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class, 'supplier_id');
     }
 }

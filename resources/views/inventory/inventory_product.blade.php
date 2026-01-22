@@ -28,9 +28,10 @@
                 <th scope="col" class="px-4 py-3 whitespace-nowrap">Material</th>
                 <th scope="col" class="px-4 py-3 whitespace-nowrap">Dimensions</th>
                 <th scope="col" class="px-4 py-3 text-center">Pcs/Unit</th>
+                <th scope="col" class="px-4 py-3 text-center">Weight (Kg)</th>
                 <th scope="col" class="px-4 py-3 text-center">Unit/Car</th>
                 <th scope="col" class="px-4 py-3 text-center">Rank</th>
-                <th scope="col" class="px-4 py-3 whitespace-nowrap">Coil Center</th>
+
                 <th scope="col" class="px-4 py-3">Remark</th>
                 <th scope="col" class="px-4 py-3 whitespace-nowrap">Updated At</th>
                 <th scope="col" class="px-4 py-3 text-center w-[100px]">Action</th>
@@ -54,13 +55,13 @@
                 <input type="hidden" name="_method" id="formMethod" value="POST">
                 
                 <div class="p-4 overflow-y-auto flex-1 space-y-6">
-                    {{-- Product Identity Section --}}
+                    {{-- Product Information Section --}}
                     <div>
                         <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
-                            <i class="fa-solid fa-tag text-xs"></i>
-                            Product Identity
+                            <i class="fa-solid fa-circle-info text-xs"></i>
+                            Product Information
                         </h4>
-                        <div class="grid gap-4 md:grid-cols-3">
+                        <div class="grid gap-4 md:grid-cols-4">
                             <div class="md:col-span-2">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-600">*</span></label>
                                 <select name="product_id" id="product_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -82,16 +83,6 @@
                                 </select>
                                 <p id="error-revision" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- Material & Source Section --}}
-                    <div>
-                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
-                            <i class="fa-solid fa-industry text-xs"></i>
-                            Material & Source
-                        </h4>
-                        <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Material Spec</label>
                                 <select name="material_spec_id" id="material_spec_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
@@ -99,72 +90,75 @@
                                 </select>
                                 <p id="error-material_spec_id" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            <div>
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Coil Center</label>
-                                <select name="coil_center_id" id="coil_center_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                                    <option value="">Select Coil Center</option>
-                                </select>
-                                <p id="error-coil_center_id" class="text-red-500 text-xs mt-1 hidden"></p>
-                            </div>
-                            <div>
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Supplier</label>
-                                <select name="subcont_id" id="subcont_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                                    <option value="">Select Supplier</option>
-                                </select>
-                                <p id="error-subcont_id" class="text-red-500 text-xs mt-1 hidden"></p>
-                            </div>
                         </div>
                     </div>
 
-                    {{-- Dimensions Section --}}
+                    {{-- Unit & Dimensions Section --}}
                     <div>
                         <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
                             <i class="fa-solid fa-ruler-combined text-xs"></i>
-                            Dimensions
+                            Unit & Dimensions
                         </h4>
-                        <div class="grid gap-4 md:grid-cols-3">
-                            <div>
+                        
+                        {{-- Unit Selection (First as requested) --}}
+                        <div class="mb-4">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit <span class="text-xs text-gray-500">(Determines visible dimensions)</span></label>
+                            <select name="unit_id" id="unit_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
+                                <option value="">Select Unit</option>
+                            </select>
+                            <p id="error-unit_id" class="text-red-500 text-xs mt-1 hidden"></p>
+                        </div>
+
+                        {{-- Dimensions Grid --}}
+                        <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                            <div class="lg:col-span-1">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thickness</label>
                                 <input type="number" name="thickness" id="thickness" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-thickness" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            <div>
+                            <div class="lg:col-span-1">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Width</label>
                                 <input type="number" name="width" id="width" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-width" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            <div>
+                            
+                            {{-- Dynamic Fields --}}
+                            <div id="lengthContainer" class="lg:col-span-1">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length</label>
                                 <input type="number" name="length" id="length" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-length" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            <div id="length2Container">
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length 2 (Trapezoid)</label>
+                            <div id="length2Container" class="lg:col-span-1">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length 2</label>
                                 <input type="number" name="length_2" id="length_2" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-length_2" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            <div id="pitchContainer">
+                            <div id="pitchContainer" class="lg:col-span-1">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pitch</label>
                                 <input type="number" name="pitch" id="pitch" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-pitch" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
+                            
+                            <div class="lg:col-span-1">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Density</label>
+                                <input type="number" name="density" id="density" step="0.001" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                <p id="error-density" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
+                            <div class="lg:col-span-1">
+                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Weight (Kg)</label>
+                                <input type="number" name="weight_kg" id="weight_kg" step="0.001" min="0" readonly class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed">
+                                <p id="error-weight_kg" class="text-red-500 text-xs mt-1 hidden"></p>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Logistics Section --}}
+                    {{-- Inventory Control & Logistics Section --}}
                     <div>
                         <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
-                            <i class="fa-solid fa-truck-ramp-box text-xs"></i>
-                            Unit & Logistics
+                            <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                            Logistics & Control
                         </h4>
-                        <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                            <div>
-                                <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit</label>
-                                <select name="unit_id" id="unit_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
-                                    <option value="">Select Unit</option>
-                                </select>
-                                <p id="error-unit_id" class="text-red-500 text-xs mt-1 hidden"></p>
-                            </div>
+                        <div class="grid gap-4 md:grid-cols-4">
                             <div>
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Rank</label>
                                 <select name="rank_id" id="rank_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2">
@@ -182,23 +176,12 @@
                                 <input type="number" name="unit_per_car" id="unit_per_car" min="1" value="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 <p id="error-unit_per_car" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- Inventory Control Section --}}
-                    <div>
-                        <h4 class="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2 border-b pb-2">
-                            <i class="fa-solid fa-boxes-stacked text-xs"></i>
-                            Inventory Control & Others
-                        </h4>
-                        <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Min Stock</label>
-                                <input type="number" name="min_stock" id="min_stock" min="0" value="0" readonly class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed" title="Auto-calculated (Pcs per Unit x 90)">
+                                <input type="number" name="min_stock" id="min_stock" min="0" value="0" readonly class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed">
                                 <p id="error-min_stock" class="text-red-500 text-xs mt-1 hidden"></p>
-                                <p class="text-xs text-gray-500 mt-1">Formula: <b>Pcs per Unit x 90</b></p>
                             </div>
-                            <div class="md:col-span-2">
+                            <div class="md:col-span-4">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Remark</label>
                                 <textarea name="remark" id="remark" rows="1" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white h-[42px] leading-tight" placeholder="Optional notes..."></textarea>
                                 <p id="error-remark" class="text-red-500 text-xs mt-1 hidden"></p>
@@ -267,10 +250,6 @@ $(function() {
     $.get('{{ route("inventory.product.dropdownData") }}', function(data) {
         dropdownData = data;
         
-        data.coilCenters.forEach(cc => {
-            $('#coil_center_id').append(`<option value="${cc.hash_id}">${cc.code} - ${cc.name}</option>`);
-        });
-        
         data.materialSpecs.forEach(ms => {
             $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`);
         });
@@ -282,12 +261,6 @@ $(function() {
         data.ranks.forEach(r => {
             $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`);
         });
-
-        if (data.subContractors) {
-            data.subContractors.forEach(sc => {
-                $('#subcont_id').append(`<option value="${sc.hash_id}">${sc.name} (${sc.code})</option>`);
-            });
-        }
     });
 
 
@@ -310,6 +283,34 @@ $(function() {
                 pagination: { more: data.pagination.more }
             })
         }
+    }).on('change', function() {
+        const productId = $(this).val();
+        if (!productId) return;
+
+        $.get(`{{ url('inventory/product/used-revisions') }}/${productId}`, function(usedRevisions) {
+            const currentRevision = isEditMode ? $('#revision').val() : null;
+            
+            $('#revision option').each(function() {
+                const val = $(this).val();
+                if (!val) return;
+                
+                if (usedRevisions.includes(val)) {
+                    if (val === currentRevision) {
+                        $(this).prop('disabled', false).show();
+                    } else {
+                        $(this).prop('disabled', true).hide();
+                    }
+                } else {
+                    $(this).prop('disabled', false).show();
+                }
+            });
+            
+            // Re-initialize select2 to reflect changes
+            $('#revision').select2({
+                dropdownParent: $('#formModal'),
+                width: '100%'
+            });
+        });
     });
 
     // DataTable
@@ -359,9 +360,14 @@ $(function() {
                 }
             },
             { data: 'pcs_per_unit', className: 'px-4 py-3 text-center' },
+            { 
+                data: 'weight_kg', 
+                className: 'px-4 py-3 text-center', 
+                render: d => d ? parseFloat(d).toFixed(2) : '-' 
+            },
             { data: 'unit_per_car', className: 'px-4 py-3 text-center' },
             { data: 'rank', className: 'px-4 py-3 text-center' },
-            { data: 'coil_center', className: 'px-4 py-3 text-center' },
+
             { 
                 data: 'remark', 
                 defaultContent: '-', 
@@ -413,7 +419,10 @@ $(function() {
         $('#productForm').attr('action', '{{ route("inventory.product.store") }}');
         $('#productForm')[0].reset();
         $('#pcs_per_unit').val(1);
+        $('#unit_per_car').val(1);
         $('#min_stock').val(90);
+        $('#density').val(''); 
+        $('#weight_kg').val('');
         $('#product_id').val(null).trigger('change');
         $('#unit_id').val('').trigger('change');
         $('[id^="error-"]').addClass('hidden').text('');
@@ -468,9 +477,7 @@ $(function() {
 
         $.get(`{{ url('inventory/product') }}/${id}`, function(data) {
             $('#revision').val(data.revision).trigger('change');
-            $('#subcont_id').val(data.sub_contractor ? data.sub_contractor.hash_id : '').trigger('change');
-            $('#coil_center_id').val(data.coil_center ? data.coil_center.hash_id : '').trigger('change');
-            $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
+             $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
             $('#thickness').val(data.thickness);
             $('#width').val(data.width);
             $('#length').val(data.length);
@@ -479,8 +486,12 @@ $(function() {
             $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
             $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
             $('#pcs_per_unit').val(data.pcs_per_unit);
+            $('#pcs_per_unit').val(data.pcs_per_unit);
+            $('#pcs_per_unit').val(data.pcs_per_unit);
             $('#unit_per_car').val(data.unit_per_car);
             $('#min_stock').val(data.min_stock);
+            $('#density').val(data.density);
+            $('#weight_kg').val(data.weight_kg);
             $('#remark').val(data.remark);
 
             if (data.product) {
@@ -500,32 +511,96 @@ $(function() {
     });
 
 
-    // Toggle Unit fields visibility (Length 2 & Pitch)
+    // Toggle Unit fields visibility and Visibility of Fields based on Unit Type
     function toggleUnitFields() {
         const unitId = $('#unit_id').val();
         const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
-        const unitName = selectedUnit ? selectedUnit.name : '';
+        const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
 
-        if (unitName === 'Trapezoid' || unitName === 'trapezoid') {
+        // Reset all visibility first
+        $('#lengthContainer').hide();
+        $('#length2Container').hide();
+        $('#pitchContainer').hide();
+        
+        // Logic Visibility
+        if (unitName.includes('sheet')) {
+            // Sheet: Show Length, Hide L2 & Pitch (unless user wants Pitch, but per req Hide Pitch)
+            // User requirement: "Sheet: (T x W x L x Density)" -> Need L.
+            // Requirement said "Sheet: Hide L2, Pitch. Show Length"
+            $('#lengthContainer').show();
+            $('#length2Container').hide();
+            $('#pitchContainer').hide();
+        } else if (unitName.includes('trapezoid')) {
+             // Trapezoid: Show Length, Length 2. Hide Pitch.
+            $('#lengthContainer').show();
             $('#length2Container').show();
             $('#pitchContainer').hide();
-            if (!isEditMode) $('#pitch').val('');
-        } else {
+        } else if (unitName.includes('coil')) {
+            // Coil: Show Pitch. Hide Length, Length 2.
+            $('#lengthContainer').hide();
             $('#length2Container').hide();
             $('#pitchContainer').show();
-            if (!isEditMode) $('#length_2').val('');
+        } else {
+             // Default if unknown or empty: Show Length.
+             $('#lengthContainer').show();
         }
+        
+        // Trigger calculation when unit changes
+        calculateWeight();
     }
 
     $('#unit_id').on('change', function() {
         toggleUnitFields();
     });
+    
+    // Auto-calculate Weight
+    // Formula:
+    // Sheet: (T x W x L x Density) / 1,000,000
+    // Coil: (T x W x Pitch x Density) / 1,000,000
+    // Trapezoid: (T x W x ((L + L2) / 2) x Density) / 1,000,000
+    
+    const inputsForCalc = ['#thickness', '#width', '#length', '#length_2', '#pitch', '#density'];
+    $(inputsForCalc.join(', ')).on('input change', calculateWeight);
+    
+    function calculateWeight() {
+        const unitId = $('#unit_id').val();
+        const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
+        const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
+        
+        const t = parseFloat($('#thickness').val()) || 0;
+        const w = parseFloat($('#width').val()) || 0;
+        const density = parseFloat($('#density').val()) || 0;
+        
+        let weight = 0;
+        
+        if (unitName.includes('sheet')) {
+            const l = parseFloat($('#length').val()) || 0;
+            weight = (t * w * l * density) / 1000000;
+        } else if (unitName.includes('coil')) {
+            const p = parseFloat($('#pitch').val()) || 0;
+            weight = (t * w * p * density) / 1000000;
+        } else if (unitName.includes('trapezoid')) {
+            const l = parseFloat($('#length').val()) || 0;
+            const l2 = parseFloat($('#length_2').val()) || 0;
+            const avgL = (l + l2) / 2;
+            weight = (t * w * avgL * density) / 1000000;
+        } else {
+             // Fallback default (Sheet logic) if unit not selected or known
+             const l = parseFloat($('#length').val()) || 0;
+             weight = (t * w * l * density) / 1000000;
+        }
+        
+        $('#weight_kg').val(weight > 0 ? weight.toFixed(3) : '');
+    }
 
     // Auto-calculate min stock
-    $('#pcs_per_unit').on('input change', function() {
-        const pcs = parseInt($(this).val()) || 0;
-        $('#min_stock').val(pcs * 90);
-    });
+    function calculateMinStock() {
+        const pcs = parseInt($('#pcs_per_unit').val()) || 0;
+        const upc = parseInt($('#unit_per_car').val()) || 0;
+        $('#min_stock').val(pcs * upc * 90);
+    }
+
+    $('#pcs_per_unit, #unit_per_car').on('input change', calculateMinStock);
 
     // Delete button
     $(document).on('click', '.delete-button', function() {

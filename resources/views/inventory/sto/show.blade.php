@@ -54,19 +54,28 @@
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-green-600 dark:text-green-400">Inc:</span>
-                <span id="stat-total-increase" class="font-bold text-green-700 dark:text-green-300">+{{ number_format($stats['total_increase'], 2) }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">(<span id="stat-count-increase">{{ $stats['count_increase'] }}</span>)</span>
+                <div class="flex flex-col leading-tight">
+                    <span id="stat-total-increase-pcs" class="font-bold text-green-700 dark:text-green-300">{{ number_format($stats['total_increase_pcs'], 0) }} Pcs</span>
+                    <span id="stat-total-increase" class="text-[10px] text-green-600 dark:text-green-400">({{ number_format($stats['total_increase'], 0) }} Unit)</span>
+                </div>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 ml-1 self-start">(<span id="stat-count-increase">{{ $stats['count_increase'] }}</span>)</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-red-600 dark:text-red-400">Dec:</span>
-                <span id="stat-total-decrease" class="font-bold text-red-700 dark:text-red-300">{{ number_format($stats['total_decrease'], 2) }}</span>
-                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">(<span id="stat-count-decrease">{{ $stats['count_decrease'] }}</span>)</span>
+                <div class="flex flex-col leading-tight">
+                    <span id="stat-total-decrease-pcs" class="font-bold text-red-700 dark:text-red-300">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
+                    <span id="stat-total-decrease" class="text-[10px] text-red-600 dark:text-red-400">({{ number_format($stats['total_decrease'], 0) }} Unit)</span>
+                </div>
+                <span class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 ml-1 self-start">(<span id="stat-count-decrease">{{ $stats['count_decrease'] }}</span>)</span>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">
                 <span class="text-purple-600 dark:text-purple-400">Net:</span>
-                <span id="stat-net-adjustment" class="font-bold text-purple-700 dark:text-purple-300">{{ $netAdjustment >= 0 ? '+' : '' }}{{ number_format($netAdjustment, 2) }}</span>
+                <div class="flex flex-col leading-tight">
+                    <span id="stat-net-adjustment-pcs" class="font-bold text-purple-700 dark:text-purple-300">{{ ($stats['net_adjustment_pcs'] >= 0 ? '+' : '') . number_format($stats['net_adjustment_pcs'], 0) }} Pcs</span>
+                    <span id="stat-net-adjustment" class="text-[10px] text-purple-600 dark:text-purple-400">({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, 0) }} Unit)</span>
+                </div>
             </div>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <div class="flex items-center gap-2">

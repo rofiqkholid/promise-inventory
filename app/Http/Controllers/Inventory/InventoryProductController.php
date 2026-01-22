@@ -8,7 +8,7 @@ use App\Models\InventoryModel\CoilCenter;
 use App\Models\InventoryModel\MaterialSpec;
 use App\Models\InventoryModel\Unit;
 use App\Models\InventoryModel\Rank;
-use App\Models\InventoryModel\SubContractor;
+use App\Models\InventoryModel\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -42,7 +42,7 @@ class InventoryProductController extends Controller
             1 => 'prod.part_no',
             2 => 'prod.part_name',
             3 => 'p.revision',
-            4 => 'cc.code',
+
             5 => 'ms.spec_name',
             6 => 'p.thickness',
             7 => 'p.width',
@@ -55,8 +55,7 @@ class InventoryProductController extends Controller
             ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
             ->leftJoin('models as model', 'model.id', '=', 'prod.model_id')
-            ->leftJoin('inv_m_sub_contractor as sc', 'sc.id', '=', 'p.subcont_id')
-            ->leftJoin('inv_m_coil_center as cc', 'cc.id', '=', 'p.coil_center_id')
+
             ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
             ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
@@ -71,6 +70,8 @@ class InventoryProductController extends Controller
                 'p.length',
                 'p.length_2',
                 'p.pitch',
+                'p.density',
+                'p.weight_kg',
                 'p.current_stock_qty',
                 'p.trial_usage_qty',
                 'p.min_stock',
@@ -80,8 +81,7 @@ class InventoryProductController extends Controller
                 DB::raw("COALESCE(prod.part_name,'') as part_name"),
                 DB::raw("COALESCE(cust.code,'') as customer_code"),
                 DB::raw("COALESCE(model.name,'') as model_name"),
-                DB::raw("COALESCE(sc.code,'') as sub_contractor_code"),
-                DB::raw("COALESCE(cc.code,'') as coil_center_code"),
+
                 DB::raw("COALESCE(ms.spec_name,'') as material_spec_name"),
                 DB::raw("COALESCE(ms.coating_type,'') as coating_type"),
                 DB::raw("COALESCE(u.code,'') as unit_code"),
@@ -105,7 +105,7 @@ class InventoryProductController extends Controller
                   ->orWhere('cust.code', 'like', "%{$searchValue}%")
                   ->orWhere('model.name', 'like', "%{$searchValue}%")
                   ->orWhere('p.revision', 'like', "%{$searchValue}%")
-                  ->orWhere('cc.code', 'like', "%{$searchValue}%")
+
                   ->orWhere('ms.spec_name', 'like', "%{$searchValue}%")
                   ->orWhere('u.code', 'like', "%{$searchValue}%")
                   ->orWhere('u.code', 'like', "%{$searchValue}%")
@@ -139,15 +139,19 @@ class InventoryProductController extends Controller
                 'customer' => $r->customer_code,
                 'model' => $r->model_name,
                 'revision' => $r->revision,
-                'sub_contractor' => $r->sub_contractor_code,
-                'coil_center' => $r->coil_center_code,
+
                 'material_spec' => $r->material_spec_name,
                 'coating_type' => $r->coating_type,
                 'thickness' => (float)$r->thickness,
                 'width' => (float)$r->width,
                 'length' => (float)$r->length,
                 'length_2' => (float)$r->length_2,
+                'length_2' => (float)$r->length_2,
                 'pitch' => (float)$r->pitch,
+                'density' => (float)$r->density,
+                'weight_kg' => (float)$r->weight_kg,
+                'density' => (float)$r->density,
+                'weight_kg' => (float)$r->weight_kg,
                 'unit' => $r->unit_code,
                 'unit_name' => $r->unit_name,
                 'rank' => $r->rank_code,
@@ -174,8 +178,7 @@ class InventoryProductController extends Controller
     public function getDropdownData()
     {
         return response()->json([
-            'subContractors' => SubContractor::select('id', 'code', 'name')->get(),
-            'coilCenters' => CoilCenter::select('id', 'code', 'name')->get(),
+
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::select('id', 'code', 'name')->get(),
             'ranks' => Rank::select('id', 'code', 'description')->get(),
@@ -225,6 +228,26 @@ class InventoryProductController extends Controller
     }
 
     /**
+     * Get used revisions for a product.
+     */
+    public function getUsedRevisions($productId)
+    {
+        $salt = config('app.key') . \App\Models\Products::class;
+        $length = config('hashids.connections.main.length', 10);
+        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
+        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
+        
+        $decoded = $hashids->decode($productId);
+        $id = $decoded[0] ?? $productId;
+
+        $usedRevisions = InventoryProduct::where('product_id', $id)
+            ->pluck('revision')
+            ->toArray();
+
+        return response()->json($usedRevisions);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     use \App\Traits\DecodesHashInputs;
@@ -236,8 +259,6 @@ class InventoryProductController extends Controller
     {
         $data = $this->decodeHashInputs($request->all(), [
             'product_id' => \App\Models\Products::class,
-            'subcont_id' => SubContractor::class,
-            'coil_center_id' => CoilCenter::class,
             'material_spec_id' => MaterialSpec::class,
             'unit_id' => Unit::class,
             'rank_id' => Rank::class,
@@ -247,8 +268,6 @@ class InventoryProductController extends Controller
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'subcont_id' => 'nullable|exists:inv_m_sub_contractor,id',
-            'coil_center_id' => 'nullable|exists:inv_m_coil_center,id',
             'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
             'unit_id' => 'nullable|exists:inv_m_unit,id',
             'rank_id' => 'nullable|exists:inv_m_rank,id',
@@ -258,6 +277,8 @@ class InventoryProductController extends Controller
             'length' => 'nullable|numeric|min:0',
             'length_2' => 'nullable|numeric|min:0',
             'pitch' => 'nullable|numeric|min:0',
+            'density' => 'nullable|numeric|min:0',
+            'weight_kg' => 'nullable|numeric|min:0',
             'pcs_per_unit' => 'nullable|integer|min:1',
             'unit_per_car' => 'nullable|integer|min:1',
             'min_stock' => 'nullable|integer|min:0',
@@ -277,7 +298,7 @@ class InventoryProductController extends Controller
     public function show($id)
     {
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
-        $inventoryProduct->load(['product', 'coilCenter', 'materialSpec', 'unit', 'rank', 'subContractor']);
+        $inventoryProduct->load(['product', 'materialSpec', 'unit', 'rank']);
         return response()->json($inventoryProduct);
     }
 
@@ -290,8 +311,6 @@ class InventoryProductController extends Controller
         
         $data = $this->decodeHashInputs($request->all(), [
             'product_id' => \App\Models\Products::class,
-            'subcont_id' => SubContractor::class,
-            'coil_center_id' => CoilCenter::class,
             'material_spec_id' => MaterialSpec::class,
             'unit_id' => Unit::class,
             'rank_id' => Rank::class,
@@ -301,8 +320,6 @@ class InventoryProductController extends Controller
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
-            'subcont_id' => 'nullable|exists:inv_m_sub_contractor,id',
-            'coil_center_id' => 'nullable|exists:inv_m_coil_center,id',
             'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
             'unit_id' => 'nullable|exists:inv_m_unit,id',
             'rank_id' => 'nullable|exists:inv_m_rank,id',
@@ -312,6 +329,8 @@ class InventoryProductController extends Controller
             'length' => 'nullable|numeric|min:0',
             'length_2' => 'nullable|numeric|min:0',
             'pitch' => 'nullable|numeric|min:0',
+            'density' => 'nullable|numeric|min:0',
+            'weight_kg' => 'nullable|numeric|min:0',
             'pcs_per_unit' => 'nullable|integer|min:1',
             'unit_per_car' => 'nullable|integer|min:1',
             'min_stock' => 'nullable|integer|min:0',
