@@ -185,6 +185,28 @@ class InventoryProductController extends Controller
         ]);
     }
 
+    public function getCustomers()
+{
+    return DB::table('customers')
+        ->select('id', 'code')
+        ->orderBy('code')
+        ->get();
+}
+
+public function getModels(Request $request)
+{
+    $request->validate([
+        'customer_id' => 'required|exists:customers,id'
+    ]);
+
+    return DB::table('models')
+        ->where('customer_id', $request->customer_id)
+        ->select('id', 'name')
+        ->orderBy('name')
+        ->get();
+}
+
+
     /**
      * Get products for dropdown (Select2).
      */

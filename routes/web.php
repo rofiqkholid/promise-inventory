@@ -79,6 +79,8 @@ Route::get('/inventory/product', [InventoryProductController::class, 'index'])->
 Route::get('/inventory/product/data', [InventoryProductController::class, 'data'])->name('inventory.product.data');
 Route::get('/inventory/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('inventory.product.dropdownData');
 Route::get('/inventory/product/get-products', [InventoryProductController::class, 'getProducts'])->name('inventory.product.getProducts');
+Route::get('/inventory/product/get-customer',[InventoryProductController::class, 'getCustomers'])->name('inventory.product.getCustomers');
+Route::get('/inventory/product/get-model',[InventoryProductController::class, 'getModels'])->name('inventory.product.getModels');
 Route::get('/inventory/product/used-revisions/{productId}', [InventoryProductController::class, 'getUsedRevisions'])->name('inventory.product.usedRevisions');
 Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');
 Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');

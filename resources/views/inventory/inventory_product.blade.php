@@ -53,7 +53,7 @@
             <form id="productForm" method="POST" class="flex flex-col overflow-hidden h-full">
                 @csrf
                 <input type="hidden" name="_method" id="formMethod" value="POST">
-                
+
                 <div class="p-4 overflow-y-auto flex-1 space-y-6">
                     {{-- Product Information Section --}}
                     <div>
@@ -62,6 +62,21 @@
                             Product Information
                         </h4>
                         <div class="grid gap-4 md:grid-cols-4">
+                            {{-- CUSTOMER --}}
+                            <div>
+                                <label class="block text-sm font-medium">Customer<span class="text-red-600">*</span></label>
+                                <select id="customer_id" class="select2 w-full">
+                                    <option></option>
+                                </select>
+                            </div>
+
+                            {{-- MODEL --}}
+                            <div>
+                                <label class="block text-sm font-medium">Model<span class="text-red-600">*</span></label>
+                                <select id="model_id" class="select2 w-full" disabled>
+                                    <option></option>
+                                </select>
+                            </div>
                             <div class="md:col-span-2">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Product <span class="text-red-600">*</span></label>
                                 <select name="product_id" id="product_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -99,7 +114,7 @@
                             <i class="fa-solid fa-ruler-combined text-xs"></i>
                             Unit & Dimensions
                         </h4>
-                        
+
                         {{-- Unit Selection (First as requested) --}}
                         <div class="mb-4">
                             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Unit <span class="text-xs text-gray-500">(Determines visible dimensions)</span></label>
@@ -121,7 +136,7 @@
                                 <input type="number" name="width" id="width" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-width" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            
+
                             {{-- Dynamic Fields --}}
                             <div id="lengthContainer" class="lg:col-span-1">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Length</label>
@@ -138,7 +153,7 @@
                                 <input type="number" name="pitch" id="pitch" step="0.01" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                 <p id="error-pitch" class="text-red-500 text-xs mt-1 hidden"></p>
                             </div>
-                            
+
                             <div class="lg:col-span-1">
                                 <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Density</label>
                                 <input type="number" name="density" id="density" step="0.001" min="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
@@ -222,171 +237,252 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-$(function() {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
-    let dropdownData = {};
-    let isEditMode = false;
+    $(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+        let dropdownData = {};
+        let isEditMode = false;
 
-    // Toast helper
-    function toast(icon, title, text) {
-        const isDark = document.documentElement.classList.contains('dark');
-        const theme = isDark ? {
-            bg: 'rgba(30, 41, 59, 0.95)', fg: '#E5E7EB',
-            icon: { success: '#22c55e', error: '#ef4444' }
-        } : {
-            bg: 'rgba(255, 255, 255, 0.98)', fg: '#0f172a',
-            icon: { success: '#16a34a', error: '#dc2626' }
-        };
-        Swal.fire({
-            toast: true, position: 'top-end', showConfirmButton: false, timer: 2600, timerProgressBar: true,
-            icon, title, text,
-            iconColor: theme.icon[icon],
-            background: theme.bg,
-            color: theme.fg
-        });
-    }
-
-    // Load dropdown data
-    $.get('{{ route("inventory.product.dropdownData") }}', function(data) {
-        dropdownData = data;
-        
-        data.materialSpecs.forEach(ms => {
-            $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`);
-        });
-        
-        data.units.forEach(u => {
-            $('#unit_id').append(`<option value="${u.hash_id}">${u.code} - ${u.name}</option>`);
-        });
-        
-        data.ranks.forEach(r => {
-            $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`);
-        });
-    });
-
-
-
-
-    // Initialize Product Select2
-    $('#product_id').select2({
-        dropdownParent: $('#formModal'),
-        width: '100%',
-        placeholder: 'Search Product...',
-        allowClear: false,
-        minimumInputLength: 1,
-        ajax: {
-            url: '{{ route("inventory.product.getProducts") }}',
-            dataType: 'json',
-            delay: 250,
-            data: params => ({ q: params.term, page: params.page || 1 }),
-            processResults: data => ({
-                results: data.results,
-                pagination: { more: data.pagination.more }
-            })
-        }
-    }).on('change', function() {
-        const productId = $(this).val();
-        if (!productId) return;
-
-        $.get(`{{ url('inventory/product/used-revisions') }}/${productId}`, function(usedRevisions) {
-            const currentRevision = isEditMode ? $('#revision').val() : null;
-            
-            $('#revision option').each(function() {
-                const val = $(this).val();
-                if (!val) return;
-                
-                if (usedRevisions.includes(val)) {
-                    if (val === currentRevision) {
-                        $(this).prop('disabled', false).show();
-                    } else {
-                        $(this).prop('disabled', true).hide();
-                    }
-                } else {
-                    $(this).prop('disabled', false).show();
-                }
-            });
-            
-            // Re-initialize select2 to reflect changes
-            $('#revision').select2({
+        function initCustomerModelSelect2() {
+            $('#customer_id, #model_id').select2({
                 dropdownParent: $('#formModal'),
-                width: '100%'
+                width: '100%',
+                placeholder: 'Select...',
+                
+            });
+        }
+        const routeCustomers = '{{ route("inventory.product.getCustomers") }}';
+        const routeModels = '{{ route("inventory.product.getModels") }}';
+
+        function loadCustomers() {
+            const el = $('#customer_id');
+
+            el.empty().append('<option></option>');
+
+            $.get(routeCustomers, function(res) {
+                res.forEach(c => {
+                    el.append(new Option(c.code, c.id));
+                });
+            });
+        }
+
+        $('#customer_id').on('change', function() {
+            const customerId = this.value;
+
+            // reset model
+            $('#model_id')
+                .prop('disabled', true)
+                .empty()
+                .append('<option></option>')
+                .trigger('change');
+
+            // reset product
+            $('#product_id')
+                .val(null)
+                .trigger('change')
+                .prop('disabled', true);
+
+            if (!customerId) return;
+
+            $.get(routeModels, {
+                customer_id: customerId
+            }, function(models) {
+                models.forEach(m => {
+                    $('#model_id').append(new Option(m.name, m.id));
+                });
+
+                $('#model_id').prop('disabled', false);
             });
         });
-    });
 
-    // DataTable
-    // DataTable
-    const table = window.defaultDataTable('inventoryProductTable', {
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("inventory.product.data") }}',
-            type: 'GET',
-            data: d => { d.search = d.search.value; }
-        },
-        columns: [
-            { data: null, className: 'px-4 py-3 text-center', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
-            { data: 'part_no', className: 'px-4 py-3 whitespace-nowrap font-medium' },
-            { data: 'customer', className: 'px-4 py-3 text-center' },
-            { data: 'model', className: 'px-4 py-3 text-center' },
-            { 
-                data: null, 
-                className: 'px-4 py-3 whitespace-nowrap',
-                render: row => `${row.material_spec} <br> <span class="text-xs text-gray-500 dark:text-gray-400">(${row.coating_type || '-'})</span>` 
-            },
-            { 
-                data: null, 
-                className: 'px-4 py-3 whitespace-nowrap font-mono text-xs',
-                render: row => {
-                    const t = parseFloat(row.thickness) || 0;
-                    const w = parseFloat(row.width) || 0;
-                    const l = parseFloat(row.length) || 0;
-                    const l2 = parseFloat(row.length_2) || 0;
-                    const p = parseFloat(row.pitch) || 0;
-                    const unitName = (row.unit_name || '').toLowerCase();
-                    
-                    let size = `${t} x ${w} x ${l}`;
-                    
-                    if (unitName === 'trapezoid' && l2 > 0) {
-                        size += ` / ${l2}`;
-                    }
-                    
-                    let html = `<div class="flex flex-col leading-tight"><span>${size}</span>`;
-                    if (p > 0) {
-                        html += `<span class="text-sm text-blue-500 dark:text-blue-400 font-bold">P: ${p}</span>`;
-                    }
-                    html += `</div>`;
-                    
-                    return html;
+        function initProductSelect2(modelId) {
+            if ($('#product_id').data('select2')) {
+                $('#product_id').select2('destroy');
+            }
+
+            $('#product_id').select2({
+                dropdownParent: $('#formModal'),
+                width: '100%',
+                minimumInputLength: 1,
+                ajax: {
+                    url: '{{ route("inventory.product.getProducts") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: p => ({
+                        q: p.term,
+                        model_id: modelId
+                    }),
+                    processResults: d => ({
+                        results: d.results,
+                        pagination: d.pagination
+                    })
+                }
+            });
+        }
+
+        $('#model_id').on('change', function() {
+            const modelId = this.value;
+
+            $('#product_id').val(null).trigger('change');
+
+            if (!modelId) return;
+
+            $('#product_id').prop('disabled', false);
+            initProductSelect2(modelId);
+        });
+
+
+        // Toast helper
+        function toast(icon, title, text) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const theme = isDark ? {
+                bg: 'rgba(30, 41, 59, 0.95)',
+                fg: '#E5E7EB',
+                icon: {
+                    success: '#22c55e',
+                    error: '#ef4444'
+                }
+            } : {
+                bg: 'rgba(255, 255, 255, 0.98)',
+                fg: '#0f172a',
+                icon: {
+                    success: '#16a34a',
+                    error: '#dc2626'
+                }
+            };
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2600,
+                timerProgressBar: true,
+                icon,
+                title,
+                text,
+                iconColor: theme.icon[icon],
+                background: theme.bg,
+                color: theme.fg
+            });
+        }
+
+        // Load dropdown data
+        $.get('{{ route("inventory.product.dropdownData") }}', function(data) {
+            dropdownData = data;
+
+            data.materialSpecs.forEach(ms => {
+                $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`);
+            });
+
+            data.units.forEach(u => {
+                $('#unit_id').append(`<option value="${u.hash_id}">${u.code} - ${u.name}</option>`);
+            });
+
+            data.ranks.forEach(r => {
+                $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`);
+            });
+        });
+
+
+
+
+
+
+
+        // DataTable
+        const table = window.defaultDataTable('inventoryProductTable', {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("inventory.product.data") }}',
+                type: 'GET',
+                data: d => {
+                    d.search = d.search.value;
                 }
             },
-            { data: 'pcs_per_unit', className: 'px-4 py-3 text-center' },
-            { 
-                data: 'weight_kg', 
-                className: 'px-4 py-3 text-center', 
-                render: d => d ? parseFloat(d).toFixed(2) : '-' 
-            },
-            { data: 'unit_per_car', className: 'px-4 py-3 text-center' },
-            { data: 'rank', className: 'px-4 py-3 text-center' },
+            columns: [{
+                    data: null,
+                    className: 'px-4 py-3 text-center',
+                    render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+                },
+                {
+                    data: 'part_no',
+                    className: 'px-4 py-3 whitespace-nowrap font-medium'
+                },
+                {
+                    data: 'customer',
+                    className: 'px-4 py-3 text-center'
+                },
+                {
+                    data: 'model',
+                    className: 'px-4 py-3 text-center'
+                },
+                {
+                    data: null,
+                    className: 'px-4 py-3 whitespace-nowrap',
+                    render: row => `${row.material_spec} <br> <span class="text-xs text-gray-500 dark:text-gray-400">(${row.coating_type || '-'})</span>`
+                },
+                {
+                    data: null,
+                    className: 'px-4 py-3 whitespace-nowrap font-mono text-xs',
+                    render: row => {
+                        const t = parseFloat(row.thickness) || 0;
+                        const w = parseFloat(row.width) || 0;
+                        const l = parseFloat(row.length) || 0;
+                        const l2 = parseFloat(row.length_2) || 0;
+                        const p = parseFloat(row.pitch) || 0;
+                        const unitName = (row.unit_name || '').toLowerCase();
 
-            { 
-                data: 'remark', 
-                defaultContent: '-', 
-                className: 'px-4 py-3 text-xs text-gray-500 dark:text-gray-400',
-                orderable: false,
-                render: (d) => d || '-'
-            },
-            { 
-                data: 'updated_at',
-                className: 'px-4 py-3 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400',
-                render: (d) => d || '-'
-            },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                className: 'px-4 py-3 text-center',
-                width: '100px',
-                render: row => `
+                        let size = `${t} x ${w} x ${l}`;
+
+                        if (unitName === 'trapezoid' && l2 > 0) {
+                            size += ` / ${l2}`;
+                        }
+
+                        let html = `<div class="flex flex-col leading-tight"><span>${size}</span>`;
+                        if (p > 0) {
+                            html += `<span class="text-sm text-blue-500 dark:text-blue-400 font-bold">P: ${p}</span>`;
+                        }
+                        html += `</div>`;
+
+                        return html;
+                    }
+                },
+                {
+                    data: 'pcs_per_unit',
+                    className: 'px-4 py-3 text-center'
+                },
+                {
+                    data: 'weight_kg',
+                    className: 'px-4 py-3 text-center',
+                    render: d => d ? parseFloat(d).toFixed(2) : '-'
+                },
+                {
+                    data: 'unit_per_car',
+                    className: 'px-4 py-3 text-center'
+                },
+                {
+                    data: 'rank',
+                    className: 'px-4 py-3 text-center'
+                },
+
+                {
+                    data: 'remark',
+                    defaultContent: '-',
+                    className: 'px-4 py-3 text-xs text-gray-500 dark:text-gray-400',
+                    orderable: false,
+                    render: (d) => d || '-'
+                },
+                {
+                    data: 'updated_at',
+                    className: 'px-4 py-3 whitespace-nowrap text-xs text-gray-500 dark:text-gray-400',
+                    render: (d) => d || '-'
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'px-4 py-3 text-center',
+                    width: '100px',
+                    render: row => `
                     <div class="flex items-center justify-center gap-2">
                         <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-green-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900" data-id="${row.id}" title="Print Label">
                             <i class="fa-solid fa-print text-sm"></i>
@@ -398,237 +494,286 @@ $(function() {
                             <i class="fa-solid fa-trash-can text-sm"></i>
                         </button>
                     </div>`
-            }
-        ],
-        order: [[0, 'desc']]
-    });
-
-    // Modal helpers
-    function showModal(m) { m.removeClass('hidden').addClass('flex'); }
-    function hideModal(m) { m.addClass('hidden').removeClass('flex'); }
-
-    const formModal = $('#formModal');
-    const deleteModal = $('#deleteModal');
-    let deleteId = null;
-
-    // Add button
-    $('#add-button').on('click', function() {
-        isEditMode = false;
-        $('#modalTitle').text('Add Inventory Product');
-        $('#formMethod').val('POST');
-        $('#productForm').attr('action', '{{ route("inventory.product.store") }}');
-        $('#productForm')[0].reset();
-        $('#pcs_per_unit').val(1);
-        $('#unit_per_car').val(1);
-        $('#min_stock').val(90);
-        $('#density').val(''); 
-        $('#weight_kg').val('');
-        $('#product_id').val(null).trigger('change');
-        $('#unit_id').val('').trigger('change');
-        $('[id^="error-"]').addClass('hidden').text('');
-        toggleUnitFields();
-        showModal(formModal);
-    });
-
-    // Close modals
-    $('.close-modal-button').on('click', function() {
-        hideModal($(this).closest('[tabindex="-1"]'));
-    });
-
-    // Submit form
-    $('#productForm').on('submit', function(e) {
-        e.preventDefault();
-        $('[id^="error-"]').addClass('hidden').text('');
-
-        const formData = new FormData(this);
-        
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: (res) => {
-                if (res.success) {
-                    table.ajax.reload();
-                    hideModal(formModal);
-                    toast('success', 'Success', res.message);
                 }
-            },
-            error: (xhr) => {
-                const errors = xhr.responseJSON?.errors || {};
-                Object.keys(errors).forEach(key => {
-                    $(`#error-${key}`).text(errors[key][0]).removeClass('hidden');
-                });
-                toast('error', 'Error', xhr.responseJSON?.message || 'Operation failed');
-            }
+            ],
+            order: [
+                [0, 'desc']
+            ]
         });
-    });
 
-    // Edit button
-    $(document).on('click', '.edit-button', function() {
-        const id = $(this).data('id');
-        isEditMode = true;
-        $('#modalTitle').text('Edit Inventory Product');
-        $('#formMethod').val('PUT');
-        $('#productForm').attr('action', `{{ url('inventory/product') }}/${id}`);
-        $('[id^="error-"]').addClass('hidden').text('');
+        // Modal helpers
+        function showModal(m) {
+            m.removeClass('hidden').addClass('flex');
+        }
 
-        $.get(`{{ url('inventory/product') }}/${id}`, function(data) {
-            $('#revision').val(data.revision).trigger('change');
-             $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
-            $('#thickness').val(data.thickness);
-            $('#width').val(data.width);
-            $('#length').val(data.length);
-            $('#length_2').val(data.length_2);
-            $('#pitch').val(data.pitch);
-            $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
-            $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
-            $('#pcs_per_unit').val(data.pcs_per_unit);
-            $('#pcs_per_unit').val(data.pcs_per_unit);
-            $('#pcs_per_unit').val(data.pcs_per_unit);
-            $('#unit_per_car').val(data.unit_per_car);
-            $('#min_stock').val(data.min_stock);
-            $('#density').val(data.density);
-            $('#weight_kg').val(data.weight_kg);
-            $('#remark').val(data.remark);
+        function hideModal(m) {
+            m.addClass('hidden').removeClass('flex');
+        }
 
-            if (data.product) {
-                const opt = new Option(`${data.product.part_no} - ${data.product.part_name}`, data.product.hash_id || data.product_id, true, true);
-                $('#product_id').append(opt).trigger('change');
+        const formModal = $('#formModal');
+        const deleteModal = $('#deleteModal');
+        let deleteId = null;
+
+        // Add button
+        $('#add-button').on('click', function() {
+            initCustomerModelSelect2();
+            loadCustomers();
+            isEditMode = false;
+            $('#modalTitle').text('Add Inventory Product');
+            $('#formMethod').val('POST');
+            $('#productForm').attr('action', '{{ route("inventory.product.store") }}');
+            $('#productForm')[0].reset();
+            $('#pcs_per_unit').val(1);
+            $('#unit_per_car').val(1);
+            $('#min_stock').val(90);
+            $('#density').val('');
+            $('#weight_kg').val('');
+            if ($('#product_id').data('select2')) {
+                $('#product_id').select2('destroy');
             }
-            
+            $('#product_id')
+                .val(null)
+                .prop('disabled', true);
+            $('#unit_id').val('').trigger('change');
+            $('[id^="error-"]').addClass('hidden').text('');
             toggleUnitFields();
             showModal(formModal);
         });
-    });
-    
-    // Print button
-    $(document).on('click', '.print-button', function() {
-        const id = $(this).data('id');
-        window.open(`{{ url('inventory/product') }}/${id}/print`, '_blank');
-    });
+
+        // Close modals
+        $('.close-modal-button').on('click', function() {
+            hideModal($(this).closest('[tabindex="-1"]'));
+        });
+
+        // Submit form
+        $('#productForm').on('submit', function(e) {
+            e.preventDefault();
+            $('[id^="error-"]').addClass('hidden').text('');
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: (res) => {
+                    if (res.success) {
+                        table.ajax.reload();
+                        hideModal(formModal);
+                        toast('success', 'Success', res.message);
+                    }
+                },
+                error: (xhr) => {
+                    const errors = xhr.responseJSON?.errors || {};
+                    Object.keys(errors).forEach(key => {
+                        $(`#error-${key}`).text(errors[key][0]).removeClass('hidden');
+                    });
+                    toast('error', 'Error', xhr.responseJSON?.message || 'Operation failed');
+                }
+            });
+        });
+
+        // Edit button
+        $(document).on('click', '.edit-button', function() {
+            initCustomerModelSelect2();
+            loadCustomers();
+            const id = $(this).data('id');
+            isEditMode = true;
+            $('#modalTitle').text('Edit Inventory Product');
+            $('#formMethod').val('PUT');
+            $('#productForm').attr('action', `{{ url('inventory/product') }}/${id}`);
+            if ($('#product_id').data('select2')) {
+                $('#product_id').select2('destroy');
+            }
+            $('#product_id').val(null).prop('disabled', true);
+            $('[id^="error-"]').addClass('hidden').text('');
+
+            $.get(`{{ url('inventory/product') }}/${id}`, function(data) {
+                if (data.product?.customer_id) {
+                    $('#customer_id')
+                        .val(data.product.customer_id)
+                        .trigger('change');
+                }
+                setTimeout(() => {
+                    if (data.product?.model_id) {
+                        $('#model_id')
+                            .val(data.product.model_id)
+                            .trigger('change');
+                    }
+                    setTimeout(() => {
+                        $('#product_id').prop('disabled', false);
+                        initProductSelect2(data.product.model_id);
+
+                        const opt = new Option(
+                            `${data.product.part_no} - ${data.product.part_name}`,
+                            data.product.hash_id || data.product_id,
+                            true,
+                            true
+                        );
+                        $('#product_id').append(opt).trigger('change');
+
+                    }, 300);
+                }, 300);
+                $('#revision').val(data.revision).trigger('change');
+                $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
+                $('#thickness').val(data.thickness);
+                $('#width').val(data.width);
+                $('#length').val(data.length);
+                $('#length_2').val(data.length_2);
+                $('#pitch').val(data.pitch);
+                $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
+                $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
+                $('#pcs_per_unit').val(data.pcs_per_unit);
+                $('#pcs_per_unit').val(data.pcs_per_unit);
+                $('#pcs_per_unit').val(data.pcs_per_unit);
+                $('#unit_per_car').val(data.unit_per_car);
+                $('#min_stock').val(data.min_stock);
+                $('#density').val(data.density);
+                $('#weight_kg').val(data.weight_kg);
+                $('#remark').val(data.remark);
+
+                if (data.product) {
+                    const opt = new Option(`${data.product.part_no} - ${data.product.part_name}`, data.product.hash_id || data.product_id, true, true);
+                    $('#product_id').append(opt).trigger('change');
+                }
+
+                toggleUnitFields();
+                showModal(formModal);
+            });
+        });
+
+        // Print button
+        $(document).on('click', '.print-button', function() {
+            const id = $(this).data('id');
+            window.open(`{{ url('inventory/product') }}/${id}/print`, '_blank');
+        });
 
 
-    // Toggle Unit fields visibility and Visibility of Fields based on Unit Type
-    function toggleUnitFields() {
-        const unitId = $('#unit_id').val();
-        const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
-        const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
+        // Toggle Unit fields visibility and Visibility of Fields based on Unit Type
+        function toggleUnitFields() {
+            const unitId = $('#unit_id').val();
+            const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
+            const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
 
-        // Reset all visibility first
-        $('#lengthContainer').hide();
-        $('#length2Container').hide();
-        $('#pitchContainer').hide();
-        
-        // Logic Visibility
-        if (unitName.includes('sheet')) {
-            // Sheet: Show Length, Hide L2 & Pitch (unless user wants Pitch, but per req Hide Pitch)
-            // User requirement: "Sheet: (T x W x L x Density)" -> Need L.
-            // Requirement said "Sheet: Hide L2, Pitch. Show Length"
-            $('#lengthContainer').show();
-            $('#length2Container').hide();
-            $('#pitchContainer').hide();
-        } else if (unitName.includes('trapezoid')) {
-             // Trapezoid: Show Length, Length 2. Hide Pitch.
-            $('#lengthContainer').show();
-            $('#length2Container').show();
-            $('#pitchContainer').hide();
-        } else if (unitName.includes('coil')) {
-            // Coil: Show Pitch. Hide Length, Length 2.
+            // Reset all visibility first
             $('#lengthContainer').hide();
             $('#length2Container').hide();
-            $('#pitchContainer').show();
-        } else {
-             // Default if unknown or empty: Show Length.
-             $('#lengthContainer').show();
-        }
-        
-        // Trigger calculation when unit changes
-        calculateWeight();
-    }
+            $('#pitchContainer').hide();
 
-    $('#unit_id').on('change', function() {
-        toggleUnitFields();
-    });
-    
-    // Auto-calculate Weight
-    // Formula:
-    // Sheet: (T x W x L x Density) / 1,000,000
-    // Coil: (T x W x Pitch x Density) / 1,000,000
-    // Trapezoid: (T x W x ((L + L2) / 2) x Density) / 1,000,000
-    
-    const inputsForCalc = ['#thickness', '#width', '#length', '#length_2', '#pitch', '#density'];
-    $(inputsForCalc.join(', ')).on('input change', calculateWeight);
-    
-    function calculateWeight() {
-        const unitId = $('#unit_id').val();
-        const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
-        const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
-        
-        const t = parseFloat($('#thickness').val()) || 0;
-        const w = parseFloat($('#width').val()) || 0;
-        const density = parseFloat($('#density').val()) || 0;
-        
-        let weight = 0;
-        
-        if (unitName.includes('sheet')) {
-            const l = parseFloat($('#length').val()) || 0;
-            weight = (t * w * l * density) / 1000000;
-        } else if (unitName.includes('coil')) {
-            const p = parseFloat($('#pitch').val()) || 0;
-            weight = (t * w * p * density) / 1000000;
-        } else if (unitName.includes('trapezoid')) {
-            const l = parseFloat($('#length').val()) || 0;
-            const l2 = parseFloat($('#length_2').val()) || 0;
-            const avgL = (l + l2) / 2;
-            weight = (t * w * avgL * density) / 1000000;
-        } else {
-             // Fallback default (Sheet logic) if unit not selected or known
-             const l = parseFloat($('#length').val()) || 0;
-             weight = (t * w * l * density) / 1000000;
-        }
-        
-        $('#weight_kg').val(weight > 0 ? weight.toFixed(3) : '');
-    }
-
-    // Auto-calculate min stock
-    function calculateMinStock() {
-        const pcs = parseInt($('#pcs_per_unit').val()) || 0;
-        const upc = parseInt($('#unit_per_car').val()) || 0;
-        $('#min_stock').val(pcs * upc * 90);
-    }
-
-    $('#pcs_per_unit, #unit_per_car').on('input change', calculateMinStock);
-
-    // Delete button
-    $(document).on('click', '.delete-button', function() {
-        deleteId = $(this).data('id');
-        showModal(deleteModal);
-    });
-
-    // Confirm delete
-    $('#confirmDeleteButton').on('click', function() {
-        if (!deleteId) return;
-        
-        $.ajax({
-            url: `{{ url('inventory/product') }}/${deleteId}`,
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            success: (res) => {
-                if (res.success) {
-                    table.ajax.reload();
-                    hideModal(deleteModal);
-                    deleteId = null;
-                    toast('success', 'Success', res.message);
-                }
-            },
-            error: (xhr) => {
-                toast('error', 'Error', xhr.responseJSON?.message || 'Delete failed');
+            // Logic Visibility
+            if (unitName.includes('sheet')) {
+                // Sheet: Show Length, Hide L2 & Pitch (unless user wants Pitch, but per req Hide Pitch)
+                // User requirement: "Sheet: (T x W x L x Density)" -> Need L.
+                // Requirement said "Sheet: Hide L2, Pitch. Show Length"
+                $('#lengthContainer').show();
+                $('#length2Container').hide();
+                $('#pitchContainer').hide();
+            } else if (unitName.includes('trapezoid')) {
+                // Trapezoid: Show Length, Length 2. Hide Pitch.
+                $('#lengthContainer').show();
+                $('#length2Container').show();
+                $('#pitchContainer').hide();
+            } else if (unitName.includes('coil')) {
+                // Coil: Show Pitch. Hide Length, Length 2.
+                $('#lengthContainer').hide();
+                $('#length2Container').hide();
+                $('#pitchContainer').show();
+            } else {
+                // Default if unknown or empty: Show Length.
+                $('#lengthContainer').show();
             }
+
+            // Trigger calculation when unit changes
+            calculateWeight();
+        }
+
+        $('#unit_id').on('change', function() {
+            toggleUnitFields();
+        });
+
+        // Auto-calculate Weight
+        // Formula:
+        // Sheet: (T x W x L x Density) / 1,000,000
+        // Coil: (T x W x Pitch x Density) / 1,000,000
+        // Trapezoid: (T x W x ((L + L2) / 2) x Density) / 1,000,000
+
+        const inputsForCalc = ['#thickness', '#width', '#length', '#length_2', '#pitch', '#density'];
+        $(inputsForCalc.join(', ')).on('input change', calculateWeight);
+
+        function calculateWeight() {
+            const unitId = $('#unit_id').val();
+            const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
+            const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
+
+            const t = parseFloat($('#thickness').val()) || 0;
+            const w = parseFloat($('#width').val()) || 0;
+            const density = parseFloat($('#density').val()) || 0;
+
+            let weight = 0;
+
+            if (unitName.includes('sheet')) {
+                const l = parseFloat($('#length').val()) || 0;
+                weight = (t * w * l * density) / 1000000;
+            } else if (unitName.includes('coil')) {
+                const p = parseFloat($('#pitch').val()) || 0;
+                weight = (t * w * p * density) / 1000000;
+            } else if (unitName.includes('trapezoid')) {
+                const l = parseFloat($('#length').val()) || 0;
+                const l2 = parseFloat($('#length_2').val()) || 0;
+                const avgL = (l + l2) / 2;
+                weight = (t * w * avgL * density) / 1000000;
+            } else {
+                // Fallback default (Sheet logic) if unit not selected or known
+                const l = parseFloat($('#length').val()) || 0;
+                weight = (t * w * l * density) / 1000000;
+            }
+
+            $('#weight_kg').val(weight > 0 ? weight.toFixed(3) : '');
+        }
+
+        // Auto-calculate min stock
+        function calculateMinStock() {
+            const pcs = parseInt($('#pcs_per_unit').val()) || 0;
+            const upc = parseInt($('#unit_per_car').val()) || 0;
+            $('#min_stock').val(pcs * upc * 90);
+        }
+
+        $('#pcs_per_unit, #unit_per_car').on('input change', calculateMinStock);
+
+        // Delete button
+        $(document).on('click', '.delete-button', function() {
+            deleteId = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        // Confirm delete
+        $('#confirmDeleteButton').on('click', function() {
+            if (!deleteId) return;
+
+            $.ajax({
+                url: `{{ url('inventory/product') }}/${deleteId}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: (res) => {
+                    if (res.success) {
+                        table.ajax.reload();
+                        hideModal(deleteModal);
+                        deleteId = null;
+                        toast('success', 'Success', res.message);
+                    }
+                },
+                error: (xhr) => {
+                    toast('error', 'Error', xhr.responseJSON?.message || 'Delete failed');
+                }
+            });
         });
     });
-});
 </script>
 @endpush
