@@ -26,7 +26,7 @@ class TransactionHistoryController extends Controller
             ->get();
         
         $categories = TransactionCategory::select('id', 'code', 'name', 'effect')->orderBy('name')->get();
-        $pics = PIC::where('is_active', 1)->orderBy('name')->get();
+        $pics = \App\Models\User::orderBy('name')->get();
 
         return view('inventory.transaction_history', compact('products', 'categories', 'pics'));
     }
@@ -34,7 +34,7 @@ class TransactionHistoryController extends Controller
 {
     $query = InventoryTransaction::with([
         'product.product',
-        'pic',
+        'user',
         'transactionCategory'
     ]);
 
@@ -61,9 +61,8 @@ class TransactionHistoryController extends Controller
     /* =====================================================
      * FILTER: PIC
      * ===================================================== */
-    if (!empty($request->pic_id)) {
-        $picId = Pic::decodeHash($request->pic_id);
-        $query->where('pic_id', $picId);
+    if (!empty($request->user_id)) {
+        $query->where('user_id', $request->user_id);
     }
 
     /* =====================================================
@@ -94,7 +93,7 @@ class TransactionHistoryController extends Controller
                     $q2->where('name', 'like', "%{$search}%")
                        ->orWhere('code', 'like', "%{$search}%");
                 })
-              ->orWhereHas('pic', function ($q3) use ($search) {
+              ->orWhereHas('user', function ($q3) use ($search) {
                     $q3->where('name', 'like', "%{$search}%");
                 })
               ->orWhereHas('product.product', function ($q4) use ($search) {
@@ -113,7 +112,7 @@ class TransactionHistoryController extends Controller
         'product_detail_id',
         'transaction_category_id',
         'qty',
-        'pic_id',
+        'user_id',
         'remark'
     ];
 
@@ -148,7 +147,7 @@ class TransactionHistoryController extends Controller
             'product_name' => $item->product->product->part_name ?? '-',
             'category' => $item->transactionCategory->code ?? '-',
             'qty' => $item->qty,
-            'pic_name' => $item->pic->name ?? '-',
+            'pic_name' => $item->user->name ?? '-',
             'remark' => $item->remark
         ];
     });
@@ -168,7 +167,7 @@ class TransactionHistoryController extends Controller
             return response()->json(['error' => 'Invalid ID'], 404);
         }
 
-        $transaction = InventoryTransaction::with(['product.product', 'pic', 'transactionCategory'])->find($decodedId);
+        $transaction = InventoryTransaction::with(['product.product', 'user', 'transactionCategory'])->find($decodedId);
         if (!$transaction) {
             return response()->json(['error' => 'Transaction not found'], 404);
         }
@@ -181,7 +180,8 @@ class TransactionHistoryController extends Controller
             'product_name' => $transaction->product->product->part_name ?? null,
             'transaction_category_id' => $transaction->transactionCategory->hash_id,
             'qty' => $transaction->qty,
-            'pic_id' => $transaction->pic->hash_id,
+            'user_id' => $transaction->user_id, // Return raw ID for internal use or user name
+            'pic_name' => $transaction->user->name ?? null,
             'remark' => $transaction->remark,
         ]);
     }
@@ -200,8 +200,8 @@ class TransactionHistoryController extends Controller
     if (isset($data['transaction_category_id']) && !is_numeric($data['transaction_category_id'])) {
         $data['transaction_category_id'] = \App\Models\InventoryModel\TransactionCategory::decodeHash($data['transaction_category_id']);
     }
-    if (isset($data['pic_id']) && !is_numeric($data['pic_id'])) {
-        $data['pic_id'] = \App\Models\InventoryModel\PIC::decodeHash($data['pic_id']);
+    if (isset($data['user_id']) && !is_numeric($data['user_id'])) {
+        // user_id is coming as numeric or can be extracted from Auth if missing
     }
 
     $request->merge($data);
@@ -211,7 +211,7 @@ class TransactionHistoryController extends Controller
         'transaction_date' => 'required|date',
         'qty' => 'required|integer|min:1',
         'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
-        'pic_id' => 'required|exists:inv_m_pic,id',
+        'user_id' => 'required|exists:users,id', // Added validation for user_id
         'remark' => 'nullable|string',
     ]);
 
@@ -229,7 +229,7 @@ class TransactionHistoryController extends Controller
             'transaction_date' => $request->transaction_date,
             'qty' => $request->qty,
             'transaction_category_id' => $request->transaction_category_id,
-            'pic_id' => $request->pic_id,
+            'user_id' => $request->user_id ?? $transaction->user_id,
             'remark' => $request->remark,
         ]);
 

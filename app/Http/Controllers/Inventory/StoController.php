@@ -45,8 +45,8 @@ class StoController extends Controller
                 $dir = $request->input('order.0.dir', 'desc');
                 
                 if ($colName === 'pic_id') {
-                    // Sort by relationship? Complex, fallback to created_at for now to avoid join complexity unless needed
-                    $query->orderBy('created_at', $dir); 
+                    // Sort by relationship
+                    $query->orderBy('user_id', $dir); 
                 } else {
                     $query->orderBy($colName, $dir);
                 }
@@ -101,7 +101,7 @@ class StoController extends Controller
         }
 
         $events = StoEvent::with('pic')->orderBy('created_at', 'desc')->get(); // Fallback for initial load if needed, but DataTable will call AJAX
-        $pics = PIC::where('is_active', 1)->get();
+        $pics = \App\Models\User::orderBy('name')->get();
         return view('inventory.sto.index', compact('events', 'pics'));
     }
 
@@ -110,15 +110,18 @@ class StoController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $this->decodeHashInputs($request->all(), [
-            'pic_id' => PIC::class,
-        ]);
+        // user_id is coming via request or handeled automatically
+        $data = $request->all();
+        if (isset($data['user_id']) && !is_numeric($data['user_id'])) {
+             // If hash id is used, decode it. Assuming User might not have hash id yet or using raw ID
+             // If User model has hash id, decode here.
+        }
         $request->merge($data);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'period_start' => 'required|date',
-            'pic_id' => 'required|exists:inv_m_pic,id',
+            'user_id' => 'required|exists:users,id',
             'description' => 'nullable|string',
         ]);
 
@@ -426,10 +429,7 @@ class StoController extends Controller
         // Attempt to find PIC based on Auth User
         $user = auth()->user();
         if ($user) {
-            $pic = PIC::where('name', $user->name)->first();
-            if ($pic) {
-                $detail->auditor_id = $pic->id;
-            }
+            $detail->auditor_id = $user->id;
         }
         
         $detail->save();

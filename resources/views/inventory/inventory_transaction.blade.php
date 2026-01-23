@@ -82,13 +82,11 @@
 
                         {{-- PIC --}}
                         <div class="mb-4">
-                            <label for="pic_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIC Name <span class="text-red-500">*</span></label>
-                            <select name="pic_id" id="pic_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white select2" required>
-                                <option value="">Select PIC...</option>
-                                @foreach($pics as $pic)
-                                    <option value="{{ $pic->hash_id }}">{{ $pic->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIC Name</label>
+                            <div class="bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-600/50 dark:border-gray-600 dark:text-gray-300 flex items-center gap-2">
+                                <i class="fa-solid fa-user-circle text-gray-500"></i>
+                                <span>{{ Auth::user()->name }}</span>
+                            </div>
                         </div>
 
                         {{-- Remark --}}

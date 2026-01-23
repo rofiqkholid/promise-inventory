@@ -14,7 +14,6 @@
     <!-- Stats or Info could go here -->
 
     <!-- Events List - Responsive -->
-    <!-- Events List - Responsive -->
     <x-table id="stoEventsTable">
         <thead>
             <tr>
@@ -40,7 +39,7 @@
             window.defaultDataTable('stoEventsTable', {
                 serverSide: true,
                 ajax: "{{ route('inventory.sto.index') }}",
-                order: [[1, 'desc']], // Sort by Code/Row Num is 0
+                order: [[1, 'desc']],
                 columns: [
                     { className: 'px-4 md:px-6 py-3 md:py-4 text-center text-gray-500 font-medium', orderable: false, searchable: false },
                     { className: 'px-4 md:px-6 py-3 md:py-4 font-medium text-gray-800 dark:text-gray-200' },
@@ -79,9 +78,9 @@
 
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PIC (Person In Charge)</label>
-                        <select name="pic_id" required class="w-full border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @foreach($pics as $pic)
-                                <option value="{{ $pic->hash_id }}">{{ $pic->name }}</option>
+                        <select name="user_id" required class="w-full border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            @foreach($pics as $p)
+                                <option value="{{ $p->id }}">{{ $p->name }}</option>
                             @endforeach
                         </select>
                     </div>

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Transaction History')
+@section('page_title', 'Transaction History')
 
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
@@ -64,12 +65,12 @@
             </select>
 
 
-            {{-- PIC --}}
-            <select id="filter_pic" class="select2-filter min-w-[140px]">
+            {{-- User/PIC --}}
+            <select id="filter_user" class="select2-filter min-w-[140px]">
                 <option value="">All PIC</option>
-                @foreach($pics as $pic)
-                <option value="{{ $pic->hash_id }}">
-                    {{ $pic->name }}
+                @foreach($pics as $p)
+                <option value="{{ $p->id }}">
+                    {{ $p->name }}
                 </option>
                 @endforeach
             </select>
@@ -173,13 +174,12 @@
 
                         {{-- PIC --}}
                         <div class="mb-4">
-                            <label for="edit_pic_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIC Name <span class="text-red-500">*</span></label>
-                            <select name="pic_id" id="edit_pic_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white select2-modal" required>
-                                <option value="">Select PIC...</option>
-                                @foreach($pics as $pic)
-                                <option value="{{ $pic->hash_id }}">{{ $pic->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PIC Name</label>
+                            <div class="bg-gray-100 border border-gray-300 text-gray-700 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 flex items-center gap-2">
+                                <i class="fa-solid fa-user-circle text-gray-500"></i>
+                                <span id="edit_pic_name">-</span>
+                            </div>
+                            <input type="hidden" name="user_id" id="edit_user_id">
                         </div>
 
                         {{-- Remark --}}
@@ -226,7 +226,7 @@
 
             });
 
-            $('#filter_pic').select2({
+            $('#filter_user').select2({
                 width: '100%',
                 placeholder: 'Select PIC',
 
@@ -259,13 +259,13 @@
                     data: d => {
                         d.product_detail_id = $('#filter_product').val() || null;
                         d.transaction_category_id = $('#filter_category').val() || null;
-                        d.pic_id = $('#filter_pic').val() || null;
+                        d.user_id = $('#filter_user').val() || null;
 
                         const dateRange = $('#filter_date_range').val();
                         if (dateRange && dateRange.includes(' - ')) {
                             d.date_range = dateRange;
                         } else {
-                            delete d.date_range; // ⬅️ PENTING
+                            delete d.date_range;
                         }
                     }
                 },
@@ -417,7 +417,7 @@
                 // 4. reset select2
                 $('#filter_product').val(null).trigger('change.select2');
                 $('#filter_category').val(null).trigger('change.select2');
-                $('#filter_pic').val(null).trigger('change.select2');
+                $('#filter_user').val(null).trigger('change.select2');
 
                 // 5. reload ke default (tanpa cache)
                 table.ajax.reload(null, true);
@@ -485,7 +485,8 @@
                         setTimeout(() => {
                             $('#edit_product_detail_id').val(response.product_detail_id).trigger('change');
                             $('#edit_transaction_category_id').val(response.transaction_category_id).trigger('change');
-                            $('#edit_pic_id').val(response.pic_id).trigger('change');
+                            $('#edit_user_id').val(response.user_id);
+                            $('#edit_pic_name').text(response.pic_name || 'System');
                         }, 100);
                     }
                 });

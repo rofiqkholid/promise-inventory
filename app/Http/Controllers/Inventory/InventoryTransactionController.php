@@ -28,17 +28,17 @@ class InventoryTransactionController extends Controller
             ->get();
         
         $categories = TransactionCategory::select('id', 'code', 'name', 'effect')->orderBy('name')->get();
-        $pics = PIC::where('is_active', 1)->orderBy('name')->get();
+        // $pics = PIC::where('is_active', 1)->orderBy('name')->get(); // No longer needed for manual selection
         
         $coilCenters = CoilCenter::select('id', 'code', 'name')->orderBy('code')->get();
         $suppliers = Supplier::select('id', 'code', 'name')->orderBy('code')->get();
 
-        return view('inventory.inventory_transaction', compact('products', 'categories', 'pics', 'coilCenters', 'suppliers'));
+        return view('inventory.inventory_transaction', compact('products', 'categories', 'coilCenters', 'suppliers'));
     }
 
     public function data(Request $request)
     {
-        $query = InventoryTransaction::with(['product.product', 'pic', 'transactionCategory']);
+        $query = InventoryTransaction::with(['product.product', 'user', 'transactionCategory']);
 
         // Filter by Product
         if ($request->has('product_detail_id') && !empty($request->product_detail_id)) {
@@ -59,7 +59,7 @@ class InventoryTransactionController extends Controller
                            ->orWhere('code', 'like', '%' . $search . '%');
                   })
                   ->orWhere('remark', 'like', '%' . $search . '%')
-                  ->orWhereHas('pic', function($q3) use ($search) {
+                  ->orWhereHas('user', function($q3) use ($search) {
                       $q3->where('name', 'like', '%' . $search . '%');
                   })
                   ->orWhereHas('product.product', function($q2) use ($search) {
@@ -69,7 +69,7 @@ class InventoryTransactionController extends Controller
         }
 
         // Sorting
-        $columns = ['id', 'transaction_date', 'product_detail_id', 'transaction_category_id', 'qty', 'pic_id', 'remark'];
+        $columns = ['id', 'transaction_date', 'product_detail_id', 'transaction_category_id', 'qty', 'user_id', 'remark'];
         $orderBy = $columns[$request->input('order.0.column')] ?? 'created_at';
         $orderDir = $request->input('order.0.dir') ?? 'desc';
         $query->orderBy($orderBy, $orderDir);
@@ -90,7 +90,7 @@ class InventoryTransactionController extends Controller
                 'product_name' => $item->product->product->part_name ?? '-',
                 'category' => $item->transactionCategory->code ?? '-',
                 'qty' => $item->qty,
-                'pic_name' => $item->pic->name ?? '-',
+                'pic_name' => $item->user->name ?? '-',
                 'remark' => $item->remark,
             ];
         });
@@ -114,9 +114,9 @@ class InventoryTransactionController extends Controller
         if (isset($data['transaction_category_id']) && !is_numeric($data['transaction_category_id'])) {
             $data['transaction_category_id'] = \App\Models\InventoryModel\TransactionCategory::decodeHash($data['transaction_category_id']);
         }
-        if (isset($data['pic_id']) && !is_numeric($data['pic_id'])) {
-            $data['pic_id'] = \App\Models\InventoryModel\PIC::decodeHash($data['pic_id']);
-        }
+        
+        // user_id is now handled automatically via Auth::id()
+        $data['user_id'] = Auth::id();
         if (isset($data['coil_center_id']) && !is_numeric($data['coil_center_id'])) {
             $data['coil_center_id'] = \App\Models\InventoryModel\CoilCenter::decodeHash($data['coil_center_id']);
         }
@@ -132,7 +132,7 @@ class InventoryTransactionController extends Controller
             'transaction_date' => 'required|date',
             'qty' => 'required|integer|min:1',
             'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
-            'pic_id' => 'required|exists:inv_m_pic,id',
+            'user_id' => 'required',
             'remark' => 'nullable|string',
             'coil_center_id' => 'nullable|exists:inv_m_coil_center,id',
             'supplier_id' => 'nullable|exists:inv_m_suppliers,id',
@@ -149,7 +149,7 @@ class InventoryTransactionController extends Controller
                 'transaction_date' => $request->transaction_date,
                 'qty' => $request->qty,
                 'transaction_category_id' => $request->transaction_category_id,
-                'pic_id' => $request->pic_id,
+                'user_id' => $request->user_id,
                 'remark' => $request->remark,
                 'coil_center_id' => $request->coil_center_id,
                 'supplier_id' => $request->supplier_id,

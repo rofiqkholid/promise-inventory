@@ -46,7 +46,7 @@ class StoDetail extends Model
 
     public function auditor()
     {
-        return $this->belongsTo(PIC::class, 'auditor_id');
+        return $this->belongsTo(\App\Models\User::class, 'auditor_id');
     }
 
     // Accessor for Computed Column 'diff_qty' if needed in PHP logic, 

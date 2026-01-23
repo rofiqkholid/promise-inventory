@@ -20,7 +20,7 @@ class StoEvent extends Model
         'period_start',
         'period_end',
         'status',
-        'pic_id',
+        'user_id',
         'description',
     ];
 
@@ -38,6 +38,6 @@ class StoEvent extends Model
 
     public function pic()
     {
-        return $this->belongsTo(PIC::class, 'pic_id');
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 }

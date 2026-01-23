@@ -22,7 +22,7 @@ class InventoryTransaction extends Model
         'transaction_date',
         'qty',
         'transaction_category_id',
-        'pic_id',
+        'user_id',
         'remark',
         'coil_center_id',
         'supplier_id'
@@ -43,9 +43,14 @@ class InventoryTransaction extends Model
         return $this->belongsTo(InventoryProduct::class, 'product_detail_id');
     }
 
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
     public function pic()
     {
-        return $this->belongsTo(PIC::class, 'pic_id');
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     public function coilCenter()
