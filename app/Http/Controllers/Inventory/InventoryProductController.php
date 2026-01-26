@@ -193,18 +193,16 @@ class InventoryProductController extends Controller
         ->get();
 }
 
-public function getModels(Request $request)
-{
-    $request->validate([
-        'customer_id' => 'required|exists:customers,id'
-    ]);
+    public function getModels(Request $request)
+    {
+        $query = DB::table('models')->select('id', 'name')->orderBy('name');
+        
+        if ($request->customer_id) {
+            $query->where('customer_id', $request->customer_id);
+        }
 
-    return DB::table('models')
-        ->where('customer_id', $request->customer_id)
-        ->select('id', 'name')
-        ->orderBy('name')
-        ->get();
-}
+        return $query->get();
+    }
 
 
     /**

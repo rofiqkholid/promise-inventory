@@ -35,7 +35,9 @@ class TransactionHistoryController extends Controller
     $query = InventoryTransaction::with([
         'product.product',
         'user',
-        'transactionCategory'
+        'transactionCategory',
+        'coilCenter',
+        'supplier'
     ]);
 
     /* =====================================================
@@ -148,6 +150,9 @@ class TransactionHistoryController extends Controller
             'category' => $item->transactionCategory->code ?? '-',
             'qty' => $item->qty,
             'pic_name' => $item->user->name ?? '-',
+            'origin_destination' => $item->coilCenter 
+                ? $item->coilCenter->code 
+                : ($item->supplier ? $item->supplier->code : '-'),
             'remark' => $item->remark
         ];
     });
@@ -180,7 +185,7 @@ class TransactionHistoryController extends Controller
             'product_name' => $transaction->product->product->part_name ?? null,
             'transaction_category_id' => $transaction->transactionCategory->hash_id,
             'qty' => $transaction->qty,
-            'user_id' => $transaction->user_id, // Return raw ID for internal use or user name
+            'user_id' => $transaction->user_id, 
             'pic_name' => $transaction->user->name ?? null,
             'remark' => $transaction->remark,
         ]);
@@ -188,11 +193,11 @@ class TransactionHistoryController extends Controller
 
     public function update(Request $request, $id)
 {
-    // 1. Decode ID transaksi utama
+    //Decode ID transaksi utama
     $decodedId = InventoryTransaction::decodeHash($id);
     $transaction = InventoryTransaction::findOrFail($decodedId);
 
-    // 2. Decode inputs (mengikuti pola method store Anda)
+    //Decode inputs
     $data = $request->all();
     if (isset($data['product_detail_id']) && !is_numeric($data['product_detail_id'])) {
         $data['product_detail_id'] = \App\Models\InventoryModel\InventoryProduct::decodeHash($data['product_detail_id']);
@@ -211,19 +216,17 @@ class TransactionHistoryController extends Controller
         'transaction_date' => 'required|date',
         'qty' => 'required|integer|min:1',
         'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
-        'user_id' => 'required|exists:users,id', // Added validation for user_id
+        'user_id' => 'required|exists:users,id', 
         'remark' => 'nullable|string',
     ]);
 
     DB::beginTransaction();
     try {
-        // A. KEMBALIKAN STOK LAMA (Revert)
         $oldProduct = InventoryProduct::findOrFail($transaction->product_detail_id);
         $oldCategory = TransactionCategory::findOrFail($transaction->transaction_category_id);
         $oldProduct->current_stock_qty -= ($transaction->qty * $oldCategory->effect);
         $oldProduct->save();
 
-        // B. UPDATE DATA TRANSAKSI
         $transaction->update([
             'product_detail_id' => $request->product_detail_id,
             'transaction_date' => $request->transaction_date,
@@ -233,7 +236,6 @@ class TransactionHistoryController extends Controller
             'remark' => $request->remark,
         ]);
 
-        // C. TERAPKAN STOK BARU
         $newProduct = InventoryProduct::findOrFail($request->product_detail_id);
         $newCategory = TransactionCategory::findOrFail($request->transaction_category_id);
         $newProduct->current_stock_qty += ($request->qty * $newCategory->effect);

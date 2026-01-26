@@ -107,6 +107,7 @@
                             <th class="px-6 py-3">Date</th>
                             <th class="px-6 py-3">Product</th>
                             <th class="px-6 py-3">Category</th>
+                            <th class="px-6 py-3">Source/Dest</th>
                             <th class="px-6 py-3">Qty</th>
                             <th class="px-6 py-3">PIC</th>
                             <th class="px-6 py-3">Remark</th>
@@ -299,6 +300,11 @@
                             }
                             return `<span class="badge badge-danger">${d}</span>`;
                         }
+                    },
+
+                    {
+                        data: 'origin_destination',
+                        className: 'text-xs text-gray-500 italic'
                     },
 
                     {

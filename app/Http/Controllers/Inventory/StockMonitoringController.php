@@ -16,7 +16,29 @@ class StockMonitoringController extends Controller
         $categories = \App\Models\InventoryModel\TransactionCategory::orderBy('effect', 'desc')
             ->orderBy('name')
             ->get();
-        return view('inventory.stock_monitoring', compact('categories'));
+
+        // Calculate Stats for KPI
+        $products = InventoryProduct::where('is_active', 1)->get();
+        
+        $stats = [
+            'total' => $products->count(),
+            'safe' => 0,
+            'warning' => 0,
+            'danger' => 0,
+            'over' => 0
+        ];
+
+        foreach ($products as $p) {
+            $status = $this->calculateStockStatus($p->current_stock_qty, $p->min_stock, $p->pcs_per_unit);
+            if (isset($stats[$status])) {
+                $stats[$status]++;
+            }
+        }
+
+        // Get Customers for Filter
+        $customers = DB::table('customers')->select('id', 'code', 'name')->orderBy('code')->get();
+
+        return view('inventory.stock_monitoring', compact('categories', 'stats', 'customers'));
     }
 
     public function data(Request $request)
@@ -105,19 +127,58 @@ class StockMonitoringController extends Controller
             });
         }
 
+        // Stock Status Filter
+        if ($request->has('stock_status') && !empty($request->stock_status)) {
+            $status = $request->stock_status;
+            
+            $query->where(function($q) use ($status) {
+                // currentPCS = current_stock_qty * pcs_per_unit
+                // maxStock = min_stock * 3
+                
+                $currentPcsSql = "inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1)";
+                $minSql = "inv_t_product_detail.min_stock";
+                
+                if ($status === 'over') {
+                    $q->whereRaw("{$currentPcsSql} > ({$minSql} * 3)")
+                      ->where($minSql, '>', 0);
+                } elseif ($status === 'danger') {
+                    $q->whereRaw("{$currentPcsSql} < ({$minSql} - 30)")
+                      ->where($minSql, '>', 0);
+                } elseif ($status === 'warning') {
+                    $q->whereRaw("{$currentPcsSql} >= ({$minSql} - 30)")
+                      ->whereRaw("{$currentPcsSql} < {$minSql}")
+                      ->where($minSql, '>', 0);
+                } elseif ($status === 'safe') {
+                    $q->where(function($sq) use ($currentPcsSql, $minSql) {
+                        $sq->whereRaw("{$currentPcsSql} >= {$minSql}")
+                          ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
+                          ->where($minSql, '>', 0);
+                    })->orWhere($minSql, '<=', 0);
+                }
+            });
+        }
+
+        // Customer Filter
+        if ($request->has('customer_id') && !empty($request->customer_id)) {
+            $query->where('products.customer_id', $request->customer_id);
+        }
+
+        // Model Filter
+        if ($request->has('model_id') && !empty($request->model_id)) {
+            $query->where('products.model_id', $request->model_id);
+        }
+
         $recordsTotal = InventoryProduct::where('is_active', 1)->count();
         $filteredRecords = $query->count();
 
         // Sorting - Map frontend index to backend field
         $sortableColumns = ['id', 'part_no', 'spec_size', 'remark', 'balance_pcs'];
         
-        // Add indices for categories (they aren't really sortable easily here, so we skip or map to a safe default)
-        // However, we need to skip them to find the STO index
         foreach ($categories as $cat) {
             $sortableColumns[] = 'usage'; // Placeholder
         }
         
-        $sortableColumns[] = 'sto_qty'; // STO is now after categories
+        $sortableColumns[] = 'sto_qty';
         $sortableColumns[] = 'action';
 
         $orderColIdx = $request->input('order.0.column', 1);
@@ -183,12 +244,12 @@ class StockMonitoringController extends Controller
 
             $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
 
-            // Source of truth is now the synchronized current_stock_qty column
             $calculatedQty = (float)$item->current_stock_qty;
             $inQty = (float)($item->total_in_sum ?? 0);
             $outQty = (float)($item->total_out_sum ?? 0);
 
             $row = [
+                'id' => $item->id,
                 'hash_id' => $hashId,
                 'part_no' => $partNoDisplay,
                 'spec_size' => $specSize,
@@ -223,13 +284,11 @@ class StockMonitoringController extends Controller
                 $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
                 $row[$alias] = $this->formatQty($item->$alias, $pcsPerUnit);
 
-                // Detect Trial Category via Flag
                 if ($cat->is_trial) {
                     $trialQty = abs(floatval($item->$alias)); // Unit
                     $limitValue = floatval($item->limit_value);
                     $trialStatus = $this->calculateTrialStatus($trialQty, $limitValue, $pcsPerUnit);
 
-                    // Append status to the specific cell data if needed, or row
                     $row['trial_status'] = $trialStatus;
                 }
             }
@@ -273,12 +332,10 @@ class StockMonitoringController extends Controller
 
         $pcsDisplay = number_format($pcs, 0);
 
-        // If 1 PCS = 1 Unit, showing both is redundant.
         if ($pcsPerUnit == 1) {
             return "<span class='font-bold'>$pcsDisplay</span>";
         }
 
-        // Remove decimals from Unit display as well
         $unitDisplay = number_format($qty, 0);
 
         return "<span class='font-bold'>$pcsDisplay</span> <span class='text-xs text-gray-500'>($unitDisplay)</span>";
@@ -379,5 +436,27 @@ class StockMonitoringController extends Controller
         $products = [$product];
 
         return view('inventory.qrcode_balance', compact('products'));
+    }
+    public function getStoLog($id)
+    {
+        $logs = \App\Models\InventoryModel\StoDetail::with(['event', 'auditor'])
+            ->where('product_detail_id', $id)
+            ->where('is_adjusted', 1)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get()
+            ->map(function($log) {
+                return [
+                    'date' => $log->created_at->format('d M y H:i'),
+                    'event' => $log->event->code ?? '-',
+                    'system' => (float)$log->system_qty_snapshot,
+                    'actual' => (float)$log->real_qty_input,
+                    'diff' => (float)$log->diff_qty,
+                    'auditor' => $log->auditor ? $log->auditor->name : '-',
+                    'remark' => $log->remark ?? '-'
+                ];
+            });
+            
+        return response()->json($logs);
     }
 }

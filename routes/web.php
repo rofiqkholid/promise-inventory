@@ -95,6 +95,7 @@ Route::get('/inventory/transaction/categories', [InventoryTransactionController:
 // Stock Monitoring
 Route::get('/inventory/stock-monitoring', [StockMonitoringController::class, 'index'])->name('inventory.stockMonitoring');
 Route::get('/inventory/stock-monitoring/data', [StockMonitoringController::class, 'data'])->name('inventory.stockMonitoring.data');
+Route::get('/inventory/stock-monitoring/log/{id}', [StockMonitoringController::class, 'getStoLog'])->name('inventory.stockMonitoring.getStoLog');
 Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 
 // Stock Opname (STO)
@@ -110,6 +111,14 @@ Route::prefix('inventory/sto')->name('inventory.sto.')->group(function () {
     Route::post('/{id}/reopen', [\App\Http\Controllers\Inventory\StoController::class, 'reopen'])->name('reopen');
     Route::get('/{id}/export-excel', [\App\Http\Controllers\Inventory\StoController::class, 'exportExcel'])->name('exportExcel');
 });
+    // VAVE Analysis
+    Route::prefix('inventory/vave')->name('inventory.vave.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'index'])->name('index');
+        Route::get('/data', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'data'])->name('data');
+        Route::get('/rfq/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'showRfq'])->name('showRfq');
+        Route::post('/rfq', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'storeRfq'])->name('storeRfq');
+        Route::get('/comparison/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getComparison'])->name('getComparison');
+    });
 #End region
 
 #Region Transaction History

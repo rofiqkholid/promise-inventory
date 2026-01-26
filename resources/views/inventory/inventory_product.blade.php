@@ -439,7 +439,10 @@
 
                         let html = `<div class="flex flex-col leading-tight"><span>${size}</span>`;
                         if (p > 0) {
-                            html += `<span class="text-sm text-blue-500 dark:text-blue-400 font-bold">P: ${p}</span>`;
+                            html += `<span class="text-xs text-blue-500 dark:text-blue-400 font-bold">P: ${p}</span>`;
+                        }
+                        if (row.weight_kg) {
+                            html += `<span class="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">W: ${parseFloat(row.weight_kg).toFixed(3)} kg</span>`;
                         }
                         html += `</div>`;
 

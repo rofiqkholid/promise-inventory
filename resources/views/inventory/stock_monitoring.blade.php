@@ -12,49 +12,169 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Monitoring stock balance and breakdown of usage.</p>
         </div>
 
-        {{-- Legend Popover --}}
-        <div class="relative mt-4 sm:mt-0">
-            <button id="toggleLegend" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700">
-                <i class="fa-solid fa-circle-question mr-1.5 text-blue-500"></i> Legend
+        {{-- Action Toolbar --}}
+        <div class="flex items-center gap-3 mt-4 sm:mt-0 relative">
+            <button id="btnToggleFilter" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200 hover:shadow-md p-0 leading-none" title="Toggle Filters">
+                <i class="fa-solid fa-filter text-base"></i>
             </button>
+            
+            <div class="relative">
+                <button id="toggleLegend" class="w-10 h-10 rounded-full bg-white dark:bg-gray-800 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200 hover:shadow-md p-0 leading-none" title="Legend & Help">
+                    <i class="fa-solid fa-question text-base"></i>
+                </button>
 
-            <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 z-50">
-                <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Stock Status</h4>
-                <div class="space-y-2 mb-4">
-                    <div class="flex items-center text-xs">
-                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>
-                        <div class="text-gray-600 dark:text-gray-300">Over <span class="text-gray-400">(&gt; Max)</span></div>
+                {{-- Legend Popover Content --}}
+                <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 z-50">
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Stock Status</h4>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300">Over <span class="text-gray-400">(&gt; Max)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300">Safe <span class="text-gray-400">(Min - Max)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300">Warning <span class="text-gray-400">(Min-30 - Min-1)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0 animate-pulse"></span>
+                            <div class="text-gray-600 dark:text-gray-300">Critical <span class="text-gray-400">(&lt; Min-30)</span></div>
+                        </div>
                     </div>
-                    <div class="flex items-center text-xs">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
-                        <div class="text-gray-600 dark:text-gray-300">Safe <span class="text-gray-400">(Min - Max)</span></div>
-                    </div>
-                    <div class="flex items-center text-xs">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
-                        <div class="text-gray-600 dark:text-gray-300">Warning <span class="text-gray-400">(Min-30 - Min-1)</span></div>
-                    </div>
-                    <div class="flex items-center text-xs">
-                        <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0 animate-pulse"></span>
-                        <div class="text-gray-600 dark:text-gray-300">Critical <span class="text-gray-400">(&lt; Min-30)</span></div>
-                    </div>
-                </div>
 
-                <div class="border-t border-gray-100 dark:border-gray-700 my-3"></div>
+                    <div class="border-t border-gray-100 dark:border-gray-700 my-3"></div>
 
-                <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Trial Validation</h4>
-                <div class="space-y-2">
-                    <div class="flex items-center text-xs">
-                        <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 font-bold mr-2 text-[10px]">WARN</span>
-                        <div class="text-gray-600 dark:text-gray-300">Near Limit <span class="text-gray-400">(&gt; Limit-50)</span></div>
-                    </div>
-                    <div class="flex items-center text-xs">
-                        <span class="px-1.5 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 font-bold mr-2 text-[10px]">CRIT</span>
-                        <div class="text-gray-600 dark:text-gray-300">Over Limit <span class="text-gray-400">(&gt; Limit)</span></div>
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Trial Validation</h4>
+                    <div class="space-y-2">
+                        <div class="flex items-center text-xs">
+                            <span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 font-bold mr-2 text-[10px]">WARN</span>
+                            <div class="text-gray-600 dark:text-gray-300">Near Limit <span class="text-gray-400">(&gt; Limit-50)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="px-1.5 py-0.5 rounded bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 font-bold mr-2 text-[10px]">CRIT</span>
+                            <div class="text-gray-600 dark:text-gray-300">Over Limit <span class="text-gray-400">(&gt; Limit)</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Collapsible Filter Card --}}
+    <div id="filterCard" class="hidden bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6 relative">
+        <div class="absolute -top-2 right-14 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-gray-200 dark:border-b-gray-700"></div>
+        <div class="absolute -top-[7px] right-14 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white dark:border-b-gray-800"></div>
+        
+        <div class="flex flex-col xl:flex-row gap-4 xl:items-end">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                <!-- Stock Status -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stock Status</label>
+                    <div class="w-full">
+                        <select id="filter_status" class="select2 w-full">
+                            <option value="">All Status</option>
+                            <option value="safe">Safe Stock</option>
+                            <option value="warning">Warning</option>
+                            <option value="danger">Critical</option>
+                            <option value="over">Over Stock</option>
+                        </select>
+                    </div>
+                </div>
+
+                        <!-- Customer -->
+                        <div class="space-y-1">
+                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</label>
+                            <div class="w-full">
+                                <select id="filter_customer" class="select2 w-full">
+                                    <option value="">All Customers</option>
+                                    @foreach($customers as $c)
+                                    <option value="{{ $c->id }}">{{ $c->code }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                <!-- Model -->
+                <div class="space-y-1">
+                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model</label>
+                    <div class="w-full">
+                        <select id="filter_model" class="select2 w-full">
+                            <option value="">All Models</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 xl:pt-0">
+                <button type="button" id="reset_filters" class="flex items-center justify-center gap-2 h-[38px] px-6 w-full md:w-auto bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-md transition-colors text-sm font-semibold">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {{-- Individual KPI Cards - Forced Single Row --}}
+    <div class="flex flex-nowrap gap-3 mb-6 overflow-x-auto pb-2">
+        <!-- Total -->
+        <div class="flex-none w-[200px] flex-grow bg-white dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-500 text-lg">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Total Products</div>
+                <div class="text-xl font-black text-gray-900 dark:text-white leading-tight">{{ number_format($stats['total'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- Safe -->
+        <div class="flex-none w-[200px] flex-grow bg-white dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500 text-lg">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Safe Stock</div>
+                <div class="text-xl font-black text-gray-900 dark:text-white leading-tight">{{ number_format($stats['safe'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="flex-none w-[200px] flex-grow bg-white dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-500 text-lg">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Warning</div>
+                <div class="text-xl font-black text-gray-900 dark:text-white leading-tight">{{ number_format($stats['warning'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- Critical -->
+        <div class="flex-none w-[200px] flex-grow bg-white dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 text-lg">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Critical</div>
+                <div class="text-xl font-black text-gray-900 dark:text-white leading-tight">{{ number_format($stats['danger'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- Over Stock -->
+        <div class="flex-none w-[200px] flex-grow bg-white dark:bg-gray-800 p-3 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 text-lg">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+            <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Over Stock</div>
+                <div class="text-xl font-black text-gray-900 dark:text-white leading-tight">{{ number_format($stats['over'] ?? 0) }}</div>
+            </div>
+        </div>
+    </div>
+
+
 
     {{-- DataTable --}}
     <x-table id="stockMonitoringTable">
@@ -82,8 +202,12 @@
                 @endif
             </tr>
         </thead>
-        <tbody></tbody>
+        </tbody>
     </x-table>
+
+    {{-- Popover Components --}}
+    <x-inventory.sto-log-popover />
+    <x-inventory.product-detail-popover />
 </div>
 @endsection
 
@@ -92,8 +216,37 @@
     /* Tooltip content style */
     #global-tooltip-portal {
         pointer-events: none;
-        /* Let mouse events pass through */
         display: none;
+    }
+    
+    /* Dashboard-style Select2 Override */
+    .select2-container .select2-selection--single {
+        height: 38px !important; 
+        font-size: 14px !important;
+        display: flex !important;
+        align-items: center !important;
+        border-color: #d1d5db !important; /* gray-300 to match inputs */
+        border-radius: 0.375rem !important; /* rounded-md/lg */
+    }
+    .dark .select2-container .select2-selection--single {
+        background-color: #374151 !important; /* gray-700 */
+        border-color: #4b5563 !important; /* gray-600 */
+        color: #e5e7eb !important;
+    }
+    .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #e5e7eb !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+        padding-left: 12px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 4px !important;
+    }
+    .select2-dropdown {
+        font-size: 13px !important;
+        border-color: #d1d5db !important;
     }
 </style>
 @endpush
@@ -101,13 +254,7 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // Create Portal Container if not exists
-        if ($('#global-tooltip-portal').length === 0) {
-            $('body').append('<div id="global-tooltip-portal" class="fixed z-[9999] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-4 w-64 text-left hidden"></div>');
-        }
-
-        const tooltip = $('#global-tooltip-portal');
-
+        // DataTable Configuration
         let columns = [{
                 data: null,
                 render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
@@ -185,7 +332,8 @@
                     let colorClass = 'text-gray-600 dark:text-gray-400';
                     if (parseFloat(row.sto_gap) > 0) colorClass = 'text-green-600 dark:text-green-400';
                     else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-red-600 dark:text-red-400';
-                    return `<span class="${colorClass}">${data}</span>`;
+                    
+                    return `<span class="${colorClass} sto-log-trigger cursor-pointer hover:underline decoration-dotted underline-offset-4" data-id="${row.id}">${data} <i class="fa-solid fa-caret-down text-[10px] ml-0.5 opacity-50"></i></span>`;
                 }
                 return data;
             }
@@ -193,7 +341,6 @@
 
         const categories = <?php echo json_encode(isset($categories) ? $categories->values() : []); ?>;
 
-        // Safety check: Pastikan categories benar-benar array sebelum di-loop
         if (Array.isArray(categories) && categories.length > 0) {
             categories.forEach(cat => {
                 let safeCode = cat.code.replace(/[^a-zA-Z0-9]/g, '_');
@@ -253,7 +400,14 @@
         const table = window.defaultDataTable('stockMonitoringTable', {
             processing: true,
             serverSide: true,
-            ajax: "{{ route('inventory.stockMonitoring.data') }}",
+            ajax: {
+                url: "{{ route('inventory.stockMonitoring.data') }}",
+                data: function(d) {
+                    d.stock_status = $('#filter_status').val();
+                    d.customer_id = $('#filter_customer').val();
+                    d.model_id = $('#filter_model').val();
+                }
+            },
             columns: columns,
             pageLength: 25,
             createdRow: function(row, data, dataIndex) {
@@ -274,48 +428,27 @@
             table.search(searchVal).draw();
         }
 
-        $(document).on('mouseenter', '.hover-trigger', function(e) {
-            const el = $(this);
-            const data = el.data('details');
-            if (!data) return;
-
-            let content = `
-                <h4 class="font-bold text-gray-900 dark:text-white mb-2 border-b pb-1">Product Details</h4>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <div class="text-gray-500 dark:text-gray-400">Customer:</div>
-                    <div class="font-medium text-gray-900 dark:text-white truncate">${data.customer || '-'}</div>
-                    <div class="text-gray-500 dark:text-gray-400">Model:</div>
-                    <div class="font-medium text-gray-900 dark:text-white truncate">${data.model || '-'}</div>
-                    <div class="text-gray-500 dark:text-gray-400">Rank/Limit:</div>
-                    <div class="font-medium text-gray-900 dark:text-white">${data.rank || '-'} <span class="text-gray-400">(${data.limit_value || '-'})</span></div>
-                    <div class="text-gray-500 dark:text-gray-400">Coating:</div>
-                    <div class="font-medium text-gray-900 dark:text-white">${data.coating_type || '-'}</div>
-                    <div class="text-gray-500 dark:text-gray-400">Min. Stock:</div>
-                    <div class="font-medium text-gray-900 dark:text-white">${data.min_stock || '-'}</div>
-                    <div class="text-gray-500 dark:text-gray-400">Unit/Car:</div>
-                    <div class="font-medium text-gray-900 dark:text-white">${data.unit_per_car || '-'}</div>
-                    <div class="text-gray-500 dark:text-gray-400">Last Upd:</div>
-                    <div class="font-medium text-gray-900 dark:text-white col-span-2">${data.last_update || '-'}</div>
-                </div>
-            `;
-
-            tooltip.html(content).removeClass('hidden').show();
-            const rect = this.getBoundingClientRect();
-            let top = rect.bottom + 5;
-            let left = rect.left;
-
-            if (top + tooltip.outerHeight() > window.innerHeight) top = rect.top - tooltip.outerHeight() - 5;
-            if (left + tooltip.outerWidth() > window.innerWidth) left = window.innerWidth - tooltip.outerWidth() - 10;
-
-            tooltip.css({
-                top: top + 'px',
-                left: left + 'px',
-                position: 'fixed'
-            });
+        // Filter Toggle Logic
+        $('#btnToggleFilter').on('click', function(e) {
+            e.stopPropagation();
+            const btn = $(this);
+            const card = $('#filterCard');
+            
+            card.slideToggle(200);
+            btn.toggleClass('bg-blue-50 text-blue-600 ring-2 ring-blue-500/50');
+            
+            // Close Legend if open
+            if (!$('#legendPopover').hasClass('hidden')) {
+                $('#legendPopover').addClass('hidden');
+            }
         });
-
-        $(document).on('mouseleave', '.hover-trigger', function() {
-            tooltip.hide();
+        
+        // Close Filter Card when clicking outside
+        $(document).click(function(e) {
+            if (!$(e.target).closest('#filterCard, #btnToggleFilter, .select2-container').length) {
+                $('#filterCard').slideUp(200);
+                $('#btnToggleFilter').removeClass('bg-blue-50 text-blue-600 ring-2 ring-blue-500/50');
+            }
         });
 
         $('#toggleLegend').click(function(e) {
@@ -355,6 +488,61 @@
         $(document).on('click', '.print-balance-button', function() {
             const id = $(this).data('id');
             window.open(`{{ url('inventory/stock-monitoring') }}/${id}/print-balance`, '_blank');
+        });
+
+        // Filter Handlers
+        // Initialize Select2
+        $('.select2').select2({
+            minimumResultsForSearch: 0, 
+            width: '100%'
+        });
+
+        // Filter Handlers
+        $('#filter_status, #filter_customer, #filter_model').on('change', function() {
+            table.draw();
+        });
+
+        // Load Models Function
+        function loadModels(customerId) {
+            const modelSelect = $('#filter_model');
+            const currentModel = modelSelect.val();
+
+            modelSelect.empty().append('<option value="">Loading...</option>');
+
+            $.ajax({
+                url: "{{ route('inventory.product.getModels') }}",
+                data: { customer_id: customerId },
+                success: function(data) {
+                    modelSelect.empty().append('<option value="">All Models</option>');
+                    data.forEach(function(model) {
+                         const isSelected = currentModel == model.id;
+                         const option = new Option(model.name, model.id, isSelected, isSelected);
+                         modelSelect.append(option);
+                    });
+                    modelSelect.trigger('change.select2');
+                },
+                error: function() {
+                    modelSelect.empty().append('<option value="">Error Loading Models</option>');
+                }
+            });
+        }
+
+        // Initial Load
+        loadModels(null);
+
+        $('#reset_filters').on('click', function() {
+            $('#filter_status').val('').trigger('change');
+            $('#filter_customer').val('').trigger('change');
+            
+            $('#filter_model').val(null).trigger('change.select2');
+            
+            table.search('').draw();
+        });
+
+        // Dynamic Model Loading
+        $('#filter_customer').on('change', function() {
+            const customerId = $(this).val();
+            loadModels(customerId);
         });
     });
 </script>

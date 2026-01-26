@@ -123,14 +123,14 @@
 
             @include('layouts.header')
 
-            <main class="bg-gray-100 dark:bg-gray-900 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth flex flex-col">
-                @include('components.toast')
+            <main class="bg-gray-100 dark:bg-gray-900 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth">
+                <div class="flex flex-col min-h-full">
+                    @include('components.toast')
 
-                <div class="flex-grow">
                     @yield('content')
-                </div>
 
-                @include('layouts.footer')
+                    @include('layouts.footer')
+                </div>
             </main>
         </div>
 

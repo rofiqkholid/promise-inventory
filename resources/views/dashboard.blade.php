@@ -4,261 +4,231 @@
 @section('page_title', 'Dashboard')
 
 @section('content')
-<div class="dashboard-container min-h-screen flex flex-col">
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
-        @foreach([
-        ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50', 'id' => 'stat_total_stock'],
-        ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'id' => 'stat_material_in'],
-        ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'id' => 'stat_material_out'],
-        ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50', 'id' => 'stat_out_pp'],
-        ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50', 'id' => 'stat_out_event'],
-        ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50', 'id' => 'stat_out_trial'],
-        ] as $stat)
-        <div class="stat-card flex flex-col justify-between h-full p-3 bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 duration-200">
-            <div class="flex gap-2">
-                <div class="{{ $stat['bg'] }} {{ $stat['color'] }} w-12 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <i class="fa-solid {{ $stat['icon'] }} text-xl"></i>
-                </div>
-                <div class="flex flex-col">
-                    <div class="text-sm font-base text-slate-400 dark:text-gray-400 tracking-wide">{{ $stat['label'] }}</div>
-                    <div class="value font-bold text-2xl text-slate-800 dark:text-gray-100 tracking-tight" id="{{ $stat['id'] }}">{{ $stat['val'] }}</div>
+<div class="dashboard-container flex-1 flex flex-col">
+    <div class="flex gap-2 mb-2 items-stretch">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 flex-1">
+            @foreach([
+            ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50', 'id' => 'stat_total_stock'],
+            ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'id' => 'stat_material_in'],
+            ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'id' => 'stat_material_out'],
+            ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50', 'id' => 'stat_out_pp'],
+            ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50', 'id' => 'stat_out_event'],
+            ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50', 'id' => 'stat_out_trial'],
+            ] as $stat)
+            <div class="stat-card flex flex-col justify-between h-full px-3 py-2 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 duration-200">
+                <div class="flex gap-2 items-center">
+                    <div class="{{ $stat['bg'] }} {{ $stat['color'] }} w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid {{ $stat['icon'] }} text-sm"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <div class="text-[10px] font-base text-slate-400 dark:text-gray-400 tracking-wide uppercase">{{ $stat['label'] }}</div>
+                        <div class="value font-bold text-lg text-slate-800 dark:text-gray-100 tracking-tight leading-tight" id="{{ $stat['id'] }}">{{ $stat['val'] }}</div>
+                    </div>
                 </div>
             </div>
+            @endforeach
         </div>
-        @endforeach
+
+        <button id="btnToggleDashFilter" class="flex flex-col items-center justify-center gap-0.5 w-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-[10px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all">
+            <i class="fa-solid fa-filter text-sm"></i>
+            <span>Filter</span>
+            <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-200 mt-0.5" id="filterChevron"></i>
+        </button>
     </div>
 
-    <div class="filter-card bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 p-4">
-        <div class="section-title flex items-center gap-2 mb-6 text-slate-800 dark:text-gray-200">
-            <span class="font-bold text-md tracking-wider">Filter Data</span>
-        </div>
+    {{-- Collapsible Filter Card --}}
+    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-3 mb-2">
         <form id="filterForm">
-            <div class="flex flex-col xl:flex-row gap-4 xl:items-end">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
-                    <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Period</label>
-                        <input
-                            type="month"
-                            id="month_picker"
-                            name="month_year"
-                            value="{{ $filters['month_year'] }}"
-                            class="modern-input w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded-lg h-[38px] px-3 text-gray-600 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer">
+            <div class="flex flex-col xl:flex-row gap-2 xl:items-end">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 flex-1">
+                    <div class="space-y-0.5">
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Period</label>
+                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded h-[38px] px-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
                     </div>
-                    <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Customer</label>
-                        <select id="filterCustomer" name="customer[]" class="w-full"></select>
+                    <div class="space-y-0.5">
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Customer</label>
+                        <select id="filterCustomer" name="customer[]" class="w-full text-xs"></select>
                     </div>
-                    <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Model</label>
-                        <select id="filterModel" name="model[]" class="w-full"></select>
+                    <div class="space-y-0.5">
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Model</label>
+                        <select id="filterModel" name="model[]" class="w-full text-xs"></select>
                     </div>
-                    <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Balance Status</label>
-                        <select id="filterBalance" name="status_balance[]" class="w-full"></select>
+                    <div class="space-y-0.5">
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Balance</label>
+                        <select id="filterBalance" name="status_balance[]" class="w-full text-xs"></select>
                     </div>
-                    <div class="space-y-1">
-                        <label class="filter-label block text-sm text-slate-500 dark:text-gray-400 tracking-wide">Usage Status</label>
-                        <select id="filterUsage" name="status_usage[]" class="w-full"></select>
+                    <div class="space-y-0.5">
+                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Usage</label>
+                        <select id="filterUsage" name="status_usage[]" class="w-full text-xs"></select>
                     </div>
                 </div>
 
                 <div class="flex gap-2 pt-2 xl:pt-0">
-                    <button type="button" id="btnReset" class="btn-modern-reset flex items-center justify-center gap-2 h-[38px] px-4 w-full md:w-auto border border-gray-300 dark:border-gray-600 rounded-sm hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <span class="text-sm text-gray-600 dark:text-gray-300">Reset</span>
-                    </button>
-                    <button type="button" id="btnApply" class="btn-modern-apply flex items-center justify-center gap-2 h-[38px] px-6 w-full md:w-auto bg-blue-50 dark:bg-blue-600/20 hover:bg-blue-100 dark:hover:bg-blue-600/30 border border-blue-200 dark:border-blue-500/50 rounded-sm transition-colors">
-                        <span class="text-sm font-semibold text-blue-600 dark:text-blue-400">Apply</span>
+                    <button type="button" id="btnReset" class="h-[30px] px-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 transition-colors">
+                        Reset
                     </button>
                 </div>
             </div>
         </form>
     </div>
 
-    <div class="grid grid-cols-12 gap-3 mt-3 items-stretch flex-1 min-h-0">
-        <div class="col-span-12 xl:col-span-8 flex flex-col gap-3">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-sm border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm text-slate-700 dark:text-gray-200 tracking-wider">Material Stock Status</span>
-                        </div>
+    <div class="grid grid-cols-12 gap-2 mt-0 items-stretch" style="min-height: calc(100vh - 200px);">
+        <div class="col-span-12 xl:col-span-8 flex flex-col gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
+                <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Stock Status</span>
+                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
-                    <div class="h-64"><canvas id="stockStatusChart"></canvas></div>
+                    <div class="flex-1 min-h-0 relative"><canvas id="stockStatusChart"></canvas></div>
                 </div>
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-sm border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm text-slate-700 dark:text-gray-200 tracking-wider">Usage by Models</span>
-                        </div>
+                <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Usage by Models</span>
+                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
-                    <div class="h-64"><canvas id="usageModelChart"></canvas></div>
+                    <div class="flex-1 min-h-0 relative"><canvas id="usageModelChart"></canvas></div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-sm border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm text-slate-700 dark:text-gray-200 tracking-wider">Transaction Trend</span>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
+                <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Transaction Trend</span>
+                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
-                    <div class="h-64"><canvas id="trendlineChart"></canvas></div>
+                    <div class="flex-1 min-h-0 relative"><canvas id="trendlineChart"></canvas></div>
                 </div>
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-sm border border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-sm text-slate-700 dark:text-gray-200 tracking-wider">Supply by Makers (IN)</span>
-                        </div>
+                <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
+                    <div class="flex items-center justify-between mb-0.5">
+                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Supply by Makers (IN)</span>
+                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
-                    <div class="h-64"><canvas id="makerChart"></canvas></div>
+                    <div class="flex-1 min-h-0 relative"><canvas id="makerChart"></canvas></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-span-12 xl:col-span-4 flex flex-col gap-3 h-full">
-            <div class="table-container bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1">
-                <div class="py-1.5 px-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex items-center justify-between">
+        <div class="col-span-12 xl:col-span-4 flex flex-col gap-2 h-full">
+            {{-- Balance Table --}}
+            <div class="table-container bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1 min-h-0">
+                <div class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center">
-                            <i class="fa-solid fa-triangle-exclamation text-xs"></i>
-                        </div>
-                        <span class="font-bold text-xs text-slate-700 dark:text-gray-200 tracking-wider">Balance Warnings</span>
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[10px]"></i>
+                        <span class="font-bold text-[10px] text-slate-700 dark:text-gray-200 uppercase tracking-wide">Balance Warnings</span>
                     </div>
                     @if(count($tables['balance']) > 0)
-                    <span class="text-[10px] font-semibold bg-rose-100 text-rose-600 py-1 px-2 rounded-md">{{ count($tables['balance']) }} Items</span>
+                    <span class="text-[9px] font-bold bg-rose-100 text-rose-600 px-1.5 rounded">{{ count($tables['balance']) }}</span>
                     @endif
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
-                    <table class="w-full text-xs">
-                        <thead class="bg-slate-50 dark:bg-gray-700 sticky top-0 z-10">
+                    <table class="w-full text-[10px]">
+                        <thead class="bg-gray-50/50 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-sm">
                             <tr>
-                                <th class="py-1.5 px-3 text-left font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Item No</th>
-                                <th class="py-1.5 px-3 text-left font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Cust</th>
-                                <th class="py-1.5 px-3 text-right font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Status</th>
+                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Item</th>
+                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Cust</th>
+                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Qty</th>
+                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Status</th>
                             </tr>
                         </thead>
                         <tbody id="balanceTableBody" class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($tables['balance'] as $row)
                             <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
-                                <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
-                                    <div class="truncate max-w-[120px]" title="{{ $row->part_no . ($row->revision ? ' - ' . $row->revision : '') }}">{{ $row->part_no }}{{ $row->revision ? ' - ' . $row->revision : '' }}</div>
-                                    <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">{{ $row->model_name }}</div>
+                                <td class="p-2 font-medium text-slate-700 dark:text-gray-300">
+                                    <div class="truncate max-w-[100px]">{{ $row->part_no }}</div>
+                                    <div class="text-[9px] text-slate-400">{{ $row->model_name }}</div>
                                 </td>
-                                <td class="p-3 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
-                                <td class="p-3 text-right">
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold {{ $row->status == 'Critical' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400' : ($row->status == 'Over' ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400') }}">
+                                <td class="p-2 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
+                                <td class="p-2 text-right whitespace-nowrap">
+                                    <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-gray-200">{{ number_format($row->current_stock_qty) }}</span>
+                                    <span class="text-slate-400 mx-1">/</span>
+                                    <span class="font-mono text-[9px] text-slate-500">{{ number_format($row->min_stock) }}</span>
+                                </td>
+                                <td class="p-2 text-right">
+                                    <span class="text-[9px] font-bold {{ $row->status == 'Critical' ? 'text-rose-600' : ($row->status == 'Over' ? 'text-amber-600' : 'text-emerald-600') }}">
                                         {{ $row->status }}
                                     </span>
                                 </td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="3" class="p-4 text-center text-slate-400 dark:text-gray-500 italic">No warnings found</td>
-                            </tr>
+                            <tr><td colspan="4" class="p-2 text-center text-slate-400 italic">No warnings</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="table-container bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1">
-                <div class="py-1.5 px-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex items-center justify-between">
+            {{-- Usage Table --}}
+            <div class="table-container bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1 min-h-0">
+                <div class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
-                            <i class="fa-solid fa-chart-pie text-xs"></i>
-                        </div>
-                        <span class="font-bold text-xs text-slate-700 dark:text-gray-200 tracking-wider">Usage Status</span>
+                        <i class="fa-solid fa-chart-pie text-amber-500 text-[10px]"></i>
+                        <span class="font-bold text-[10px] text-slate-700 dark:text-gray-200 uppercase tracking-wide">Usage Status</span>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
-                    <table class="w-full text-xs">
-                        <thead class="bg-slate-50 dark:bg-gray-700 sticky top-0 z-10">
+                    <table class="w-full text-[10px]">
+                        <thead class="bg-gray-50/50 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-sm">
                             <tr>
-                                <th class="py-1.5 px-3 text-left font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Item No</th>
-                                <th class="py-1.5 px-3 text-left font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Cust</th>
-                                <th class="py-1.5 px-3 text-right font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Status</th>
+                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Item</th>
+                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Cust</th>
+                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Qty</th>
+                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Status</th>
                             </tr>
                         </thead>
                         <tbody id="usageTableBody" class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($tables['usage'] as $row)
                             <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
-                                <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
-                                    <div class="truncate max-w-[120px]" title="{{ $row->part_no . ($row->revision ? ' - ' . $row->revision : '') }}">{{ $row->part_no }}{{ $row->revision ? ' - ' . $row->revision : '' }}</div>
-                                    <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">{{ $row->model_name }}</div>
+                                <td class="p-2 font-medium text-slate-700 dark:text-gray-300">
+                                    <div class="truncate max-w-[100px]">{{ $row->part_no }}</div>
                                 </td>
-                                <td class="p-3 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
-                                <td class="p-3 text-right">
-                                    @php
-                                        $colorClass = match($row->status) {
-                                            'Critical' => 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400',
-                                            'Over' => 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400',
-                                            default => 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
-                                        };
-                                    @endphp
-                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold {{ $colorClass }}">
+                                <td class="p-2 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
+                                <td class="p-2 text-right whitespace-nowrap">
+                                    <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-gray-200">{{ number_format($row->current_stock_qty) }}</span>
+                                    <span class="text-slate-400 mx-1">/</span>
+                                    <span class="font-mono text-[9px] text-slate-500">{{ number_format($row->min_stock) }}</span>
+                                </td>
+                                <td class="p-2 text-right">
+                                    <span class="text-[9px] font-bold {{ $row->status == 'Critical' ? 'text-rose-600' : ($row->status == 'Over' ? 'text-amber-600' : 'text-emerald-600') }}">
                                         {{ $row->status }}
                                     </span>
                                 </td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="3" class="p-4 text-center text-slate-400 dark:text-gray-500 italic">No usage data found</td>
-                            </tr>
+                            <tr><td colspan="4" class="p-2 text-center text-slate-400 italic">No data</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="table-container bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1">
-                <div class="py-1.5 px-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex items-center justify-between">
+            {{-- Recent Transactions --}}
+            <div class="table-container bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1 min-h-0">
+                <div class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
-                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
-                        </div>
-                        <span class="font-bold text-xs text-slate-700 dark:text-gray-200 tracking-wider">Recent Transactions</span>
+                        <i class="fa-solid fa-clock-rotate-left text-blue-500 text-[10px]"></i>
+                        <span class="font-bold text-[10px] text-slate-700 dark:text-gray-200 uppercase tracking-wide">Recent Transactions</span>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
-                    <table class="w-full text-xs">
-                        <thead class="bg-slate-50 dark:bg-gray-700 sticky top-0 z-10">
-                            <tr>
-                                <th class="py-1.5 px-3 text-left font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Item</th>
-                                <th class="py-1.5 px-3 text-center font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Type</th>
-                                <th class="py-1.5 px-3 text-right font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Qty</th>
-                                <th class="py-1.5 px-3 text-right font-semibold text-slate-500 dark:text-gray-400 tracking-wider text-[10px]">Date</th>
-                            </tr>
-                        </thead>
+                    <table class="w-full text-[10px]">
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                             @forelse($tables['history'] as $row)
                             <tr class="hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">
-                                <td class="p-3 font-medium text-slate-700 dark:text-gray-300">
-                                    <div class="truncate max-w-[100px]" title="{{ $row->part_no . ($row->revision ? ' - ' . $row->revision : '') }}">{{ $row->part_no }}{{ $row->revision ? ' - ' . $row->revision : '' }}</div>
+                                <td class="p-2 font-medium text-slate-700 dark:text-gray-300">
+                                    <div class="truncate max-w-[90px]">{{ $row->part_no }}</div>
                                 </td>
-                                <td class="p-3 text-center">
-                                    @php
-                                    $cat = strtolower($row->category);
-                                    $activeClass = 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-gray-100 dark:border-gray-700';
-                                    if (Str::contains($cat, 'in')) $activeClass = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/40';
-                                    elseif (Str::contains($cat, 'trial')) $activeClass = 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/40';
-                                    elseif (Str::contains($cat, 'event')) $activeClass = 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/40';
-                                    elseif (Str::contains($cat, 'pp')) $activeClass = 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/40';
-                                    elseif (Str::contains($cat, 'out')) $activeClass = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/40';
-                                    @endphp
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border {{ $activeClass }}">
-                                        {{ $row->category }}
-                                    </span>
+                                <td class="p-2 text-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-gray-100 text-gray-600 border border-gray-200">{{ $row->category }}</span>
                                 </td>
-                                <td class="p-3 text-right font-mono font-medium text-slate-700 dark:text-gray-300">
+                                <td class="p-2 text-right font-mono text-slate-700 dark:text-gray-300">
                                     {{ number_format($row->qty * $row->pcs_per_unit) }}
                                 </td>
-                                <td class="p-3 text-right text-[10px] text-slate-500 dark:text-gray-400 whitespace-nowrap">
-                                    {{ \Carbon\Carbon::parse($row->transaction_date)->format('d/m/y') }}
+                                <td class="p-2 text-right text-[9px] text-slate-500 dark:text-gray-400 whitespace-nowrap">
+                                    {{ \Carbon\Carbon::parse($row->transaction_date)->format('d/m') }}
                                 </td>
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="4" class="p-4 text-center text-slate-400 dark:text-gray-500 italic">No history found</td>
-                            </tr>
+                            <tr><td colspan="4" class="p-2 text-center text-slate-400 italic">No history</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -266,13 +236,31 @@
             </div>
         </div>
     </div>
-
 </div>
 @endsection
 
 @push('scripts')
+<style>
+    /* Hide chevron when clear button is present */
+    .select2-container--default .select2-selection--single:has(.select2-selection__clear) .select2-selection__arrow {
+        display: none !important;
+    }
+    
+    /* Center clear button vertically */
+    .select2-container--default .select2-selection--single .select2-selection__clear {
+        top: 50% !important;
+        transform: translateY(25%) !important;
+    }
+</style>
 <script>
     $(document).ready(function() {
+        // Toggle Filter Logic
+        $('#btnToggleDashFilter').on('click', function(e) {
+            e.stopPropagation();
+            $('#dashboardFilterCard').slideToggle(200);
+            $('#filterChevron').toggleClass('rotate-180');
+        });
+
         const isDark = document.documentElement.classList.contains('dark');
         
         // Dynamic Chart Defaults
@@ -292,8 +280,8 @@
         $('#filterModel').select2({
             dropdownParent: $('#filterModel').parent(),
             width: '100%',
-            placeholder: 'Select Model...',
-            allowClear: false,
+            placeholder: 'All Models',
+            allowClear: true,
             ajax: {
                 url: '{{ route("api.data.models") }}',
                 method: 'POST',
@@ -307,9 +295,14 @@
                         _token: '{{ csrf_token() }}'
                     };
                 },
-                processResults: function(data) {
+                processResults: function(data, params) {
+                    const results = data.results || [];
+                    // Add 'All' option only on first page and when no search term
+                    if ((!params.term || params.term === '') && (!params.page || params.page === 1)) {
+                        results.unshift({ id: '', text: 'All Models' });
+                    }
                     return {
-                        results: data.results,
+                        results: results,
                         pagination: data.pagination
                     };
                 },
@@ -320,8 +313,8 @@
         $('#filterCustomer').select2({
             dropdownParent: $('#filterCustomer').parent(),
             width: '100%',
-            placeholder: 'Select Customer...',
-            allowClear: false,
+            placeholder: 'All Customers',
+            allowClear: true,
             ajax: {
                 url: '{{ route("api.data.customers") }}',
                 method: 'POST',
@@ -334,9 +327,14 @@
                         _token: '{{ csrf_token() }}'
                     };
                 },
-                processResults: function(data) {
+                processResults: function(data, params) {
+                    const results = data.results || [];
+                    // Add 'All' option only on first page and when no search term
+                    if ((!params.term || params.term === '') && (!params.page || params.page === 1)) {
+                        results.unshift({ id: '', text: 'All Customers' });
+                    }
                     return {
-                        results: data.results,
+                        results: results,
                         pagination: data.pagination
                     };
                 },
@@ -347,39 +345,40 @@
         $('#filterBalance').select2({
             dropdownParent: $('#filterBalance').parent(),
             width: '100%',
-            placeholder: 'Select Balance Status',
-            allowClear: false,
+            placeholder: 'All Balance Status',
+            allowClear: true,
             ajax: {
                 url: '{{ route("api.data.statuses", ["type" => "balance"]) }}',
                 method: 'GET',
                 dataType: 'json',
                 processResults: function(data) {
-                    return {
-                        results: data.results
-                    };
+                    const results = [{ id: '', text: 'All' }].concat(data.results || []);
+                    return { results: results };
                 }
             }
         });
         $('#filterUsage').select2({
             dropdownParent: $('#filterUsage').parent(),
             width: '100%',
-            placeholder: 'Select Usage Status',
-            allowClear: false,
+            placeholder: 'All Usage Status',
+            allowClear: true,
             ajax: {
                 url: '{{ route("api.data.statuses", ["type" => "usage"]) }}',
                 method: 'GET',
                 dataType: 'json',
                 processResults: function(data) {
-                    return {
-                        results: data.results
-                    };
+                    const results = [{ id: '', text: 'All' }].concat(data.results || []);
+                    return { results: results };
                 }
             }
         });
 
-            function fetchDashboardData(formData, btn) {
-                const originalText = btn.html();
-                btn.html('<i class="fa-solid fa-spinner fa-spin"></i>').prop('disabled', true);
+            function fetchDashboardData(formData, btn = null) {
+                let originalText = '';
+                if (btn && btn.length) {
+                    originalText = btn.html();
+                    btn.html('<i class="fa-solid fa-spinner fa-spin"></i>').prop('disabled', true);
+                }
 
                 $.ajax({
                     url: window.location.pathname,
@@ -439,13 +438,16 @@
                         alert('Failed to filter data.');
                     },
                     complete: function() {
-                        btn.html(originalText).prop('disabled', false);
+                        if (btn && btn.length) {
+                            btn.html(originalText).prop('disabled', false);
+                        }
                     }
                 });
             }
 
-            $('#btnApply').on('click', function() {
-                fetchDashboardData($('#filterForm').serialize(), $(this));
+            // Auto-apply logic
+            $('#month_picker, #filterCustomer, #filterModel, #filterBalance, #filterUsage').on('change', function() {
+                fetchDashboardData($('#filterForm').serialize());
             });
 
             $('#btnReset').on('click', function() {
@@ -485,7 +487,7 @@
                 const tbody = $(selector);
                 tbody.empty();
                 if (data.length === 0) {
-                    tbody.append('<tr><td colspan="3" class="p-4 text-center text-slate-400 dark:text-gray-500 italic">No data found</td></tr>');
+                    tbody.append('<tr><td colspan="4" class="p-4 text-center text-slate-400 dark:text-gray-500 italic">No data found</td></tr>');
                     return;
                 }
                 data.forEach(item => {
@@ -509,6 +511,11 @@
                             <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">${row.model_name || '-'}</div>
                         </td>
                         <td class="p-3 text-slate-600 dark:text-gray-400">${row.customer_code || '-'}</td>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-gray-200">${new Intl.NumberFormat().format(row.current_stock_qty)}</span>
+                            <span class="text-slate-400 mx-1">/</span>
+                            <span class="font-mono text-[9px] text-slate-500">${new Intl.NumberFormat().format(row.min_stock)}</span>
+                        </td>
                         <td class="p-3 text-right">
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold ${colorClass}">
                                 ${row.status}
@@ -533,6 +540,11 @@
                             <div class="text-[10px] text-slate-400 dark:text-gray-500 mt-0.5">${row.model_name || '-'}</div>
                         </td>
                         <td class="p-3 text-slate-600 dark:text-gray-400">${row.customer_code || '-'}</td>
+                        <td class="p-3 text-right whitespace-nowrap">
+                            <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-gray-200">${new Intl.NumberFormat().format(row.current_stock_qty)}</span>
+                            <span class="text-slate-400 mx-1">/</span>
+                            <span class="font-mono text-[9px] text-slate-500">${new Intl.NumberFormat().format(row.min_stock)}</span>
+                        </td>
                         <td class="p-3 text-right">
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold ${colorClass}">
                                 ${row.status}

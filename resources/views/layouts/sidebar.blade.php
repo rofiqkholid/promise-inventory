@@ -65,6 +65,20 @@
                 Product
             </div>
         </a>
+        
+        {{-- VA/VE ANALYSIS --}}
+        <a href="{{ route('inventory.vave.index') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+           {{ request()->routeIs('inventory.vave.*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
+            :class="!sidebarExpanded ? 'justify-center' : ''">
+            <i class="fa-solid fa-vial w-6 text-center text-lg {{ request()->routeIs('inventory.vave.*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}"></i>
+            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">VA/VE Analysis</span>
+
+            {{-- Tooltip for Minimized --}}
+            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
+                VA/VE Analysis
+            </div>
+        </a>
 
         {{-- INVENTORY TRANSACTION --}}
 
