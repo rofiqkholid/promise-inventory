@@ -71,15 +71,35 @@ class StoController extends Controller
                     $period .= ' - ' . $event->period_end->format('d M Y');
                 }
 
-                $statusClass = $event->status === 'OPEN' 
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                $statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                if ($event->status === 'OPEN') {
+                    $statusClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+                } elseif ($event->status === 'WAITING CHECK') {
+                    $statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+                } elseif ($event->status === 'WAITING APPROVAL') {
+                    $statusClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+                }
                 
-                $statusBadge = '<span class="px-2 py-1 text-xs rounded-full whitespace-nowrap ' . $statusClass . '">' . $event->status . '</span>';
+                $statusBadge = '<span class="px-2 py-1 text-xs rounded-full whitespace-nowrap ' . $statusClass . '">' . str_replace('_', ' ', $event->status) . '</span>';
                 
-                $actionBtn = $event->status === 'OPEN' 
-                    ? '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-list-check"></i> Manage</a>'
-                    : '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm" style="background-color: #334155; color: white;"><i class="fa-solid fa-eye"></i> View</a>';
+                $actionBtn = '';
+                if ($event->status === 'OPEN') {
+                    $label = 'Manage';
+                    $btnClass = 'bg-blue-600 hover:bg-blue-700';
+                    $icon = 'fa-list-check';
+                    if ($event->rejection_note) {
+                        $label = 'Fix Data';
+                        $btnClass = 'bg-red-600 hover:bg-red-700';
+                        $icon = 'fa-circle-exclamation';
+                    }
+                    $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 ' . $btnClass . ' text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid ' . $icon . '"></i> ' . $label . '</a>';
+                } elseif ($event->status === 'WAITING CHECK') {
+                    $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-magnifying-glass"></i> Verify</a>';
+                } elseif ($event->status === 'WAITING APPROVAL') {
+                    $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-check-double"></i> Approve</a>';
+                } else {
+                     $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-eye"></i> View</a>';
+                }
 
                 return [
                     $rowNumber++,
@@ -100,9 +120,8 @@ class StoController extends Controller
             ]);
         }
 
-        $events = StoEvent::with('pic')->orderBy('created_at', 'desc')->get(); // Fallback for initial load if needed, but DataTable will call AJAX
-        $pics = \App\Models\User::orderBy('name')->get();
-        return view('inventory.sto.index', compact('events', 'pics'));
+        $events = StoEvent::with('pic')->orderBy('created_at', 'desc')->get();
+        return view('inventory.sto.index', compact('events'));
     }
 
     /**
@@ -110,20 +129,13 @@ class StoController extends Controller
      */
     public function store(Request $request)
     {
-        // user_id is coming via request or handeled automatically
-        $data = $request->all();
-        if (isset($data['user_id']) && !is_numeric($data['user_id'])) {
-             // If hash id is used, decode it. Assuming User might not have hash id yet or using raw ID
-             // If User model has hash id, decode here.
-        }
-        $request->merge($data);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'period_start' => 'required|date',
-            'user_id' => 'required|exists:users,id',
             'description' => 'nullable|string',
         ]);
+
+        $validated['user_id'] = auth()->id();
 
         // Generate Code: STO-YYYY-MM-{Sequence}
         $date = now();
@@ -444,72 +456,149 @@ class StoController extends Controller
     /**
      * Finalize Event and Adjust Stock.
      */
+    /**
+     * Submit STO for Verification (Owner/Operator).
+     */
+    public function submitForCheck($id)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+        
+        if ($stoEvent->status !== 'OPEN') {
+            return back()->with('error', 'Status must be OPEN to submit for check.');
+        }
+
+        $stoEvent->status = 'WAITING CHECK';
+        $stoEvent->rejection_note = null; // Clear old rejection reason
+        $stoEvent->save();
+
+        return redirect()->route('inventory.sto.index')->with('success', 'STO Event submitted for verification.');
+    }
+
+    /**
+     * Verify STO Data (Checker).
+     */
+    public function verify($id)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+
+        if ($stoEvent->status !== 'WAITING CHECK') {
+            return back()->with('error', 'Event is not waiting for check.');
+        }
+
+        // Authorization Check
+        $user = auth()->user();
+        if (!$user->hasAppRole('checker') && !$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+             return back()->with('error', 'Unauthorized. Only Checkers or Admins can verify.');
+        }
+
+        $stoEvent->status = 'WAITING APPROVAL';
+        $stoEvent->checked_by = $user->id;
+        $stoEvent->checked_at = now();
+        $stoEvent->save();
+
+        return redirect()->route('inventory.sto.index')->with('success', 'STO Event verified. Waiting for approval.');
+    }
+
+    /**
+     * Reject STO Data (Checker/Approver).
+     */
+    public function reject(Request $request, $id)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+
+        if (!in_array($stoEvent->status, ['WAITING CHECK', 'WAITING APPROVAL'])) {
+            return back()->with('error', 'Only events waiting for check or approval can be rejected.');
+        }
+
+        $request->validate([
+            'rejection_note' => 'required|string|max:500'
+        ]);
+
+        $user = auth()->user();
+        if (!$user->hasAppRole('checker') && !$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+             return back()->with('error', 'Unauthorized.');
+        }
+        
+        $stoEvent->status = 'OPEN';
+        $stoEvent->rejection_note = $request->rejection_note;
+        
+        // Reset approval timestamps if they were set
+        if ($stoEvent->status === 'WAITING APPROVAL') {
+             $stoEvent->checked_by = null;
+             $stoEvent->checked_at = null;
+        }
+        
+        $stoEvent->save();
+
+        return redirect()->route('inventory.sto.index')->with('success', 'STO Event rejected and sent back to OPEN status.');
+    }
+
+    /**
+     * Finalize Event and Adjust Stock (Approver).
+     */
     public function finalize($id)
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        if ($stoEvent->status === 'CLOSED') {
-             return redirect()->route('inventory.sto.index')->with('error', 'Event is already closed.');
+        if ($stoEvent->status !== 'WAITING APPROVAL') {
+             return back()->with('error', 'Event is not waiting for approval.');
+        }
+
+        // Authorization Check
+        $user = auth()->user();
+        if (!$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+             return back()->with('error', 'Unauthorized. Only Approvers or Admins can finalize.');
         }
 
         // Validation: Check if there are any counted items
         $totalItems = StoDetail::where('event_id', $stoEvent->id)->count();
         if ($totalItems === 0) {
-            return back()->with('error', 'Cannot finalize empty STO event. Please count at least one item.');
+            return back()->with('error', 'Cannot finalize empty STO event.');
         }
 
         try {
             DB::beginTransaction();
 
             $stoEvent->status = 'CLOSED';
+            $stoEvent->approved_by = $user->id;
+            $stoEvent->approved_at = now();
             $stoEvent->period_end = now();
             $stoEvent->save();
 
-            // Process Adjustments - Directly update stock based on diff_qty
+            // Process Adjustments
             $details = StoDetail::where('event_id', $stoEvent->id)
-                ->where('is_adjusted', 0) // Only process unadjusted lines
+                ->where('is_adjusted', 0)
                 ->get(); 
 
             $count = 0;
             $errors = [];
 
             foreach ($details as $detail) {
-                // Use the already calculated diff_qty from the detail record
                 $diff = $detail->diff_qty;
                 
-                // Skip if no difference
                 if ($diff == 0) {
                     $detail->is_adjusted = true;
                     $detail->save();
                     continue;
                 }
 
-                // Update Master Stock directly
                 $product = InventoryProduct::find($detail->product_detail_id);
                 if ($product) {
-                    // diff_qty is already signed (positive = add, negative = subtract)
                     $product->current_stock_qty += $diff;
                     $product->save();
                     
-                    // Mark as adjusted
                     $detail->is_adjusted = true;
                     $detail->save();
                     
                     $count++;
                 } else {
-                    // Log error but continue processing
                     $errors[] = "Product ID {$detail->product_detail_id} not found";
                 }
             }
 
             DB::commit();
             
-            $message = "STO Event finalized. Stock updated for {$count} items.";
-            if (!empty($errors)) {
-                $message .= " Warnings: " . implode(', ', $errors);
-            }
-            
-            return redirect()->route('inventory.sto.index')->with('success', $message);
+            return redirect()->route('inventory.sto.index')->with('success', "STO Event finalized by {$user->name}. Stock updated for {$count} items.");
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -518,36 +607,15 @@ class StoController extends Controller
     }
 
     /**
-     * Delete a counted item from STO detail.
-     */
-    public function deleteDetail($id, $detailId)
-    {
-        $stoEvent = StoEvent::findByHashOrFail($id);
-        
-        if ($stoEvent->status !== 'OPEN') {
-            return response()->json(['success' => false, 'message' => 'Cannot delete from closed event.'], 403);
-        }
-
-        $detail = StoDetail::findByHashOrFail($detailId);
-        
-        if ($detail->event_id !== $stoEvent->id) {
-            return response()->json(['success' => false, 'message' => 'Detail does not belong to this event.'], 403);
-        }
-
-        $detail->delete();
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Item deleted successfully.',
-            'stats' => $this->getStoStats($stoEvent)
-        ]);
-    }
-
-    /**
      * Reopen a closed STO event (Admin only).
      */
-    public function reopen($id)
+    public function reopen(Request $request, $id)
     {
+        // Reopen Logic: Only Approver
+        if (!auth()->user()->hasAppRole('approver') && !auth()->user()->hasAppRole('admin')) {
+            return back()->with('error', 'Unauthorized.');
+        }
+
         $stoEvent = StoEvent::findByHashOrFail($id);
         
         if ($stoEvent->status === 'OPEN') {
@@ -557,43 +625,39 @@ class StoController extends Controller
         try {
             DB::beginTransaction();
 
-            // Reverse stock adjustments
-            $details = StoDetail::where('event_id', $stoEvent->id)
-                ->where('is_adjusted', 1)
-                ->get();
+            // Reverse stock adjustments if CLOSED
+            if ($stoEvent->status === 'CLOSED') {
+                $details = StoDetail::where('event_id', $stoEvent->id)
+                    ->where('is_adjusted', 1)
+                    ->get();
 
-            foreach ($details as $detail) {
-                $diff = $detail->diff_qty;
-                
-                if ($diff == 0) {
-                    $detail->is_adjusted = false;
-                    $detail->save();
-                    continue;
-                }
-
-                $product = InventoryProduct::find($detail->product_detail_id);
-                if ($product) {
-                    $oldStock = $product->current_stock_qty;
-                    
-                    $product->current_stock_qty -= $diff;
-                    $product->save();
-                    
+                foreach ($details as $detail) {
+                    $diff = $detail->diff_qty;
+                    if ($diff != 0) {
+                        $product = InventoryProduct::find($detail->product_detail_id);
+                        if ($product) {
+                            $product->current_stock_qty -= $diff;
+                            $product->save();
+                        }
+                    }
                     $detail->is_adjusted = false;
                     $detail->save();
                 }
             }
 
-            // Reopen event
+            // Reset Status and Approval Fields
             $stoEvent->status = 'OPEN';
             $stoEvent->period_end = null;
+            $stoEvent->checked_by = null;
+            $stoEvent->checked_at = null;
+            $stoEvent->approved_by = null;
+            $stoEvent->approved_at = null;
             $stoEvent->save();
             
-            $stoEvent->refresh();
-
             DB::commit();
             
             return redirect()->route('inventory.sto.show', $stoEvent->hash_id)
-                ->with('success', 'STO Event reopened successfully. Stock adjustments have been reversed.');
+                ->with('success', 'STO Event reopened. Approvals reset.');
 
         } catch (\Exception $e) {
             DB::rollBack();

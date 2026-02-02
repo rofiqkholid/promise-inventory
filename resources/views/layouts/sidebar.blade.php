@@ -15,144 +15,60 @@
     <nav class="flex-1 py-4 px-3 space-y-1 custom-scrollbar"
         :class="sidebarExpanded ? 'overflow-y-auto' : 'overflow-visible'">
 
-        {{-- DASHBOARD --}}
-        <a href="{{ route('dashboard') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('dashboard') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-chart-pie w-6 text-center text-lg {{ request()->routeIs('dashboard') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}"></i>
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Dashboard</span>
+        @foreach($sidebarMenus as $menu)
+            @if($menu->children->count() > 0)
+                {{-- PARENT MENU WITH DROPDOWN --}}
+                <div x-data="{ open: {{ request()->routeIs($menu->route.'*') ? 'true' : 'false' }} }" class="relative">
+                    <button @click="open = !open; sidebarExpanded = true"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+                        {{ request()->routeIs($menu->route.'*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
+                        :class="!sidebarExpanded ? 'justify-center' : ''">
+                        
+                        <i class="{{ $menu->icon }} w-6 text-center text-lg {{ request()->routeIs($menu->route.'*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500' }}"></i>
+                        
+                        <span x-show="sidebarExpanded" class="flex-1 text-left text-sm whitespace-nowrap">{{ $menu->title }}</span>
+                        
+                        <i x-show="sidebarExpanded" class="fa-solid fa-chevron-down text-xs transition-transform duration-200" 
+                           :class="open ? 'rotate-180' : ''"></i>
 
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Dashboard
-            </div>
-        </a>
+                        {{-- Tooltip for Minimized --}}
+                        <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
+                            {{ $menu->title }}
+                        </div>
+                    </button>
 
+                    {{-- SUBMENU ITEMS --}}
+                    <div x-show="open && sidebarExpanded" x-collapse class="pl-4 space-y-1 mt-1">
+                        @foreach($menu->children as $child)
+                            <a href="{{ route($child->route) }}"
+                                class="flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm
+                                {{ request()->routeIs($child->route.'*') ? 'text-blue-600 dark:text-blue-400 font-medium bg-blue-50/50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-700/50' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs($child->route.'*') ? 'bg-blue-600 dark:bg-blue-400' : 'bg-slate-400 dark:bg-gray-600' }}"></span>
+                                <span class="whitespace-nowrap">{{ $child->title }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                {{-- SINGLE MENU ITEM --}}
+                <a href="{{ $menu->route === '#' ? '#' : route($menu->route) }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+                {{ $menu->route !== '#' && request()->routeIs($menu->route.'*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
+                    :class="!sidebarExpanded ? 'justify-center' : ''">
 
+                    <i class="{{ $menu->icon }} w-6 text-center text-lg
+                        {{ $menu->route !== '#' && request()->routeIs($menu->route.'*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}">
+                    </i>
 
-        {{-- MASTER DATA --}}
-        <a href="{{ route('inventory.master') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-   {{ request()->routeIs('inventory.master*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
+                    <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">{{ $menu->title }}</span>
 
-            <i class="fa-solid fa-database w-6 text-center text-lg
-        {{ request()->routeIs('inventory.master*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}">
-            </i>
-
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Master Data</span>
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded"
-                class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded
-                opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Master Data
-            </div>
-        </a>
-
-
-        {{-- Product--}}
-
-        <a href="{{ route('inventory.product') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('inventory.product') ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-slate-50 hover:text-slate-900' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-box w-6 text-center text-lg {{ request()->routeIs('inventory.product') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600' }}"></i>
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Product</span>
-
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Product
-            </div>
-        </a>
-        
-        {{-- VA/VE ANALYSIS --}}
-        <a href="{{ route('inventory.vave.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('inventory.vave.*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-vial w-6 text-center text-lg {{ request()->routeIs('inventory.vave.*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}"></i>
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">VA/VE Analysis</span>
-
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                VA/VE Analysis
-            </div>
-        </a>
-
-        {{-- INVENTORY TRANSACTION --}}
-
-        <a href="{{ route('inventory.transaction') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('inventory.transaction') ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-slate-50 hover:text-slate-900' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-right-left w-6 text-center text-lg {{ request()->routeIs('inventory.transaction') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600' }}"></i>
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Inventory Transaction</span>
-
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Inventory Transaction
-            </div>
-        </a>
-
-        {{-- STOCK MONITORING --}}
-
-        <a href="{{ route('inventory.stockMonitoring') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('inventory.stockMonitoring') ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-slate-50 hover:text-slate-900' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-chart-line w-6 text-center text-lg {{ request()->routeIs('inventory.stockMonitoring') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600' }}"></i>
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Stock Monitoring</span>
-
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Stock Monitoring
-            </div>
-        </a>
-
-
-        {{-- STOCK OPNAME --}}
-
-        <a href="{{ route('inventory.sto.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('inventory.sto.index') ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-slate-50 hover:text-slate-900' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-clipboard-check w-6 text-center text-lg {{ request()->routeIs('inventory.sto.*') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600' }}"></i>
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Stock Opname (STO)</span>
-
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Stock Opname (STO)
-            </div>
-        </a>
-
-
-        {{-- TRANSACTION HISTORY --}}
-        <a href="{{ route('transactionHistory') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-           {{ request()->routeIs('transactionHistory') ? 'bg-blue-50 text-blue-600 font-medium' : 'hover:bg-slate-50 hover:text-slate-900' }}"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-clock-rotate-left w-6 text-center text-lg {{ request()->routeIs('transactionHistory') ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}}">
-            </i>
-
-            <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">Transaction History</span>
-
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Transaction History
-            </div>
-        </a>
-
-        {{-- REPORTS --}}
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white"
-            :class="!sidebarExpanded ? 'justify-center' : ''">
-            <i class="fa-solid fa-file-invoice w-6 text-center text-lg text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300"></i>
-            <span x-show="sidebarExpanded" class="text-sm">Reports</span>
-            {{-- Tooltip for Minimized --}}
-            <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
-                Reports
-            </div>
-        </a>
+                    {{-- Tooltip for Minimized --}}
+                    <div x-show="!sidebarExpanded" class="absolute left-full top-2 ml-2 bg-slate-800 dark:bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none whitespace-nowrap">
+                        {{ $menu->title }}
+                    </div>
+                </a>
+            @endif
+        @endforeach
 
     </nav>
 

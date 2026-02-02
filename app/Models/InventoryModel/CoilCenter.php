@@ -27,6 +27,8 @@ class CoilCenter extends Model
     protected $fillable = [
         'code',
         'name',
+        'email',
+        'phone',
         'address',
     ];
 

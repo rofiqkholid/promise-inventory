@@ -31,6 +31,8 @@ class CoilCenterController extends Controller
             $query->where(function($q) use ($searchValue) {
                 $q->where('code', 'like', '%' . $searchValue . '%')
                   ->orWhere('name', 'like', '%' . $searchValue . '%')
+                  ->orWhere('email', 'like', '%' . $searchValue . '%')
+                  ->orWhere('phone', 'like', '%' . $searchValue . '%')
                   ->orWhere('address', 'like', '%' . $searchValue . '%');
             });
         }
@@ -66,6 +68,8 @@ class CoilCenterController extends Controller
         $validated = $request->validate([
             'code' => 'required|string|max:50|unique:inv_m_coil_center,code',
             'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
         ]);
 
@@ -97,6 +101,8 @@ class CoilCenterController extends Controller
                 Rule::unique('inv_m_coil_center')->ignore($coilCenter->id),
             ],
             'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
         ]);
 

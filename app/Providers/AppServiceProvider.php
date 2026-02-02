@@ -62,5 +62,29 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('stockAlertAutoOpen', $stockAlertAutoOpen);
             }
         });
+
+        // Sidebar Configuration - Load menus based on user role
+        \Illuminate\Support\Facades\View::composer('layouts.sidebar', function ($view) {
+            $userRole = null;
+            $sidebarMenus = collect();
+
+            if (auth()->check()) {
+                $invRole = auth()->user()->appRole->role ?? null;
+                $userRole = $invRole->code ?? null;
+                
+                if ($invRole) {
+                    $sidebarMenus = $invRole->menus()
+                        ->with(['children' => function($q) {
+                             $q->where('inv_m_menus.is_active', true);
+                        }])
+                        ->whereNull('inv_m_menus.parent_id')
+                        ->where('inv_m_menus.is_active', true)
+                        ->get();
+                }
+            }
+
+            $view->with('sidebarMenus', $sidebarMenus)
+                 ->with('userRoleCode', $userRole);
+        });
     }
 }

@@ -123,7 +123,7 @@
 
             @include('layouts.header')
 
-            <main class="bg-gray-100 dark:bg-gray-900 flex-1 overflow-y-auto p-3 md:p-3 scroll-smooth">
+            <main class="bg-gray-100 dark:bg-gray-900 flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 scroll-smooth">
                 <div class="flex flex-col min-h-full">
                     @include('components.toast')
 

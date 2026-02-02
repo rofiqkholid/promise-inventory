@@ -46,4 +46,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function appRole()
+    {
+        return $this->hasOne(\App\Models\InventoryModel\UserAppRole::class, 'user_id');
+    }
+
+    public function hasAppRole($roleCode)
+    {
+        return $this->appRole && $this->appRole->role && $this->appRole->role->code === $roleCode;
+    }
+
+    public function specificMenus()
+    {
+        return $this->belongsToMany(\App\Models\InventoryModel\Menu::class, 'inv_user_menus', 'user_id', 'menu_id');
+    }
 }

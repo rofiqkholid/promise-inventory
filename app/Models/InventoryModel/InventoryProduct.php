@@ -45,6 +45,8 @@ class InventoryProduct extends Model
         'remark',
         'density',
         'weight_kg',
+        'net_weight',
+        'material_price',
     ];
 
     /**
@@ -68,6 +70,8 @@ class InventoryProduct extends Model
         'updated_at' => 'datetime',
         'density' => 'float',
         'weight_kg' => 'float',
+        'net_weight' => 'float',
+        'material_price' => 'float',
     ];
 
     /**

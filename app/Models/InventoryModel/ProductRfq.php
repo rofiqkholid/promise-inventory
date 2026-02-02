@@ -26,6 +26,8 @@ class ProductRfq extends Model
      */
     protected $fillable = [
         'product_id',
+        'rfq_name',
+        'is_active',
         'material_spec_id',
         'unit_id',
         'thickness',
@@ -35,6 +37,8 @@ class ProductRfq extends Model
         'pitch',
         'density',
         'weight_kg',
+        'net_weight',
+        'material_price',
         'remark',
     ];
 
@@ -44,6 +48,7 @@ class ProductRfq extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'is_active' => 'boolean',
         'thickness' => 'float',
         'width' => 'float',
         'length' => 'float',
@@ -51,6 +56,8 @@ class ProductRfq extends Model
         'pitch' => 'float',
         'density' => 'float',
         'weight_kg' => 'float',
+        'net_weight' => 'float',
+        'material_price' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

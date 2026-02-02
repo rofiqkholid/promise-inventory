@@ -6,10 +6,10 @@
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-6">
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Inventory Master Data</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage inventory master data.</p>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Inventory Master Data</h2>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage all system master data configurations.</p>
         </div>
     </div>
 
@@ -39,9 +39,7 @@
                     <!-- <button data-tab="transaction-category" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
                         Transaction Category
                     </button> -->
-                    <button data-tab="pic" role="tab" aria-selected="false" class="tab-button segmented-btn rounded-md py-2 px-4 text-sm font-medium border-transparent text-gray-700 dark:text-gray-300 relative z-10">
-                        PIC
-                    </button>
+
                 </div>
             </nav>
         </div>
@@ -50,18 +48,18 @@
     {{-- Tab Content: Coil Center --}}
     <div id="tab-coil-center" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition ease-in-out duration-150" data-target="coil-center">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="coil-center">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
         <x-table id="coilCenterTable">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th scope="col" class="px-6 py-3 w-16">No</th>
-                    <th scope="col" class="px-6 py-3">Code</th>
-                    <th scope="col" class="px-6 py-3">Name</th>
-                    <th scope="col" class="px-6 py-3">Address</th>
-                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                    <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Code</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Name</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Address</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -71,17 +69,17 @@
     {{-- Tab Content: Material Spec --}}
     <div id="tab-material-spec" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="material-spec">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="material-spec">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
         <x-table id="materialSpecTable">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th scope="col" class="px-6 py-3 w-16">No</th>
-                    <th scope="col" class="px-6 py-3">Spec Name</th>
-                    <th scope="col" class="px-6 py-3">Coating Type</th>
-                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                    <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Spec Name</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Coating Type</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -91,17 +89,17 @@
     {{-- Tab Content: Unit --}}
     <div id="tab-unit" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="unit">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="unit">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
         <x-table id="unitTable">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th scope="col" class="px-6 py-3 w-16">No</th>
-                    <th scope="col" class="px-6 py-3">Code</th>
-                    <th scope="col" class="px-6 py-3">Name</th>
-                    <th scope="col" class="px-6 py-3 text-center">Action</th>
+                    <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Code</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Name</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -111,18 +109,18 @@
     {{-- Tab Content: Rank --}}
     <div id="tab-rank" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="rank">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="rank">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
         <x-table id="rankTable">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th scope="col" class="px-6 py-3 w-16">No</th>
-                    <th scope="col" class="px-6 py-3">Code</th>
-                    <th scope="col" class="px-6 py-3">Limit Value</th>
-                    <th scope="col" class="px-6 py-3">Description</th>
-                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                    <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Code</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Limit Value</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Description</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -132,19 +130,19 @@
     {{-- Tab Content: Supplier --}}
     <div id="tab-supplier" class="tab-content hidden">
         <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="supplier">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="supplier">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
         <x-table id="supplierTable">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
+            <thead class="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                    <th scope="col" class="px-6 py-3 w-16">No</th>
-                    <th scope="col" class="px-6 py-3">Code</th>
-                    <th scope="col" class="px-6 py-3">Name</th>
-                    <th scope="col" class="px-6 py-3">Email</th>
-                    <th scope="col" class="px-6 py-3">Phone</th>
-                    <th scope="col" class="px-6 py-3 text-center w-[100px]">Action</th>
+                    <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Code</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Name</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Email</th>
+                    <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Phone</th>
+                    <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -154,23 +152,7 @@
     {{-- Tab Content: Transaction Category --}}
 
     {{-- Tab Content: PIC --}}
-    <div id="tab-pic" class="tab-content hidden">
-        <div class="mb-4 flex justify-end">
-            <button type="button" class="add-button inline-flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150" data-target="pic">
-                <i class="fa-solid fa-plus"></i> Add New
-            </button>
-        </div>
-        <x-table id="picTable">
-            <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
-                <tr>
-                    <th scope="col" class="px-6 py-3 w-16">No</th>
-                    <th scope="col" class="px-6 py-3">Name</th>
-                    <th scope="col" class="px-6 py-3 text-center">Action</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </x-table>
-    </div>
+
 </div>
 
 {{-- Modals will be added via separate file for brevity --}}
@@ -208,11 +190,11 @@
         color: #e2e8f0; /* slate-200 */
     }
     .segmented-tabs .segmented-btn.active {
-        color: #2563eb !important; /* blue-600 */
-        font-weight: 600 !important;
+        color: #0f172a !important; /* slate-900 */
+        font-weight: 700 !important;
     }
     .dark .segmented-tabs .segmented-btn.active {
-        color: #60a5fa !important; /* blue-400 */
+        color: #f8fafc !important; /* slate-50 */
     }
     
     #tab-highlight {

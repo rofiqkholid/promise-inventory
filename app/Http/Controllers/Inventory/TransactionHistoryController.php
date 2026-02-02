@@ -37,7 +37,8 @@ class TransactionHistoryController extends Controller
         'user',
         'transactionCategory',
         'coilCenter',
-        'supplier'
+        'supplier',
+        'destination'
     ]);
 
     /* =====================================================
@@ -150,9 +151,11 @@ class TransactionHistoryController extends Controller
             'category' => $item->transactionCategory->code ?? '-',
             'qty' => $item->qty,
             'pic_name' => $item->user->name ?? '-',
-            'origin_destination' => $item->coilCenter 
-                ? $item->coilCenter->code 
-                : ($item->supplier ? $item->supplier->code : '-'),
+            'origin_destination' => collect([
+                $item->coilCenter?->code,
+                $item->supplier?->code,
+                $item->destination?->code ? '(To: ' . $item->destination->code . ')' : null
+            ])->filter()->implode(' '),
             'remark' => $item->remark
         ];
     });

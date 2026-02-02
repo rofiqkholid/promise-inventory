@@ -14,7 +14,7 @@ class Supplier extends Model
      *
      * @var string
      */
-    protected $table = 'inv_m_suppliers';
+    protected $table = 'inv_m_supplier';
     protected $appends = ['hash_id'];
     protected $hidden = ['id'];
 

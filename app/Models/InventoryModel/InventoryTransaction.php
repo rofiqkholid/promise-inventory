@@ -25,7 +25,8 @@ class InventoryTransaction extends Model
         'user_id',
         'remark',
         'coil_center_id',
-        'supplier_id'
+        'supplier_id',
+        'destination_id'
     ];
 
     protected $casts = [
@@ -61,5 +62,10 @@ class InventoryTransaction extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class, 'supplier_id');
+    }
+
+    public function destination()
+    {
+        return $this->belongsTo(Supplier::class, 'destination_id');
     }
 }

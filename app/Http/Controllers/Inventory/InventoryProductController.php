@@ -72,6 +72,7 @@ class InventoryProductController extends Controller
                 'p.pitch',
                 'p.density',
                 'p.weight_kg',
+                'p.net_weight',
                 'p.current_stock_qty',
                 'p.trial_usage_qty',
                 'p.min_stock',
@@ -150,8 +151,7 @@ class InventoryProductController extends Controller
                 'pitch' => (float)$r->pitch,
                 'density' => (float)$r->density,
                 'weight_kg' => (float)$r->weight_kg,
-                'density' => (float)$r->density,
-                'weight_kg' => (float)$r->weight_kg,
+                'net_weight' => (float)$r->net_weight,
                 'unit' => $r->unit_code,
                 'unit_name' => $r->unit_name,
                 'rank' => $r->rank_code,
@@ -219,7 +219,15 @@ class InventoryProductController extends Controller
             ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
             ->where('p.is_delete', 0)
-            ->select('p.id', 'p.part_no', 'p.part_name', 'c.code as customer_code', 'm.name as model_name');
+            ->select('p.id', 'p.part_no', 'p.part_name', 'c.code as customer_code', 'm.name as model_name', 'p.customer_id', 'p.model_id');
+
+        if ($request->filled('customer_id')) {
+            $query->where('p.customer_id', $request->customer_id);
+        }
+
+        if ($request->filled('model_id')) {
+            $query->where('p.model_id', $request->model_id);
+        }
 
         if ($q !== '') {
             $query->where(function ($w) use ($q) {
@@ -242,6 +250,8 @@ class InventoryProductController extends Controller
             'results' => $rows->map(fn($p) => [
                 'id' => $hashids->encode($p->id),
                 'text' => "{$p->part_no} - {$p->part_name} ({$p->customer_code})",
+                'customer_id' => $p->customer_id,
+                'model_id' => $p->model_id,
             ]),
             'pagination' => ['more' => ($skip + $limit) < $total],
         ]);
@@ -299,6 +309,8 @@ class InventoryProductController extends Controller
             'pitch' => 'nullable|numeric|min:0',
             'density' => 'nullable|numeric|min:0',
             'weight_kg' => 'nullable|numeric|min:0',
+            'net_weight' => 'nullable|numeric|min:0',
+            'material_price' => 'nullable|numeric|min:0',
             'pcs_per_unit' => 'nullable|integer|min:1',
             'unit_per_car' => 'nullable|integer|min:1',
             'min_stock' => 'nullable|integer|min:0',
@@ -351,6 +363,8 @@ class InventoryProductController extends Controller
             'pitch' => 'nullable|numeric|min:0',
             'density' => 'nullable|numeric|min:0',
             'weight_kg' => 'nullable|numeric|min:0',
+            'net_weight' => 'nullable|numeric|min:0',
+            'material_price' => 'nullable|numeric|min:0',
             'pcs_per_unit' => 'nullable|integer|min:1',
             'unit_per_car' => 'nullable|integer|min:1',
             'min_stock' => 'nullable|integer|min:0',

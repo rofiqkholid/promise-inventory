@@ -24,7 +24,7 @@ class SupplierController extends Controller
         $columns = ['id', 'code', 'name', 'email', 'phone', 'promise_supp_id'];
         $orderColumn = $columns[$orderColumnIdx] ?? 'id';
 
-        $query = DB::table('inv_m_suppliers as s')
+        $query = DB::table('inv_m_supplier as s')
             ->leftJoin('suppliers as gs', 'gs.id', '=', 's.promise_supp_id')
             ->select([
                 's.id',
@@ -51,7 +51,7 @@ class SupplierController extends Controller
             });
         }
 
-        $recordsTotal = DB::table('inv_m_suppliers')->count();
+        $recordsTotal = DB::table('inv_m_supplier')->count();
         $recordsFiltered = $query->count();
 
         $data = $query->orderBy($orderColumn, $orderDir)
@@ -107,7 +107,7 @@ class SupplierController extends Controller
 
         $rules = [
             'promise_supp_id' => 'nullable|integer',
-            'code' => 'required_without:promise_supp_id|nullable|string|max:50|unique:inv_m_suppliers,code',
+            'code' => 'required_without:promise_supp_id|nullable|string|max:50|unique:inv_m_supplier,code',
             'name' => 'required_without:promise_supp_id|nullable|string|max:50',
             'email' => 'nullable|email|max:50',
             'phone' => 'nullable|string|max:20',
@@ -137,7 +137,7 @@ class SupplierController extends Controller
     {
         $supplier = Supplier::findByHashOrFail($id);
         
-        $data = DB::table('inv_m_suppliers as s')
+        $data = DB::table('inv_m_supplier as s')
             ->leftJoin('suppliers as gs', 'gs.id', '=', 's.promise_supp_id')
             ->select([
                 's.id',
@@ -182,7 +182,7 @@ class SupplierController extends Controller
 
         $rules = [
             'promise_supp_id' => 'nullable|integer',
-            'code' => 'required|string|max:50|unique:inv_m_suppliers,code,' . $supplier->id,
+            'code' => 'required|string|max:50|unique:inv_m_supplier,code,' . $supplier->id,
             'name' => 'required|string|max:50',
             'email' => 'nullable|email|max:50',
             'phone' => 'nullable|string|max:20',

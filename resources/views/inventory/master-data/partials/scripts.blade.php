@@ -25,6 +25,16 @@
                         data: 'name'
                     },
                     {
+                        data: 'email',
+                        defaultContent: '-',
+                        render: (d) => d || '-'
+                    },
+                    {
+                        data: 'phone',
+                        defaultContent: '-',
+                        render: (d) => d || '-'
+                    },
+                    {
                         data: 'address',
                         orderable: false
                     },
@@ -242,37 +252,7 @@
                     }
                 ]
             },
-            'pic': {
-                table: 'picTable',
-                dataUrl: '{{ route("inventory.pic.data") }}',
-                apiBase: '{{ url("inventory/master/pic") }}',
-                columns: [{
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1
-                    },
-                    {
-                        data: 'name'
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center',
-                        width: '100px',
-                        render: (d, t, r) => `
-                    <div class="flex items-center justify-center gap-2">
-                        <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.hash_id}" data-type="pic" title="Edit">
-                            <i class="fa-solid fa-pen-to-square text-sm"></i>
-                        </button>
-                        <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800" data-id="${r.hash_id}" data-type="pic" title="Delete">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
-                    </div>`
-                    }
-                ]
-            }
+
         };
 
         let initializedTabs = {};

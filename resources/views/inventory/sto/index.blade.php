@@ -1,101 +1,120 @@
 @extends('layouts.app')
 
+@section('title', 'Stock Opname Management')
+@section('page_title', 'Stock Opname')
+
 @section('content')
-<div class="p-4 md:p-6">
-    <div class="flex justify-between items-center mb-4 md:mb-6">
-        <h1 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white">Stock Opname (STO) Events</h1>
+<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
+    <div class="mb-6">
+        <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Stock Opname Monitor</h2>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Coordinate and track physical inventory count events.</p>
+    </div>
+
+    <div class="mb-6 p-4 bg-white dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+            <h3 class="font-bold text-gray-900 dark:text-white">Active STO Events</h3>
+            <p class="text-xs text-gray-500 font-medium">List of all scheduled and completed inventory counts.</p>
+        </div>
         @auth
-            <button onclick="document.getElementById('createEventModal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm whitespace-nowrap">
-                <i class="fa-solid fa-plus"></i> New Event
+            <button onclick="document.getElementById('createEventModal').classList.remove('hidden')" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-md transition-all shadow-sm hover:bg-slate-800 gap-2">
+                <i class="fa-solid fa-plus text-xs"></i> New Event
             </button>
         @endauth
     </div>
 
-    <!-- Stats or Info could go here -->
-
-    <!-- Events List - Responsive -->
+    <!-- Events Table -->
     <x-table id="stoEventsTable">
         <thead>
             <tr>
-                <th class="px-4 md:px-6 py-2 md:py-3 w-10 text-center">No</th>
-                <th class="px-4 md:px-6 py-2 md:py-3">Code</th>
-                <th class="px-4 md:px-6 py-2 md:py-3">Name</th>
-                <th class="px-4 md:px-6 py-2 md:py-3">Period</th>
-                <th class="px-4 md:px-6 py-2 md:py-3">Status</th>
-                <th class="px-4 md:px-6 py-2 md:py-3">PIC</th>
-                <th class="px-4 md:px-6 py-2 md:py-3 text-center">Action</th>
+                <th class="w-16">No</th>
+                <th class="text-center w-32">Event Code</th>
+                <th class="text-left">Event Name</th>
+                <th class="text-left">Counting Period</th>
+                <th class="text-center w-32">Status</th>
+                <th class="text-left">PIC</th>
+                <th class="w-40 text-center">Action</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-600">
-            {{-- Data populated via AJAX --}}
-        </tbody>
+        <tbody></tbody>
     </x-table>
+</div>
+
+<!-- Create Modal -->
+<div id="createEventModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="document.getElementById('createEventModal').classList.add('hidden')"></div>
+        
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-md text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-10 border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    <i class="fa-solid fa-calendar-plus text-blue-600"></i> Initialize STO
+                </h3>
+                <button onclick="document.getElementById('createEventModal').classList.add('hidden')" class="text-gray-400 hover:text-gray-900 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form action="{{ route('inventory.sto.store') }}" method="POST" class="p-5">
+                @csrf
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Event Name</label>
+                        <input type="text" name="name" required class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-bold" placeholder="e.g. STO Semester 1 2026">
+                    </div>
+
+                    <div>
+                        <label class="block mb-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date</label>
+                        <input type="date" name="period_start" required class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-bold" value="{{ date('Y-m-d') }}">
+                    </div>
+
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
+                        <label class="block text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1.5">Assigned PIC (Auto)</label>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center text-white text-xs font-black shadow-sm">
+                                {{ substr(auth()->user()->name, 0, 1) }}
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-black text-gray-900 dark:text-white">{{ auth()->user()->name }}</span>
+                                <span class="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">Event Creator</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block mb-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Notes / Scope (Optional)</label>
+                        <textarea name="description" rows="3" class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-medium"></textarea>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex gap-3">
+                    <button type="button" onclick="document.getElementById('createEventModal').classList.add('hidden')" class="flex-1 py-2 text-sm font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-md transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm active:scale-95 transition-all outline-none">Initialize Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
         if (window.defaultDataTable) {
             window.defaultDataTable('stoEventsTable', {
                 serverSide: true,
                 ajax: "{{ route('inventory.sto.index') }}",
                 order: [[1, 'desc']],
                 columns: [
-                    { className: 'px-4 md:px-6 py-3 md:py-4 text-center text-gray-500 font-medium', orderable: false, searchable: false },
-                    { className: 'px-4 md:px-6 py-3 md:py-4 font-medium text-gray-800 dark:text-gray-200' },
-                    { className: 'px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400' },
-                    { className: 'px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400 whitespace-nowrap' },
-                    { className: 'px-4 md:px-6 py-3 md:py-4' },
-                    { className: 'px-4 md:px-6 py-3 md:py-4 text-gray-600 dark:text-gray-400' },
-                    { className: 'px-4 md:px-6 py-3 md:py-4 text-center', orderable: false }
+                    { data: 0, className: 'text-center font-bold text-gray-400' },
+                    { data: 1, className: 'text-center font-mono text-[11px] bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800' },
+                    { data: 2, className: 'font-bold text-gray-900 dark:text-white' },
+                    { data: 3, className: 'text-sm font-medium text-gray-500' },
+                    { data: 4, className: 'text-center' },
+                    { data: 5, className: 'text-sm font-bold text-blue-600 dark:text-blue-400' },
+                    { data: 6, className: 'text-center', orderable: false }
                 ]
             });
         }
     });
 </script>
 @endpush
-
-<!-- Create Modal -->
-<div id="createEventModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-slate-900/50 transition-opacity" aria-hidden="true" onclick="document.getElementById('createEventModal').classList.add('hidden')"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative z-10" onclick="event.stopPropagation()">
-            <form action="{{ route('inventory.sto.store') }}" method="POST">
-                @csrf
-                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4" id="modal-title">Create New STO Event</h3>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Name</label>
-                        <input type="text" name="name" required class="w-full border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" placeholder="e.g. STO Semester 1 2026">
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                        <input type="date" name="period_start" required class="w-full border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500" value="{{ date('Y-m-d') }}">
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PIC (Person In Charge)</label>
-                        <select name="user_id" required class="w-full border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @foreach($pics as $p)
-                                <option value="{{ $p->id }}">{{ $p->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (Optional)</label>
-                        <textarea name="description" rows="3" class="w-full border rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
-                    </div>
-                </div>
-                <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm">Create Event</button>
-                    <button type="button" onclick="document.getElementById('createEventModal').classList.add('hidden')" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 hover:bg-gray-200 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 @endsection

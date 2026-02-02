@@ -15,133 +15,139 @@
             <div class="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 flex flex-col">
                 
                 <!-- Professional Header -->
-                <div class="px-7 py-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-slate-50/20 dark:bg-gray-800/20">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-900/10 text-rose-500 dark:text-rose-400 flex items-center justify-center border border-rose-100/50 dark:border-rose-800/30 relative overflow-hidden">
-                            <i class="fa-solid fa-triangle-exclamation text-xl relative z-10"></i>
+                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center border border-rose-100 dark:border-rose-900/30">
+                            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-slate-800 dark:text-white leading-tight tracking-tight">Stock Alerts</h3>
-                            <p class="text-xs text-slate-500 dark:text-gray-400 font-semibold tracking-wide uppercase mt-0.5">
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Stock Alerts</h3>
+                            <p class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mt-1">
                                 {{ count($stockAlerts) }} item{{ count($stockAlerts) !== 1 ? 's' : '' }} need attention
                             </p>
                         </div>
                     </div>
-                    <button type="button" id="closeStockAlert" class="w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-800 transition-all">
-                        <i class="fa-solid fa-times text-xl"></i>
+                    <button type="button" id="closeStockAlert" class="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-800 transition-all">
+                        <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
 
                 <!-- Scrollable Content -->
-                <div class="max-h-[55vh] overflow-y-auto custom-scrollbar bg-white dark:bg-gray-900">
+                <div class="max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-gray-900/50 p-4">
                     @php
                         $criticalItems = $stockAlerts->where('status', 'Critical');
                         $warningItems = $stockAlerts->where('status', 'Warning');
                     @endphp
 
-                    <div class="p-4 space-y-2">
+                    <div class="space-y-4">
                         @if(count($stockAlerts) === 0)
                             <div class="py-12 flex flex-col items-center justify-center text-center">
-                                <div class="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-900/10 text-emerald-500 flex items-center justify-center mb-4">
-                                    <i class="fa-solid fa-check-circle text-4xl"></i>
+                                <div class="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-900/10 text-emerald-500 flex items-center justify-center mb-4 border border-emerald-100 dark:border-emerald-900/30">
+                                    <i class="fa-solid fa-check text-3xl"></i>
                                 </div>
-                                <h4 class="text-lg font-bold text-slate-800 dark:text-white">All Clear!</h4>
-                                <p class="text-sm text-slate-500 dark:text-gray-400 mt-1 max-w-[200px]">
-                                    All stock levels are within safe operating ranges.
+                                <h4 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">All Clear</h4>
+                                <p class="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-[200px]">
+                                    Stock levels are within safe ranges.
                                 </p>
                             </div>
                         @else
                             @if(count($criticalItems) > 0)
-                                <div class="px-4 py-3 flex items-center gap-3">
-                                    <span class="text-[11px] font-bold uppercase tracking-[0.15em] text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 px-3 py-1 rounded-full border border-rose-100 dark:border-rose-800/30">Critical Stock</span>
-                                    <div class="h-px flex-1 bg-gradient-to-r from-rose-100 to-transparent dark:from-rose-900/30"></div>
-                                </div>
-                                @foreach($criticalItems as $item)
-                                <div class="px-5 py-4 rounded-xl bg-slate-50/50 dark:bg-gray-800/20 hover:bg-slate-100/50 dark:hover:bg-gray-800/40 transition-all border border-gray-100 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-900/30 group mb-2">
-                                    <div class="flex items-center justify-between gap-6">
-                                        <div class="min-w-0 flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <div class="text-base font-bold text-slate-800 dark:text-gray-100 truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
-                                                    {{ $item->part_no }}{{ $item->revision ? ' - ' . $item->revision : '' }}
+                                <div>
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/30 px-2 py-1 rounded border border-rose-200 dark:border-rose-800">Critical Stock</span>
+                                        <div class="h-px flex-1 bg-rose-200 dark:bg-rose-900/30"></div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach($criticalItems as $item)
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:border-rose-300 dark:hover:border-rose-700 transition-colors group">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate group-hover:text-rose-600 transition-colors">
+                                                            {{ $item->part_no }}
+                                                        </span>
+                                                        @if($item->revision)
+                                                        <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">{{ $item->revision }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
+                                                        <span class="font-bold uppercase tracking-wide">{{ $item->customer_code }}</span>
+                                                        <span class="text-slate-300 dark:text-gray-600">|</span>
+                                                        <span>{{ $item->model_name }}</span>
+                                                    </div>
                                                 </div>
-                                                <a href="{{ route('inventory.stockMonitoring') }}?search={{ $item->part_no }}" class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500 hover:text-blue-600 dark:text-blue-400 p-1" title="View Details">
-                                                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                                                </a>
-                                            </div>
-                                            <div class="flex items-center gap-3 mt-1.5">
-                                                <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800/30">{{ $item->model_name }}</span>
-                                                <span class="text-[11px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider">{{ $item->customer_code }}</span>
+                                                <div class="flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded border border-slate-100 dark:border-gray-700">
+                                                    <div class="text-right">
+                                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Stock</div>
+                                                        <div class="text-sm font-bold text-rose-600 dark:text-rose-400 tabular-nums leading-none">{{ number_format($item->current_stock_qty) }}</div>
+                                                    </div>
+                                                    <div class="w-px h-6 bg-slate-200 dark:bg-gray-600"></div>
+                                                    <div class="text-right">
+                                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Min</div>
+                                                        <div class="text-sm font-bold text-slate-700 dark:text-gray-300 tabular-nums leading-none">{{ number_format($item->min_stock) }}</div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="shrink-0">
-                                            <div class="flex items-center gap-4 px-4 py-2 bg-slate-100/30 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700">
-                                                <div class="text-center min-w-[60px]">
-                                                    <div class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-tighter mb-0.5">Stock (Pcs)</div>
-                                                    <div class="text-xl font-bold text-rose-600 dark:text-rose-400 leading-none tabular-nums">{{ number_format($item->current_stock_qty) }}</div>
-                                                </div>
-                                                <div class="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
-                                                <div class="text-center min-w-[60px]">
-                                                    <div class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-tighter mb-0.5">Min (Pcs)</div>
-                                                    <div class="text-xl font-bold text-slate-700 dark:text-gray-300 leading-none tabular-nums">{{ number_format($item->min_stock) }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                                @endforeach
                             @endif
 
                             @if(count($warningItems) > 0)
-                                <div class="pt-6 px-4 py-3 flex items-center gap-3">
-                                    <span class="text-[11px] font-bold uppercase tracking-[0.15em] text-amber-500 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full border border-amber-100 dark:border-amber-800/30">Overstock Warning</span>
-                                    <div class="h-px flex-1 bg-gradient-to-r from-amber-100 to-transparent dark:from-amber-900/30"></div>
-                                </div>
-                                @foreach($warningItems as $item)
-                                <div class="px-5 py-4 rounded-xl bg-slate-50/50 dark:bg-gray-800/20 hover:bg-slate-100/50 dark:hover:bg-gray-800/40 transition-all border border-gray-100 dark:border-gray-800 hover:border-amber-200 dark:hover:border-amber-900/30 group mb-2">
-                                    <div class="flex items-center justify-between gap-6">
-                                        <div class="min-w-0 flex-1">
-                                            <div class="flex items-center gap-2">
-                                                <div class="text-base font-bold text-slate-800 dark:text-gray-100 truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                                                    {{ $item->part_no }}{{ $item->revision ? ' - ' . $item->revision : '' }}
+                                <div class="mt-6">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded border border-amber-200 dark:border-amber-800">Overstock</span>
+                                        <div class="h-px flex-1 bg-amber-200 dark:bg-amber-900/30"></div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach($warningItems as $item)
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:border-amber-300 dark:hover:border-amber-700 transition-colors group">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate group-hover:text-amber-600 transition-colors">
+                                                            {{ $item->part_no }}
+                                                        </span>
+                                                        @if($item->revision)
+                                                        <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">{{ $item->revision }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
+                                                        <span class="font-bold uppercase tracking-wide">{{ $item->customer_code }}</span>
+                                                        <span class="text-slate-300 dark:text-gray-600">|</span>
+                                                        <span>{{ $item->model_name }}</span>
+                                                    </div>
                                                 </div>
-                                                <a href="{{ route('inventory.stockMonitoring') }}?search={{ $item->part_no }}" class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-500 hover:text-blue-600 dark:text-blue-400 p-1" title="View Details">
-                                                    <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
-                                                </a>
-                                            </div>
-                                            <div class="flex items-center gap-3 mt-1.5">
-                                                <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded border border-blue-100 dark:border-blue-800/30">{{ $item->model_name }}</span>
-                                                <span class="text-[11px] text-slate-400 dark:text-gray-500 font-bold uppercase tracking-wider">{{ $item->customer_code }}</span>
+                                                <div class="flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded border border-slate-100 dark:border-gray-700">
+                                                    <div class="text-right">
+                                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Stock</div>
+                                                        <div class="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums leading-none">{{ number_format($item->current_stock_qty) }}</div>
+                                                    </div>
+                                                    <div class="w-px h-6 bg-slate-200 dark:bg-gray-600"></div>
+                                                    <div class="text-right">
+                                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Max</div>
+                                                        <div class="text-sm font-bold text-slate-700 dark:text-gray-300 tabular-nums leading-none">{{ number_format($item->min_stock * 3) }}</div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="shrink-0">
-                                            <div class="flex items-center gap-4 px-4 py-2 bg-slate-100/30 dark:bg-gray-800/60 rounded-xl border border-gray-200 dark:border-gray-700">
-                                                <div class="text-center min-w-[60px]">
-                                                    <div class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-tighter mb-0.5">Stock (Pcs)</div>
-                                                    <div class="text-xl font-bold text-amber-600 dark:text-amber-400 leading-none tabular-nums">{{ number_format($item->current_stock_qty) }}</div>
-                                                </div>
-                                                <div class="h-8 w-px bg-gray-200 dark:bg-gray-700"></div>
-                                                <div class="text-center min-w-[60px]">
-                                                    <div class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-tighter mb-0.5">Max (Pcs)</div>
-                                                    <div class="text-xl font-bold text-slate-700 dark:text-gray-300 leading-none tabular-nums">{{ number_format($item->min_stock * 3) }}</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
-                                @endforeach
                             @endif
                         @endif
                     </div>
                 </div>
 
                 <!-- Action Footer -->
-                <div class="p-8 border-t border-gray-200 dark:border-gray-800 bg-slate-50/20 dark:bg-gray-900">
-                    <button type="button" id="closeStockAlertBtn" class="w-full h-14 bg-slate-800 dark:bg-blue-600 hover:bg-slate-900 dark:hover:bg-blue-700 text-white rounded-xl font-bold text-base tracking-wide transition-all active:scale-[0.98] flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-check-circle text-lg"></i>
-                        Acknowledge & Close
+                <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md font-bold text-xs uppercase tracking-widest transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check text-sm"></i>
+                        Acknowledge
                     </button>
-                    <p class="mt-4 text-center text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em]">
-                        Promise Inventory Management
+                    <p class="mt-2 text-center text-[9px] font-bold text-slate-300 dark:text-gray-600 uppercase tracking-[0.2em]">
+                        Promise Inventory
                     </p>
                 </div>
             </div>

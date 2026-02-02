@@ -22,7 +22,7 @@ class InventoryTransactionController extends Controller
         }
         
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
-            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
+            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision', 'inv_t_product_detail.pcs_per_unit')
             ->where('inv_t_product_detail.is_active', 1)
             ->orderBy('products.part_no')
             ->get();
@@ -48,6 +48,17 @@ class InventoryTransactionController extends Controller
                 if ($decoded) $prodId = $decoded;
             }
             $query->where('product_detail_id', $prodId);
+        }
+
+        // Filter by Month & Year
+        $month = $request->input('month', date('m'));
+        $year = $request->input('year', date('Y'));
+
+        if (!empty($month)) {
+            $query->whereMonth('transaction_date', $month);
+        }
+        if (!empty($year)) {
+            $query->whereYear('transaction_date', $year);
         }
 
         // Global Search
@@ -77,7 +88,11 @@ class InventoryTransactionController extends Controller
         $perPage = $request->input('length', 10);
         $start = $request->input('start', 0);
         
-        $total = InventoryTransaction::count();
+        // Use a consistent base count for the selected period
+        $total = InventoryTransaction::whereMonth('transaction_date', $month)
+            ->whereYear('transaction_date', $year)
+            ->count();
+            
         $filtered = $query->count();
         $transactions = $query->skip($start)->take($perPage)->get();
 
@@ -123,6 +138,9 @@ class InventoryTransactionController extends Controller
         if (isset($data['supplier_id']) && !is_numeric($data['supplier_id'])) {
             $data['supplier_id'] = \App\Models\InventoryModel\Supplier::decodeHash($data['supplier_id']);
         }
+        if (isset($data['destination_id']) && !is_numeric($data['destination_id'])) {
+            $data['destination_id'] = \App\Models\InventoryModel\Supplier::decodeHash($data['destination_id']);
+        }
 
         // Replace request data
         $request->merge($data);
@@ -135,7 +153,8 @@ class InventoryTransactionController extends Controller
             'user_id' => 'required',
             'remark' => 'nullable|string',
             'coil_center_id' => 'nullable|exists:inv_m_coil_center,id',
-            'supplier_id' => 'nullable|exists:inv_m_suppliers,id',
+            'supplier_id' => 'nullable|exists:inv_m_supplier,id',
+            'destination_id' => 'nullable|exists:inv_m_supplier,id',
         ]);
 
         DB::beginTransaction();
@@ -153,6 +172,7 @@ class InventoryTransactionController extends Controller
                 'remark' => $request->remark,
                 'coil_center_id' => $request->coil_center_id,
                 'supplier_id' => $request->supplier_id,
+                'destination_id' => $request->destination_id,
             ]);
 
             // Update Stock

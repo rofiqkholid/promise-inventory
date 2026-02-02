@@ -5,34 +5,33 @@
 
 @section('content')
 <div class="dashboard-container flex-1 flex flex-col">
-    <div class="flex gap-2 mb-2 items-stretch">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 flex-1">
+    <div class="flex gap-2 mb-2 h-[68px]">
+        {{-- KPI Cards Container: flex-1 to push Filter button to right edge, min-w-0 for flex scrolling --}}
+        <div class="flex-1 min-w-0 overflow-x-auto flex flex-nowrap gap-2 scrollbar-hide h-full">
             @foreach([
-            ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50', 'id' => 'stat_total_stock'],
-            ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'id' => 'stat_material_in'],
-            ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'id' => 'stat_material_out'],
-            ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50', 'id' => 'stat_out_pp'],
-            ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50', 'id' => 'stat_out_event'],
-            ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50', 'id' => 'stat_out_trial'],
+                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50', 'bg_dark' => 'dark:bg-blue-900/20', 'border' => 'border-blue-100 dark:border-blue-800/50', 'id' => 'stat_total_stock'],
+                ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'bg_dark' => 'dark:bg-emerald-900/20', 'border' => 'border-emerald-100 dark:border-emerald-800/50', 'id' => 'stat_material_in'],
+                ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'bg_dark' => 'dark:bg-amber-900/20', 'border' => 'border-amber-100 dark:border-amber-800/50', 'id' => 'stat_material_out'],
+                ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'text-indigo-500', 'bg' => 'bg-indigo-50', 'bg_dark' => 'dark:bg-indigo-900/20', 'border' => 'border-indigo-100 dark:border-indigo-800/50', 'id' => 'stat_out_pp'],
+                ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'text-purple-500', 'bg' => 'bg-purple-50', 'bg_dark' => 'dark:bg-purple-900/20', 'border' => 'border-purple-100 dark:border-purple-800/50', 'id' => 'stat_out_event'],
+                ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50', 'bg_dark' => 'dark:bg-rose-900/20', 'border' => 'border-rose-100 dark:border-rose-800/50', 'id' => 'stat_out_trial'],
             ] as $stat)
-            <div class="stat-card flex flex-col justify-between h-full px-3 py-2 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 duration-200">
-                <div class="flex gap-2 items-center">
-                    <div class="{{ $stat['bg'] }} {{ $stat['color'] }} w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid {{ $stat['icon'] }} text-sm"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <div class="text-[10px] font-base text-slate-400 dark:text-gray-400 tracking-wide uppercase">{{ $stat['label'] }}</div>
-                        <div class="value font-bold text-lg text-slate-800 dark:text-gray-100 tracking-tight leading-tight" id="{{ $stat['id'] }}">{{ $stat['val'] }}</div>
-                    </div>
+            <div class="flex-none min-w-[180px] h-full bg-white dark:bg-gray-800 px-3 py-2 rounded-md border border-gray-100 dark:border-gray-700 flex items-center gap-3 shadow-sm hover:shadow-md transition-all flex-grow">
+                <div class="w-10 h-10 rounded-lg {{ $stat['bg'] }} {{ $stat['bg_dark'] }} border {{ $stat['border'] }} flex items-center justify-center {{ $stat['color'] }} text-base shadow-inner">
+                    <i class="fa-solid {{ $stat['icon'] }}"></i>
+                </div>
+                <div>
+                    <div class="text-[9px] font-bold {{ $stat['color'] }} uppercase tracking-[0.1em] mb-0.5">{{ $stat['label'] }}</div>
+                    <div class="text-lg font-bold text-slate-900 dark:text-white leading-none tracking-tight" id="{{ $stat['id'] }}">{{ $stat['val'] }}</div>
                 </div>
             </div>
             @endforeach
         </div>
 
-        <button id="btnToggleDashFilter" class="flex flex-col items-center justify-center gap-0.5 w-16 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-[10px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all">
+        <button id="btnToggleDashFilter" class="flex-none w-14 h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-[10px] font-bold text-slate-700 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-all uppercase tracking-wider shadow-sm flex flex-col items-center justify-center gap-0.5">
             <i class="fa-solid fa-filter text-sm"></i>
             <span>Filter</span>
-            <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-200 mt-0.5" id="filterChevron"></i>
+            <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-200" id="filterChevron"></i>
         </button>
     </div>
 
@@ -40,31 +39,31 @@
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-3 mb-2">
         <form id="filterForm">
             <div class="flex flex-col xl:flex-row gap-2 xl:items-end">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 flex-1">
-                    <div class="space-y-0.5">
-                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Period</label>
-                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 rounded h-[38px] px-2 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 flex-1">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Period</label>
+                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-medium border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-slate-900 dark:text-white rounded-md h-[38px] px-3 focus:outline-none focus:ring-2 focus:ring-slate-500 shadow-sm">
                     </div>
-                    <div class="space-y-0.5">
-                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Customer</label>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Customer</label>
                         <select id="filterCustomer" name="customer[]" class="w-full text-xs"></select>
                     </div>
-                    <div class="space-y-0.5">
-                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Model</label>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Model</label>
                         <select id="filterModel" name="model[]" class="w-full text-xs"></select>
                     </div>
-                    <div class="space-y-0.5">
-                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Balance</label>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Balance</label>
                         <select id="filterBalance" name="status_balance[]" class="w-full text-xs"></select>
                     </div>
-                    <div class="space-y-0.5">
-                        <label class="block text-[10px] uppercase font-bold text-slate-500 dark:text-gray-400">Usage</label>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Usage</label>
                         <select id="filterUsage" name="status_usage[]" class="w-full text-xs"></select>
                     </div>
                 </div>
 
                 <div class="flex gap-2 pt-2 xl:pt-0">
-                    <button type="button" id="btnReset" class="h-[30px] px-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded text-xs text-gray-700 dark:text-gray-300 transition-colors">
+                    <button type="button" id="btnReset" class="h-[38px] px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-md text-[10px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider transition-colors">
                         Reset
                     </button>
                 </div>
@@ -76,32 +75,32 @@
         <div class="col-span-12 xl:col-span-8 flex flex-col gap-2">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
                 <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
-                    <div class="flex items-center justify-between mb-0.5">
-                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Stock Status</span>
-                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Stock Status</span>
+                        <button class="text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-0 relative"><canvas id="stockStatusChart"></canvas></div>
                 </div>
                 <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
-                    <div class="flex items-center justify-between mb-0.5">
-                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Usage by Models</span>
-                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Usage by Models</span>
+                        <button class="text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-0 relative"><canvas id="usageModelChart"></canvas></div>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 flex-1 min-h-0">
                 <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
-                    <div class="flex items-center justify-between mb-0.5">
-                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Transaction Trend</span>
-                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Transaction Trend</span>
+                        <button class="text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-0 relative"><canvas id="trendlineChart"></canvas></div>
                 </div>
                 <div class="chart-card bg-white dark:bg-gray-800 p-2.5 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col relative group hover:border-blue-300 transition-colors">
-                    <div class="flex items-center justify-between mb-0.5">
-                        <span class="font-bold text-[10px] text-slate-600 dark:text-gray-300 uppercase tracking-wide">Supply by Makers (IN)</span>
-                        <button class="text-gray-300 hover:text-blue-500"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Supply by Makers (IN)</span>
+                        <button class="text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-0 relative"><canvas id="makerChart"></canvas></div>
                 </div>
@@ -113,8 +112,8 @@
             <div class="table-container bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1 min-h-0">
                 <div class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[10px]"></i>
-                        <span class="font-bold text-[10px] text-slate-700 dark:text-gray-200 uppercase tracking-wide">Balance Warnings</span>
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[12px]"></i>
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Balance Warnings</span>
                     </div>
                     @if(count($tables['balance']) > 0)
                     <span class="text-[9px] font-bold bg-rose-100 text-rose-600 px-1.5 rounded">{{ count($tables['balance']) }}</span>
@@ -124,10 +123,10 @@
                     <table class="w-full text-[10px]">
                         <thead class="bg-gray-50/50 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-sm">
                             <tr>
-                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Item</th>
-                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Cust</th>
-                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Qty</th>
-                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Status</th>
+                                <th class="py-2.5 px-3 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Item</th>
+                                <th class="py-2.5 px-3 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cust</th>
+                                <th class="py-2.5 px-3 text-right font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
+                                <th class="py-2.5 px-3 text-right font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody id="balanceTableBody" class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -140,8 +139,8 @@
                                 <td class="p-2 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
                                 <td class="p-2 text-right whitespace-nowrap">
                                     <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-gray-200">{{ number_format($row->current_stock_qty) }}</span>
-                                    <span class="text-slate-400 mx-1">/</span>
-                                    <span class="font-mono text-[9px] text-slate-500">{{ number_format($row->min_stock) }}</span>
+                                    <span class="text-slate-300 mx-1">/</span>
+                                    <span class="font-mono text-[10px] text-slate-400">{{ number_format($row->min_stock) }}</span>
                                 </td>
                                 <td class="p-2 text-right">
                                     <span class="text-[9px] font-bold {{ $row->status == 'Critical' ? 'text-rose-600' : ($row->status == 'Over' ? 'text-amber-600' : 'text-emerald-600') }}">
@@ -161,18 +160,18 @@
             <div class="table-container bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1 min-h-0">
                 <div class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-amber-500 text-[10px]"></i>
-                        <span class="font-bold text-[10px] text-slate-700 dark:text-gray-200 uppercase tracking-wide">Usage Status</span>
+                        <i class="fa-solid fa-chart-pie text-amber-500 text-[12px]"></i>
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Usage Status</span>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
                     <table class="w-full text-[10px]">
                         <thead class="bg-gray-50/50 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-sm">
                             <tr>
-                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Item</th>
-                                <th class="py-1 px-2 text-left font-semibold text-slate-500 dark:text-gray-400">Cust</th>
-                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Qty</th>
-                                <th class="py-1 px-2 text-right font-semibold text-slate-500 dark:text-gray-400">Status</th>
+                                <th class="py-2.5 px-3 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Item</th>
+                                <th class="py-2.5 px-3 text-left font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Cust</th>
+                                <th class="py-2.5 px-3 text-right font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty</th>
+                                <th class="py-2.5 px-3 text-right font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody id="usageTableBody" class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -184,8 +183,8 @@
                                 <td class="p-2 text-slate-600 dark:text-gray-400">{{ $row->customer_code }}</td>
                                 <td class="p-2 text-right whitespace-nowrap">
                                     <span class="font-mono text-[10px] font-bold text-slate-700 dark:text-gray-200">{{ number_format($row->current_stock_qty) }}</span>
-                                    <span class="text-slate-400 mx-1">/</span>
-                                    <span class="font-mono text-[9px] text-slate-500">{{ number_format($row->min_stock) }}</span>
+                                    <span class="text-slate-300 mx-1">/</span>
+                                    <span class="font-mono text-[10px] text-slate-400">{{ number_format($row->min_stock) }}</span>
                                 </td>
                                 <td class="p-2 text-right">
                                     <span class="text-[9px] font-bold {{ $row->status == 'Critical' ? 'text-rose-600' : ($row->status == 'Over' ? 'text-amber-600' : 'text-emerald-600') }}">
@@ -205,8 +204,8 @@
             <div class="table-container bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col flex-1 min-h-0">
                 <div class="py-1.5 px-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-clock-rotate-left text-blue-500 text-[10px]"></i>
-                        <span class="font-bold text-[10px] text-slate-700 dark:text-gray-200 uppercase tracking-wide">Recent Transactions</span>
+                        <i class="fa-solid fa-clock-rotate-left text-blue-500 text-[12px]"></i>
+                        <span class="font-bold text-[10px] text-slate-900 dark:text-white uppercase tracking-tight">Recent Transactions</span>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
@@ -250,6 +249,32 @@
     .select2-container--default .select2-selection--single .select2-selection__clear {
         top: 50% !important;
         transform: translateY(25%) !important;
+    }
+
+    /* Match Select2 height with other inputs (38px) */
+    .select2-container .select2-selection--single {
+        height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        border-color: #d1d5db !important; /* gray-300 */
+        border-radius: 0.375rem !important; /* rounded-md */
+    }
+    .dark .select2-container .select2-selection--single {
+        background-color: #374151 !important; /* gray-700 */
+        border-color: #4b5563 !important; /* gray-600 */
+        color: white !important;
+    }
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        padding-left: 0.75rem !important; /* px-3 */
+        font-size: 0.75rem !important; /* text-xs */
+        font-weight: 500 !important;
+        color: #0f172a !important; /* slate-900 */
+    }
+    .dark .select2-container .select2-selection--single .select2-selection__rendered {
+        color: white !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
     }
 </style>
 <script>
@@ -714,4 +739,13 @@
         }
     });
 </script>
+<style>
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
 @endpush

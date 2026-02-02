@@ -324,3 +324,208 @@ Eco Animation in Monitoring
 .animate-flow {
     animation: flowRight 2s infinite ease-in-out;
 }
+
+/* ==========================================================================
+   PREMIUM UI COMPONENTS (SELECT2, LITEPICKER, INPUTS)
+   ========================================================================== */
+
+/* --- Premium Input Utility (Matches Select2) --- */
+.premium-input {
+    height: 40px !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    /* Improved border contrast (Slate 300) */
+    background-color: #f8fafc !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    transition: all 0.2s ease;
+    outline: none !important;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    padding: 0 1rem !important;
+}
+
+.dark .premium-input {
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+    color: #94a3b8 !important;
+}
+
+.premium-input:focus {
+    border-color: #3b82f6 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .premium-input:focus {
+    background-color: #1f2937 !important;
+}
+
+/* --- Global Premium Select2 Styling --- */
+.select2-container--default .select2-selection--single {
+    height: 40px !important;
+    border-radius: 6px !important;
+    border: 1px solid #cbd5e1 !important;
+    /* Improved border contrast */
+    background-color: #f8fafc !important;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.dark .select2-container--default .select2-selection--single {
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: normal !important;
+    font-weight: 600 !important;
+    font-size: 0.8125rem !important;
+    color: #475569 !important;
+    padding-left: 0.875rem !important;
+    padding-right: 2rem !important;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #94a3b8 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 100% !important;
+    top: 0 !important;
+    right: 10px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #64748b transparent transparent transparent !important;
+    border-width: 5px 4px 0 4px !important;
+    position: static !important;
+    margin: 0 !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+    border-color: transparent transparent #64748b transparent !important;
+    border-width: 0 4px 5px 4px !important;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+    border-color: #3b82f6 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .select2-container--default.select2-container--focus .select2-selection--single,
+.dark .select2-container--default.select2-container--open .select2-selection--single {
+    background-color: #1f2937 !important;
+}
+
+/* --- Litepicker Premium Theme --- */
+.litepicker {
+    font-family: inherit !important;
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    padding: 8px !important;
+}
+
+.dark .litepicker {
+    background: #1f2937 !important;
+    color: #f1f5f9 !important;
+    border: 1px solid #374151 !important;
+}
+
+.litepicker .container__months {
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+
+.litepicker .container__months .month-item-header {
+    padding: 10px 5px !important;
+    display: flex !important;
+    justify-content: center !important;
+    gap: 5px !important;
+}
+
+.litepicker .container__months .month-item-header select {
+    appearance: none !important;
+    padding: 4px 24px 4px 10px !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #334155 !important;
+    cursor: pointer !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-position: right 4px center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.25rem 1.25rem !important;
+    width: auto !important;
+}
+
+.dark .litepicker .container__months .month-item-header select {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #e5e7eb !important;
+}
+
+.litepicker .container__months .month-item-header .month-item-name,
+.litepicker .container__months .month-item-header .month-item-year {
+    font-weight: 600 !important;
+    text-transform: none !important;
+    font-size: 13px !important;
+    letter-spacing: normal !important;
+    color: #1e293b !important;
+}
+
+.dark .litepicker .container__months .month-item-header .month-item-name,
+.dark .litepicker .container__months .month-item-header .month-item-year {
+    color: #f8fafc !important;
+}
+
+.litepicker .container__days .day-item {
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    margin: 1px !important;
+    transition: all 0.2s ease !important;
+    font-size: 12px !important;
+}
+
+.litepicker .container__days .day-item.is-start-date,
+.litepicker .container__days .day-item.is-end-date {
+    background-color: #0f172a !important;
+    /* Premium Dark Style */
+    color: #ffffff !important;
+}
+
+.dark .litepicker .container__days .day-item.is-start-date,
+.dark .litepicker .container__days .day-item.is-end-date {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+
+.litepicker .container__days .day-item.is-in-range {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.dark .litepicker .container__days .day-item.is-in-range {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+.litepicker .container__days .day-item:hover {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
