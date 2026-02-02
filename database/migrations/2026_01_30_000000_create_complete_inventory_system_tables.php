@@ -183,11 +183,11 @@ return new class extends Migration
             $table->string('revision')->nullable();
             
             // Dimensions & Specs
-            $table->float('thickness')->default(0);
-            $table->float('width')->default(0);
-            $table->float('length')->default(0);
-            $table->float('length_2')->default(0);
-            $table->float('pitch')->default(0);
+            $table->float('thickness')->nullable()->default(0);
+            $table->float('width')->nullable()->default(0);
+            $table->float('length')->nullable()->default(0);
+            $table->float('length_2')->nullable()->default(0);
+            $table->float('pitch')->nullable()->default(0);
             
             // Quantities & Calculations
             $table->integer('pcs_per_unit')->default(0);
@@ -199,10 +199,10 @@ return new class extends Migration
             $table->float('trial_usage_qty')->default(0);
             
             // Weight & Price
-            $table->float('density')->default(0);
-            $table->float('weight_kg')->default(0);
-            $table->float('net_weight')->default(0);
-            $table->decimal('material_price', 15, 2)->default(20000);
+            $table->float('density')->nullable()->default(0);
+            $table->float('weight_kg')->nullable()->default(0);
+            $table->float('net_weight')->nullable()->default(0);
+            $table->decimal('material_price', 15, 2)->nullable()->default(20000);
 
             $table->boolean('is_active')->default(true);
             $table->string('remark', 100)->nullable();

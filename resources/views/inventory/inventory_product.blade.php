@@ -69,29 +69,29 @@
                         <div class="grid gap-6 md:grid-cols-4">
                             {{-- CUSTOMER --}}
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Customer<span class="text-red-500">*</span></label>
-                                <select id="customer_id" class="select2 w-full bg-gray-50 border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Customer<span class="text-red-500">*</span></label>
+                                <select id="customer_id" class="select2 w-full bg-gray-50 border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option></option>
                                 </select>
                             </div>
 
                             {{-- MODEL --}}
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Model<span class="text-red-500">*</span></label>
-                                <select id="model_id" class="select2 w-full bg-gray-50 border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" disabled>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Model<span class="text-red-500">*</span></label>
+                                <select id="model_id" class="select2 w-full bg-gray-50 border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" disabled>
                                     <option></option>
                                 </select>
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Product Name <span class="text-red-500">*</span></label>
-                                <select name="product_id" id="product_id" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Product Name <span class="text-red-500">*</span></label>
+                                <select name="product_id" id="product_id" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Search Product...</option>
                                 </select>
                                 <p id="error-product_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Revision <span class="text-red-500">*</span></label>
-                                <select name="revision" id="revision" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Revision <span class="text-red-500">*</span></label>
+                                <select name="revision" id="revision" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Revision</option>
                                     <option value="R">R</option>
                                     <option value="R1">R1</option>
@@ -104,8 +104,8 @@
                                 <p id="error-revision" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Material Spec</label>
-                                <select name="material_spec_id" id="material_spec_id" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
+                                <select name="material_spec_id" id="material_spec_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Material Spec</option>
                                 </select>
                                 <p id="error-material_spec_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Check Input</p>
@@ -122,8 +122,8 @@
 
                         {{-- Unit Selection (First as requested) --}}
                         <div class="mb-4 max-w-sm">
-                            <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Unit <span class="text-[9px] text-gray-300 font-normal normal-case tracking-normal ml-1">(Determines visible dimensions)</span></label>
-                            <select name="unit_id" id="unit_id" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit <span class="text-[9px] text-gray-300 font-normal normal-case tracking-normal ml-1">(Determines visible dimensions)</span></label>
+                            <select name="unit_id" id="unit_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                 <option value="">Select Unit</option>
                             </select>
                             <p id="error-unit_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Check Input</p>
@@ -132,51 +132,51 @@
                         {{-- Dimensions Grid --}}
                         <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-6 bg-slate-50/50 dark:bg-gray-700/30 p-4 rounded-lg border border-slate-100 dark:border-gray-700">
                             <div class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Thickness</label>
-                                <input type="number" name="thickness" id="thickness" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Thickness</label>
+                                <input type="number" name="thickness" id="thickness" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
                                 <p id="error-thickness" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Width</label>
-                                <input type="number" name="width" id="width" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Width</label>
+                                <input type="number" name="width" id="width" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
                                 <p id="error-width" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
 
                             {{-- Dynamic Fields --}}
                             <div id="lengthContainer" class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Length</label>
-                                <input type="number" name="length" id="length" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Length</label>
+                                <input type="number" name="length" id="length" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
                                 <p id="error-length" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div id="length2Container" class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Length 2</label>
-                                <input type="number" name="length_2" id="length_2" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Length 2</label>
+                                <input type="number" name="length_2" id="length_2" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
                                 <p id="error-length_2" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div id="pitchContainer" class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Pitch</label>
-                                <input type="number" name="pitch" id="pitch" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pitch</label>
+                                <input type="number" name="pitch" id="pitch" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
                                 <p id="error-pitch" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
 
                             <div class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Density</label>
-                                <input type="number" name="density" id="density" step="0.001" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Density</label>
+                                <input type="number" name="density" id="density" step="0.001" min="0" value="7.85" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
                                 <p id="error-density" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-[0.2em]">Weight (Kg)</label>
-                                <input type="number" name="weight_kg" id="weight_kg" step="0.001" min="0" readonly class="bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold rounded-md block w-full h-10 px-3 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 cursor-not-allowed shadow-inner" placeholder="0.000">
+                                <label class="block mb-2 text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Weight (Kg)</label>
+                                <input type="number" name="weight_kg" id="weight_kg" step="0.001" min="0" readonly class="bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold rounded-md block w-full h-10 px-3 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 cursor-not-allowed" placeholder="0.000">
                                 <p id="error-weight_kg" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-[0.2em]">Net Weight (Kg)</label>
-                                <input type="number" name="net_weight" id="net_weight" step="0.001" min="0" class="bg-purple-50/50 border border-purple-200 text-purple-700 text-xs font-bold rounded-md focus:ring-purple-500 focus:border-purple-500 block w-full h-10 px-3 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300 shadow-sm transition-all" placeholder="0.000">
+                                <label class="block mb-2 text-[10px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Net Weight (Kg)</label>
+                                <input type="number" name="net_weight" id="net_weight" step="0.001" min="0" class="bg-purple-50/50 border border-purple-200 text-purple-700 text-xs font-bold rounded-md focus:ring-purple-500 focus:border-purple-500 block w-full h-10 px-3 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300 transition-all" placeholder="0.000">
                                 <p id="error-net_weight" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
-                                <label class="block mb-2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">Material Price</label>
-                                <input type="number" name="material_price" id="material_price" step="0.01" min="0" value="20000" class="bg-emerald-50/50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300 shadow-sm transition-all" placeholder="0.00">
+                                <label class="block mb-2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Material Price</label>
+                                <input type="number" name="material_price" id="material_price" step="0.01" min="0" value="20000" class="bg-emerald-50/50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300 transition-all" placeholder="0.00">
                                 <p id="error-material_price" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                         </div>
@@ -190,30 +190,30 @@
                         </h4>
                         <div class="grid gap-6 md:grid-cols-4">
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Rank</label>
-                                <select name="rank_id" id="rank_id" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Rank</label>
+                                <select name="rank_id" id="rank_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Rank</option>
                                 </select>
                                 <p id="error-rank_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Pcs per Unit</label>
-                                <input type="number" name="pcs_per_unit" id="pcs_per_unit" min="1" value="1" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs per Unit</label>
+                                <input type="number" name="pcs_per_unit" id="pcs_per_unit" min="1" value="1" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                 <p id="error-pcs_per_unit" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Unit per Car</label>
-                                <input type="number" name="unit_per_car" id="unit_per_car" min="1" value="1" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit per Car</label>
+                                <input type="number" name="unit_per_car" id="unit_per_car" min="1" value="1" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                 <p id="error-unit_per_car" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Min Stock</label>
-                                <input type="number" name="min_stock" id="min_stock" min="0" value="0" readonly class="bg-gray-100 border border-slate-200 text-gray-500 text-xs font-bold rounded-md focus:outline-none block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed shadow-inner">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Min Stock</label>
+                                <input type="number" name="min_stock" id="min_stock" min="0" value="0" readonly class="bg-gray-100 border border-slate-200 text-gray-500 text-xs font-bold rounded-md focus:outline-none block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white cursor-not-allowed">
                                 <p id="error-min_stock" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="md:col-span-4">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Remark</label>
-                                <textarea name="remark" id="remark" rows="1" class="block w-full text-xs font-medium text-gray-900 bg-white rounded-md border border-slate-200 focus:ring-slate-500 focus:border-slate-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all placeholder-gray-300 py-3 px-3 min-h-[42px]" placeholder="Optional notes..."></textarea>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Remark</label>
+                                <textarea name="remark" id="remark" rows="1" class="block w-full text-xs font-medium text-gray-900 bg-white rounded-md border border-slate-200 focus:ring-slate-500 focus:border-slate-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-gray-300 py-3 px-3 min-h-[42px]" placeholder="Optional notes..."></textarea>
                                 <p id="error-remark" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                         </div>
@@ -221,10 +221,10 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-100 rounded-md border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all hover:shadow-md active:scale-[0.98]">
+                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-100 rounded-md border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all">
                         Cancel
                     </button>
-                    <button type="submit" class="text-white bg-slate-900 hover:bg-slate-800 focus:ring-4 focus:outline-none focus:ring-slate-200 font-bold rounded-md text-[10px] uppercase tracking-widest px-6 py-3 text-center transition-all shadow-md active:scale-[0.98]">
+                    <button type="submit" class="text-white bg-slate-900 hover:bg-slate-800 focus:ring-4 focus:outline-none focus:ring-slate-200 font-bold rounded-md text-[10px] uppercase tracking-widest px-6 py-3 text-center transition-all">
                         <i class="fa-solid fa-save mr-1.5"></i> Save Product
                     </button>
                 </div>
@@ -261,8 +261,8 @@
         let dropdownData = {};
         let isEditMode = false;
 
-        function initCustomerModelSelect2() {
-            $('#customer_id, #model_id').select2({
+        function initFormSelect2() {
+            $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id').select2({
                 dropdownParent: $('#formModal'),
                 width: '100%',
                 placeholder: 'Select...',
@@ -582,7 +582,7 @@
 
         // Add button
         $('#add-button').on('click', function() {
-            initCustomerModelSelect2();
+            initFormSelect2();
             loadCustomers();
             isEditMode = false;
             $('#modalTitle').text('Add Inventory Product');
@@ -592,7 +592,7 @@
             $('#pcs_per_unit').val(1);
             $('#unit_per_car').val(1);
             $('#min_stock').val(90);
-            $('#density').val('');
+            $('#density').val('7.85');
             $('#weight_kg').val('');
             $('#net_weight').val('');
             $('#material_price').val('20000');

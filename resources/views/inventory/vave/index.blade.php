@@ -11,16 +11,16 @@
     </div>
 
     {{-- Filter Card --}}
-    <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
+    <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-lg border border-slate-200 dark:border-gray-700">
         <div class="flex flex-col md:flex-row items-end gap-5">
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Customer</label>
+                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Customer</label>
                 <select id="filterCustomer" class="select2-simple w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     <option value="">All Customers</option>
                 </select>
             </div>
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Model</label>
+                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Model</label>
                 <select id="filterModel" class="select2-simple w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     <option value="">All Models</option>
                 </select>
@@ -30,7 +30,7 @@
                     <i class="fa-solid fa-rotate-left"></i> Reset
                 </button>
                 <div class="hidden md:block h-8 w-px bg-gray-100 dark:bg-gray-700 mx-1"></div>
-                <button type="button" id="btnExportSummary" class="flex-1 md:flex-none inline-flex items-center justify-center px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-widest rounded-md transition-all shadow-md gap-2 active:scale-[0.98]">
+                <button type="button" id="btnExportSummary" class="flex-1 md:flex-none inline-flex items-center justify-center px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-widest rounded-md transition-all gap-2">
                     <i class="fa-solid fa-file-excel text-sm"></i> Export Summary
                 </button>
             </div>
@@ -58,7 +58,7 @@
 {{-- RFQ Management Modal --}}
 <div id="rfqModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 backdrop-blur-sm">
     <div class="relative p-4 w-full max-w-4xl h-full md:h-auto">
-        <div class="relative bg-white rounded-lg shadow-xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
+        <div class="relative bg-white rounded-lg border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
             <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -76,19 +76,19 @@
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <div class="p-8">
                         {{-- Version Management Toolbar --}}
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 p-1 bg-white dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 p-1 bg-white dark:bg-gray-700/50 rounded-lg border border-slate-200 dark:border-gray-700">
                             <div class="flex-[2] p-3">
-                                <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">
                                     Baseline Version
                                 </label>
                                 <div class="flex gap-2">
-                                    <select id="rfq_history_select" class="flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                    <select id="rfq_history_select" class="select2-rfq flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                         <option value="">-- Load/Select Version --</option>
                                     </select>
-                                    <button type="button" id="btn_new_baseline" class="py-2 px-4 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none dark:bg-gray-800 dark:text-blue-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden shadow-sm transition-all uppercase tracking-wider" title="Create New Draft">
+                                    <button type="button" id="btn_new_baseline" class="py-2 px-4 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none dark:bg-gray-800 dark:text-blue-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-wider" title="Create New Draft">
                                         <i class="fa-solid fa-plus mr-1"></i> New
                                     </button>
-                                    <button type="button" id="btn_delete_baseline" class="py-2 px-4 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none dark:bg-gray-800 dark:text-red-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden shadow-sm transition-all uppercase tracking-wider" title="Delete This Baseline">
+                                    <button type="button" id="btn_delete_baseline" class="py-2 px-4 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none dark:bg-gray-800 dark:text-red-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-wider" title="Delete This Baseline">
                                         <i class="fa-solid fa-trash-can mr-1"></i> Delete
                                     </button>
                                 </div>
@@ -108,36 +108,36 @@
                             {{-- Identity & Context --}}
                             <div class="space-y-6">
                                 <div>
-                                    <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Baseline Name</label>
-                                    <input type="text" name="rfq_name" id="rfq_name" placeholder="e.g. Baseline Primary" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Baseline Name</label>
+                                    <input type="text" name="rfq_name" id="rfq_name" placeholder="e.g. Baseline Primary" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     
                                     <input type="hidden" name="is_active" value="1">
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Material Spec</label>
-                                        <select name="material_spec_id" id="rfq_material_spec_id" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
+                                        <select name="material_spec_id" id="rfq_material_spec_id" class="select2-rfq bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                             <option value="">Select Spec</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Unit Type</label>
-                                        <select name="unit_id" id="rfq_unit_id" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all">
+                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit Type</label>
+                                        <select name="unit_id" id="rfq_unit_id" class="select2-rfq bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                             <option value="">Select Unit</option>
                                         </select>
                                     </div>
                                 </div>
                                 
                                 <div class="space-y-2">
-                                    <label for="remark" class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Remark / Notes</label>
-                                    <textarea name="remark" id="remark" rows="3" class="block p-3 w-full text-xs font-medium text-gray-900 bg-white rounded-md border border-slate-200 focus:ring-slate-500 focus:border-slate-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all placeholder-gray-300" placeholder="Optional notes..."></textarea>
+                                    <label for="remark" class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Remark / Notes</label>
+                                    <textarea name="remark" id="remark" rows="3" class="block p-3 w-full text-xs font-medium text-gray-900 bg-white rounded-md border border-slate-200 focus:ring-slate-500 focus:border-slate-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-gray-300" placeholder="Optional notes..."></textarea>
                                 </div>
                             </div>
 
                             {{-- Parameters & Calculations --}}
                             <div class="space-y-6">
-                                <div class="p-5 bg-slate-50 dark:bg-gray-700/50 rounded-lg border border-slate-200 dark:border-gray-600 shadow-sm relative">
+                                <div class="p-5 bg-slate-50 dark:bg-gray-700/50 rounded-lg border border-slate-200 dark:border-gray-600 relative">
                                     <h5 class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-4 flex items-center absolute -top-3 left-4 bg-white dark:bg-gray-800 px-2 border border-slate-100 dark:border-gray-600 rounded">
                                         <i class="fa-solid fa-ruler-combined mr-2 text-blue-500"></i>
                                         Dimensions (mm)
@@ -145,44 +145,44 @@
                                     
                                     <div class="grid grid-cols-2 gap-4 mt-2">
                                          <div>
-                                            <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Thickness</label>
-                                            <input type="number" step="0.01" name="thickness" id="rfq_thickness" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Thickness</label>
+                                            <input type="number" step="0.01" name="thickness" id="rfq_thickness" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div>
-                                            <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Width</label>
-                                            <input type="number" step="0.01" name="width" id="rfq_width" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Width</label>
+                                            <input type="number" step="0.01" name="width" id="rfq_width" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_length_container">
                                             <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]" id="label_rfq_length">Length</label>
-                                            <input type="number" step="0.01" name="length" id="rfq_length" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm" placeholder="0.00">
+                                            <input type="number" step="0.01" name="length" id="rfq_length" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_length2_container" class="hidden">
-                                            <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Length 2 (L2)</label>
-                                            <input type="number" step="0.01" name="length_2" id="rfq_length_2" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Length 2 (L2)</label>
+                                            <input type="number" step="0.01" name="length_2" id="rfq_length_2" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_pitch_container" class="hidden">
-                                            <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Pitch (mm)</label>
-                                            <input type="number" step="0.01" name="pitch" id="rfq_pitch" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pitch (mm)</label>
+                                            <input type="number" step="0.01" name="pitch" id="rfq_pitch" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Density</label>
-                                        <input type="number" step="0.001" name="density" id="rfq_density" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="7.850">
+                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Density</label>
+                                        <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
                                     </div>
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-blue-500 dark:text-blue-400 uppercase tracking-[0.2em]">Gross Weight (Kg)</label>
-                                        <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold rounded-md block w-full h-10 px-3 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 cursor-not-allowed shadow-inner" placeholder="0.000">
+                                        <label class="block mb-2 text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Gross Weight (Kg)</label>
+                                        <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold rounded-md block w-full h-10 px-3 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 cursor-not-allowed" placeholder="0.000">
                                     </div>
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Net Weight (Kg)</label>
-                                        <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm transition-all" placeholder="0.000">
+                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Net Weight (Kg)</label>
+                                        <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
                                     </div>
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-[0.2em]">Price (Rp/Kg)</label>
-                                        <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 shadow-sm transition-all" placeholder="0.00">
+                                        <label class="block mb-2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Price (Rp/Kg)</label>
+                                        <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all" placeholder="0.00">
                                     </div>
                                 </div>
                             </div>
@@ -191,10 +191,10 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-100 rounded-md border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all hover:shadow-md active:scale-[0.98]">
+                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-100 rounded-md border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all">
                         Cancel
                     </button>
-                    <button type="submit" class="text-white bg-slate-900 hover:bg-slate-800 focus:ring-4 focus:outline-none focus:ring-slate-200 font-bold rounded-md text-[10px] uppercase tracking-widest px-6 py-3 text-center transition-all shadow-md active:scale-[0.98]">
+                    <button type="submit" class="text-white bg-slate-900 hover:bg-slate-800 focus:ring-4 focus:outline-none focus:ring-slate-200 font-bold rounded-md text-[10px] uppercase tracking-widest px-6 py-3 text-center transition-all">
                         <i class="fa-solid fa-save mr-1.5"></i> Save Baseline
                     </button>
                 </div>
@@ -209,8 +209,8 @@
 {{-- Comparison Modal --}}
 <div id="comparisonModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/50 backdrop-blur-sm p-4">
     <div class="relative w-full max-w-6xl max-h-[90vh]">
-        <div class="relative text-left bg-white rounded-lg shadow-2xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-4 right-4 bg-white dark:bg-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md text-sm w-8 h-8 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-20 transition-all shadow-sm border border-gray-200 dark:border-gray-600">
+        <div class="relative text-left bg-white rounded-lg border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-4 right-4 bg-white dark:bg-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md text-sm w-8 h-8 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-20 transition-all border border-gray-200 dark:border-gray-600">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             
@@ -239,7 +239,7 @@
                         <span>Loss (Increase)</span>
                     </div>
                 </div>
-                <button type="button" class="close-modal-button w-full sm:w-auto px-8 py-3 text-[10px] font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-all shadow-md uppercase tracking-widest active:scale-[0.98]">
+                <button type="button" class="close-modal-button w-full sm:w-auto px-8 py-3 text-[10px] font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-all uppercase tracking-widest">
                     <i class="fa-solid fa-times mr-2"></i> Close Analysis
                 </button>
             </div>
@@ -348,6 +348,12 @@ $(function() {
             width: '100%',
             placeholder: 'Select...',
             allowClear: true
+        });
+
+        $('.select2-rfq').select2({
+            dropdownParent: $('#rfqModal'),
+            width: '100%',
+            placeholder: 'Select...',
         });
     }
 
