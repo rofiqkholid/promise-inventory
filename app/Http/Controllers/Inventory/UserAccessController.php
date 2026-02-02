@@ -274,6 +274,16 @@ class UserAccessController extends Controller
         return response()->json(['active_menus' => $activeMenuIds]);
     }
 
+    public function updateRoleMenu(Request $request)
+    {
+        $role = \App\Models\InventoryModel\InvRole::findOrFail($request->role_id);
+        $menuIds = $request->input('menu_ids', []);
+
+        $role->menus()->sync($menuIds);
+
+        return response()->json(['success' => true, 'message' => 'Role permissions updated.']);
+    }
+
     #Region Users Management
     public function userData(Request $request)
     {
