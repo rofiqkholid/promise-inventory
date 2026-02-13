@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\URL;
+
+
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,8 +25,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\View::composer(['layouts.header', 'components.stock-alert-modal'], function ($view) {
-            $stockAlerts = \Illuminate\Support\Facades\DB::table('inv_t_product_detail as p')
+        if (config('app.url')) {
+            URL::forceRootUrl(config('app.url'));
+        }
+
+        if (str_contains(config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+        View::composer(['layouts.header', 'components.stock-alert-modal'], function ($view) {
+            $stockAlerts = DB::table('inv_t_product_detail as p')
                 ->join('products as prod', 'prod.id', '=', 'p.product_id')
                 ->leftJoin('models as m', 'm.id', '=', 'prod.model_id')
                 ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
@@ -55,27 +68,27 @@ class AppServiceProvider extends ServiceProvider
             // Only handle auto-open for the modal component to avoid session flag being set by header
             if (str_contains($view->getName(), 'stock-alert-modal')) {
                 $stockAlertAutoOpen = false;
-                if (count($stockAlerts) > 0 && !\Illuminate\Support\Facades\Session::has('stock_alert_auto_shown')) {
+                if (count($stockAlerts) > 0 && !Session::has('stock_alert_auto_shown')) {
                     $stockAlertAutoOpen = true;
-                    \Illuminate\Support\Facades\Session::put('stock_alert_auto_shown', true);
+                    Session::put('stock_alert_auto_shown', true);
                 }
                 $view->with('stockAlertAutoOpen', $stockAlertAutoOpen);
             }
         });
 
         // Sidebar Configuration - Load menus based on user role
-        \Illuminate\Support\Facades\View::composer('layouts.sidebar', function ($view) {
+        View::composer('layouts.sidebar', function ($view) {
             $userRole = null;
             $sidebarMenus = collect();
 
             if (auth()->check()) {
                 $invRole = auth()->user()->appRole->role ?? null;
                 $userRole = $invRole->code ?? null;
-                
+
                 if ($invRole) {
                     $sidebarMenus = $invRole->menus()
-                        ->with(['children' => function($q) {
-                             $q->where('inv_m_menus.is_active', true);
+                        ->with(['children' => function ($q) {
+                            $q->where('inv_m_menus.is_active', true);
                         }])
                         ->whereNull('inv_m_menus.parent_id')
                         ->where('inv_m_menus.is_active', true)
@@ -84,7 +97,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('sidebarMenus', $sidebarMenus)
-                 ->with('userRoleCode', $userRole);
+                ->with('userRoleCode', $userRole);
         });
     }
 }
