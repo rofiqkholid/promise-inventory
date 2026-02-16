@@ -63,22 +63,36 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        // Sidebar Configuration - Load menus based on user role
+        // Sidebar Configuration - Load menus based on user role & specific user permissions
         \Illuminate\Support\Facades\View::composer('layouts.sidebar', function ($view) {
             $userRole = null;
             $sidebarMenus = collect();
 
             if (auth()->check()) {
-                $invRole = auth()->user()->appRole->role ?? null;
+                $user = auth()->user();
+                $invRole = $user->appRole->role ?? null;
                 $userRole = $invRole->code ?? null;
                 
-                if ($invRole) {
-                    $sidebarMenus = $invRole->menus()
-                        ->with(['children' => function($q) {
-                             $q->where('inv_m_menus.is_active', true);
+                // Get menu IDs from role
+                $roleMenuIds = $invRole ? $invRole->menus()->pluck('inv_m_menus.id')->toArray() : [];
+                // Get menu IDs from specific user permissions
+                $specificMenuIds = $user->specificMenus()->pluck('inv_m_menus.id')->toArray();
+                
+                $allowedMenuIds = array_unique(array_merge($roleMenuIds, $specificMenuIds));
+
+                if (!empty($allowedMenuIds)) {
+                    $sidebarMenus = \App\Models\InventoryModel\Menu::where('is_active', true)
+                        ->whereNull('parent_id')
+                        ->where(function($query) use ($allowedMenuIds) {
+                            $query->whereIn('id', $allowedMenuIds)
+                                  ->orWhereHas('children', function($q) use ($allowedMenuIds) {
+                                      $q->whereIn('id', $allowedMenuIds)->where('is_active', true);
+                                  });
+                        })
+                        ->with(['children' => function($q) use ($allowedMenuIds) {
+                            $q->whereIn('id', $allowedMenuIds)->where('is_active', true);
                         }])
-                        ->whereNull('inv_m_menus.parent_id')
-                        ->where('inv_m_menus.is_active', true)
+                        ->orderBy('order')
                         ->get();
                 }
             }
