@@ -187,7 +187,7 @@ class UserAccessController extends Controller
         
         $activeMenuIds = array_unique(array_merge($specificMenuIds, $roleMenuIds));
 
-        return response()->json(['active_menus' => $activeMenuIds]);
+        return response()->json(['active_menus' => array_values($activeMenuIds)]);
     }
 
     public function updateUserMenu(Request $request)
@@ -271,7 +271,7 @@ class UserAccessController extends Controller
         $role = \App\Models\InventoryModel\InvRole::with('menus')->findOrFail($roleId);
         $activeMenuIds = $role->menus->pluck('id')->toArray();
 
-        return response()->json(['active_menus' => $activeMenuIds]);
+        return response()->json(['active_menus' => array_values($activeMenuIds)]);
     }
 
     public function updateRoleMenu(Request $request)

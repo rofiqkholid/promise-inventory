@@ -505,7 +505,8 @@
             $('#permissionModalTitle').text('User Specific Menu');
             $('.menu-checkbox').prop('checked', false);
             $.get("{{ url('inventory/user-menus') }}/" + id, function(data) {
-                data.active_menus.forEach(menuId => $(`.menu-checkbox[value="${menuId}"]`).prop('checked', true));
+                const menus = Array.isArray(data.active_menus) ? data.active_menus : Object.values(data.active_menus || {});
+                menus.forEach(menuId => $(`.menu-checkbox[value="${menuId}"]`).prop('checked', true));
                 $('#permissionModal').removeClass('hidden').addClass('flex');
             });
         });
@@ -530,7 +531,8 @@
             $('#permissionModalTitle').text('Role Basic Menu');
             $('.menu-checkbox').prop('checked', false);
             $.get("{{ url('inventory/role-menus') }}/" + id, function(data) {
-                data.active_menus.forEach(menuId => $(`.menu-checkbox[value="${menuId}"]`).prop('checked', true));
+                const menus = Array.isArray(data.active_menus) ? data.active_menus : Object.values(data.active_menus || {});
+                menus.forEach(menuId => $(`.menu-checkbox[value="${menuId}"]`).prop('checked', true));
                 $('#permissionModal').removeClass('hidden').addClass('flex');
             });
         });
@@ -622,7 +624,7 @@
         });
     }
 
-    function openAddUserRoleModal() { $('#addUserRoleForm')[0].reset(); $('#user_allocation_id, #edit_mode_user_id').val(''); $('#user_id_select').val(null).empty().trigger('change'); $('#residueModalTitle').html('<i class="fa-solid fa-user-plus text-blue-600"></i> New Allocation'); $('#addUserRoleModal').removeClass('hidden').addClass('flex'); }
+    function openAddUserRoleModal() { $('#addUserRoleForm')[0].reset(); $('#user_allocation_id, #edit_mode_user_id').val(''); $('#user_id_select').val(null).empty().trigger('change'); $('#addUserRoleModalTitle').html('<i class="fa-solid fa-user-plus text-blue-600"></i> New Allocation'); $('#addUserRoleModal').removeClass('hidden').addClass('flex'); }
     function openAddRoleModal() { $('#roleForm')[0].reset(); $('#role_id_input').val(''); $('#roleModalTitle').html('<i class="fa-solid fa-plus text-purple-600"></i> Add Role'); $('#roleModal').removeClass('hidden').addClass('flex'); }
     function openAddAccountModal() { $('#accountForm')[0].reset(); $('#account_id_input').val(''); $('#password_hint').hide(); $('#accountModalTitle').html('<i class="fa-solid fa-user-plus text-amber-600"></i> Add Account'); $('#accountModal').removeClass('hidden').addClass('flex'); }
     function openAddMenuModal() { $('#menuForm')[0].reset(); $('#menu_id_input').val(''); $('#menu_is_active_input').prop('checked', true); $('#menuModalTitle').html('<i class="fa-solid fa-plus text-emerald-600"></i> Add Menu Item'); $('#menuModal').removeClass('hidden').addClass('flex'); }
