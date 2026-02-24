@@ -14,6 +14,7 @@ use App\Http\Controllers\Inventory\InventoryProductController;
 use App\Http\Controllers\Inventory\InventoryTransactionController;
 use App\Http\Controllers\Inventory\StockMonitoringController;
 use App\Http\Controllers\Inventory\TransactionHistoryController;
+use App\Http\Controllers\Inventory\AutoPrController;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
@@ -25,6 +26,7 @@ Route::get('/', function () {
 
 Route::post('/login', [AuthController::class, 'login'])->name('login_post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/forget', [AuthController::class, 'forgetPassword'])->name('forget_password');
 
 // Inventory System Routes (Role-based)
 Route::middleware(['auth', 'inventory.role'])->group(function () {
@@ -157,6 +159,12 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/comparison/{id}/export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportExcel'])->name('export');
         Route::get('/summary-export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
         Route::delete('/rfq/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyRfq'])->name('destroyRfq');
+    });
+
+    // Auto PR (Admin, Approver, Checker)
+    Route::middleware(['inventory.role:admin,approver,checker'])->prefix('inventory/auto-pr')->name('inventory.autoPr.')->group(function () {
+        Route::get('/', [AutoPrController::class, 'index'])->name('index');
+        Route::get('/data', [AutoPrController::class, 'data'])->name('data');
     });
 
     // Transaction History (Admin, Approver, Checker)

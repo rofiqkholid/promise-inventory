@@ -192,6 +192,9 @@
                     Login
                 </button>
             </div>
+            <div>
+                <a href="{{ route('forget_password') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">Forget Password?</a>
+            </div>
 
             <div class="divider"><span>or</span></div>
 

@@ -64,4 +64,9 @@ class AuthController extends Controller
 
         return redirect('/')->with('success', 'Anda telah logout');
     }
+
+    public function forgetPassword()
+    {
+        return view('forget_password');
+    }
 }
