@@ -147,17 +147,17 @@ return new class extends Migration
             $table->integer('unit_id')->nullable();
             
             // Dimensions (Float to match system standard)
-            $table->float('thickness')->default(0);
-            $table->float('width')->default(0);
-            $table->float('length')->default(0);
-            $table->float('length_2')->default(0);
-            $table->float('pitch')->default(0);
+            $table->float('thickness')->default(0)->nullable();
+            $table->float('width')->default(0)->nullable();
+            $table->float('length')->default(0)->nullable();
+            $table->float('length_2')->default(0)->nullable();
+            $table->float('pitch')->default(0)->nullable();
             
             // Weights & Price
-            $table->float('density')->default(0);
+            $table->float('density')->default(0)->nullable();
             $table->float('weight_kg')->default(0);
-            $table->float('net_weight')->default(0);
-            $table->decimal('material_price', 15, 2)->default(20000); // 15,2 for currency precision
+            $table->float('net_weight')->default(0)->nullable();
+            $table->decimal('material_price', 15, 2)->default(20000)->nullable(); // 15,2 for currency precision
             
             $table->string('remark', 100)->nullable();
             $table->timestamps();
