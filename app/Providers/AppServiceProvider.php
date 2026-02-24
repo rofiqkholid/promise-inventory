@@ -77,7 +77,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Sidebar Configuration - Load menus based on user role & specific user permissions
-        \Illuminate\Support\Facades\View::composer('layouts.sidebar', function ($view) {
+        View::composer('layouts.sidebar', function ($view) {
             $userRole = null;
             $sidebarMenus = collect();
 

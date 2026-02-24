@@ -56,24 +56,31 @@ class InventoryMenuSeeder extends Seeder
                 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']
             ],
             [
+                'title' => 'Auto PR',
+                'route' => 'inventory.autoPr.index',
+                'icon' => 'fa-solid fa-receipt',
+                'order' => 7,
+                'roles' => ['admin', 'approver', 'checker']
+            ],
+            [
                 'title' => 'Stock Opname (STO)',
                 'route' => 'inventory.sto.index',
                 'icon' => 'fa-solid fa-clipboard-check',
-                'order' => 7,
+                'order' => 8,
                 'roles' => ['admin', 'approver', 'checker', 'operator']
             ],
             [
                 'title' => 'Transaction History',
                 'route' => 'transactionHistory',
                 'icon' => 'fa-solid fa-clock-rotate-left',
-                'order' => 8,
+                'order' => 9,
                 'roles' => ['admin', 'approver', 'checker']
             ],
             [
                 'title' => 'User Access',
                 'route' => 'inventory.userAccess.index',
                 'icon' => 'fa-solid fa-users-gear',
-                'order' => 9,
+                'order' => 10,
                 'roles' => ['admin', 'approver']
             ],
         ];

@@ -94,10 +94,15 @@
                                 </div>
                             </div>
                             <div class="hidden md:block w-px bg-gray-200 h-16 mx-2"></div>
-                            <div class="flex-1 p-3 flex flex-col md:items-end justify-center">
-                                <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-2">Latest Inventory Revision</span>
-                                <div id="latest_rev_display" class="text-xs font-bold text-slate-700 dark:text-gray-300 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 w-full md:w-auto text-center min-w-[200px]">
-                                    -
+                            <div class="flex-1 p-2 flex flex-col md:items-end justify-center">
+                                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Latest Inventory Baseline</span>
+                                <div class="flex flex-col gap-1 w-full md:w-auto min-w-[220px]">
+                                    <div id="latest_rev_display" class="text-[10px] font-bold text-slate-700 dark:text-gray-200 px-3 py-1 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 text-center">
+                                        -
+                                    </div>
+                                    <div id="latest_dim_display" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 px-3 py-1 bg-blue-50/30 dark:bg-blue-900/10 rounded border border-blue-100/50 dark:border-blue-800/50 text-center">
+                                        -
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -500,10 +505,6 @@ $(function() {
             if (window.latestRevision.unit) {
                 $('#rfq_unit_id').val(window.latestRevision.unit.hash_id).trigger('change');
             }
-            
-            window.showToast('Specs auto-filled from inventory. Dimensions ready for input.', 'info');
-        } else {
-             window.showToast('Please define baseline parameters.', 'info');
         }
         
         calculateRfqWeight(); // Should result in 0
@@ -550,6 +551,7 @@ $(function() {
         $('#btn_new_baseline').addClass('hidden');
         $('#btn_delete_baseline').addClass('hidden');
         $('#latest_rev_display').text('Loading...');
+        $('#latest_dim_display').text('...');
         
         $.get(`{{ url('inventory/vave/rfq') }}/${id}`, function(res) {
             $('#rfqModalTitle').text(`Manage Baseline (RFQ) - ${res.product.part_no}`);
@@ -562,9 +564,25 @@ $(function() {
                  window.latestRevision = res.revisions[0];
                  const specName = window.latestRevision.material_spec ? window.latestRevision.material_spec.spec_name : 'No Spec';
                  $('#latest_rev_display').text(`${window.latestRevision.revision} (${specName})`);
+
+                 // Dimensions display - remove trailing zeros
+                 const rev = window.latestRevision;
+                 const f = (n) => +parseFloat(n || 0).toFixed(3);
+                 let dimText = `${f(rev.thickness)} x ${f(rev.width)}`;
+                 
+                 if (f(rev.pitch) > 0) {
+                     dimText += ` x P${f(rev.pitch)}`;
+                 } else if (f(rev.length_2) > 0) {
+                     dimText += ` x ${f(rev.length)} / ${f(rev.length_2)}`;
+                 } else if (f(rev.length) > 0) {
+                     dimText += ` x ${f(rev.length)}`;
+                 }
+                 
+                 $('#latest_dim_display').text(dimText);
             } else {
                  window.latestRevision = null;
                  $('#latest_rev_display').text('No Inventory Data');
+                 $('#latest_dim_display').text('-');
             }
 
             // Populate History Dropdown

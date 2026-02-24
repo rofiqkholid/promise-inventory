@@ -161,7 +161,7 @@
 
                             <div class="lg:col-span-1">
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Density</label>
-                                <input type="number" name="density" id="density" step="0.001" min="0" value="7.85" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
+                                <input type="number" name="density" id="density" step="0.001" min="0" value="7.85" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.85">
                                 <p id="error-density" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
@@ -699,7 +699,7 @@
                 $('#pcs_per_unit').val(data.pcs_per_unit);
                 $('#unit_per_car').val(data.unit_per_car);
                 $('#min_stock').val(data.min_stock);
-                $('#density').val(parseFloat(data.density || 0));
+                $('#density').val(parseFloat(data.density || 7.85));
                 $('#weight_kg').val(parseFloat(data.weight_kg || 0));
                 $('#net_weight').val(parseFloat(data.net_weight || 0));
                 $('#material_price').val(parseFloat(data.material_price || 20000));
