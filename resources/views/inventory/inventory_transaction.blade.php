@@ -135,10 +135,12 @@
                     </h3>
                     
                     <div class="flex items-center gap-2">
-                        <div class="flex items-center">
-                            <input type="month" id="filterMonthYear" value="{{ date('Y-m') }}" 
-                                onclick="this.showPicker()"
-                                class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md px-2 h-8 text-[10px] font-bold text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer shadow-sm uppercase">
+                        <div class="relative group">
+                            <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 text-[10px] pointer-events-none transition-colors z-10"></i>
+                            <input type="text" id="filter_date_range" readonly 
+                                value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
+                                class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md pl-8 pr-2 h-8 text-[10px] font-bold text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer shadow-sm uppercase w-48" 
+                                placeholder="Filter by Date">
                         </div>
                         <button id="refreshTable" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm">
                             <i class="fa-solid fa-arrows-rotate text-xs"></i>
@@ -155,6 +157,7 @@
                                 <th class="w-24 text-center font-bold uppercase tracking-wider text-[10px]">Qty</th>
                                 <th class="w-40 text-left font-bold uppercase tracking-wider text-[10px]">PIC</th>
                                 <th class="text-left font-bold uppercase tracking-wider text-[10px]">Remark</th>
+                                <th class="w-20 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -167,6 +170,123 @@
 
 {{-- Scanner Modal --}}
 @include('components.scanner-modal')
+
+{{-- Edit Transaction Modal --}}
+<div id="editTransactionModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="relative w-full max-w-lg">
+        <div class="relative bg-white rounded-md shadow-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-3">
+                    <i class="fa-solid fa-pen-nib text-blue-600"></i> Adjust Transaction
+                </h3>
+                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="editTransactionForm" class="p-6">
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="edit_id" name="id">
+
+                <div class="space-y-4">
+                    {{-- Product Selection --}}
+                    <div>
+                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Material <span class="text-red-500">*</span></label>
+                        <select name="product_detail_id" id="edit_product_detail_id" class="select2-modal" required>
+                            <option value="">Select Material...</option>
+                            @foreach($products as $product)
+                            <option value="{{ $product->hash_id }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Transaction Category --}}
+                    <div>
+                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category <span class="text-red-500">*</span></label>
+                        <select name="transaction_category_id" id="edit_transaction_category_id" class="select2-modal" required>
+                            <option value="">Select Category...</option>
+                            @foreach($categories as $category)
+                            <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}">
+                                {{ $category->name }} ({{ $category->effect == 1 ? 'IN +' : 'OUT -' }})
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    {{-- Conditional Fields --}}
+                    <div id="editCoilCenterContainer" class="hidden">
+                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Coil Center <span class="text-red-500">*</span></label>
+                        <select name="coil_center_id" id="edit_coil_center_id" class="select2-modal">
+                            <option value="">Select Coil Center...</option>
+                            @foreach($coilCenters as $cc)
+                                <option value="{{ $cc->hash_id }}">{{ $cc->code }} - {{ $cc->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div id="editOutFieldsContainer" class="grid grid-cols-2 gap-4 hidden">
+                        <div>
+                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Supplier <span class="text-red-500">*</span></label>
+                            <select name="supplier_id" id="edit_supplier_id" class="select2-modal">
+                                <option value="">Select Supplier...</option>
+                                @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->hash_id }}">{{ $supplier->code }} - {{ $supplier->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Destination <span class="text-red-500">*</span></label>
+                            <select name="destination_id" id="edit_destination_id" class="select2-modal">
+                                <option value="">Select Destination...</option>
+                                @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->hash_id }}">{{ $supplier->code }} - {{ $supplier->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Qty & Date Row --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity <span class="text-red-500">*</span></label>
+                            <input type="number" name="qty" id="edit_qty" step="1" min="1" class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-bold focus:border-blue-500 focus:ring-0 outline-none transition-all" required placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="transaction_date" id="edit_transaction_date" class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-xs font-bold focus:border-blue-500 focus:ring-0 outline-none transition-all uppercase" required>
+                        </div>
+                    </div>
+
+                    {{-- PIC Info --}}
+                    <div class="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md border border-blue-100 dark:border-blue-800/50">
+                        <label class="block mb-1.5 text-[8px] font-bold text-blue-500 uppercase tracking-widest">Registered By (PIC)</label>
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-user-shield text-blue-400"></i>
+                            <span id="edit_pic_name" class="text-xs font-medium text-gray-700 dark:text-gray-300">-</span>
+                        </div>
+                    </div>
+
+                    {{-- Remark --}}
+                    <div>
+                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Remark</label>
+                        <textarea name="remark" id="edit_remark" rows="2" class="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-normal focus:border-blue-500 focus:ring-0 outline-none transition-all" placeholder="Optional audit explanation..."></textarea>
+                    </div>
+                </div>
+
+                {{-- Action Buttons --}}
+                <div class="mt-8 flex gap-3">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all">
+                        Discard
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold rounded-md shadow-md transition-all active:scale-95 uppercase tracking-widest">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('style')
@@ -177,6 +297,17 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
     $(document).ready(function() {
+        // Pre-select product from URL if exists
+        const urlParams = new URLSearchParams(window.location.search);
+        const preSelectedProduct = urlParams.get('product');
+        if (preSelectedProduct) {
+            $('#product_detail_id').val(preSelectedProduct).trigger('change');
+            // Small delay to ensure Select2 is ready
+            setTimeout(() => {
+                $('#product_detail_id').val(preSelectedProduct).trigger('change.select2');
+            }, 100);
+        }
+
         if ($.fn.select2) {
             function formatCategory(state) {
                 if (!state.id) return state.text;
@@ -225,17 +356,15 @@
         }
 
         // DataTable
-        var table = window.defaultDataTable('recentTransactionTable', {
+        var table = window.defaultDataTable('#recentTransactionTable', {
             processing: true,
             serverSide: true,
             ajax: {
                 url: "{{ route('inventory.transaction.data') }}",
                 data: function(d) {
-                    let val = $('#filterMonthYear').val();
-                    if (val) {
-                        let parts = val.split('-');
-                        d.year = parts[0];
-                        d.month = parts[1];
+                    const dateRange = $('#filter_date_range').val();
+                    if (dateRange && dateRange.includes(' - ')) {
+                        d.date_range = dateRange;
                     }
                 }
             },
@@ -276,6 +405,21 @@
                 { 
                     data: 'remark', 
                     render: (d) => d ? `<span class="text-[10px] text-gray-400 font-normal italic">${d}</span>` : `<span class="text-gray-200 font-mono text-[10px]">-</span>` 
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    className: 'text-center',
+                    render: (d, t, r) => `
+                        <div class="flex items-center justify-center gap-1">
+                            <button class="edit-transaction-btn p-1.5 text-slate-400 hover:text-blue-500 transition-colors" data-id="${r.id}" title="Edit">
+                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            </button>
+                            <button class="delete-transaction-btn p-1.5 text-slate-400 hover:text-red-500 transition-colors" data-id="${r.id}" title="Delete">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `
                 }
             ],
             order: [[0, 'desc']],
@@ -290,8 +434,21 @@
             table.ajax.reload();
         });
 
-        $('#filterMonthYear').on('change', function() {
-            table.ajax.reload();
+        // Date Picker Init
+        const dateRangePicker = new Litepicker({
+            element: document.getElementById('filter_date_range'),
+            singleMode: false,
+            autoApply: true,
+            format: 'YYYY-MM-DD',
+            delimiter: ' - ',
+            dropdowns: { months: true, years: true },
+            startDate: "{{ date('Y-m-01') }}",
+            endDate: "{{ date('Y-m-t') }}",
+            setup: (picker) => {
+                picker.on('selected', (date1, date2) => {
+                    setTimeout(() => table.ajax.reload(), 10);
+                });
+            }
         });
 
         // Initialize Global Scanner Service (Unified)
@@ -368,6 +525,98 @@
 
         $('#qty').on('input change', updateQtyPreview);
         $('#product_detail_id').on('change', updateQtyPreview);
+
+        // --- EDIT & DELETE HANDLERS ---
+        $('#recentTransactionTable').on('click', '.edit-transaction-btn', function() {
+            const id = $(this).data('id');
+            $('#editTransactionForm')[0].reset();
+            
+            $.ajax({
+                url: `{{ url('inventory/transaction') }}/${id}/edit`,
+                type: 'GET',
+                success: function(response) {
+                    $('#edit_id').val(response.id);
+                    $('#edit_qty').val(response.qty);
+                    $('#edit_transaction_date').val(response.transaction_date);
+                    $('#edit_remark').val(response.remark);
+                    $('#edit_pic_name').text(response.pic_name || 'System');
+                    
+                    // Open Modal
+                    $('#editTransactionModal').removeClass('hidden').addClass('flex');
+                    
+                    // Init Select2 for Modal
+                    $('.select2-modal').select2({ dropdownParent: $('#editTransactionModal'), width: '100%' });
+                    
+                    // Trigger changes for conditional fields
+                    setTimeout(() => {
+                        $('#edit_product_detail_id').val(response.product_detail_id).trigger('change');
+                        $('#edit_transaction_category_id').val(response.transaction_category_id).trigger('change');
+                        
+                        // Handle IN/OUT conditional fields after category change
+                        let effect = $('#edit_transaction_category_id.select2-modal').find(':selected').data('effect');
+                        if (response.coil_center_id) $('#edit_coil_center_id').val(response.coil_center_id).trigger('change');
+                        if (response.supplier_id) $('#edit_supplier_id').val(response.supplier_id).trigger('change');
+                        if (response.destination_id) $('#edit_destination_id').val(response.destination_id).trigger('change');
+                    }, 200);
+                }
+            });
+        });
+
+        $('#edit_transaction_category_id').on('change', function() {
+            let effect = $(this).find(':selected').data('effect');
+            $('#editCoilCenterContainer').addClass('hidden');
+            $('#editOutFieldsContainer').addClass('hidden');
+            
+            if (effect == 1) $('#editCoilCenterContainer').removeClass('hidden');
+            else if (effect == -1) $('#editOutFieldsContainer').removeClass('hidden');
+        });
+
+        $('#editTransactionForm').on('submit', function(e) {
+            e.preventDefault();
+            const id = $('#edit_id').val();
+            $.ajax({
+                url: `{{ url('inventory/transaction') }}/${id}`,
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({ title: 'Success', text: response.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                        window.closeEditModal();
+                        table.ajax.reload(null, false);
+                    }
+                },
+                error: xhr => Swal.fire('Error', xhr.responseJSON?.message || 'Update failed', 'error')
+            });
+        });
+
+        $('#recentTransactionTable').on('click', '.delete-transaction-btn', function() {
+            const id = $(this).data('id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Stock levels will be reverted automatically.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `{{ url('inventory/transaction') }}/${id}`,
+                        type: 'DELETE',
+                        data: { _token: '{{ csrf_token() }}' },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({ title: 'Deleted!', text: response.message, icon: 'success', timer: 1500, showConfirmButton: false });
+                                table.ajax.reload(null, false);
+                            }
+                        },
+                        error: xhr => Swal.fire('Error', xhr.responseJSON?.message || 'Delete failed', 'error')
+                    });
+                }
+            });
+        });
+
+        window.closeEditModal = () => $('#editTransactionModal').addClass('hidden').removeClass('flex');
 
     });
 </script>

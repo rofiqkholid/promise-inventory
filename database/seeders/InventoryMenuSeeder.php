@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\InventoryModel\Menu;
+use App\Models\InventoryModel\InvRole;
 
 class InventoryMenuSeeder extends Seeder
 {
@@ -18,21 +19,72 @@ class InventoryMenuSeeder extends Seeder
                 'route' => 'dashboard',
                 'icon' => 'fa-solid fa-chart-pie',
                 'order' => 1,
-                'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']
+                'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
             ],
             [
                 'title' => 'Master Data',
-                'route' => 'inventory.master',
+                'route' => 'inventory.master.master.index',
                 'icon' => 'fa-solid fa-database',
                 'order' => 2,
-                'roles' => ['admin', 'approver']
-            ],
-            [
-                'title' => 'Product',
-                'route' => 'inventory.product',
-                'icon' => 'fa-solid fa-box',
-                'order' => 3,
-                'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']
+                'roles' => ['admin', 'approver'],
+                'children' => [
+                    [
+                        'title' => 'Product',
+                        'route' => 'inventory.master.product.index',
+                        'icon' => 'fa-solid fa-box',
+                        'order' => 1,
+                        'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
+                    ],
+                    [
+                        'title' => 'Coil Center',
+                        'route' => 'inventory.master.coilCenter.index',
+                        'icon' => 'fa-solid fa-industry',
+                        'order' => 2,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                    [
+                        'title' => 'Material Spec',
+                        'route' => 'inventory.master.materialSpec.index',
+                        'icon' => 'fa-solid fa-layer-group',
+                        'order' => 3,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                    [
+                        'title' => 'Unit',
+                        'route' => 'inventory.master.unit.index',
+                        'icon' => 'fa-solid fa-ruler',
+                        'order' => 4,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                    [
+                        'title' => 'Rank',
+                        'route' => 'inventory.master.rank.index',
+                        'icon' => 'fa-solid fa-ranking-star',
+                        'order' => 5,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                    [
+                        'title' => 'Model Config',
+                        'route' => 'inventory.master.modelConfig.index',
+                        'icon' => 'fa-solid fa-sliders',
+                        'order' => 6,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                    [
+                        'title' => 'Supplier',
+                        'route' => 'inventory.master.supplier.index',
+                        'icon' => 'fa-solid fa-truck-field',
+                        'order' => 7,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                    [
+                        'title' => 'Transaction Category',
+                        'route' => 'inventory.master.transactionCategory.index',
+                        'icon' => 'fa-solid fa-tags',
+                        'order' => 8,
+                        'roles' => ['admin', 'approver'],
+                    ],
+                ]
             ],
             [
                 'title' => 'VA/VE Analysis',
@@ -85,21 +137,31 @@ class InventoryMenuSeeder extends Seeder
             ],
         ];
 
-        foreach ($menus as $menu) {
-            // Create Menu
-            $m = \App\Models\InventoryModel\Menu::updateOrCreate(
-                ['route' => $menu['route']],
-                [
-                    'title' => $menu['title'],
-                    'icon' => $menu['icon'],
-                    'order' => $menu['order'],
-                    'is_active' => true
-                ]
+        $this->seedMenus($menus);
+    }
+
+    private function seedMenus(array $menus, $parentId = null)
+    {
+        foreach ($menus as $menuData) {
+            $children = $menuData['children'] ?? [];
+            $roles = $menuData['roles'] ?? [];
+            unset($menuData['children'], $menuData['roles']);
+
+            $menuData['parent_id'] = $parentId;
+            $menuData['is_active'] = true;
+
+            $menu = Menu::updateOrCreate(
+                ['route' => $menuData['route']],
+                $menuData
             );
 
-            // Assign to Roles
-            $roles = \App\Models\InventoryModel\InvRole::whereIn('code', $menu['roles'])->get();
-            $m->roles()->sync($roles->pluck('id'));
+            // Sync Roles
+            $roleModels = InvRole::whereIn('code', $roles)->get();
+            $menu->roles()->sync($roleModels->pluck('id'));
+
+            if (!empty($children)) {
+                $this->seedMenus($children, $menu->id);
+            }
         }
     }
 }

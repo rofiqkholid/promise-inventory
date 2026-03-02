@@ -95,12 +95,12 @@
                             </div>
                             <div class="hidden md:block w-px bg-gray-200 h-16 mx-2"></div>
                             <div class="flex-1 p-2 flex flex-col md:items-end justify-center">
-                                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Latest Inventory Baseline</span>
+                                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Active Baseline Status</span>
                                 <div class="flex flex-col gap-1 w-full md:w-auto min-w-[220px]">
-                                    <div id="latest_rev_display" class="text-[10px] font-bold text-slate-700 dark:text-gray-200 px-3 py-1 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700 text-center">
+                                    <div id="active_baseline_display" class="text-[10px] font-bold text-slate-700 dark:text-gray-200 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded border border-amber-100 dark:border-amber-800/50 text-center">
                                         -
                                     </div>
-                                    <div id="latest_dim_display" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 px-3 py-1 bg-blue-50/30 dark:bg-blue-900/10 rounded border border-blue-100/50 dark:border-blue-800/50 text-center">
+                                    <div id="active_weight_display" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 px-3 py-1 bg-blue-50/30 dark:bg-blue-900/10 rounded border border-blue-100/50 dark:border-blue-800/50 text-center">
                                         -
                                     </div>
                                 </div>
@@ -112,10 +112,9 @@
                             
                             {{-- Identity & Context --}}
                             <div class="space-y-6">
-                                <div>
+                                <div class="hidden">
                                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Baseline Name</label>
-                                    <input type="text" name="rfq_name" id="rfq_name" placeholder="e.g. Baseline Primary" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
-                                    
+                                    <input type="text" name="rfq_name" id="rfq_name" readonly class="bg-gray-50 border border-slate-200 text-gray-400 text-xs font-semibold rounded-md block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <input type="hidden" name="is_active" value="1">
                                 </div>
 
@@ -258,7 +257,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function() {
-    const table = window.defaultDataTable('vaveTable', {
+    const table = window.defaultDataTable('#vaveTable', {
         processing: true,
         serverSide: true,
         ajax: {
@@ -321,7 +320,7 @@ $(function() {
 
     // Populate Master Filters
     function loadMainFilters() {
-        $.get('{{ route("inventory.product.getCustomers") }}', function(data) {
+        $.get('{{ route("inventory.master.product.getCustomers") }}', function(data) {
             data.forEach(c => {
                 $('#filterCustomer').append(`<option value="${c.id}">${c.code}</option>`);
             });
@@ -331,7 +330,7 @@ $(function() {
             const customerId = $(this).val();
             $('#filterModel').empty().append('<option value="">All Models</option>');
             
-            $.get('{{ route("inventory.product.getModels") }}', { customer_id: customerId }, function(data) {
+            $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: customerId }, function(data) {
                 data.forEach(m => {
                     $('#filterModel').append(`<option value="${m.id}">${m.name}</option>`);
                 });
@@ -381,7 +380,7 @@ $(function() {
 
     // Populate Dropdown Data for RFQ Form
     function loadRfqDropdowns() {
-        $.get('{{ route("inventory.product.dropdownData") }}', function(data) {
+        $.get('{{ route("inventory.master.product.dropdownData") }}', function(data) {
             vaveDropdownData = data;
             
             // Clear and populate
@@ -550,8 +549,6 @@ $(function() {
         $('#rfq_id').val(''); 
         $('#btn_new_baseline').addClass('hidden');
         $('#btn_delete_baseline').addClass('hidden');
-        $('#latest_rev_display').text('Loading...');
-        $('#latest_dim_display').text('...');
         
         $.get(`{{ url('inventory/vave/rfq') }}/${id}`, function(res) {
             $('#rfqModalTitle').text(`Manage Baseline (RFQ) - ${res.product.part_no}`);
@@ -562,27 +559,8 @@ $(function() {
             // Determines Latest Revision
             if (res.revisions && res.revisions.length > 0) {
                  window.latestRevision = res.revisions[0];
-                 const specName = window.latestRevision.material_spec ? window.latestRevision.material_spec.spec_name : 'No Spec';
-                 $('#latest_rev_display').text(`${window.latestRevision.revision} (${specName})`);
-
-                 // Dimensions display - remove trailing zeros
-                 const rev = window.latestRevision;
-                 const f = (n) => +parseFloat(n || 0).toFixed(3);
-                 let dimText = `${f(rev.thickness)} x ${f(rev.width)}`;
-                 
-                 if (f(rev.pitch) > 0) {
-                     dimText += ` x P${f(rev.pitch)}`;
-                 } else if (f(rev.length_2) > 0) {
-                     dimText += ` x ${f(rev.length)} / ${f(rev.length_2)}`;
-                 } else if (f(rev.length) > 0) {
-                     dimText += ` x ${f(rev.length)}`;
-                 }
-                 
-                 $('#latest_dim_display').text(dimText);
             } else {
                  window.latestRevision = null;
-                 $('#latest_rev_display').text('No Inventory Data');
-                 $('#latest_dim_display').text('-');
             }
 
             // Populate History Dropdown
@@ -590,7 +568,6 @@ $(function() {
             if(res.rfqHistory && res.rfqHistory.length > 0) {
                  res.rfqHistory.forEach((h, index) => {
                     const activeLabel = h.is_active ? ' (Active)' : '';
-                    // Default to select the first one (latest) as per request
                     const isSelected = index === 0 ? 'selected' : '';
                     histSelect.append(`<option value="${h.hash_id}" ${isSelected}>${h.rfq_name || 'Baseline'} - ${parseFloat(h.weight_kg).toFixed(3)}kg${activeLabel}</option>`);
                 });
@@ -607,6 +584,15 @@ $(function() {
                 $('#rfq_name').val('Baseline 1');
                 resetAndAutoFillRfqForm();
                 $('#btn_delete_baseline').addClass('hidden');
+            }
+
+            // Update Active Display (The 'Previous' reference)
+            if (res.rfq) {
+                $('#active_baseline_display').text(`${res.rfq.rfq_name || 'Active'}`);
+                $('#active_weight_display').text(`${parseFloat(res.rfq.weight_kg || 0).toFixed(3)} Kg`);
+            } else {
+                $('#active_baseline_display').text('No Baseline Set');
+                $('#active_weight_display').text('-');
             }
             
             // Ensure UI state matches unit (safeguard)
@@ -629,14 +615,40 @@ $(function() {
     
     // Create New Baseline
     $('#btn_new_baseline').on('click', function() {
+        const currentData = {};
+        // Capture current form state to use as base for new baseline
+        currentData.rfq_material_spec_id = $('#rfq_material_spec_id').val();
+        currentData.rfq_unit_id = $('#rfq_unit_id').val();
+        currentData.thickness = $('#rfq_thickness').val();
+        currentData.width = $('#rfq_width').val();
+        currentData.length = $('#rfq_length').val();
+        currentData.length_2 = $('#rfq_length_2').val();
+        currentData.pitch = $('#rfq_pitch').val();
+        currentData.density = $('#rfq_density').val();
+        currentData.net_weight = $('#rfq_net_weight').val();
+        currentData.material_price = $('#rfq_material_price').val();
+
         $('#btn_new_baseline').addClass('hidden');
         $('#btn_delete_baseline').addClass('hidden');
-        $('#rfq_history_select').val('');
+        $('#rfq_history_select').val('').trigger('change.select2');
         
         const count = (window.rfqHistory ? window.rfqHistory.length : 0) + 1;
-        $('#rfq_name').val(`Baseline ${count} (New)`);
+        $('#rfq_name').val(`Baseline ${count}`);
+        $('#rfq_id').val('');
+
+        // Apply captured data
+        $('#rfq_material_spec_id').val(currentData.rfq_material_spec_id).trigger('change');
+        $('#rfq_unit_id').val(currentData.rfq_unit_id).trigger('change');
+        $('#rfq_thickness').val(currentData.thickness);
+        $('#rfq_width').val(currentData.width);
+        $('#rfq_length').val(currentData.length);
+        $('#rfq_length_2').val(currentData.length_2);
+        $('#rfq_pitch').val(currentData.pitch);
+        $('#rfq_density').val(currentData.density);
+        $('#rfq_net_weight').val(currentData.net_weight);
+        $('#rfq_material_price').val(currentData.material_price);
         
-        resetAndAutoFillRfqForm();
+        calculateRfqWeight();
     });
 
     // Handle Delete Baseline

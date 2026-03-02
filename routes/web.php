@@ -15,6 +15,7 @@ use App\Http\Controllers\Inventory\InventoryTransactionController;
 use App\Http\Controllers\Inventory\StockMonitoringController;
 use App\Http\Controllers\Inventory\TransactionHistoryController;
 use App\Http\Controllers\Inventory\AutoPrController;
+use App\Http\Controllers\Inventory\ModelConfigController;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
@@ -28,46 +29,73 @@ Route::post('/login', [AuthController::class, 'login'])->name('login_post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/forget', [AuthController::class, 'forgetPassword'])->name('forget_password');
 
+// Public Scan Info (No Login Required)
+Route::get('/inventory/stock-monitoring/scan-info/{id}', [StockMonitoringController::class, 'scanInfo'])->name('inventory.scanInfo');
+
 // Inventory System Routes (Role-based)
 Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     #Region Inventory Master (Admin, Approver)
-    Route::middleware(['inventory.role:admin,approver'])->group(function () {
-        Route::get('/inventory/master', function () {
-            return view('inventory.master-data.index');
-        })->name('inventory.master');
+    Route::middleware(['inventory.role:admin,approver,checker,operator,viewer'])->group(function () {
+        // Master Data Grouped Routes
+        Route::prefix('inventory/master')->name('inventory.master.')->group(function () {
+            // Monolithic /inventory/master redirected to first child (Product)
+            Route::get('/', function () {
+                return redirect()->route('inventory.master.product.index');
+            })->name('index');
 
-        // Coil Center
-        Route::get('/inventory/coil-center/data', [CoilCenterController::class, 'data'])->name('inventory.coilCenter.data');
-        Route::prefix('inventory/master/coil-center')->name('inventory.coilCenter.')->group(function () {
-            Route::post('/', [CoilCenterController::class, 'store'])->name('store');
-            Route::get('/{id}', [CoilCenterController::class, 'show'])->name('show');
-            Route::put('/{id}', [CoilCenterController::class, 'update'])->name('update');
-            Route::delete('/{id}', [CoilCenterController::class, 'destroy'])->name('destroy');
+            // Product (Master Data)
+            Route::get('/product', [InventoryProductController::class, 'index'])->name('product.index');
+            Route::get('/product/data', [InventoryProductController::class, 'data'])->name('product.data');
+            Route::get('/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('product.dropdownData');
+            Route::get('/product/get-products', [InventoryProductController::class, 'getProducts'])->name('product.getProducts');
+            Route::get('/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('product.getCustomers');
+            Route::get('/product/get-model', [InventoryProductController::class, 'getModels'])->name('product.getModels');
+            Route::get('/product/used-revisions/{productId}', [InventoryProductController::class, 'getUsedRevisions'])->name('product.usedRevisions');
+            Route::get('/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('product.print');
+            Route::resource('product', InventoryProductController::class)->names('product')->parameters(['product' => 'inventoryProduct'])->except(['create', 'edit', 'index']);
+
+            // Coil Center
+            Route::get('/coil-center', [CoilCenterController::class, 'index'])->name('coilCenter.index');
+            Route::get('/coil-center/data', [CoilCenterController::class, 'data'])->name('coilCenter.data');
+            Route::get('/coil-center/{id}', [CoilCenterController::class, 'show'])->name('coilCenter.show');
+            Route::post('/coil-center', [CoilCenterController::class, 'store'])->name('coilCenter.store');
+            Route::put('/coil-center/{id}', [CoilCenterController::class, 'update'])->name('coilCenter.update');
+            Route::delete('/coil-center/{id}', [CoilCenterController::class, 'destroy'])->name('coilCenter.destroy');
+
+            // Material Spec
+            Route::get('/material-spec', [MaterialSpecController::class, 'index'])->name('materialSpec.index');
+            Route::get('/material-spec/data', [MaterialSpecController::class, 'data'])->name('materialSpec.data');
+            Route::resource('material-spec', MaterialSpecController::class)->names('materialSpec')->parameters(['material-spec' => 'materialSpec'])->except(['create', 'edit', 'index']);
+
+            // Unit
+            Route::get('/unit', [UnitController::class, 'index'])->name('unit.index');
+            Route::get('/unit/data', [UnitController::class, 'data'])->name('unit.data');
+            Route::resource('unit', UnitController::class)->names('unit')->except(['create', 'edit', 'index']);
+
+            // Rank
+            Route::get('/rank', [RankController::class, 'index'])->name('rank.index');
+            Route::get('/rank/data', [RankController::class, 'data'])->name('rank.data');
+            Route::resource('rank', RankController::class)->names('rank')->except(['create', 'edit', 'index']);
+
+            // Supplier
+            Route::get('/supplier', [SupplierController::class, 'index'])->name('supplier.index');
+            Route::get('/supplier/data', [SupplierController::class, 'data'])->name('supplier.data');
+            Route::get('/supplier/global', [SupplierController::class, 'getGlobal'])->name('supplier.getGlobal');
+            Route::get('/supplier/global/{id}', [SupplierController::class, 'getGlobalDetail'])->name('supplier.getGlobalDetail');
+            Route::resource('supplier', SupplierController::class)->names('supplier')->parameters(['supplier' => 'supplier'])->except(['create', 'edit', 'index']);
+
+            // Transaction Category
+            Route::get('/transaction-category', [TransactionCategoryController::class, 'index'])->name('transactionCategory.index');
+            Route::get('/transaction-category/data', [TransactionCategoryController::class, 'data'])->name('transactionCategory.data');
+            Route::resource('transaction-category', TransactionCategoryController::class)->names('transactionCategory')->parameters(['transaction-category' => 'transactionCategory'])->except(['create', 'edit', 'index']);
+
+            // Model Config (Bulk Settings)
+            Route::get('/model-config', [ModelConfigController::class, 'index'])->name('modelConfig.index');
+            Route::get('/model-config/data', [ModelConfigController::class, 'data'])->name('modelConfig.data');
+            Route::post('/model-config/update-status', [ModelConfigController::class, 'updateStatus'])->name('modelConfig.updateStatus');
         });
-
-        // Material Spec
-        Route::get('/inventory/material-spec/data', [MaterialSpecController::class, 'data'])->name('inventory.materialSpec.data');
-        Route::resource('inventory/master/material-spec', MaterialSpecController::class)->names('inventory.materialSpec')->parameters(['material-spec' => 'materialSpec'])->except(['create', 'edit', 'index']);
-
-        // Unit
-        Route::get('/inventory/unit/data', [UnitController::class, 'data'])->name('inventory.unit.data');
-        Route::resource('inventory/master/unit', UnitController::class)->names('inventory.unit')->except(['create', 'edit', 'index']);
-
-        // Rank
-        Route::get('/inventory/rank/data', [RankController::class, 'data'])->name('inventory.rank.data');
-        Route::resource('inventory/master/rank', RankController::class)->names('inventory.rank')->except(['create', 'edit', 'index']);
-
-        // Supplier
-        Route::get('/inventory/supplier/data', [SupplierController::class, 'data'])->name('inventory.supplier.data');
-        Route::get('/inventory/supplier/global', [SupplierController::class, 'getGlobal'])->name('inventory.supplier.getGlobal');
-        Route::get('/inventory/supplier/global/{id}', [SupplierController::class, 'getGlobalDetail'])->name('inventory.supplier.getGlobalDetail');
-        Route::resource('inventory/master/supplier', SupplierController::class)->names('inventory.supplier')->parameters(['supplier' => 'supplier'])->except(['create', 'edit', 'index']);
-
-        // Transaction Category
-        Route::get('/inventory/transaction-category/data', [TransactionCategoryController::class, 'data'])->name('inventory.transactionCategory.data');
-        Route::resource('inventory/master/transaction-category', TransactionCategoryController::class)->names('inventory.transactionCategory')->parameters(['transaction-category' => 'transactionCategory'])->except(['create', 'edit', 'index']);
 
 
 
@@ -107,16 +135,6 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     });
     #Endregion
 
-    // Inventory Product (All Roles)
-    Route::get('/inventory/product', [InventoryProductController::class, 'index'])->name('inventory.product');
-    Route::get('/inventory/product/data', [InventoryProductController::class, 'data'])->name('inventory.product.data');
-    Route::get('/inventory/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('inventory.product.dropdownData');
-    Route::get('/inventory/product/get-products', [InventoryProductController::class, 'getProducts'])->name('inventory.product.getProducts');
-    Route::get('/inventory/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('inventory.product.getCustomers');
-    Route::get('/inventory/product/get-model', [InventoryProductController::class, 'getModels'])->name('inventory.product.getModels');
-    Route::get('/inventory/product/used-revisions/{productId}', [InventoryProductController::class, 'getUsedRevisions'])->name('inventory.product.usedRevisions');
-    Route::get('/inventory/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('inventory.product.print');
-    Route::resource('inventory/product', InventoryProductController::class)->names('inventory.product')->parameters(['product' => 'inventoryProduct'])->except(['create', 'edit', 'index']);
 
     // Inventory Transaction (Admin, Approver, Operator)
     Route::middleware(['inventory.role:admin,approver,operator'])->group(function () {
@@ -124,6 +142,9 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/inventory/transaction/data', [InventoryTransactionController::class, 'data'])->name('inventory.transaction.data');
         Route::post('/inventory/transaction/store', [InventoryTransactionController::class, 'store'])->name('inventory.transaction.store');
         Route::get('/inventory/transaction/categories', [InventoryTransactionController::class, 'getCategories'])->name('inventory.transaction.categories');
+        Route::get('/inventory/transaction/{id}/edit', [InventoryTransactionController::class, 'edit'])->name('inventory.transaction.edit');
+        Route::put('/inventory/transaction/{id}', [InventoryTransactionController::class, 'update'])->name('inventory.transaction.update');
+        Route::delete('/inventory/transaction/{id}', [InventoryTransactionController::class, 'destroy'])->name('inventory.transaction.destroy');
     });
 
     // Stock Monitoring (All Roles)
@@ -135,6 +156,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     // Stock Opname (STO) (Admin, Approver, Checker, Operator)
     Route::middleware(['inventory.role:admin,approver,checker,operator'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Inventory\StoController::class, 'index'])->name('index');
+        Route::get('/get-preview-code', [\App\Http\Controllers\Inventory\StoController::class, 'previewCode'])->name('previewCode');
         Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
         Route::get('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'show'])->name('show');
         Route::get('/{id}/details-data', [\App\Http\Controllers\Inventory\StoController::class, 'detailsData'])->name('detailsData');

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryModel\StoEvent;
 use App\Models\InventoryModel\StoDetail;
 use App\Models\InventoryModel\InventoryProduct;
+use App\Models\InventoryModel\StoReason;
 use App\Models\InventoryModel\PIC;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class StoController extends Controller
 
             // Ordering
             if ($request->has('order')) {
-                $columns = ['code', 'name', 'period_start', 'status', 'pic_id', 'created_at']; // Map index to col name
+                $columns = ['code', 'period_start', 'status', 'pic_id', 'created_at']; // Map index to col name
                 $colIndex = $request->input('order.0.column');
                 $colName = $columns[$colIndex] ?? 'created_at';
                 $dir = $request->input('order.0.dir', 'desc');
@@ -56,6 +57,18 @@ class StoController extends Controller
 
             // Count Total & Filtered
             $recordsTotal = StoEvent::count();
+
+            // Calculate Variance Totals in Query
+            $query->select('inv_t_sto_event.*')
+                ->addSelect([
+                    'net_pcs' => StoDetail::selectRaw('SUM(inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit)')
+                        ->leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
+                        ->whereColumn('inv_t_sto_detail.event_id', 'inv_t_sto_event.id'),
+                    'net_amount' => StoDetail::selectRaw('SUM(inv_t_sto_detail.diff_qty * ISNULL(inv_t_product_detail.weight_kg, 0) * ISNULL(inv_t_product_detail.material_price, 0))')
+                        ->leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
+                        ->whereColumn('inv_t_sto_detail.event_id', 'inv_t_sto_event.id'),
+                ]);
+
             $recordsFiltered = $query->count();
 
             // Pagination
@@ -82,33 +95,99 @@ class StoController extends Controller
                 
                 $statusBadge = '<span class="px-2 py-1 text-xs rounded-full whitespace-nowrap ' . $statusClass . '">' . str_replace('_', ' ', $event->status) . '</span>';
                 
-                $actionBtn = '';
-                if ($event->status === 'OPEN') {
-                    $label = 'Manage';
-                    $btnClass = 'bg-blue-600 hover:bg-blue-700';
-                    $icon = 'fa-list-check';
-                    if ($event->rejection_note) {
-                        $label = 'Fix Data';
-                        $btnClass = 'bg-red-600 hover:bg-red-700';
-                        $icon = 'fa-circle-exclamation';
+                $user = auth()->user();
+                $isPicRole = $user->hasAppRole('pic') || $user->hasAppRole('admin');
+                $isApprover = $user->hasAppRole('approver') || $user->hasAppRole('admin');
+                $isChecker = $user->hasAppRole('checker') || $user->hasAppRole('approver') || $user->hasAppRole('admin');
+
+                $baseUrl = route('inventory.sto.show', $event->hash_id);
+                
+                // Helper to create step button
+                $getStep = function($label, $icon, $statusTarget, $activeColor, $isDone, $isCurrent, $hasPermission, $formAction = null) use ($baseUrl) {
+                    $opacity = $isDone || $isCurrent ? 'opacity-100' : 'opacity-30 grayscale';
+                    $cursor = $isDone || $isCurrent ? '' : 'cursor-not-allowed';
+                    $color = $isDone ? 'bg-emerald-600' : ($isCurrent ? $activeColor : 'bg-gray-400');
+                    $border = $isCurrent ? 'ring-2 ring-offset-1 ring-' . explode('-', $activeColor)[1] . '-500' : '';
+                    
+                    $content = '<i class="fa-solid ' . $icon . ' text-[10px]"></i> <span class="hidden md:inline">' . $label . '</span>';
+                    
+                    if ($isCurrent && $hasPermission && $formAction) {
+                        return '
+                            <form action="' . $formAction . '" method="POST" class="inline">
+                                ' . csrf_field() . '
+                                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 ' . $color . ' text-white rounded text-[10px] font-bold transition-all hover:scale-105 shadow-sm" onclick="return confirm(\'Proceed with ' . $label . '?\')">
+                                    ' . $content . '
+                                </button>
+                            </form>';
                     }
-                    $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 ' . $btnClass . ' text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid ' . $icon . '"></i> ' . $label . '</a>';
-                } elseif ($event->status === 'WAITING CHECK') {
-                    $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-magnifying-glass"></i> Verify</a>';
-                } elseif ($event->status === 'WAITING APPROVAL') {
-                    $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-check-double"></i> Approve</a>';
-                } else {
-                     $actionBtn = '<a href="' . route('inventory.sto.show', $event->hash_id) . '" class="inline-flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-800 text-white px-3 py-1.5 rounded-md text-sm font-medium transition-colors shadow-sm"><i class="fa-solid fa-eye"></i> View</a>';
+
+                    $tag = ($isDone || $isCurrent) ? 'a' : 'div';
+                    $href = ($isDone || $isCurrent) ? ' href="' . $baseUrl . '"' : '';
+                    
+                    return '<' . $tag . $href . ' class="inline-flex items-center gap-1 px-2.5 py-1.5 ' . $color . ' ' . $opacity . ' ' . $cursor . ' ' . $border . ' text-white rounded text-[10px] font-bold shadow-sm">
+                        ' . $content . '
+                    </' . $tag . '>';
+                };
+
+        $steps = [];
+                
+                // Step 1: Count (Anyone)
+                $steps[] = $getStep('Count', 'fa-list-check', 'OPEN', 'bg-blue-600', 
+                    $event->status !== 'OPEN', 
+                    $event->status === 'OPEN', 
+                    true);
+
+                // Step 2: Verify (Checker/Admin)
+                $steps[] = $getStep('Verify', 'fa-magnifying-glass', 'WAITING CHECK', 'bg-amber-500', 
+                    in_array($event->status, ['WAITING APPROVAL', 'CLOSED']), 
+                    $event->status === 'WAITING CHECK', 
+                    $isChecker);
+
+                // Step 3: Approve (Approver/Admin)
+                $steps[] = $getStep('Approve', 'fa-lock', 'WAITING APPROVAL', 'bg-purple-600', 
+                    $event->status === 'CLOSED', 
+                    $event->status === 'WAITING APPROVAL', 
+                    $isApprover);
+
+                $actionBtn = '
+                    <div class="flex items-center justify-center gap-1 py-1">
+                        ' . implode('<div class="w-2 h-px bg-gray-200"></div>', $steps) . '
+                    </div>';
+
+                if ($event->status === 'CLOSED' && $isApprover) {
+                    $actionBtn .= '
+                        <div class="mt-2 flex justify-center">
+                            <form action="' . route('inventory.sto.reopen', $event->hash_id) . '" method="POST" class="inline">
+                                ' . csrf_field() . '
+                                <button type="submit" class="text-[9px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-tighter" onclick="return confirm(\'Reopen this event?\')">
+                                    <i class="fa-solid fa-rotate-left"></i> Reopen Event
+                                </button>
+                            </form>
+                        </div>';
+                }
+
+                $netPcs = $event->net_pcs ?? 0;
+                $netAmt = $event->net_amount ?? 0;
+                $varianceHtml = '-';
+                
+                if ($netPcs != 0 || $netAmt != 0) {
+                    $color = $netAmt < 0 ? 'text-red-600' : ($netAmt > 0 ? 'text-green-600' : 'text-gray-600');
+                    $prefix = $netAmt > 0 ? '+' : '';
+                    $varianceHtml = '
+                        <div class="flex flex-col items-center">
+                            <span class="text-[11px] font-bold ' . $color . '">' . $prefix . number_format(abs($netAmt), 0) . '</span>
+                            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-tighter">' . ($netPcs >= 0 ? '+' : '') . number_format($netPcs, 0) . ' Pcs</span>
+                        </div>';
                 }
 
                 return [
                     $rowNumber++,
                     $event->code,
-                    $event->name,
                     $period,
                     $statusBadge,
                     $event->pic->name ?? '-',
-                    $actionBtn // No logic here, just raw HTML or view component could be better but this works for AJAX
+                    $varianceHtml,
+                    $actionBtn 
                 ];
             });
 
@@ -129,32 +208,56 @@ class StoController extends Controller
      */
     public function store(Request $request)
     {
+        // Only Admin, Approver, or PIC role can initialize a new event
+        $user = auth()->user();
+        if (!$user->hasAppRole('pic') && !$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+             return back()->with('error', 'Unauthorized. Only PIC, Approver, or Admin can initialize STO events.');
+        }
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
             'period_start' => 'required|date',
             'description' => 'nullable|string',
         ]);
 
         $validated['user_id'] = auth()->id();
-
-        // Generate Code: STO-YYYY-MM-{Sequence}
-        $date = now();
-        $prefix = 'STO-' . $date->format('Y-m');
-        $lastCode = StoEvent::where('code', 'like', "$prefix%")->orderBy('id', 'desc')->value('code');
-        
-        if ($lastCode) {
-            $lastSeq = (int) substr($lastCode, -3);
-            $newSeq = str_pad($lastSeq + 1, 3, '0', STR_PAD_LEFT);
-        } else {
-            $newSeq = '001';
-        }
-        
-        $validated['code'] = "$prefix-$newSeq";
+        $validated['code'] = $this->generateEventCode($validated['period_start']);
+        $validated['name'] = "STO Event - " . $validated['code']; 
         $validated['status'] = 'OPEN';
 
         StoEvent::create($validated);
 
         return redirect()->route('inventory.sto.index')->with('success', 'STO Event created successfully.');
+    }
+
+    /**
+     * Preview the generated code via AJAX.
+     */
+    public function previewCode(Request $request)
+    {
+        $date = $request->input('date') ?: now()->format('Y-m-d');
+        return response()->json(['code' => $this->generateEventCode($date)]);
+    }
+
+    /**
+     * Generate STO Code: SAI/STO/DDMMYYYY/0001
+     */
+    private function generateEventCode($dateInput = null)
+    {
+        $date = $dateInput ? \Carbon\Carbon::parse($dateInput) : now();
+        $prefix = 'SAI/STO/' . $date->format('dmY');
+        
+        // Find the absolute last created STO code to continue sequence
+        $lastRecord = StoEvent::orderBy('id', 'desc')->first();
+        
+        if ($lastRecord && $lastRecord->code) {
+            $parts = explode('/', $lastRecord->code);
+            $lastSeq = (int) end($parts);
+            $newSeq = str_pad($lastSeq + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $newSeq = '0001';
+        }
+        
+        return "$prefix/$newSeq";
     }
 
     public function show($id)
@@ -168,6 +271,7 @@ class StoController extends Controller
 
         $countedIds = StoDetail::where('event_id', $stoEvent->id)->pluck('product_detail_id')->toArray();
 
+        // Used for "Remaining Items" list
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
             ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
             ->where('inv_t_product_detail.is_active', 1)
@@ -175,7 +279,16 @@ class StoController extends Controller
             ->orderBy('products.part_no')
             ->get();
 
-        return view('inventory.sto.show', compact('stoEvent', 'stats', 'products', 'netAdjustment', 'progress'));
+        // Used for the search/scanner dropdown (contains all active products)
+        $allProducts = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
+            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
+            ->where('inv_t_product_detail.is_active', 1)
+            ->orderBy('products.part_no')
+            ->get();
+
+        $reasons = StoReason::where('is_active', 1)->get();
+
+        return view('inventory.sto.show', compact('stoEvent', 'stats', 'products', 'allProducts', 'netAdjustment', 'progress', 'reasons', 'countedIds'));
     }
 
     /**
@@ -185,7 +298,7 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'auditor'])
+        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'auditor', 'reason'])
             ->where('event_id', $stoEvent->id);
 
         // Searching
@@ -224,8 +337,12 @@ class StoController extends Controller
         
         // Calculate starting row number for this page
         $rowNumber = $start + 1;
+        $user = auth()->user();
+        $isAdmin = $user->hasAppRole('admin');
+        $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic'); // PIC role or event creator
+        $canEditInline = ($isAdmin || $isPic) && $stoEvent->status === 'OPEN';
 
-        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber) {
+        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline) {
             $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
             $unitCode = $detail->product->unit->code ?? 'PCS';
 
@@ -251,18 +368,31 @@ class StoController extends Controller
 
             $diff = $detail->real_qty_input - $detail->system_qty_snapshot;
             
+            // Financial Calculation
+            $pricePerKg = $detail->product->material_price ?? 0;
+            $weightPerPcs = $detail->product->weight_kg ?? 0;
+            
+            $systemAmount = $detail->system_qty_snapshot * $weightPerPcs * $pricePerKg;
+            $realAmount = $detail->real_qty_input * $weightPerPcs * $pricePerKg;
+            $diffAmount = $diff * $weightPerPcs * $pricePerKg;
+
+            $formatCurrency = function($val, $isDiff = false) {
+                if ($val == 0) return '<span class="text-gray-300">-</span>';
+                
+                $color = 'text-gray-600 dark:text-gray-400';
+                if ($isDiff) {
+                    $color = $val < 0 ? 'text-red-600' : 'text-green-600';
+                }
+                
+                return '<span class="text-[11px] font-mono font-bold ' . $color . '">' . number_format(abs($val), 0) . '</span>';
+            };
+            
             $productInfo = '
                 <div class="flex flex-col">
                     <span class="text-sm font-bold text-gray-800 dark:text-gray-200">' . ($detail->product->product->part_no ?? '-') . ' - ' . ($detail->product->revision ?? '') . '</span>
                     <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">' . ($detail->product->product->part_name ?? '-') . '</span>';
             
             
-            if ($detail->auditor) {
-                $productInfo .= '
-                    <div class="mt-1 flex items-center gap-1 text-[10px] text-blue-500 font-semibold">
-                        <i class="fa-solid fa-user-check"></i> ' . $detail->auditor->name . '
-                    </div>';
-            }
             $productInfo .= '</div>';
 
             $diffHtml = '';
@@ -275,9 +405,9 @@ class StoController extends Controller
                 $diffHtml = '<span class="text-sm font-medium text-gray-300">-</span>';
             }
 
-           // Inline editable QTY field for OPEN status
+            // Inline editable QTY field for OPEN status - Permission restricted
             $qtyHtml = '';
-            if ($stoEvent->status === 'OPEN') {
+            if ($canEditInline) {
                 $qtyHtml = '
                     <div class="flex items-center justify-center gap-1">
                         <input type="number" step="any" 
@@ -293,9 +423,9 @@ class StoController extends Controller
                 $qtyHtml = '<div class="text-blue-600 dark:text-blue-400">' . $formatQty($detail->real_qty_input, $pcsPerUnit, $unitCode) . '</div>';
             }
             
-            // Inline editable REMARK field
+            // Inline editable REMARK field - Permission restricted
             $remarkHtml = '';
-            if ($stoEvent->status === 'OPEN') {
+            if ($canEditInline) {
                 $remarkValue = htmlspecialchars($detail->remark ?? '', ENT_QUOTES);
                 $remarkHtml = '<input type="text" 
                     class="remark-input text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" 
@@ -307,13 +437,43 @@ class StoController extends Controller
                 $remarkHtml = '<span class="text-xs text-gray-600 dark:text-gray-400">' . ($detail->remark ?: '-') . '</span>';
             }
 
+            // Reason Select - ONLY for PIC / Admin when there is a difference
+            $reasonHtml = '';
+            if ($diff != 0) {
+                if ($canEditInline) {
+                    $reasonHtml = '<select class="reason-input text-xs pl-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300" style="width: 180px; min-width: 180px;" data-detail-id="' . $detail->hash_id . '">';
+                    $reasonHtml .= '<option value="">-- Select Reason --</option>';
+                    
+                    // Filter reasons by category (Shortage/Excess) based on diff
+                    $category = $diff < 0 ? 'SHORTAGE' : 'EXCESS';
+                    $reasons = \App\Models\InventoryModel\StoReason::where('is_active', true)
+                                ->where(function($q) use ($category) {
+                                    $q->where('category', $category)->orWhere('category', 'OTHERS');
+                                })->get();
+
+                    foreach ($reasons as $r) {
+                        $selected = $detail->reason_id == $r->id ? 'selected' : '';
+                        $reasonHtml .= '<option value="' . $r->id . '" ' . $selected . '>' . $r->name . '</option>';
+                    }
+                    $reasonHtml .= '</select>';
+                } else {
+                    $reasonHtml = '<span class="text-[10px] text-red-500 font-bold">' . ($detail->reason->name ?? 'Reason Required') . '</span>';
+                }
+            } else {
+                $reasonHtml = '<span class="text-[10px] text-gray-400 italic">No Diff</span>';
+            }
+
             $actionHtml = '';
             if ($stoEvent->status === 'OPEN') {
                 $actionHtml = '
-                    <div class="flex justify-end gap-2">
+                    <div class="flex items-center justify-center gap-4">
+                        <button type="button" onclick="editFromTable(\'' . $detail->product->hash_id . '\')" 
+                                class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Edit Entry">
+                            <i class="fa-solid fa-pen-to-square text-lg"></i>
+                        </button>
                         <button type="button" onclick="deleteItem(\'' . $detail->hash_id . '\')" 
-                                class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Delete">
-                            <i class="fa-solid fa-trash-can"></i>
+                                class="text-gray-400 hover:text-red-600 transition-colors" title="Delete Entry">
+                            <i class="fa-solid fa-trash-can text-lg"></i>
                         </button>
                     </div>';
             }
@@ -322,11 +482,16 @@ class StoController extends Controller
 
             return [
                 'row_number' => $currentRow,
-                'updated_at' => $detail->updated_at->format('H:i'),
+                'updated_at' => $detail->updated_at->format('d/m/Y H:i'),
                 'product_info' => $productInfo,
+                'auditor' => $detail->auditor->name ?? '-',
                 'system_qty' => $formatQty($detail->system_qty_snapshot, $pcsPerUnit, $unitCode),
+                'system_amount' => $formatCurrency($systemAmount),
                 'real_qty' => $qtyHtml,
+                'real_amount' => $formatCurrency($realAmount),
                 'diff' => $diffHtml,
+                'diff_amount' => $formatCurrency($diffAmount, true),
+                'reason' => $reasonHtml,
                 'remark' => $remarkHtml,
                 'action' => $actionHtml
             ];
@@ -365,13 +530,22 @@ class StoController extends Controller
         }
 
         if (!$productId) {
-            return response()->json(['success' => false, 'message' => 'Invalid QR Code.'], 404);
+            // Fallback: Check if it's a raw part_no or barcode
+            $found = InventoryProduct::whereHas('product', function($q) use ($input) {
+                $q->where('part_no', $input);
+            })->first();
+            
+            if ($found) {
+                $productId = $found->id;
+            } else {
+                return response()->json(['success' => false, 'message' => 'Product not found or invalid QR format.'], 404);
+            }
         }
 
         $product = InventoryProduct::with(['product', 'unit'])->find($productId);
         
         if (!$product) {
-            return response()->json(['success' => false, 'message' => 'Product not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Product details missing.'], 404);
         }
 
         // Check if already counted
@@ -410,10 +584,27 @@ class StoController extends Controller
         $request->validate([
             'product_id_hash' => 'required',
             'real_qty' => 'required|numeric|min:0',
-            'remark' => 'nullable|string|max:255'
+            'remark' => 'nullable|string|max:255',
+            'reason_id' => 'nullable|exists:inv_m_sto_reasons,id'
         ]);
 
         $productId = InventoryProduct::decodeHash($request->product_id_hash);
+        
+        // Authorization check for Save Count (if editing existing)
+        $detail = StoDetail::where('event_id', $stoEvent->id)
+            ->where('product_detail_id', $productId)
+            ->first();
+        
+        $user = auth()->user();
+        $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic');
+        $isAdmin = $user->hasAppRole('admin');
+        
+        // If entry exists, only PIC/Admin can update/override via table or direct save
+        // But for scanner, we might want anyone to scan?
+        // Let's refine: Anyone can SCAN and INITIALIZE, but only PIC can EDIT in table.
+        // If request is from table (checked by referrer or additional flag), we could block here.
+        // For simplicity, we'll follow your request strictly on the table view.
+        
         $product = InventoryProduct::find($productId);
         
         if (!$product) {
@@ -436,7 +627,12 @@ class StoController extends Controller
         $detail->real_qty_input = $request->real_qty;
         $detail->remark = $request->remark;
         
-        // diff_qty is a computed column in SQL Server - it auto-calculates
+        if ($request->has('reason_id')) {
+            $detail->reason_id = $request->reason_id;
+        }
+        
+        // Explicitly calculate diff_qty to avoid non-null constraint errors in SQL Server
+        $detail->diff_qty = (float)$detail->real_qty_input - (float)$detail->system_qty_snapshot;
         
         // Attempt to find PIC based on Auth User
         $user = auth()->user();
@@ -463,6 +659,11 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
+        $user = auth()->user();
+        if ($stoEvent->user_id !== $user->id && !$user->hasAppRole('pic') && !$user->hasAppRole('admin')) {
+            return back()->with('error', 'Only the assigned PIC, users with PIC role, or Admin can submit this event.');
+        }
+
         if ($stoEvent->status !== 'OPEN') {
             return back()->with('error', 'Status must be OPEN to submit for check.');
         }
@@ -703,11 +904,17 @@ class StoController extends Controller
             'total_increase_pcs' => $pcsStats->inc_pcs ?? 0,
             'total_decrease_pcs' => $pcsStats->dec_pcs ?? 0,
             'net_adjustment_pcs' => $pcsStats->net_pcs ?? 0,
+            'net_amount_impact' => StoDetail::leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
+                ->where('inv_t_sto_detail.event_id', $stoEvent->id)
+                ->sum(DB::raw('inv_t_sto_detail.diff_qty * ISNULL(inv_t_product_detail.weight_kg, 0) * ISNULL(inv_t_product_detail.material_price, 0)')),
         ];
 
         $netAdjustment = (clone $baseQuery)->sum('diff_qty');
         
         $totalProducts = InventoryProduct::where('is_active', 1)->count();
+        $stats['total_unscanned'] = max(0, $totalProducts - $stats['total_items']);
+        $stats['total_count'] = $totalProducts;
+        
         $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
 
         return ['stats' => $stats, 'netAdjustment' => $netAdjustment, 'progress' => $progress];

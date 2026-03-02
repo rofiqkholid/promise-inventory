@@ -57,7 +57,7 @@
             <div x-data="{ open: false }" class="relative pl-4 border-l border-slate-200 dark:border-gray-700">
                 
                 <button @click="open = !open" @click.outside="open = false" 
-                    class="flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-gray-700 p-1.5 pr-3 rounded-full transition-colors border border-transparent hover:border-slate-100 dark:hover:border-gray-600">
+                    class="flex items-center gap-3 hover:bg-blue-50 dark:hover:bg-gray-700 p-1.5 pr-3 rounded-full transition-colors border border-transparent hover:border-slate-100 dark:hover:border-gray-600">
                     <div class="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm border border-blue-200 dark:border-blue-800">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>

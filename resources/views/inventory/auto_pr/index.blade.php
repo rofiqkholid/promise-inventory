@@ -173,7 +173,7 @@
 @push('scripts')
 <script>
 $(function() {
-    const table = window.defaultDataTable('autoPrTable', {
+    const table = window.defaultDataTable('#autoPrTable', {
         processing: true,
         serverSide: true,
         ajax: {

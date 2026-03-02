@@ -433,7 +433,7 @@
     }
 
     function initTables() {
-        userTable = window.defaultDataTable('UserAccessTable', {
+        userTable = window.defaultDataTable('#UserAccessTable', {
             processing: true, serverSide: true,
             ajax: "{{ route('inventory.userAccess.data') }}",
             columns: [
@@ -445,7 +445,7 @@
             ]
         });
 
-        rolesTable = window.defaultDataTable('RolesTable', {
+        rolesTable = window.defaultDataTable('#RolesTable', {
             ajax: "{{ route('inventory.roles.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-bold text-gray-400' },
@@ -456,7 +456,7 @@
             ]
         });
 
-        accountsTable = window.defaultDataTable('AccountsTable', {
+        accountsTable = window.defaultDataTable('#AccountsTable', {
             ajax: "{{ route('inventory.users.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-bold text-gray-400' },
@@ -467,7 +467,7 @@
             ]
         });
 
-        menusTable = window.defaultDataTable('MenusTable', {
+        menusTable = window.defaultDataTable('#MenusTable', {
             ajax: "{{ route('inventory.menus.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-bold text-gray-400' },

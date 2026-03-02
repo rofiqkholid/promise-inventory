@@ -387,7 +387,7 @@
             }
         });
 
-        const table = window.defaultDataTable('stockMonitoringTable', {
+        const table = window.defaultDataTable('#stockMonitoringTable', {
             processing: true,
             serverSide: true,
             ajax: {
@@ -500,7 +500,7 @@
             modelSelect.empty().append('<option value="">Loading...</option>');
 
             $.ajax({
-                url: "{{ route('inventory.product.getModels') }}",
+                url: "{{ route('inventory.master.product.getModels') }}",
                 data: { customer_id: customerId },
                 success: function(data) {
                     modelSelect.empty().append('<option value="">All Models</option>');

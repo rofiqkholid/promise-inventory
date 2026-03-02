@@ -347,6 +347,12 @@ div.dataTables_processing::after {
 }
 
 /* DataTable Empty State Styling */
+/* Ensure empty state row doesn't have default cell padding */
+.custom-table tbody td.dataTables_empty {
+    padding: 0 !important;
+    border: none !important;
+}
+
 .dt-empty-state {
     display: flex !important;
     flex-direction: column !important;

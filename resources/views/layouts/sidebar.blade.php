@@ -16,15 +16,30 @@
         :class="sidebarExpanded ? 'overflow-y-auto' : 'overflow-visible'">
 
         @foreach($sidebarMenus as $menu)
+            @php
+                $isParentActive = false;
+                if ($menu->route !== '#' && request()->routeIs($menu->route.'*')) {
+                    $isParentActive = true;
+                }
+                if ($menu->children->count() > 0) {
+                    foreach($menu->children as $child) {
+                        if (request()->routeIs($child->route.'*')) {
+                            $isParentActive = true;
+                            break;
+                        }
+                    }
+                }
+            @endphp
+            
             @if($menu->children->count() > 0)
                 {{-- PARENT MENU WITH DROPDOWN --}}
-                <div x-data="{ open: {{ request()->routeIs($menu->route.'*') ? 'true' : 'false' }} }" class="relative">
+                <div x-data="{ open: {{ $isParentActive ? 'true' : 'false' }} }" class="relative">
                     <button @click="open = !open; sidebarExpanded = true"
                         class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-                        {{ request()->routeIs($menu->route.'*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
+                        {{ $isParentActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
                         :class="!sidebarExpanded ? 'justify-center' : ''">
                         
-                        <i class="{{ $menu->icon }} w-6 text-center text-lg {{ request()->routeIs($menu->route.'*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500' }}"></i>
+                        <i class="{{ $menu->icon }} w-6 text-center text-lg {{ $isParentActive ? 'text-blue-700 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}"></i>
                         
                         <span x-show="sidebarExpanded" class="flex-1 text-left text-sm whitespace-nowrap">{{ $menu->title }}</span>
                         
@@ -42,8 +57,8 @@
                         @foreach($menu->children as $child)
                             <a href="{{ route($child->route) }}"
                                 class="flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm
-                                {{ request()->routeIs($child->route.'*') ? 'text-blue-600 dark:text-blue-400 font-medium bg-blue-50/50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-700/50' }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs($child->route.'*') ? 'bg-blue-600 dark:bg-blue-400' : 'bg-slate-400 dark:bg-gray-600' }}"></span>
+                                {{ request()->routeIs($child->route.'*') ? 'text-blue-700 dark:text-blue-400 font-medium bg-blue-100/50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-700/50' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs($child->route.'*') ? 'bg-blue-700 dark:bg-blue-400' : 'bg-slate-400 dark:bg-gray-600' }}"></span>
                                 <span class="whitespace-nowrap">{{ $child->title }}</span>
                             </a>
                         @endforeach
@@ -53,11 +68,11 @@
                 {{-- SINGLE MENU ITEM --}}
                 <a href="{{ $menu->route === '#' ? '#' : route($menu->route) }}"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
-                {{ $menu->route !== '#' && request()->routeIs($menu->route.'*') ? 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 font-medium' : 'hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
+                {{ $isParentActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
                     :class="!sidebarExpanded ? 'justify-center' : ''">
 
                     <i class="{{ $menu->icon }} w-6 text-center text-lg
-                        {{ $menu->route !== '#' && request()->routeIs($menu->route.'*') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}">
+                        {{ $isParentActive ? 'text-blue-700 dark:text-blue-400' : 'text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300' }}">
                     </i>
 
                     <span x-show="sidebarExpanded" class="text-sm whitespace-nowrap">{{ $menu->title }}</span>

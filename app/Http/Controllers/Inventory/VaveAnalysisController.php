@@ -356,7 +356,14 @@ class VaveAnalysisController extends Controller
 
             $p->stages = [];
             
-            // Map RFQs to stages
+            // Identify Baseline (Active RFQ)
+            $activeRfq = $rfqs->where('is_active', 1)->first() ?? $rfqs->last();
+            $p->baseline_name = $activeRfq ? ($activeRfq->rfq_name ?? 'Baseline') : '-';
+            $p->baseline_weight = $activeRfq ? (float)$activeRfq->weight_kg : 0;
+            $p->baseline_cost = $activeRfq ? ((float)$activeRfq->weight_kg * (float)($activeRfq->material_price ?? 0)) : 0;
+
+            // Map RFQs to stages (excluding the active baseline from "Stages" if preferred, 
+            // but let's keep all for now and handle "Baseline" visibility in blade as requested)
             foreach($rfqs as $rfq) {
                 $p->stages[] = [
                     'source' => 'RFQ',
@@ -372,7 +379,8 @@ class VaveAnalysisController extends Controller
                     'net_weight' => $rfq->net_weight,
                     'material_price' => $rfq->material_price,
                     'cost' => $rfq->weight_kg * ($rfq->material_price ?? 0),
-                    'budomari' => $rfq->weight_kg > 0 ? ($rfq->net_weight / $rfq->weight_kg) * 100 : 0
+                    'budomari' => $rfq->weight_kg > 0 ? ($rfq->net_weight / $rfq->weight_kg) * 100 : 0,
+                    'is_baseline' => ($activeRfq && $rfq->id == $activeRfq->id)
                 ];
             }
 
@@ -392,7 +400,8 @@ class VaveAnalysisController extends Controller
                     'net_weight' => $rev->net_weight,
                     'material_price' => $rev->material_price,
                     'cost' => $rev->weight_kg * ($rev->material_price ?? 0),
-                    'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0
+                    'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0,
+                    'is_baseline' => false
                 ];
             }
 

@@ -174,13 +174,18 @@
             let finalId = input;
             let displayPartNo = "";
 
-            if (input.startsWith('{') && input.endsWith('}')) {
+            // Handle URL input (e.g., http://.../scan-info/HASH_ID)
+            if (input.includes('/scan-info/')) {
+                const parts = input.split('/');
+                finalId = parts[parts.length - 1].split('?')[0]; // Get the hash ID, ignore query params if any
+            } 
+            // Handle legacy JSON input
+            else if (input.startsWith('{') && input.endsWith('}')) {
                 try {
                     const data = JSON.parse(input);
                     if (data.id) {
+                        finalId = data.id;
                         displayPartNo = data.pn || '';
-                        let matchHash = $(`${this.selectId} option[value="${data.id}"]`);
-                        if (matchHash.length > 0) finalId = matchHash.val();
                     }
                 } catch (e) { console.error("JSON Parse Error", e); }
             }

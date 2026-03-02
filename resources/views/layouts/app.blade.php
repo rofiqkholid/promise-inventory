@@ -88,7 +88,7 @@
     @stack('styles')
 </head>
 
-<body class="bg-background dark:bg-gray-900 text-slate-800 dark:text-gray-200 antialiased">
+<body class="bg-gray-100 dark:bg-gray-900 text-slate-800 dark:text-gray-200 antialiased">
     <div x-data="{ 
             sidebarReady: false,
             sidebarExpanded: localStorage.getItem('sidebarExpanded') !== 'false',
@@ -123,8 +123,8 @@
 
             @include('layouts.header')
 
-            <main class="bg-gray-100 dark:bg-gray-900 flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 scroll-smooth">
-                <div class="flex flex-col min-h-full">
+            <main class="flex-1 overflow-y-auto scroll-smooth">
+                <div class="flex flex-col min-h-full p-4 md:p-6 lg:p-8">
                     @include('components.toast')
 
                     @yield('content')
@@ -163,6 +163,50 @@
 
     @yield('js')
     @stack('scripts')
+
+    <script>
+        /**
+         * Global Select2 Initialization
+         */
+        $(function () {
+            const initSelect2 = (context = document) => {
+                $(context).find('select.select2:not(.no-select2)').each(function () {
+                    if ($(this).hasClass('select2-hidden-accessible') || $(this).closest('.dataTables_length').length) return;
+
+                    const $this = $(this);
+                    const options = {
+                        width: '100%',
+                        dropdownAutoWidth: true,
+                        selectionCssClass: $this.hasClass('select2-sm') ? 'select2-sm' : '',
+                        placeholder: $this.data('placeholder') || $this.find('option[value=""]').text() || 'Select an option',
+                        allowClear: $this.data('allow-clear') === true || $this.data('allow-clear') === 'true',
+                    };
+
+                    const $modal = $this.closest('.fixed, .absolute, [role="dialog"], .modal-container');
+                    if ($modal.length) {
+                        options.dropdownParent = $modal;
+                    }
+
+                    $this.select2(options);
+                });
+            };
+
+            initSelect2();
+            
+            // Re-init for dynamic content
+            $(document).on('select2:reinit', (e, container) => {
+                initSelect2(container || document);
+            });
+
+            // Auto focus search field
+            $(document).on('select2:open', () => {
+                setTimeout(() => {
+                    const searchField = document.querySelector('.select2-search__field');
+                    if (searchField) searchField.focus();
+                }, 10);
+            });
+        });
+    </script>
 </body>
 
 </html>

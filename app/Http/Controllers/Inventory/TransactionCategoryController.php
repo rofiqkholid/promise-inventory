@@ -10,6 +10,14 @@ use Illuminate\Validation\Rule;
 class TransactionCategoryController extends Controller
 {
     /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        return view('inventory.master-data.transaction-category');
+    }
+
+    /**
      * Display a listing of the resource for DataTables.
      */
     public function data(Request $request)

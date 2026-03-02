@@ -15,11 +15,11 @@
             <h3 class="font-bold text-gray-900 dark:text-white">Active STO Events</h3>
             <p class="text-xs text-gray-500 font-medium">List of all scheduled and completed inventory counts.</p>
         </div>
-        @auth
-            <button onclick="document.getElementById('createEventModal').classList.remove('hidden')" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-md transition-all shadow-sm hover:bg-slate-800 gap-2">
+        @if(auth()->user()->hasAppRole('pic') || auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'))
+            <button onclick="window.openCreateModal()" class="w-full md:w-auto inline-flex items-center justify-center px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-bold rounded-md transition-all shadow-sm hover:bg-slate-800 gap-2">
                 <i class="fa-solid fa-plus text-xs"></i> New Event
             </button>
-        @endauth
+        @endif
     </div>
 
     <!-- Events Table -->
@@ -27,11 +27,11 @@
         <thead>
             <tr>
                 <th class="w-16">No</th>
-                <th class="text-center w-32">Event Code</th>
-                <th class="text-left">Event Name</th>
+                <th class="text-left w-48">Event Code</th>
                 <th class="text-left">Counting Period</th>
                 <th class="text-center w-32">Status</th>
-                <th class="text-left">PIC</th>
+                <th class="text-left w-40">PIC</th>
+                <th class="text-center w-40">Variance</th>
                 <th class="w-40 text-center">Action</th>
             </tr>
         </thead>
@@ -58,13 +58,13 @@
                 @csrf
                 <div class="space-y-4">
                     <div>
-                        <label class="block mb-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Event Name</label>
-                        <input type="text" name="name" required class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-bold" placeholder="e.g. STO Semester 1 2026">
+                        <label class="block mb-1.5 text-xs font-bold text-gray-400 uppercase tracking-widest">Event Code Preview</label>
+                        <input type="text" id="eventCodePreview" readonly class="w-full p-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-mono font-bold text-gray-700 dark:text-gray-300" value="SAI/STO/{{ date('dmY') }}/....">
                     </div>
 
                     <div>
                         <label class="block mb-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider">Start Date</label>
-                        <input type="date" name="period_start" required class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-bold" value="{{ date('Y-m-d') }}">
+                        <input type="date" id="sto_period_start" name="period_start" required class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-bold" value="{{ date('Y-m-d') }}">
                     </div>
 
                     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
@@ -99,21 +99,50 @@
 <script>
     $(document).ready(function() {
         if (window.defaultDataTable) {
-            window.defaultDataTable('stoEventsTable', {
+            window.defaultDataTable('#stoEventsTable', {
                 serverSide: true,
                 ajax: "{{ route('inventory.sto.index') }}",
                 order: [[1, 'desc']],
                 columns: [
                     { data: 0, className: 'text-center font-bold text-gray-400' },
-                    { data: 1, className: 'text-center font-mono text-[11px] bg-slate-50 dark:bg-slate-900 px-2 py-1 rounded border border-slate-100 dark:border-slate-800' },
-                    { data: 2, className: 'font-bold text-gray-900 dark:text-white' },
-                    { data: 3, className: 'text-sm font-medium text-gray-500' },
-                    { data: 4, className: 'text-center' },
-                    { data: 5, className: 'text-sm font-bold text-blue-600 dark:text-blue-400' },
+                    { data: 1, className: 'text-left font-mono font-bold text-[13px] text-blue-700 dark:text-blue-400' },
+                    { data: 2, className: 'text-sm font-medium text-gray-500' },
+                    { data: 3, className: 'text-center' },
+                    { data: 4, className: 'text-left font-bold text-blue-600 dark:text-blue-400' },
+                    { data: 5, className: 'text-center' },
                     { data: 6, className: 'text-center', orderable: false }
                 ]
             });
         }
+
+        // Preview Code Logic
+        const periodStartInput = document.getElementById('sto_period_start');
+        const previewElement = document.getElementById('eventCodePreview');
+
+        function updateCodePreview() {
+            const date = periodStartInput.value;
+            if (!date) return;
+
+            fetch("{{ route('inventory.sto.previewCode') }}?date=" + date)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code) {
+                        previewElement.value = data.code;
+                    }
+                })
+                .catch(error => console.error('Error fetching preview code:', error));
+        }
+
+        if (periodStartInput) {
+            periodStartInput.addEventListener('change', updateCodePreview);
+            // Initial update when script loads or modal triggers might be better on modal show
+        }
+
+        // Trigger update when modal button is clicked
+        window.openCreateModal = function() {
+            document.getElementById('createEventModal').classList.remove('hidden');
+            updateCodePreview();
+        };
     });
 </script>
 @endpush

@@ -7,10 +7,10 @@
     <table>
         <thead>
             <tr>
-                <td colspan="20" style="font-weight: bold; font-size: 14pt; text-align: center;">VA/VE MATERIAL EFFICIENCY SUMMARY</td>
+                <td colspan="22" style="font-weight: bold; font-size: 14pt; text-align: center;">VA/VE MATERIAL EFFICIENCY SUMMARY</td>
             </tr>
             <tr>
-                <td colspan="20" style="text-align: center; font-size: 10pt; color: #666;">Report Generated: {{ date('Y-m-d H:i') }}</td>
+                <td colspan="22" style="text-align: center; font-size: 10pt; color: #666;">Report Generated: {{ date('Y-m-d H:i') }}</td>
             </tr>
             <tr>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">No</th>
@@ -18,6 +18,8 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Model</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part No</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part Name</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Baseline</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Weight Baseline</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Spec</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Stage</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">t</th>
@@ -56,7 +58,7 @@
             @foreach($products as $index => $p)
                 @php
                     $rowCount = count($p->stages);
-                    $baselineCost = $p->stages[0]['cost'];
+                    $baselineCost = $p->baseline_cost;
                     $cKey = $p->customer_code ?: 'N/A';
                     $mKey = $cKey . '|' . ($p->model_name ?: 'N/A');
                 @endphp
@@ -77,10 +79,16 @@
 
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top;">{{ $p->part_no }}</td>
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top;">{{ $p->part_name }}</td>
+                        
+                        {{-- New Columns --}}
+                        <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb;">{{ $p->baseline_name }}</td>
+                        <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb; font-weight: bold;">{{ number_format($p->baseline_weight, 3) }}</td>
                     @endif
                     
                     <td style="border: 1px solid #000000;">{{ $stage['spec'] }}</td>
-                    <td style="border: 1px solid #000000; font-weight: bold;">{{ strtoupper($stage['name']) }}</td>
+                    <td style="border: 1px solid #000000; font-weight: bold;">
+                        {{ $stage['is_baseline'] ? '' : strtoupper($stage['name']) }}
+                    </td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['t'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['w'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['l1'], 2, '.', '') }}</td>
@@ -103,6 +111,8 @@
                                 $status = $diff > 0 ? 'MERIT' : 'LOSS';
                                 $bgColor = $diff > 0 ? '#dcfce7' : '#fee2e2';
                                 $textColor = $diff > 0 ? '#166534' : '#991b1b';
+                            } else if ($stage['is_baseline']) {
+                                $status = '-';
                             } else {
                                 $status = 'OK';
                             }
@@ -123,7 +133,7 @@
                         $savingBg = $saving >= 0 ? '#f0fdf4' : '#fef2f2';
                     @endphp
                     <td style="border: 1px solid #000000; text-align: right; color: {{ $savingColor }}; background-color: {{ $savingBg }}; font-weight: bold;">
-                        {{ $sIndex === 0 ? '-' : number_format($saving, 2) }}
+                        {{ $stage['is_baseline'] ? '-' : number_format($saving, 2) }}
                     </td>
                 </tr>
                 @endforeach

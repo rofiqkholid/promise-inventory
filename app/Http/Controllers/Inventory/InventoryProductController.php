@@ -21,7 +21,7 @@ class InventoryProductController extends Controller
      */
     public function index()
     {
-        return view('inventory.inventory_product');
+        return view('inventory.master-data.product');
     }
 
     /**
@@ -40,21 +40,22 @@ class InventoryProductController extends Controller
         $columnsMap = [
             0 => 'p.id',
             1 => 'prod.part_no',
-            2 => 'prod.part_name',
-            3 => 'p.revision',
-
+            2 => 'cust.code',
+            3 => 'model.name',
+            4 => 'ms_model.project_status',
             5 => 'ms.spec_name',
             6 => 'p.thickness',
             7 => 'p.width',
             8 => 'u.code',
-            9 => 'p.current_stock_qty',
+            12 => 'p.updated_at',
         ];
         $orderCol = $columnsMap[$orderColIdx] ?? 'p.id';
 
         $query = DB::table('inv_t_product_detail as p')
             ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
-            ->leftJoin('models as model', 'model.id', '=', 'prod.model_id')
+            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
+            ->leftJoin('inv_m_model_status as ms_model', 'ms_model.model_id', '=', 'p.model_id')
 
             ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
@@ -64,6 +65,8 @@ class InventoryProductController extends Controller
             ->select([
                 'p.id',
                 'p.product_id',
+                'p.model_id',
+                DB::raw("COALESCE(ms_model.project_status, 'Project') as project_status"),
                 'p.revision',
                 'p.thickness',
                 'p.width',
@@ -139,6 +142,7 @@ class InventoryProductController extends Controller
                 'part_name' => $r->part_name,
                 'customer' => $r->customer_code,
                 'model' => $r->model_name,
+                'project_status' => $r->project_status,
                 'revision' => $r->revision,
 
                 'material_spec' => $r->material_spec_name,
@@ -178,7 +182,7 @@ class InventoryProductController extends Controller
     public function getDropdownData()
     {
         return response()->json([
-
+            'customers' => DB::table('customers')->select('id', 'code')->orderBy('code')->get(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::select('id', 'code', 'name')->get(),
             'ranks' => Rank::select('id', 'code', 'description')->get(),
@@ -298,6 +302,7 @@ class InventoryProductController extends Controller
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
+            'model_id' => 'required|exists:models,id',
             'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
             'unit_id' => 'nullable|exists:inv_m_unit,id',
             'rank_id' => 'nullable|exists:inv_m_rank,id',
@@ -317,8 +322,18 @@ class InventoryProductController extends Controller
             'current_stock_qty' => 'nullable|numeric|min:0',
             'trial_usage_qty' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
+            'project_status' => 'nullable|string|in:Project,Regular',
         ]);
 
+        // Update model-wide status
+        if ($request->filled('project_status')) {
+            \App\Models\InventoryModel\ModelStatus::updateOrCreate(
+                ['model_id' => $validated['model_id']],
+                ['project_status' => $validated['project_status']]
+            );
+        }
+
+        unset($validated['project_status']);
         InventoryProduct::create($validated);
 
         return response()->json(['success' => true, 'message' => 'Inventory Product created successfully.']);
@@ -330,8 +345,15 @@ class InventoryProductController extends Controller
     public function show($id)
     {
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
-        $inventoryProduct->load(['product', 'materialSpec', 'unit', 'rank']);
-        return response()->json($inventoryProduct);
+        $inventoryProduct->load(['product', 'model', 'materialSpec', 'unit', 'rank']);
+        
+        // Get model status
+        $modelStatus = \App\Models\InventoryModel\ModelStatus::where('model_id', $inventoryProduct->model_id)->first();
+        
+        $data = $inventoryProduct->toArray();
+        $data['project_status'] = $modelStatus ? $modelStatus->project_status : 'Project';
+
+        return response()->json($data);
     }
 
     /**
@@ -352,6 +374,7 @@ class InventoryProductController extends Controller
 
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
+            'model_id' => 'required|exists:models,id',
             'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
             'unit_id' => 'nullable|exists:inv_m_unit,id',
             'rank_id' => 'nullable|exists:inv_m_rank,id',
@@ -371,8 +394,18 @@ class InventoryProductController extends Controller
             'current_stock_qty' => 'nullable|numeric|min:0',
             'trial_usage_qty' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
+            'project_status' => 'nullable|string|in:Project,Regular',
         ]);
 
+        // Update model-wide status
+        if ($request->filled('project_status')) {
+            \App\Models\InventoryModel\ModelStatus::updateOrCreate(
+                ['model_id' => $validated['model_id']],
+                ['project_status' => $validated['project_status']]
+            );
+        }
+
+        unset($validated['project_status']);
         $inventoryProduct->update($validated);
 
         return response()->json(['success' => true, 'message' => 'Inventory Product updated successfully.']);
@@ -397,7 +430,7 @@ class InventoryProductController extends Controller
         $data = DB::table('inv_t_product_detail as p')
             ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
-            ->leftJoin('models as model', 'model.id', '=', 'prod.model_id')
+            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
             ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
             ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
             ->where('p.id', $inventoryProduct->id)
@@ -421,20 +454,22 @@ class InventoryProductController extends Controller
         if (!$data) abort(404);
         
         
-        $qrData = json_encode([
-            'id' => $inventoryProduct->hash_id,
-            'pn' => $data->part_no,
-            'rev' => $data->revision,
-            'dim' => (float)$data->thickness . 'x' . (float)$data->width . 'x' . (float)$data->length . ($data->length_2 > 0 ? 'x' . (float)$data->length_2 : '') . ($data->pitch > 0 ? 'x' . (float)$data->pitch : '')
-        ]);
+        $dimVal = [];
+        $dimLbl = [];
+        if ((float)$data->thickness > 0) { $dimVal[] = (float)$data->thickness; $dimLbl[] = 'T'; }
+        if ((float)$data->width > 0) { $dimVal[] = (float)$data->width; $dimLbl[] = 'W'; }
+        if ((float)$data->length > 0) { $dimVal[] = (float)$data->length; $dimLbl[] = 'L'; }
+        if ((float)$data->length_2 > 0) { $dimVal[] = (float)$data->length_2; $dimLbl[] = 'L2'; }
+        if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
 
         $product = (object) [
-            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate($qrData),
+            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
             'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
             'item_name' => $data->part_name,
             'model_name' => $data->model_name ?? '-',
             'partner_code' => $data->customer_code ?? '-',
-            'dimension' => (float)$data->thickness . ' x ' . (float)$data->width . ' x ' . (float)$data->length . ($data->length_2 > 0 ? ' x ' . (float)$data->length_2 : '') . ($data->pitch > 0 ? ' x ' . (float)$data->pitch : ''),
+            'dimension' => implode(' x ', $dimVal),
+            'dimension_label' => !empty($dimLbl) ? '(' . implode(' x ', $dimLbl) . ')' : '',
             'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : '')
         ];
 

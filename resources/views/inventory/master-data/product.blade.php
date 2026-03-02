@@ -1,4 +1,4 @@
-@extends('layouts.app')
+        @extends('layouts.app')
 @section('title', 'Inventory Product Management')
 @section('page_title', 'Product Master')
 @section('header-title', 'Inventory Product')
@@ -25,13 +25,13 @@
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 w-48 min-w-[180px]">Part No</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Customer</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Model</th>
+                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Status</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Material</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Dimensions</th>
                 <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Pcs/Unit</th>
                 <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Weight (Kg)</th>
                 <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Unit/Car</th>
                 <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Rank</th>
-
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Remark</th>
                 <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 whitespace-nowrap">Updated At</th>
                 <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
@@ -41,7 +41,6 @@
     </x-table>
 </div>
 
-{{-- Add/Edit Modal --}}
 {{-- Add/Edit Modal --}}
 <div id="formModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 backdrop-blur-sm flex">
     <div class="relative p-4 w-full max-w-4xl max-h-[95vh] h-full md:h-auto">
@@ -78,7 +77,7 @@
                             {{-- MODEL --}}
                             <div>
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Model<span class="text-red-500">*</span></label>
-                                <select id="model_id" class="select2 w-full bg-gray-50 border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" disabled>
+                                <select name="model_id" id="model_id" class="select2 w-full bg-gray-50 border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" disabled>
                                     <option></option>
                                 </select>
                             </div>
@@ -103,6 +102,7 @@
                                 </select>
                                 <p id="error-revision" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
+
                             <div>
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
                                 <select name="material_spec_id" id="material_spec_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
@@ -285,20 +285,20 @@
             `)
             .appendTo('head');
 
-        const routeCustomers = '{{ route("inventory.product.getCustomers") }}';
-        const routeModels = '{{ route("inventory.product.getModels") }}';
+        const routeCustomers = '{{ route("inventory.master.product.getCustomers") }}';
+        const routeModels = '{{ route("inventory.master.product.getModels") }}';
 
-        function loadCustomers() {
+        function populateCustomers() {
             const el = $('#customer_id');
-
             el.empty().append('<option></option>');
-
-            $.get(routeCustomers, function(res) {
-                res.forEach(c => {
+            if (dropdownData.customers) {
+                dropdownData.customers.forEach(c => {
                     el.append(new Option(c.code, c.id));
                 });
-            });
+            }
         }
+
+        const modelCache = {};
 
         let modelLoadPromise = Promise.resolve();
         let isAutoFilling = false;
@@ -311,9 +311,18 @@
                  return Promise.resolve();
             }
 
+            if (modelCache[customerId]) {
+                modelCache[customerId].forEach(m => {
+                    el.append(new Option(m.name, m.id));
+                });
+                el.prop('disabled', false);
+                return Promise.resolve();
+            }
+
             return new Promise((resolve, reject) => {
                 $.get(routeModels, { customer_id: customerId })
                     .done(function(models) {
+                        modelCache[customerId] = models;
                         models.forEach(m => {
                             el.append(new Option(m.name, m.id));
                         });
@@ -346,7 +355,7 @@
                 minimumInputLength: 0,
                 placeholder: 'Search Product...',
                 ajax: {
-                    url: '{{ route("inventory.product.getProducts") }}',
+                    url: '{{ route("inventory.master.product.getProducts") }}',
                     dataType: 'json',
                     delay: 250,
                     data: p => ({
@@ -425,8 +434,10 @@
         }
 
         // Load dropdown data
-        $.get('{{ route("inventory.product.dropdownData") }}', function(data) {
+        $.get('{{ route("inventory.master.product.dropdownData") }}', function(data) {
             dropdownData = data;
+            
+            populateCustomers();
 
             data.materialSpecs.forEach(ms => {
                 $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`);
@@ -448,11 +459,11 @@
 
 
         // DataTable
-        const table = window.defaultDataTable('inventoryProductTable', {
+        const table = window.defaultDataTable('#inventoryProductTable', {
             processing: true,
             serverSide: true,
             ajax: {
-                url: '{{ route("inventory.product.data") }}',
+                url: '{{ route("inventory.master.product.data") }}',
                 type: 'GET',
                 data: d => {
                     d.search = d.search.value;
@@ -474,6 +485,14 @@
                 {
                     data: 'model',
                     className: 'px-4 py-3 text-center'
+                },
+                {
+                    data: 'project_status',
+                    className: 'px-4 py-3 text-center',
+                    render: d => {
+                        const colors = d === 'Project' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                        return `<span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${colors}">${d}</span>`;
+                    }
                 },
                 {
                     data: null,
@@ -550,6 +569,9 @@
                     width: '100px',
                     render: row => `
                     <div class="flex items-center justify-center gap-2">
+                        <button class="duplicate-button h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-amber-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900" data-id="${row.id}" title="Duplicate to other Model">
+                            <i class="fa-solid fa-copy text-sm"></i>
+                        </button>
                         <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-lg bg-green-50 hover:bg-green-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-green-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900" data-id="${row.id}" title="Print Label">
                             <i class="fa-solid fa-print text-sm"></i>
                         </button>
@@ -583,11 +605,10 @@
         // Add button
         $('#add-button').on('click', function() {
             initFormSelect2();
-            loadCustomers();
             isEditMode = false;
             $('#modalTitle').text('Add Inventory Product');
             $('#formMethod').val('POST');
-            $('#productForm').attr('action', '{{ route("inventory.product.store") }}');
+            $('#productForm').attr('action', '{{ route("inventory.master.product.store") }}');
             $('#productForm')[0].reset();
             $('#pcs_per_unit').val(1);
             $('#unit_per_car').val(1);
@@ -648,23 +669,18 @@
             });
         });
 
-        // Edit button
-        $(document).on('click', '.edit-button', function() {
-            initProductSelect2(); // Initialize first
-            loadCustomers();
+        // Duplicate button logic
+        $(document).on('click', '.duplicate-button', function() {
+            initProductSelect2();
             const id = $(this).data('id');
-            isEditMode = true;
-            $('#modalTitle').text('Edit Inventory Product');
-            $('#formMethod').val('PUT');
-            $('#productForm').attr('action', `{{ url('inventory/product') }}/${id}`);
+            isEditMode = false; // It's a new record
+            $('#modalTitle').text('Duplicate Inventory Product');
+            $('#formMethod').val('POST');
+            $('#productForm').attr('action', '{{ route("inventory.master.product.store") }}');
             
-            // Initial state: Product enabled (since we allow auto-fill) but we will set it specially
-            if ($('#product_id').data('select2')) {
-                $('#product_id').val(null).trigger('change');
-            }
             $('[id^="error-"]').addClass('hidden').text('');
 
-            $.get(`{{ url('inventory/product') }}/${id}`, function(data) {
+            $.get(`{{ url('inventory/master/product') }}/${id}`, function(data) {
                 let chain = Promise.resolve();
 
                 if (data.product?.customer_id) {
@@ -673,8 +689,72 @@
                 }
 
                 chain.then(() => {
-                    if (data.product?.model_id) {
-                         $('#model_id').val(data.product.model_id).trigger('change');
+                    // We DON'T pre-fill model_id to force user to choose a NEW model
+                    $('#model_id').val(null).trigger('change');
+
+                    // Pre-fill Product Select2
+                    if (data.product) {
+                        const productText = `${data.product.part_no} - ${data.product.part_name}`;
+                        const newOption = new Option(productText, data.product.hash_id || data.product_id, true, true);
+                        isAutoFilling = true;
+                        $('#product_id').append(newOption).trigger('change');
+                        isAutoFilling = false;
+                    }
+                });
+
+                // Fill other specs
+                $('#revision').val(data.revision).trigger('change');
+                $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
+                $('#thickness').val(parseFloat(data.thickness || 0));
+                $('#width').val(parseFloat(data.width || 0));
+                $('#length').val(parseFloat(data.length || 0));
+                $('#length_2').val(parseFloat(data.length_2 || 0));
+                $('#pitch').val(parseFloat(data.pitch || 0));
+                $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
+                $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
+                $('#pcs_per_unit').val(data.pcs_per_unit);
+                $('#unit_per_car').val(data.unit_per_car);
+                $('#min_stock').val(data.min_stock);
+                $('#density').val(parseFloat(data.density || 7.85));
+                $('#weight_kg').val(parseFloat(data.weight_kg || 0));
+                $('#net_weight').val(parseFloat(data.net_weight || 0));
+                $('#material_price').val(parseFloat(data.material_price || 20000));
+                $('#remark').val(data.remark);
+                $('#project_status').val(data.project_status).trigger('change');
+
+                toggleUnitFields();
+                showModal(formModal);
+                
+                toast('info', 'Data Copied', 'Please select a NEW model to finish duplication.');
+            });
+        });
+
+        // Edit button
+        $(document).on('click', '.edit-button', function() {
+            initProductSelect2(); // Initialize first
+            const id = $(this).data('id');
+            isEditMode = true;
+            $('#modalTitle').text('Edit Inventory Product');
+            $('#formMethod').val('PUT');
+            $('#productForm').attr('action', `{{ url('inventory/master/product') }}/${id}`);
+            
+            // Initial state: Product enabled (since we allow auto-fill) but we will set it specially
+            if ($('#product_id').data('select2')) {
+                $('#product_id').val(null).trigger('change');
+            }
+            $('[id^="error-"]').addClass('hidden').text('');
+
+            $.get(`{{ url('inventory/master/product') }}/${id}`, function(data) {
+                let chain = Promise.resolve();
+
+                if (data.product?.customer_id) {
+                    $('#customer_id').val(data.product.customer_id).trigger('change');
+                    chain = modelLoadPromise;
+                }
+
+                chain.then(() => {
+                    if (data.model_id) {
+                         $('#model_id').val(data.model_id).trigger('change');
                     }
 
                     // Pre-fill Product Select2
@@ -704,6 +784,7 @@
                 $('#net_weight').val(parseFloat(data.net_weight || 0));
                 $('#material_price').val(parseFloat(data.material_price || 20000));
                 $('#remark').val(data.remark);
+                $('#project_status').val(data.project_status).trigger('change');
 
                 toggleUnitFields();
                 showModal(formModal);
@@ -713,7 +794,7 @@
         // Print button
         $(document).on('click', '.print-button', function() {
             const id = $(this).data('id');
-            window.open(`{{ url('inventory/product') }}/${id}/print`, '_blank');
+            window.open(`{{ url('inventory/master/product') }}/${id}/print`, '_blank');
         });
 
 
@@ -816,7 +897,7 @@
             if (!deleteId) return;
 
             $.ajax({
-                url: `{{ url('inventory/product') }}/${deleteId}`,
+                url: `{{ url('inventory/master/product') }}/${deleteId}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

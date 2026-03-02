@@ -17,6 +17,7 @@ class InventoryRoleSeeder extends Seeder
             ['name' => 'Approver', 'code' => 'approver', 'description' => 'Can approve data and manage access (Manager)'],
             ['name' => 'Checker', 'code' => 'checker', 'description' => 'Can verify data (Supervisor/Leader)'],
             ['name' => 'Operator', 'code' => 'operator', 'description' => 'Can input data (Staff)'],
+            ['name' => 'PIC', 'code' => 'pic', 'description' => 'Can create and submit STO events (Person In Charge)'],
             ['name' => 'Viewer', 'code' => 'viewer', 'description' => 'Read-only access'],
         ];
 

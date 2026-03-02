@@ -22,6 +22,7 @@ class StoDetail extends Model
         'diff_qty',
         'auditor_id',
         'remark',
+        'reason_id',
         'is_adjusted'
     ];
 
@@ -47,6 +48,11 @@ class StoDetail extends Model
     public function auditor()
     {
         return $this->belongsTo(\App\Models\User::class, 'auditor_id');
+    }
+
+    public function reason()
+    {
+        return $this->belongsTo(StoReason::class, 'reason_id');
     }
 
     // Accessor for Computed Column 'diff_qty' if needed in PHP logic, 

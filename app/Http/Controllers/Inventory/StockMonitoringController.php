@@ -412,31 +412,105 @@ class StockMonitoringController extends Controller
 
         if (!$data) abort(404);
         
-        $qrData = json_encode([
-            'id' => $inventoryProduct->hash_id,
-            'pn' => $data->part_no,
-            'rev' => $data->revision,
-            'dim' => (float)$data->thickness . 'x' . (float)$data->width . 'x' . (float)$data->length . ($data->length_2 > 0 ? 'x' . (float)$data->length_2 : '') . ($data->pitch > 0 ? 'x' . (float)$data->pitch : '')
-        ]);
-
         $balancePcs = (float)$data->current_stock_qty * (int)($data->pcs_per_unit ?? 1);
 
+        $dimVal = [];
+        $dimLbl = [];
+        if ((float)$data->thickness > 0) { $dimVal[] = (float)$data->thickness; $dimLbl[] = 'T'; }
+        if ((float)$data->width > 0) { $dimVal[] = (float)$data->width; $dimLbl[] = 'W'; }
+        if ((float)$data->length > 0) { $dimVal[] = (float)$data->length; $dimLbl[] = 'L'; }
+        if ((float)$data->length_2 > 0) { $dimVal[] = (float)$data->length_2; $dimLbl[] = 'L2'; }
+        if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
+
         $product = (object) [
-            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate($qrData),
+            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
             'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
             'item_name' => $data->part_name,
             'model_name' => $data->model_name ?? '-',
             'partner_code' => $data->customer_code ?? '-',
-            'dimension' => (float)$data->thickness . ' x ' . (float)$data->width . ' x ' . (float)$data->length . ($data->length_2 > 0 ? ' x ' . (float)$data->length_2 : '') . ($data->pitch > 0 ? ' x ' . (float)$data->pitch : ''),
-            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : ''),
-            'balance' => number_format($balancePcs, 0),
-            'unit' => 'PCS'
+            'dimension' => implode(' x ', $dimVal),
+            'dimension_label' => !empty($dimLbl) ? '(' . implode(' x ', $dimLbl) . ')' : '',
+            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : '')
         ];
 
         $products = [$product];
 
-        return view('inventory.qrcode_balance', compact('products'));
+        return view('inventory.qrcode', compact('products'));
     }
+    public function scanInfo($id)
+    {
+        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
+        
+        $data = DB::table('inv_t_product_detail as p')
+            ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
+            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
+            ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->where('p.id', $inventoryProduct->id)
+            ->select([
+                'prod.part_no',
+                'prod.part_name',
+                'cust.code as customer_code',
+                'model.name as model_name',
+                'p.revision',
+                'p.thickness',
+                'p.width',
+                'p.length',
+                'p.length_2',
+                'p.pitch',
+                'ms.spec_name as material_spec',
+                'ms.coating_type',
+                'p.current_stock_qty',
+                'p.pcs_per_unit',
+                'u.code as unit_code',
+                'u.name as unit_name',
+                'p.min_stock'
+            ])
+            ->first();
+
+        if (!$data) abort(404);
+
+        $pcsPerUnit = $data->pcs_per_unit ?? 1;
+        $balancePcs = (float)$data->current_stock_qty * $pcsPerUnit;
+        
+        $status = $this->calculateStockStatus($data->current_stock_qty, $data->min_stock, $pcsPerUnit);
+
+        // Format dimension dynamically
+        $dimVal = [];
+        $dimLbl = [];
+        if ((float)$data->thickness > 0) { $dimVal[] = (float)$data->thickness; $dimLbl[] = 'T'; }
+        if ((float)$data->width > 0) { $dimVal[] = (float)$data->width; $dimLbl[] = 'W'; }
+        if ((float)$data->length > 0) { $dimVal[] = (float)$data->length; $dimLbl[] = 'L'; }
+        if ((float)$data->length_2 > 0) { $dimVal[] = (float)$data->length_2; $dimLbl[] = 'L2'; }
+        if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
+
+        $product = (object) [
+            'hash_id' => $id,
+            'part_no' => $data->part_no,
+            'revision' => $data->revision,
+            'part_name' => $data->part_name,
+            'model_name' => $data->model_name ?? '-',
+            'customer_code' => $data->customer_code ?? '-',
+            'dimension' => implode(' x ', $dimVal),
+            'dimension_label' => !empty($dimLbl) ? '(' . implode(' x ', $dimLbl) . ')' : '',
+            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : ''),
+            'balance_pcs' => number_format($balancePcs, 0),
+            'balance_unit' => number_format($data->current_stock_qty, 0) . ' ' . ($data->unit_code ?? 'PCS'),
+            'status' => $status,
+            'min_stock' => number_format($data->min_stock, 0)
+        ];
+
+        // Find active STO
+        $activeSto = \App\Models\InventoryModel\StoEvent::where('status', 'OPEN')
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        $activeStoHashId = $activeSto ? $activeSto->hash_id : null;
+
+        return view('inventory.scan_info', compact('product', 'activeStoHashId'));
+    }
+
     public function getStoLog($id)
     {
         $logs = \App\Models\InventoryModel\StoDetail::with(['event', 'auditor'])

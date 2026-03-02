@@ -10,6 +10,14 @@ use Illuminate\Validation\Rule;
 class CoilCenterController extends Controller
 {
     /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        return view('inventory.master-data.coil-center');
+    }
+
+    /**
      * Display a listing of the resource for DataTables.
      */
     public function data(Request $request)

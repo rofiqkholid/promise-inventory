@@ -10,23 +10,13 @@ class InventoryProduct extends Model
 {
     use HasFactory, HasHashId;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'inv_t_product_detail';
     protected $appends = ['hash_id'];
     protected $hidden = ['id'];
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'product_id',
-        'product_id',
+        'model_id',
         'material_spec_id',
         'unit_id',
         'rank_id',
@@ -49,11 +39,6 @@ class InventoryProduct extends Model
         'material_price',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'thickness' => 'float',
         'width' => 'float',
@@ -74,39 +59,28 @@ class InventoryProduct extends Model
         'material_price' => 'float',
     ];
 
-    /**
-     * Get the product that owns the inventory detail.
-     */
     public function product()
     {
         return $this->belongsTo(\App\Models\Products::class, 'product_id');
     }
 
+    public function model()
+    {
+        return $this->belongsTo(\App\Models\Models::class, 'model_id');
+    }
 
-
-    /**
-     * Get the material spec that owns the product.
-     */
     public function materialSpec()
     {
         return $this->belongsTo(MaterialSpec::class, 'material_spec_id');
     }
 
-    /**
-     * Get the unit that owns the product.
-     */
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
     }
 
-    /**
-     * Get the rank that owns the product.
-     */
     public function rank()
     {
         return $this->belongsTo(Rank::class, 'rank_id');
     }
-
-
 }

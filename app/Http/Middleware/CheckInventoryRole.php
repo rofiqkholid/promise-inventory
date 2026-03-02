@@ -66,18 +66,11 @@ class CheckInventoryRole
                     return $next($request);
                 }
 
-                // Special case for Master Data tabs: if you have 'inventory.master', you get its sub-routes
-                $masterSubPrefixes = ['inventory.coilCenter.', 'inventory.materialSpec.', 'inventory.unit.', 'inventory.rank.', 'inventory.supplier.', 'inventory.transactionCategory.'];
-                $isMasterSubRoute = false;
-                foreach ($masterSubPrefixes as $prefix) {
-                    if (str_starts_with($routeName, $prefix)) {
-                        $isMasterSubRoute = true;
-                        break;
-                    }
-                }
-
+                // Special case for Master Data: if you have 'inventory.master.master.index', you get its sub-routes
+                $isMasterSubRoute = str_starts_with($routeName, 'inventory.master.');
+                
                 if ($isMasterSubRoute) {
-                    if (in_array('inventory.master', $specificMenuRoutes)) {
+                    if (in_array('inventory.master.master.index', $specificMenuRoutes)) {
                         return $next($request);
                     }
                 }
@@ -91,7 +84,7 @@ class CheckInventoryRole
                         return $next($request);
                     }
 
-                    if ($isMasterSubRoute && in_array('inventory.master', $roleMenuRoutes)) {
+                    if ($isMasterSubRoute && in_array('inventory.master.master.index', $roleMenuRoutes)) {
                         return $next($request);
                     }
                 }

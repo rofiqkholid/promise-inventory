@@ -72,15 +72,25 @@
   .details table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 15px;
+    font-size: 14px;
   }
   .details td {
-    padding: 2px 4px;
+    padding: 3px 4px;
     vertical-align: top;
+    line-height: 1.2;
   }
   .details .titleDetail {
-    width: 30%;
+    width: 25%;
     font-weight: bold;
+  }
+
+  /* Dimension info styling */
+  .dim-info {
+    font-size: 9px;
+    color: #666;
+    font-weight: normal;
+    display: block;
+    margin-top: 2px;
   }
 
   @media screen {
@@ -112,7 +122,7 @@
           <tr>
             <td class="titleDetail">Part No</td>
             <td>:</td>
-            <td>{{ $product->item_no }}</td>
+            <td><b>{{ $product->item_no }}</b></td>
           </tr>
           <tr>
             <td class="titleDetail">Part Name</td>
@@ -132,7 +142,10 @@
           <tr>
             <td class="titleDetail">Dimension</td>
             <td>:</td>
-            <td>{{ $product->dimension }}</td>
+            <td>
+                {{ $product->dimension }}
+                <span class="dim-info">{{ $product->dimension_label }}</span>
+            </td>
           </tr>
           <tr>
             <td class="titleDetail">Material</td>
