@@ -66,7 +66,8 @@ class InventoryProductController extends Controller
                 'p.id',
                 'p.product_id',
                 'p.model_id',
-                DB::raw("COALESCE(ms_model.project_status, 'Project') as project_status"),
+                'p.product_status',
+                DB::raw("COALESCE(ms_model.project_status, 'Project') as model_project_status"),
                 'p.revision',
                 'p.thickness',
                 'p.width',
@@ -142,7 +143,8 @@ class InventoryProductController extends Controller
                 'part_name' => $r->part_name,
                 'customer' => $r->customer_code,
                 'model' => $r->model_name,
-                'project_status' => $r->project_status,
+                'model_project_status' => $r->model_project_status,
+                'product_status' => $r->product_status,
                 'revision' => $r->revision,
 
                 'material_spec' => $r->material_spec_name,
@@ -322,18 +324,10 @@ class InventoryProductController extends Controller
             'current_stock_qty' => 'nullable|numeric|min:0',
             'trial_usage_qty' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
-            'project_status' => 'nullable|string|in:Project,Regular',
+            'product_status' => 'nullable|string|in:Allsize OK,Allsize NG',
+            'product_status_remark' => 'nullable|string|in:Damage,Other',
         ]);
 
-        // Update model-wide status
-        if ($request->filled('project_status')) {
-            \App\Models\InventoryModel\ModelStatus::updateOrCreate(
-                ['model_id' => $validated['model_id']],
-                ['project_status' => $validated['project_status']]
-            );
-        }
-
-        unset($validated['project_status']);
         InventoryProduct::create($validated);
 
         return response()->json(['success' => true, 'message' => 'Inventory Product created successfully.']);
@@ -351,7 +345,9 @@ class InventoryProductController extends Controller
         $modelStatus = \App\Models\InventoryModel\ModelStatus::where('model_id', $inventoryProduct->model_id)->first();
         
         $data = $inventoryProduct->toArray();
-        $data['project_status'] = $modelStatus ? $modelStatus->project_status : 'Project';
+        $data['project_status_model'] = $modelStatus ? $modelStatus->project_status : 'Project';
+        $data['product_status'] = $inventoryProduct->product_status;
+        $data['product_status_remark'] = $inventoryProduct->product_status_remark;
 
         return response()->json($data);
     }
@@ -394,18 +390,10 @@ class InventoryProductController extends Controller
             'current_stock_qty' => 'nullable|numeric|min:0',
             'trial_usage_qty' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
-            'project_status' => 'nullable|string|in:Project,Regular',
+            'product_status' => 'nullable|string|in:Allsize OK,Allsize NG',
+            'product_status_remark' => 'nullable|string|in:Damage,Other',
         ]);
 
-        // Update model-wide status
-        if ($request->filled('project_status')) {
-            \App\Models\InventoryModel\ModelStatus::updateOrCreate(
-                ['model_id' => $validated['model_id']],
-                ['project_status' => $validated['project_status']]
-            );
-        }
-
-        unset($validated['project_status']);
         $inventoryProduct->update($validated);
 
         return response()->json(['success' => true, 'message' => 'Inventory Product updated successfully.']);

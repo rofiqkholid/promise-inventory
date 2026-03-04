@@ -40,6 +40,10 @@
         width: 100% !important;
         padding-right: 30px !important;
     }
+    .swal2-html-container-tight {
+        margin: 1em 0 0 !important;
+        padding: 0 1.25em !important;
+    }
 </style>
 @endpush
 
@@ -131,16 +135,29 @@
 
     <!-- Statistics Dashboard -->
     <div class="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden relative">
-        <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
+        <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
             <div class="p-4 flex flex-col items-center text-center group">
                 <div class="w-10 h-10 mb-2 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Scanned</span>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Recorded</span>
                 <div class="flex items-baseline gap-1">
                     <span id="stat-total-items" class="text-xl font-bold text-gray-900 dark:text-white">{{ $stats['total_items'] }}</span>
                     <span class="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded-full"><span id="stat-progress">{{ $progress }}</span>%</span>
                 </div>
+                <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Items Recorded</span>
+            </div>
+
+            <!-- Total Recorded PCS -->
+            <div class="p-4 flex flex-col items-center text-center group">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Qty Counted</span>
+                <span id="stat-total-recorded-pcs" class="text-xl font-bold text-indigo-700 dark:text-indigo-400 leading-none">
+                    {{ number_format($stats['total_recorded_pcs'] ?? 0, 0) }} 
+                </span>
+                <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">PCS Recorded</span>
             </div>
 
             <!-- Remaining -->
@@ -149,8 +166,8 @@
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Remaining</span>
-                <span id="stat-total-unscanned" class="text-xl font-bold text-amber-600 leading-none">
-                    {{ $stats['total_unscanned'] ?? ($stats['total_count'] - $stats['total_items']) }}
+                <span id="stat-total-missing-items" class="text-xl font-bold text-amber-600 leading-none">
+                    {{ $stats['total_missing_items'] ?? ($stats['total_count'] - $stats['total_items']) }}
                 </span>
             </div>
 
@@ -191,7 +208,7 @@
                 </div>
                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Financial Impact</span>
                 <span id="stat-net-amount-impact" class="text-lg font-bold leading-none {{ $stats['net_amount_impact'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
-                    {{ number_format(abs($stats['net_amount_impact'] ?? 0), 0) }}
+                    {{ ($stats['net_amount_impact'] > 0 ? '+' : ($stats['net_amount_impact'] < 0 ? '-' : '')) . number_format(abs($stats['net_amount_impact'] ?? 0), 0) }}
                 </span>
                 <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Total Currency</span>
             </div>
@@ -231,7 +248,7 @@
 
     @if($stoEvent->status === 'OPEN')
     <!-- ATTENTION BANNER -->
-    <div id="unscanned-alert-banner" class="{{ ($stats['total_unscanned'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 mb-6 rounded shadow-sm">
+    <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 mb-6 rounded shadow-sm">
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="flex-shrink-0 w-8 h-8 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -240,7 +257,7 @@
                 <div>
                     <h4 class="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-widest">Missing Counts</h4>
                     <p class="text-xs text-amber-700 dark:text-amber-400">
-                        <span id="banner-unscanned-count" class="font-bold">{{ $stats['total_unscanned'] }}</span> items have not been scanned.
+                        <span id="banner-missing-count" class="font-bold">{{ $stats['total_missing_items'] }}</span> items have not been recorded yet.
                     </p>
                 </div>
             </div>
@@ -260,8 +277,8 @@
         
         <div class="flex flex-col sm:flex-row gap-3">
             <div class="flex-1 min-w-0">
-                <select id="product_detail_id" class="select2 w-full" data-placeholder="Select Product via Search or Scanner...">
-                    <option value="">Select Product via Search or Scanner...</option>
+                <select id="product_detail_id" class="select2 w-full" data-placeholder="Pick Product via Search or Scanning...">
+                    <option value="">Pick Product via Search or Scanning...</option>
                     @foreach($allProducts as $product)
                         @php $is_counted = in_array($product->id, $countedIds); @endphp
                         <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
@@ -294,8 +311,8 @@
                             <span class="text-xs font-bold text-blue-600 dark:text-blue-400 truncate" id="resSystemQty">0</span>
                         </div>
                         <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700">
-                            <span class="text-[8px] font-bold text-purple-400 uppercase leading-none mb-1">Prev</span>
-                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 truncate" id="resPrevReal">0</span>
+                            <span class="text-[8px] font-bold text-purple-400 uppercase leading-none mb-1">Entries</span>
+                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 truncate" id="resEntriesCount">0</span>
                         </div>
                     </div>
                  </div>
@@ -303,28 +320,15 @@
                  <div class="hidden md:block w-px bg-gray-200 dark:bg-gray-700 my-2"></div>
 
                  <!-- Entry Form Section -->
-                 <div class="flex-1 flex flex-col sm:flex-row md:flex-col lg:flex-row items-stretch sm:items-end md:items-stretch lg:items-end gap-3 lg:w-3/5">
-                    <div class="flex-1 flex flex-col">
-                        <div id="unitHelperLabel" class="text-[9px] font-bold text-blue-500 uppercase tracking-tighter mb-1.5 hidden">Enter Qty</div>
-                        <div class="relative">
-                            <input type="number" id="realQtyInput" step="any" 
-                                class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded h-[46px] text-center font-bold text-lg focus:border-blue-500 transition-all outline-none" 
-                                placeholder="0.00">
-                        </div>
-                    </div>
-
-                    <div class="flex-1">
-                        <div class="sm:hidden md:block lg:hidden text-[9px] font-bold text-gray-400 uppercase mb-1.5">Note / Location</div>
-                        <input type="text" id="remarkInput" 
-                               class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 focus:border-blue-500 rounded h-[46px] text-sm px-4 outline-none transition-all" 
-                               placeholder="Remark / Location...">
-                    </div>
-                    
-                    <button id="btnSaveCount" class="w-full sm:w-auto md:w-full lg:w-auto h-[46px] bg-slate-900 dark:bg-blue-600 text-white px-8 rounded font-bold text-xs uppercase tracking-widest transition-all hover:bg-slate-800 dark:hover:bg-blue-700 flex items-center justify-center gap-2 flex-shrink-0">
-                        Commit <i class="fa-solid fa-arrow-right"></i>
-                    </button>
-                 </div>
-             </div>
+                  <div class="flex-[2] flex flex-col gap-4" id="entriesFormContainer">
+                     <!-- Dynamic Rows -->
+                  </div>
+               </div>
+               <div class="mt-4 flex justify-center">
+                  <button type="button" onclick="addNewEntryRow()" class="flex items-center gap-2 px-6 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-100 transition-all">
+                      <i class="fa-solid fa-plus"></i> Add New
+                  </button>
+               </div>
              <input type="hidden" id="currentHashId">
         </div>
         <div id="scanError" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold rounded-md border border-red-100 dark:border-red-800 hidden items-center gap-2">
@@ -371,6 +375,7 @@
                         <th colspan="2" class="text-center bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
                         <th colspan="2" class="text-center bg-blue-50/30 dark:bg-blue-900/10">Real Count</th>
                         <th colspan="2" class="text-center bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
+                        <th rowspan="2" class="text-left">Location</th>
                         <th rowspan="2" class="text-left">Reason</th>
                         <th rowspan="2" class="text-left">Remark</th>
                         @if($stoEvent->status === 'OPEN')
@@ -453,15 +458,14 @@
                         </td>
                         <td class="px-6 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $p->part_name }}</td>
                         <td class="px-6 py-3 text-center">
-                            <button onclick="closeRemainingModal(); editFromTable('{{ $p->hash_id }}')" 
-                                    class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Scan Now">
-                                <i class="fa-solid fa-camera text-lg"></i>
-                            </button>
-                        </td>
+                            <button onclick="closeRemainingModal(); editFromTable('{{ $p->hash_id }}', null)" 
+                                    class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Record Now">
+                            <i class="fa-solid fa-pen-to-square text-lg"></i>
+                        </button>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 italic text-sm">All products have been scanned.</td>
+                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 italic text-sm">All products have been recorded.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -501,6 +505,7 @@
                     { data: 'real_amount', className: 'text-right pr-4 bg-blue-50/20 dark:bg-blue-900/10' },
                     { data: 'diff', className: 'text-center font-bold' },
                     { data: 'diff_amount', className: 'text-right pr-4 bg-slate-50/30 dark:bg-slate-800/20' },
+                    { data: 'location', className: 'text-center' },
                     { data: 'reason', className: 'text-center' },
                     { data: 'remark', className: 'text-xs text-gray-500 italic' },
                     @if($stoEvent->status === 'OPEN')
@@ -673,61 +678,280 @@
         });
     }
 
+    window.resetToNewEntry = function() {
+        document.getElementById('currentDetailHashId').value = '';
+        document.getElementById('editModeIndicator').classList.add('hidden');
+        document.getElementById('realQtyInput').value = '';
+        document.getElementById('remarkInput').value = '';
+        $('#location_id').val('').trigger('change');
+        document.getElementById('realQtyInput').focus();
+    }
+
+    let currentProductData = null;
+
     function showResult(data) {
-        // Use is_new_snapshot to determine if we should alert
-        if (data.is_new_snapshot === false) {
-            const prevVal = data.prev_real_qty !== null ? data.prev_real_qty : 0;
+        currentProductData = data;
+        const container = document.getElementById('entriesFormContainer');
+        container.innerHTML = ''; // Fresh start
+        
+        if (data.existing_entries && data.existing_entries.length > 0) {
+            let entryDetailsHtml = `
+                <div class="mb-4 text-xs text-gray-500">This item has been recorded in ${data.existing_entries.length} locations:</div>
+                <div class="text-left bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-800 overflow-hidden shadow-inner">
+                    <table class="w-full text-[11px] font-bold">
+                        <thead class="bg-gray-100 dark:bg-gray-800 text-gray-400 uppercase tracking-widest text-[9px]">
+                            <tr>
+                                <th class="px-3 py-2 text-left">Location</th>
+                                <th class="px-3 py-2 text-right">Qty Recorded</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">`;
+            
+            data.existing_entries.forEach(entry => {
+                const qtyVal = parseFloat(entry.real_qty || 0).toLocaleString();
+                entryDetailsHtml += `
+                    <tr>
+                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
+                            <i class="fa-solid fa-location-dot text-blue-500 mr-1.5 opacity-70"></i>
+                            ${entry.location_name || 'No Location'}
+                        </td>
+                        <td class="px-3 py-2 text-right text-blue-600 dark:text-blue-400 font-mono">
+                            ${qtyVal} <span class="text-[9px] text-gray-400 font-normal ml-0.5">${data.unit || 'PCS'}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            entryDetailsHtml += `</tbody></table></div>`;
+
             Swal.fire({
-                title: 'Already Counted!',
-                html: `This item has been filled with <b>${prevVal} ${data.unit}</b>.<br><small class="text-gray-500">Do you want to update the existing result?</small>`,
-                icon: 'warning',
+                title: 'Count Already Recorded',
+                html: entryDetailsHtml,
+                icon: 'question',
+                showDenyButton: true,
                 showCancelButton: true,
-                confirmButtonText: '<i class="fa-solid fa-pen-to-square"></i> Yes, Edit This',
+                confirmButtonText: '<i class="fa-solid fa-pen-to-square mr-1"></i> Edit Existing',
+                denyButtonText: '<i class="fa-solid fa-plus mr-1"></i> Add New',
                 cancelButtonText: 'Cancel',
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#3b82f6',
+                denyButtonColor: '#10b981',
+                cancelButtonColor: '#6b7280',
                 customClass: {
-                    confirmButton: 'font-bold uppercase tracking-widest text-xs px-6 py-2.5',
-                    cancelButton: 'font-bold uppercase tracking-widest text-xs px-6 py-2.5'
+                    htmlContainer: 'swal2-html-container-tight'
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
                     processShowResult(data);
+                    data.existing_entries.forEach(entry => {
+                        createFormRow(entry);
+                    });
+                } else if (result.isDenied) {
+                    processShowResult(data);
+                    data.existing_entries.forEach(entry => {
+                        createFormRow(entry);
+                    });
+                    addNewEntryRow(); // Automatically add the blank row
                 } else {
-                    resultArea.classList.add('hidden');
-                    $('#product_detail_id').val('').trigger('change');
+                    // Reset selection on cancel
+                    $('#product_detail_id').val('').trigger('change.select2');
+                    document.getElementById('scanResultArea').classList.add('hidden');
                 }
             });
         } else {
+            // New item, add one blank row automatically
             processShowResult(data);
+            createFormRow();
         }
     }
 
+    function createFormRow(entry = null) {
+        const container = document.getElementById('entriesFormContainer');
+        const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
+        const locations = @json($locations);
+        
+        let locationOptions = '<option value="">-- No Location --</option>';
+        locations.forEach(loc => {
+            const selected = (entry && entry.location_id == loc.id) ? 'selected' : '';
+            locationOptions += `<option value="${loc.id}" ${selected}>${loc.name}</option>`;
+        });
+
+        const rowHtml = `
+            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 border ${entry ? 'border-blue-100 dark:border-blue-900/30 bg-blue-50/10' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-all">
+                <input type="hidden" class="row-detail-hash" value="${entry ? entry.detail_id_hash : ''}">
+                
+                <div class="flex-1 w-full">
+                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Quantity (${currentProductData.unit || 'PCS'})</div>
+                    <input type="number" class="row-qty w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded h-[40px] text-center font-bold text-md focus:border-blue-500 transition-all outline-none" 
+                           placeholder="0.00" value="${entry ? entry.real_qty : ''}">
+                </div>
+
+                <div class="flex-[1.5] w-full">
+                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Location</div>
+                    <select class="row-location w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-blue-500 rounded h-[40px] text-xs px-3 outline-none transition-all">
+                        ${locationOptions}
+                    </select>
+                </div>
+
+                <div class="flex-[2] w-full">
+                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Remark</div>
+                    <input type="text" class="row-remark w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-blue-500 rounded h-[40px] text-xs px-3 outline-none transition-all" 
+                           placeholder="Optional Note..." value="${entry ? entry.remark || '' : ''}">
+                </div>
+
+                <button type="button" onclick="saveRowCount('${rowId}')" 
+                        class="h-[40px] px-4 rounded font-bold text-[10px] uppercase tracking-widest transition-all ${entry ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-900 hover:bg-black text-white'} flex items-center justify-center gap-2">
+                    ${entry ? '<i class="fa-solid fa-check"></i> Update' : '<i class="fa-solid fa-plus"></i> Save'}
+                </button>
+                
+                ${entry ? `
+                    <button type="button" onclick="deleteItem('${entry.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                ` : `
+                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="h-[40px] w-[40px] flex items-center justify-center text-gray-400 hover:text-red-400">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `}
+            </div>
+        `;
+        
+        container.insertAdjacentHTML('beforeend', rowHtml);
+        
+        // Auto focus the first blank row's qty
+        if (!entry) {
+            const lastRow = container.lastElementChild;
+            lastRow.querySelector('.row-qty').focus();
+        }
+    }
+
+    window.addNewEntryRow = function() {
+        createFormRow();
+    }
+
+    window.saveRowCount = function(rowId) {
+        const row = document.getElementById(rowId);
+        const qty = row.querySelector('.row-qty').value;
+        const locId = row.querySelector('.row-location').value;
+        const remark = row.querySelector('.row-remark').value;
+        const detailHash = row.querySelector('.row-detail-hash').value;
+        const productHash = currentHashId.value;
+
+        if (qty === '' || !productHash) return;
+
+        // Visual feedback
+        const btn = row.querySelector('button');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
+            body: JSON.stringify({ 
+                product_id_hash: productHash, 
+                detail_id_hash: detailHash, 
+                real_qty: qty, 
+                remark: remark, 
+                location_id: locId 
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                
+                row.querySelector('.row-detail-hash').value = data.detail_id_hash || '';
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Update';
+                btn.className = 'h-[40px] px-4 rounded font-bold text-[10px] uppercase tracking-widest transition-all bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2';
+                btn.disabled = false;
+                row.classList.replace('border-gray-200', 'border-blue-100');
+                row.classList.add('bg-blue-50/10');
+                
+                if (!row.querySelector('.fa-trash')) {
+                    const deleteBtnHtml = `
+                        <button type="button" onclick="deleteItem('${data.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    `;
+                    const xBtn = row.querySelector('.fa-xmark')?.parentElement;
+                    if (xBtn) xBtn.remove();
+                    row.insertAdjacentHTML('beforeend', deleteBtnHtml);
+                }
+
+                table.ajax.reload(null, false);
+                if (data.stats && window.updateStatsCard) window.updateStatsCard(data.stats);
+            } else {
+                Swal.fire('Error', data.message || 'Failed to save.', 'error');
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        });
+    }
+
+    function deleteItem(detailHash) {
+        Swal.fire({
+            title: 'Delete Entry?',
+            text: "Are you sure you want to remove this record?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const url = `{{ route('inventory.sto.deleteDetail', [$stoEvent->hash_id, ':detailHash']) }}`.replace(':detailHash', detailHash);
+                
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: data.message,
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        
+                        // Reload table and update stats
+                        if (typeof table !== 'undefined') table.ajax.reload(null, false);
+                        if (data.stats && window.updateStatsCard) window.updateStatsCard(data.stats);
+                        
+                        if (currentHashId && currentHashId.value) {
+                            fetchStoInfo(currentHashId.value);
+                        }
+                    } else {
+                        Swal.fire('Error', data.message || 'Failed to delete.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
     function processShowResult(data) {
-        resultArea.classList.remove('hidden');
+        const area = document.getElementById('scanResultArea');
+        area.classList.remove('hidden');
+        
         errorArea.classList.add('hidden');
         resPartName.innerText = data.part_name;
         resPartNo.innerText = data.part_no;
         resUnit.innerText = data.unit || 'PCS';
         resSystemQty.innerText = (data.system_qty || 0) + 0;
-        resPrevReal.innerText = (data.prev_real_qty || 0) + 0;
+        
         currentHashId.value = data.product_id_hash;
-        realQtyInput.value = data.prev_real_qty || '';
-        remarkInput.value = '';
-        
-        const unitHelper = document.getElementById('unitHelperLabel');
-        if (unitHelper) {
-            unitHelper.innerText = 'ENTER QTY IN ' + (data.unit || 'UNIT');
-            unitHelper.classList.remove('hidden');
-        }
-        
-        // Visual indicator for editing existing
-        if (data.prev_real_qty !== null) {
-            realQtyInput.classList.add('border-amber-400', 'bg-amber-50/50');
-            setTimeout(() => realQtyInput.classList.remove('border-amber-400', 'bg-amber-50/50'), 2000);
-        }
-
-        setTimeout(() => realQtyInput.focus(), 100);
     }
 
     function showError(msg) {
@@ -736,205 +960,11 @@
         resultArea.classList.add('hidden');
     }
 
-    window.editFromTable = function(hashId) {
-        // Scroll to entry area for better UX
-        document.getElementById('product_detail_id').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Force refresh data even if ID is same
-        fetchStoInfo(hashId);
-        
-        // Match Select2 visual
-        $('#product_detail_id').val(hashId).trigger('change.select2');
+    window.editFromTable = function(productHash, detailHash) {
+        $('#product_detail_id').val(productHash).trigger('change.select2');
+        fetchStoInfo(productHash);
     }
 
-    // --- Actions ---
-    function saveCount() {
-        const qty = realQtyInput.value;
-        const remark = remarkInput.value;
-        const hash = currentHashId.value;
-
-        if (qty === '' || !hash) return;
-
-        fetch(saveUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ product_id_hash: hash, real_qty: qty, remark: remark })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                // Mark as counted in dropdown
-                const $opt = $(`#product_detail_id option[value="${hash}"]`);
-                if ($opt.length) {
-                    $opt.data('counted', 'true').attr('data-counted', 'true');
-                    // Text change removed to keep option content clean
-                }
-
-                // Success feedback
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Saved!',
-                    text: 'Count result recorded successfully.',
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-
-                // Clear input area
-                resultArea.classList.add('hidden');
-                $('#product_detail_id').val('').trigger('change');
-                
-                // Refresh table and stats
-                table.ajax.reload(null, false);
-                if (data.stats && window.updateStatsCard) window.updateStatsCard(data.stats);
-            } else {
-                Swal.fire('Error', data.message || 'Failed to save.', 'error');
-            }
-        });
-    }
-
-    if(btnSaveCount) btnSaveCount.addEventListener('click', saveCount);
-
-    // Submit for Check Confirmation
-    function confirmSubmitForCheck() {
-        Swal.fire({
-            title: 'Submit for Verification?',
-            text: 'You will not be able to edit count data anymore.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#2563EB',
-            confirmButtonText: 'Yes, Submit Now',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('submitForCheckForm').submit();
-            }
-        });
-    }
-
-    // Verify Confirmation
-    function confirmVerify() {
-        Swal.fire({
-            title: 'Verify STO Data?',
-            text: 'Pass this data to final approval stage.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#F59E0B',
-            confirmButtonText: 'Yes, Verify It',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('verifyForm').submit();
-            }
-        });
-    }
-
-    const finalizeForm = document.getElementById('finalizeForm');
-    if (finalizeForm) {
-        finalizeForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Finalize STO Event?',
-                text: 'This will update stock levels and lock further entries.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#0F172A',
-                confirmButtonText: 'Yes, Finalize!'
-            }).then((result) => { if (result.isConfirmed) finalizeForm.submit(); });
-        });
-    }
-
-    function confirmReopen() {
-        Swal.fire({
-            title: 'Reopen Event?',
-            text: 'Adjustments will be reversed. Are you sure?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#4B5563',
-            confirmButtonText: 'Yes, Reopen'
-        }).then((result) => { if (result.isConfirmed) document.getElementById('reopenForm').submit(); });
-    }
-
-    window.updateStatsCard = function(data) {
-        if (!data || !data.stats) return;
-        const s = data.stats;
-        const n = data.netAdjustment;
-        const p = data.progress;
-        const fmt = (v) => new Intl.NumberFormat('en-US').format(v);
-        
-        const set = (i,v) => { let e = document.getElementById(i); if(e) e.innerText = v; };
-        set('stat-total-items', s.total_items);
-        set('stat-progress', p);
-        set('stat-total-unscanned', s.total_unscanned);
-        
-        // Dynamic Alert Visibility
-        const unscannedCount = parseInt(s.total_unscanned) || 0;
-        const alertBanner = document.getElementById('unscanned-alert-banner');
-        const alertPulse = document.getElementById('stat-unscanned-pulse');
-        const alertBadge = document.getElementById('stat-unscanned-badge');
-        const bannerCount = document.getElementById('banner-unscanned-count');
-
-        if (unscannedCount > 0) {
-            if (alertBanner) alertBanner.classList.remove('hidden');
-            if (alertPulse) alertPulse.classList.remove('hidden');
-            if (alertBadge) alertBadge.classList.remove('hidden');
-            if (bannerCount) bannerCount.innerText = unscannedCount;
-        } else {
-            if (alertBanner) alertBanner.classList.add('hidden');
-            if (alertPulse) alertPulse.classList.add('hidden');
-            if (alertBadge) alertBadge.classList.add('hidden');
-        }
-
-        set('stat-total-matched', s.total_matched);
-        set('table-total-matched', s.total_matched);
-        set('table-total-diff', s.total_diff);
-        set('stat-total-increase-pcs', fmt(s.total_increase_pcs) + ' Pcs');
-        set('stat-total-increase', '(' + fmt(s.total_increase) + ' Unit / ' + s.count_increase + ' items)');
-        set('stat-total-decrease-pcs', fmt(s.total_decrease_pcs) + ' Pcs');
-        set('stat-total-decrease', '(' + fmt(s.total_decrease) + ' Unit / ' + s.count_decrease + ' items)');
-        set('stat-net-adjustment-pcs', (n >= 0 ? '+' : '') + fmt(s.net_adjustment_pcs) + ' Pcs');
-        set('stat-net-adjustment', '(' + (n >= 0 ? '+' : '') + fmt(n) + ' Unit)');
-        
-        // Net Financial Impact Update
-        const amtElem = document.getElementById('stat-net-amount-impact');
-        const bgElem = document.getElementById('stat-net-amount-bg');
-        if (amtElem) {
-            const v = s.net_amount_impact;
-            amtElem.innerText = fmt(Math.abs(v));
-            if (v >= 0) {
-                amtElem.classList.remove('text-red-700');
-                amtElem.classList.add('text-emerald-700');
-                if (bgElem) {
-                    bgElem.classList.remove('bg-red-50', 'border-red-100', 'text-red-600');
-                    bgElem.classList.add('bg-emerald-50', 'border-emerald-100', 'text-emerald-600');
-                }
-            } else {
-                amtElem.classList.remove('text-emerald-700');
-                amtElem.classList.add('text-red-700');
-                if (bgElem) {
-                    bgElem.classList.remove('bg-emerald-50', 'border-emerald-100', 'text-emerald-600');
-                    bgElem.classList.add('bg-red-50', 'border-red-100', 'text-red-600');
-                }
-            }
-        }
-    };
-
-    window.openRemainingModal = () => $('#remainingItemsModal').removeClass('hidden').addClass('flex');
-    window.closeRemainingModal = () => $('#remainingItemsModal').addClass('hidden').removeClass('flex');
-
-    window.openRejectModal = () => $('#rejectModal').removeClass('hidden').addClass('flex');
-    window.closeRejectModal = () => $('#rejectModal').addClass('hidden').removeClass('flex');
-
-    // Keybindings: Enter and Alt+S
-    if (realQtyInput) {
-        realQtyInput.addEventListener('keydown', e => { if(e.key === 'Enter') remarkInput.focus(); });
-    }
-    if (remarkInput) {
-        remarkInput.addEventListener('keydown', e => { if(e.key === 'Enter') saveCount(); });
-    }
-
-    // Handle initial product selection from URL parameter (Redirect from Scan Info)
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const productHash = urlParams.get('product');

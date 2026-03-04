@@ -37,6 +37,8 @@ class InventoryProduct extends Model
         'weight_kg',
         'net_weight',
         'material_price',
+        'product_status',
+        'product_status_remark',
     ];
 
     protected $casts = [

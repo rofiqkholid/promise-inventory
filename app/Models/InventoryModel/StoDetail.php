@@ -55,7 +55,9 @@ class StoDetail extends Model
         return $this->belongsTo(StoReason::class, 'reason_id');
     }
 
-    // Accessor for Computed Column 'diff_qty' if needed in PHP logic, 
-    // although Model will just retrieve it if it's select * or explicit select.
-    // Ensure we don't try to fill it.
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
+
 }

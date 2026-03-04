@@ -95,6 +95,11 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/model-config', [ModelConfigController::class, 'index'])->name('modelConfig.index');
             Route::get('/model-config/data', [ModelConfigController::class, 'data'])->name('modelConfig.data');
             Route::post('/model-config/update-status', [ModelConfigController::class, 'updateStatus'])->name('modelConfig.updateStatus');
+
+            // Location (Master Data)
+            Route::get('/location', [\App\Http\Controllers\Inventory\LocationController::class, 'index'])->name('location.index');
+            Route::get('/location/data', [\App\Http\Controllers\Inventory\LocationController::class, 'data'])->name('location.data');
+            Route::resource('location', \App\Http\Controllers\Inventory\LocationController::class)->names('location')->except(['create', 'edit', 'index']);
         });
 
 
@@ -150,6 +155,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     // Stock Monitoring (All Roles)
     Route::get('/inventory/stock-monitoring', [StockMonitoringController::class, 'index'])->name('inventory.stockMonitoring');
     Route::get('/inventory/stock-monitoring/data', [StockMonitoringController::class, 'data'])->name('inventory.stockMonitoring.data');
+    Route::get('/inventory/stock-monitoring/export-excel', [StockMonitoringController::class, 'exportExcel'])->name('inventory.stockMonitoring.exportExcel');
     Route::get('/inventory/stock-monitoring/log/{id}', [StockMonitoringController::class, 'getStoLog'])->name('inventory.stockMonitoring.getStoLog');
     Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 

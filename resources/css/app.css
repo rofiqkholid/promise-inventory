@@ -331,19 +331,24 @@ Eco Animation in Monitoring
 
 /* --- Premium Input Utility (Matches Select2) --- */
 .premium-input {
-    height: 40px !important;
+    height: 38px !important;
+    /* Matching example height */
     border-radius: 6px !important;
-    border: 1px solid #cbd5e1 !important;
-    /* Improved border contrast (Slate 300) */
-    background-color: #f8fafc !important;
-    font-size: 0.8125rem !important;
-    font-weight: 600 !important;
-    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
+    font-size: 0.875rem !important;
+    font-weight: 400 !important;
+    font-family: 'Outfit', sans-serif !important;
+    color: #334155 !important;
     transition: all 0.2s ease;
     outline: none !important;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
+    text-transform: none !important;
+    letter-spacing: normal !important;
     padding: 0 1rem !important;
+}
+
+.premium-input::placeholder {
+    color: #94a3b8 !important;
 }
 
 .dark .premium-input {
@@ -364,11 +369,11 @@ Eco Animation in Monitoring
 
 /* --- Global Premium Select2 Styling --- */
 .select2-container--default .select2-selection--single {
-    height: 40px !important;
+    height: 38px !important;
+    /* Matching example height */
     border-radius: 6px !important;
-    border: 1px solid #cbd5e1 !important;
-    /* Improved border contrast */
-    background-color: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
     display: flex;
     align-items: center;
     transition: all 0.2s ease;
@@ -381,14 +386,19 @@ Eco Animation in Monitoring
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     line-height: normal !important;
-    font-weight: 600 !important;
-    font-size: 0.8125rem !important;
-    color: #475569 !important;
+    font-weight: 400 !important;
+    font-size: 0.875rem !important;
+    font-family: 'Outfit', sans-serif !important;
+    color: #334155 !important;
     padding-left: 0.875rem !important;
     padding-right: 2rem !important;
     width: 100%;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #94a3b8 !important;
 }
 
 .dark .select2-container--default .select2-selection--single .select2-selection__rendered {

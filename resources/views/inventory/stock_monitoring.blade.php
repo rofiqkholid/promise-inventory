@@ -17,6 +17,10 @@
             <button id="btnToggleFilter" class="w-10 h-10 rounded-md bg-white dark:bg-gray-800 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200 hover:shadow-md p-0" title="Toggle Filters">
                 <i class="fa-solid fa-filter text-base"></i>
             </button>
+
+            <button id="btnExportExcel" class="w-10 h-10 rounded-md bg-white dark:bg-gray-800 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200 hover:shadow-md p-0" title="Export Excel">
+                <i class="fa-solid fa-file-excel text-base"></i>
+            </button>
             
             <div class="relative">
                 <button id="toggleLegend" class="w-10 h-10 rounded-md bg-white dark:bg-gray-800 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200 hover:shadow-md p-0" title="Legend & Help">
@@ -69,7 +73,7 @@
         <div class="absolute -top-[7px] right-14 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white dark:border-b-gray-800"></div>
         
         <div class="flex flex-col xl:flex-row gap-4 xl:items-end">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
                 <!-- Stock Status -->
                 <div class="space-y-1.5">
                     <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Stock Status</label>
@@ -103,6 +107,19 @@
                     <div class="w-full">
                         <select id="filter_model" class="select2 w-full">
                             <option value="">All Models</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Project Status -->
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Project Status</label>
+                    <div class="w-full">
+                        <select id="filter_project_status" class="select2 w-full">
+                            <option value="">All Project Status</option>
+                            @foreach($project_statuses as $ps)
+                                <option value="{{ $ps }}">{{ $ps }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -184,6 +201,7 @@
                     <th rowspan="2" class="w-12 border-b dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
                     <th rowspan="2" class="border-b dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Product Information</th>
                     <th rowspan="2" class="border-b dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Spec & Size</th>
+                    <th rowspan="2" class="border-b dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Project Status</th>
                     <th rowspan="2" class="border-b dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Remark</th>
                     <th colspan="1" class="border-b dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50 dark:bg-slate-900/50">Current Balance</th>
                     <th colspan="{{ max(1, $categories->count()) + 1 }}" class="border-b dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-red-50/50 dark:bg-red-900/20">Movement & Issues (Pcs / Unit)</th>
@@ -265,6 +283,21 @@
             {
                 data: 'spec_size',
                 className: 'text-[10px] text-gray-500 font-medium uppercase'
+            },
+            {
+                data: 'project_status',
+                className: 'text-center',
+                render: function(data) {
+                    let colorClass = 'bg-gray-100 text-gray-600 border-gray-100 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
+                    if (data === 'Project') colorClass = 'bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800';
+                    else if (data === 'Regular') colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800';
+                    else if (data === 'Allsize OK') colorClass = 'bg-cyan-50 text-cyan-600 border-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800';
+                    else if (data === 'Allsize NG') colorClass = 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
+                    else if (data === 'Damage') colorClass = 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
+                    else if (data === 'Other') colorClass = 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800';
+                    
+                    return `<span class="px-1.5 py-0.5 rounded border ${colorClass} text-[9px] font-bold uppercase tracking-tighter">${data}</span>`;
+                }
             },
             {
                 data: 'remark',
@@ -396,6 +429,7 @@
                     d.stock_status = $('#filter_status').val();
                     d.customer_id = $('#filter_customer').val();
                     d.model_id = $('#filter_model').val();
+                    d.project_status = $('#filter_project_status').val();
                 }
             },
             columns: columns,
@@ -474,6 +508,20 @@
             }
         });
 
+        // Export Excel Handler
+        $('#btnExportExcel').on('click', function() {
+            const params = {
+                stock_status: $('#filter_status').val(),
+                customer_id: $('#filter_customer').val(),
+                model_id: $('#filter_model').val(),
+                project_status: $('#filter_project_status').val(),
+                search: table.search()
+            };
+            
+            const queryString = $.param(params);
+            window.open("{{ route('inventory.stockMonitoring.exportExcel') }}?" + queryString, '_blank');
+        });
+
         // Print Balance Button Handler
         $(document).on('click', '.print-balance-button', function() {
             const id = $(this).data('id');
@@ -488,7 +536,7 @@
         });
 
         // Filter Handlers
-        $('#filter_status, #filter_customer, #filter_model').on('change', function() {
+        $('#filter_status, #filter_customer, #filter_model, #filter_project_status').on('change', function() {
             table.draw();
         });
 
@@ -521,10 +569,10 @@
         loadModels(null);
 
         $('#reset_filters').on('click', function() {
-            $('#filter_status').val('').trigger('change');
             $('#filter_customer').val('').trigger('change');
             
             $('#filter_model').val(null).trigger('change.select2');
+            $('#filter_project_status').val('').trigger('change');
             
             table.search('').draw();
         });

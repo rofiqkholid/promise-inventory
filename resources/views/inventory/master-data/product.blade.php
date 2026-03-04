@@ -25,7 +25,7 @@
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 w-48 min-w-[180px]">Part No</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Customer</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Model</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Status</th>
+                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Project Status</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Material</th>
                 <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Dimensions</th>
                 <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Pcs/Unit</th>
@@ -105,10 +105,32 @@
 
                             <div>
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
-                                <select name="material_spec_id" id="material_spec_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                 <select name="material_spec_id" id="material_spec_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Material Spec</option>
                                 </select>
                                 <p id="error-material_spec_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Check Input</p>
+                            </div>
+
+
+
+                            {{-- PRODUCT STATUS --}}
+                            <div>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Product Status Override</label>
+                                <select name="product_status" id="product_status" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <option value="">None (Follow Model)</option>
+                                    <option value="Allsize OK">Allsize OK</option>
+                                    <option value="Allsize NG">Allsize NG</option>
+                                </select>
+                            </div>
+
+                            {{-- PRODUCT STATUS REMARK --}}
+                            <div>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Status Remark</label>
+                                <select name="product_status_remark" id="product_status_remark" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <option value="">No Remark</option>
+                                    <option value="Damage">Damage</option>
+                                    <option value="Other">Other</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -260,6 +282,29 @@
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
         let dropdownData = {};
         let isEditMode = false;
+        let isDuplicateMode = false;
+
+        function toggleDuplicateMode(isDuplicate) {
+            isDuplicateMode = isDuplicate;
+            // Select all inputs, selects, textareas except model_id, CSRF, and method
+            const fields = $('#productForm').find('input, select, textarea').not('#model_id, [name="_token"], [name="_method"]');
+            
+            fields.prop('disabled', isDuplicate);
+            
+            // Special handling for Select2
+            $('#productForm').find('select.select2-hidden-accessible').not('#model_id').each(function() {
+                $(this).trigger('change.select2');
+            });
+
+            // Re-enforce read-only/disabled fields that should always be restricted
+            $('#weight_kg').prop('disabled', true);
+            $('#min_stock').prop('disabled', true);
+            
+            // Model ID should always be enabled in duplication mode once customer is loaded
+            if (isDuplicate) {
+                $('#model_id').prop('disabled', false).trigger('change.select2');
+            }
+        }
 
         function initFormSelect2() {
             $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id').select2({
@@ -487,11 +532,17 @@
                     className: 'px-4 py-3 text-center'
                 },
                 {
-                    data: 'project_status',
+                    data: 'product_status', // effective status logic
                     className: 'px-4 py-3 text-center',
-                    render: d => {
-                        const colors = d === 'Project' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-                        return `<span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${colors}">${d}</span>`;
+                    render: (d, t, r) => {
+                        const status = d || r.model_project_status || 'Project';
+                        let colors = '';
+                        if (status === 'Project') colors = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+                        else if (status === 'Regular') colors = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                        else colors = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+
+                        const overrideLabel = d ? ' <span class="text-[8px] opacity-70">(Override)</span>' : '';
+                        return `<span class="px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${colors}">${status}${overrideLabel}</span>`;
                     }
                 },
                 {
@@ -627,6 +678,7 @@
             initProductSelect2();
             $('#unit_id').val('').trigger('change');
             $('[id^="error-"]').addClass('hidden').text('');
+            toggleDuplicateMode(false);
             toggleUnitFields();
             showModal(formModal);
         });
@@ -641,7 +693,13 @@
             e.preventDefault();
             $('[id^="error-"]').addClass('hidden').text('');
 
+            // Temporarily enable fields to capture data
+            const wasDuplicate = isDuplicateMode;
+            if (wasDuplicate) toggleDuplicateMode(false);
+            
             const formData = new FormData(this);
+            
+            if (wasDuplicate) toggleDuplicateMode(true);
 
             $.ajax({
                 url: $(this).attr('action'),
@@ -678,6 +736,7 @@
             $('#formMethod').val('POST');
             $('#productForm').attr('action', '{{ route("inventory.master.product.store") }}');
             
+            toggleDuplicateMode(true);
             $('[id^="error-"]').addClass('hidden').text('');
 
             $.get(`{{ url('inventory/master/product') }}/${id}`, function(data) {
@@ -720,7 +779,9 @@
                 $('#net_weight').val(parseFloat(data.net_weight || 0));
                 $('#material_price').val(parseFloat(data.material_price || 20000));
                 $('#remark').val(data.remark);
-                $('#project_status').val(data.project_status).trigger('change');
+
+                $('#product_status').val(data.product_status).trigger('change');
+                $('#product_status_remark').val(data.product_status_remark).trigger('change');
 
                 toggleUnitFields();
                 showModal(formModal);
@@ -784,8 +845,11 @@
                 $('#net_weight').val(parseFloat(data.net_weight || 0));
                 $('#material_price').val(parseFloat(data.material_price || 20000));
                 $('#remark').val(data.remark);
-                $('#project_status').val(data.project_status).trigger('change');
 
+                $('#product_status').val(data.product_status).trigger('change');
+                $('#product_status_remark').val(data.product_status_remark).trigger('change');
+
+                toggleDuplicateMode(false);
                 toggleUnitFields();
                 showModal(formModal);
             });

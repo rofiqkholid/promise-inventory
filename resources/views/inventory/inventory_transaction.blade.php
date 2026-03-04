@@ -129,22 +129,69 @@
         {{-- Recent Transactions Table --}}
         <div class="lg:col-span-2">
             <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-md shadow-sm overflow-hidden h-full flex flex-col">
-                <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 flex flex-wrap justify-between items-center gap-4 bg-slate-50/50 dark:bg-slate-900/30">
-                    <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
-                        <i class="fa-solid fa-clock-rotate-left mr-2 text-blue-600 text-sm"></i> Transaction Activity Log
-                    </h3>
-                    
-                    <div class="flex items-center gap-2">
-                        <div class="relative group">
-                            <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 text-[10px] pointer-events-none transition-colors z-10"></i>
-                            <input type="text" id="filter_date_range" readonly 
-                                value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
-                                class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md pl-8 pr-2 h-8 text-[10px] font-bold text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer shadow-sm uppercase w-48" 
-                                placeholder="Filter by Date">
+                <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
+                    <div class="flex flex-wrap justify-between items-center gap-4 mb-2" id="activityHeader">
+                        <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
+                            <i class="fa-solid fa-clock-rotate-left mr-2 text-blue-600 text-sm"></i> Transaction Activity Log
+                        </h3>
+                        <div class="flex items-center gap-3">
+                            <button id="toggleFilters" class="flex items-center gap-2 px-4 h-9 text-[10px] font-bold text-gray-500 hover:text-blue-600 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm transition-all uppercase tracking-widest group">
+                                <i class="fa-solid fa-filter text-[10px] text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                                <span>Filter</span>
+                                <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-300 ml-1" id="filterChevron"></i>
+                            </button>
+                            <button id="refreshTable" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm">
+                                <i class="fa-solid fa-arrows-rotate text-sm"></i>
+                            </button>
                         </div>
-                        <button id="refreshTable" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm">
-                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
-                        </button>
+                    </div>
+
+                    <div id="filterContainer" class="hidden mt-6 pt-6 border-t border-slate-100 dark:border-gray-700/50">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {{-- Material Filter --}}
+                            <div class="relative group">
+                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">Material</label>
+                                <select id="filter_product_detail_id" class="select2-filter-log w-full">
+                                    <option value="">All Materials</option>
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->hash_id }}">{{ $product->part_no }} - {{ $product->part_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Category Filter --}}
+                            <div class="relative group">
+                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">Category</label>
+                                <select id="filter_category_id" class="select2-filter-log w-full">
+                                    <option value="">All Categories</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->hash_id }}">{{ $category->name }} ({{ $category->effect == 1 ? 'IN' : 'OUT' }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- PIC Filter --}}
+                            <div class="relative group">
+                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">PIC</label>
+                                <select id="filter_pic_id" class="select2-filter-log w-full">
+                                    <option value="">All PIC</option>
+                                    @foreach($pics as $p)
+                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Date Filter --}}
+                            <div class="relative group">
+                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">Date Range</label>
+                                <div class="relative">
+                                    <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none transition-colors z-10"></i>
+                                    <input type="text" id="filter_date_range" readonly 
+                                        value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
+                                        class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md pl-9 pr-2 h-9 text-[11px] font-normal text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer shadow-sm w-full transition-all" 
+                                        placeholder="Filter by Date">
+                                </div>
+                            </div>
                     </div>
                 </div>
                 <div class="overflow-x-auto flex-1 bg-white dark:bg-gray-800">
@@ -156,8 +203,9 @@
                                 <th class="w-32 text-center font-bold uppercase tracking-wider text-[10px]">Category</th>
                                 <th class="w-24 text-center font-bold uppercase tracking-wider text-[10px]">Qty</th>
                                 <th class="w-40 text-left font-bold uppercase tracking-wider text-[10px]">PIC</th>
-                                <th class="text-left font-bold uppercase tracking-wider text-[10px]">Remark</th>
+                                @if(Auth::user()->hasAppRole('supervisor') || Auth::user()->hasAppRole('admin'))
                                 <th class="w-20 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -290,6 +338,12 @@
 @endsection
 
 @push('style')
+<style>
+    /* DataTable Search Box custom padding */
+    .dataTables_filter {
+        padding: 0 24px 20px 24px !important;
+    }
+</style>
 @endpush
 
 @push('scripts')
@@ -366,6 +420,9 @@
                     if (dateRange && dateRange.includes(' - ')) {
                         d.date_range = dateRange;
                     }
+                    d.product_detail_id = $('#filter_product_detail_id').val();
+                    d.category_id = $('#filter_category_id').val();
+                    d.pic_id = $('#filter_pic_id').val();
                 }
             },
             columns: [
@@ -402,32 +459,32 @@
                     data: 'pic_name',
                     render: (d) => `<span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">${d}</span>`
                 },
-                { 
-                    data: 'remark', 
-                    render: (d) => d ? `<span class="text-[10px] text-gray-400 font-normal italic">${d}</span>` : `<span class="text-gray-200 font-mono text-[10px]">-</span>` 
-                },
+                @if(Auth::user()->hasAppRole('supervisor') || Auth::user()->hasAppRole('admin'))
                 {
                     data: null,
                     orderable: false,
                     className: 'text-center',
-                    render: (d, t, r) => `
-                        <div class="flex items-center justify-center gap-1">
-                            <button class="edit-transaction-btn p-1.5 text-slate-400 hover:text-blue-500 transition-colors" data-id="${r.id}" title="Edit">
-                                <i class="fa-solid fa-pen-to-square text-xs"></i>
-                            </button>
-                            <button class="delete-transaction-btn p-1.5 text-slate-400 hover:text-red-500 transition-colors" data-id="${r.id}" title="Delete">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
-                            </button>
-                        </div>
-                    `
+                    render: (d, t, r) => {
+                        return `
+                            <div class="flex items-center justify-center gap-1">
+                                <button class="edit-transaction-btn p-1.5 text-slate-400 hover:text-blue-500 transition-colors" data-id="${r.id}" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                </button>
+                                <button class="delete-transaction-btn p-1.5 text-slate-400 hover:text-red-500 transition-colors" data-id="${r.id}" title="Delete">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
                 }
+                @endif
             ],
             order: [[0, 'desc']],
             pageLength: 10,
             lengthChange: false,
             bLengthChange: false,
-            dom: "<'flex flex-col'rt><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
-            searching: false
+            dom: "<'flex justify-between items-center mb-2'f><'flex flex-col'rt><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
+            searching: true
         });
 
         $('#refreshTable').click(function() {
@@ -449,6 +506,36 @@
                     setTimeout(() => table.ajax.reload(), 10);
                 });
             }
+        });
+
+        // Filter Toggle Handler
+        $('#toggleFilters').click(function() {
+            const container = $('#filterContainer');
+            const chevron = $('#filterChevron');
+            const header = $('#activityHeader');
+            
+            if (container.hasClass('hidden')) {
+                container.removeClass('hidden').hide().slideDown(300);
+                chevron.addClass('rotate-180');
+                header.addClass('mb-6');
+            } else {
+                container.slideUp(300, function() {
+                    $(this).addClass('hidden');
+                    header.removeClass('mb-4');
+                });
+                chevron.removeClass('rotate-180');
+            }
+        });
+
+        // Search Handlers
+        $('#filter_product_detail_id, #filter_category_id, #filter_pic_id').on('change', function() {
+            table.ajax.reload();
+        });
+
+        $('.select2-filter-log').select2({
+            width: '100%',
+            containerCssClass: 'select2-filter-log',
+            dropdownCssClass: 'select2-filter-log'
         });
 
         // Initialize Global Scanner Service (Unified)

@@ -30,8 +30,10 @@ class InventoryTransactionController extends Controller
         
         $coilCenters = CoilCenter::select('id', 'code', 'name')->orderBy('code')->get();
         $suppliers = Supplier::select('id', 'code', 'name')->orderBy('code')->get();
+        
+        $pics = \App\Models\User::select('id', 'name')->orderBy('name')->get();
 
-        return view('inventory.inventory_transaction', compact('products', 'categories', 'coilCenters', 'suppliers'));
+        return view('inventory.inventory_transaction', compact('products', 'categories', 'coilCenters', 'suppliers', 'pics'));
     }
 
     public function data(Request $request)
@@ -46,6 +48,24 @@ class InventoryTransactionController extends Controller
                 if ($decoded) $prodId = $decoded;
             }
             $query->where('product_detail_id', $prodId);
+        }
+
+        // Filter by Category
+        if ($request->filled('category_id')) {
+            $catId = $request->category_id;
+            if (!is_numeric($catId)) {
+                $decoded = \App\Models\InventoryModel\TransactionCategory::decodeHash($catId);
+                if ($decoded) $catId = $decoded;
+            }
+            $query->where('transaction_category_id', $catId);
+        }
+
+        // Filter by PIC (User)
+        if ($request->filled('pic_id')) {
+            $picId = $request->pic_id;
+            if (!is_numeric($picId)) {
+            }
+            $query->where('user_id', $picId);
         }
 
         // Filter by Date Range
@@ -224,6 +244,10 @@ class InventoryTransactionController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Auth::user()->hasAppRole('supervisor') && !Auth::user()->hasAppRole('admin')) {
+            return response()->json(['success' => false, 'message' => 'You do not have permission to edit transactions.'], 403);
+        }
+
         $decodedId = InventoryTransaction::decodeHash($id);
         $transaction = InventoryTransaction::findOrFail($decodedId);
 
@@ -290,6 +314,10 @@ class InventoryTransactionController extends Controller
 
     public function destroy($id)
     {
+        if (!Auth::user()->hasAppRole('supervisor') && !Auth::user()->hasAppRole('admin')) {
+            return response()->json(['success' => false, 'message' => 'You do not have permission to delete transactions.'], 403);
+        }
+
         $decodedId = InventoryTransaction::decodeHash($id);
         $transaction = InventoryTransaction::findOrFail($decodedId);
 

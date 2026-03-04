@@ -47,6 +47,28 @@
              </div>
         </div>
 
+        <!-- Quick Actions -->
+        <div class="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <a href="{{ route('inventory.transaction', ['product' => $product->hash_id]) }}" 
+               class="group h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all">
+                <i class="fa-solid fa-plus-circle text-lg text-blue-200"></i>
+                <span>New Transaction</span>
+                @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
+            </a>
+            
+            @php
+                $stoUrl = $activeStoHashId 
+                    ? route('inventory.sto.show', ['id' => $activeStoHashId, 'product' => $product->hash_id])
+                    : route('inventory.sto.index');
+            @endphp
+            <a href="{{ $stoUrl }}" 
+               class="group h-14 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                <i class="fa-solid fa-clipboard-check text-lg text-emerald-500"></i>
+                <span>Stock Opname</span>
+                @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
+            </a>
+        </div>
+
         <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
             
             <!-- Status Badge Area -->
@@ -76,7 +98,6 @@
                 </div>
             </div>
 
-            <!-- Content Grid -->
             <div class="p-8">
                 <!-- Unified Stock KPI Section -->
                 <div class="mb-10">
@@ -135,33 +156,23 @@
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $product->material }}</span>
                         </div>
                         <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Project Status</span>
+                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                                {{ $product->product_status ?: $product->model_project_status }}
+                                @if($product->product_status) <span class="text-[9px] text-blue-500 font-bold ml-1 uppercase">(Override)</span> @endif
+                            </span>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status Remark</span>
+                            <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $product->product_status_remark ?: '-' }}</span>
+                        </div>
+                        <div class="flex flex-col gap-1">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Safety Stock Level</span>
                             <span class="text-sm font-bold text-red-600">{{ $product->min_stock }} <small class="text-[10px] uppercase ml-0.5">PCS</small></span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Group -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <a href="{{ route('inventory.transaction', ['product' => $product->hash_id]) }}" 
-                       class="group h-14 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                        <i class="fa-solid fa-plus-circle text-lg"></i>
-                        <span>New Transaction</span>
-                        @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
-                    </a>
-                    
-                    @php
-                        $stoUrl = $activeStoHashId 
-                            ? route('inventory.sto.show', ['id' => $activeStoHashId, 'product' => $product->hash_id])
-                            : route('inventory.sto.index');
-                    @endphp
-                    <a href="{{ $stoUrl }}" 
-                       class="group h-14 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
-                        <i class="fa-solid fa-clipboard-check text-lg text-emerald-600"></i>
-                        <span>Stock Opname</span>
-                        @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
-                    </a>
-                </div>
             </div>
 
             <!-- Footer Meta -->

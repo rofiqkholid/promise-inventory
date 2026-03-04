@@ -287,8 +287,9 @@ class StoController extends Controller
             ->get();
 
         $reasons = StoReason::where('is_active', 1)->get();
+        $locations = \App\Models\InventoryModel\Location::where('is_active', 1)->orderBy('name')->get();
 
-        return view('inventory.sto.show', compact('stoEvent', 'stats', 'products', 'allProducts', 'netAdjustment', 'progress', 'reasons', 'countedIds'));
+        return view('inventory.sto.show', compact('stoEvent', 'stats', 'products', 'allProducts', 'netAdjustment', 'progress', 'reasons', 'countedIds', 'locations'));
     }
 
     /**
@@ -298,7 +299,7 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'auditor', 'reason'])
+        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'auditor', 'reason', 'location'])
             ->where('event_id', $stoEvent->id);
 
         // Searching
@@ -377,14 +378,19 @@ class StoController extends Controller
             $diffAmount = $diff * $weightPerPcs * $pricePerKg;
 
             $formatCurrency = function($val, $isDiff = false) {
-                if ($val == 0) return '<span class="text-gray-300">-</span>';
-                
-                $color = 'text-gray-600 dark:text-gray-400';
-                if ($isDiff) {
-                    $color = $val < 0 ? 'text-red-600' : 'text-green-600';
+                if ($val == 0) {
+                    if ($isDiff) return '<span class="text-[11px] font-mono font-bold text-green-600">0</span>';
+                    return '<span class="text-gray-300">-</span>';
                 }
                 
-                return '<span class="text-[11px] font-mono font-bold ' . $color . '">' . number_format(abs($val), 0) . '</span>';
+                $color = 'text-gray-600 dark:text-gray-400';
+                $prefix = '';
+                if ($isDiff) {
+                    $color = 'text-red-600';
+                    $prefix = $val > 0 ? '+' : '-';
+                }
+                
+                return '<span class="text-[11px] font-mono font-bold ' . $color . '">' . $prefix . number_format(abs($val), 0) . '</span>';
             };
             
             $productInfo = '
@@ -398,11 +404,11 @@ class StoController extends Controller
             $diffHtml = '';
             
             if ($diff > 0) {
-                $diffHtml = '<div class="text-green-600">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '+') . '</div>';
+                $diffHtml = '<div class="text-red-600">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '+') . '</div>';
             } elseif ($diff < 0) {
                 $diffHtml = '<div class="text-red-600">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '-') . '</div>';
             } else {
-                $diffHtml = '<span class="text-sm font-medium text-gray-300">-</span>';
+                $diffHtml = '<span class="text-sm font-bold text-green-600">0</span>';
             }
 
             // Inline editable QTY field for OPEN status - Permission restricted
@@ -466,11 +472,7 @@ class StoController extends Controller
             $actionHtml = '';
             if ($stoEvent->status === 'OPEN') {
                 $actionHtml = '
-                    <div class="flex items-center justify-center gap-4">
-                        <button type="button" onclick="editFromTable(\'' . $detail->product->hash_id . '\')" 
-                                class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Edit Entry">
-                            <i class="fa-solid fa-pen-to-square text-lg"></i>
-                        </button>
+                    <div class="flex items-center justify-center">
                         <button type="button" onclick="deleteItem(\'' . $detail->hash_id . '\')" 
                                 class="text-gray-400 hover:text-red-600 transition-colors" title="Delete Entry">
                             <i class="fa-solid fa-trash-can text-lg"></i>
@@ -491,6 +493,7 @@ class StoController extends Controller
                 'real_amount' => $formatCurrency($realAmount),
                 'diff' => $diffHtml,
                 'diff_amount' => $formatCurrency($diffAmount, true),
+                'location' => $detail->location->name ?? '<span class="text-gray-400 italic">No Location</span>',
                 'reason' => $reasonHtml,
                 'remark' => $remarkHtml,
                 'action' => $actionHtml
@@ -548,13 +551,24 @@ class StoController extends Controller
             return response()->json(['success' => false, 'message' => 'Product details missing.'], 404);
         }
 
-        // Check if already counted
-        $existing = StoDetail::where('event_id', $stoEvent->id)
+        // Check all existing entries for this product in this event
+        $existingEntries = StoDetail::with('location')
+            ->where('event_id', $stoEvent->id)
             ->where('product_detail_id', $product->id)
-            ->first();
+            ->get();
 
-        $systemQty = $existing ? $existing->system_qty_snapshot : $product->current_stock_qty;
-        $prevReal = $existing ? $existing->real_qty_input : null;
+        $existingData = $existingEntries->map(function($entry) {
+            return [
+                'detail_id_hash' => $entry->hash_id,
+                'location_id' => $entry->location_id,
+                'location_name' => $entry->location->name ?? 'No Location',
+                'real_qty' => $entry->real_qty_input,
+                'remark' => $entry->remark
+            ];
+        });
+
+        // Current system qty snapshot logic
+        $systemQty = $existingEntries->isNotEmpty() ? $existingEntries->first()->system_qty_snapshot : $product->current_stock_qty;
 
         return response()->json([
             'success' => true,
@@ -564,8 +578,8 @@ class StoController extends Controller
                 'part_name' => $product->product->part_name ?? '-',
                 'unit' => $product->unit->code ?? 'PCS',
                 'system_qty' => $systemQty,
-                'prev_real_qty' => $prevReal,
-                'is_new_snapshot' => !$existing
+                'existing_entries' => $existingData,
+                'is_new_snapshot' => $existingEntries->isEmpty()
             ]
         ]);
     }
@@ -583,17 +597,15 @@ class StoController extends Controller
 
         $request->validate([
             'product_id_hash' => 'required',
+            'detail_id_hash' => 'nullable', // NEW: Specific ID to update
+            'location_id' => 'nullable|exists:inv_m_locations,id',
             'real_qty' => 'required|numeric|min:0',
             'remark' => 'nullable|string|max:255',
             'reason_id' => 'nullable|exists:inv_m_sto_reasons,id'
         ]);
 
         $productId = InventoryProduct::decodeHash($request->product_id_hash);
-        
-        // Authorization check for Save Count (if editing existing)
-        $detail = StoDetail::where('event_id', $stoEvent->id)
-            ->where('product_detail_id', $productId)
-            ->first();
+        $detailId = $request->detail_id_hash ? StoDetail::decodeHash($request->detail_id_hash) : null;
         
         $user = auth()->user();
         $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic');
@@ -611,19 +623,41 @@ class StoController extends Controller
             return response()->json(['success' => false, 'message' => 'Product not found'], 404);
         }
 
-        // Upsert Detail
-        $detail = StoDetail::where('event_id', $stoEvent->id)
-            ->where('product_detail_id', $productId)
-            ->first();
+        // Upsert Detail Logic
+        $detail = null;
+        if ($detailId) {
+            // If explicit detail ID provided, we update THAT specific row
+            $detail = StoDetail::find($detailId);
+        } else {
+            // Find existing by product + location combo to avoid duplicates
+            $detail = StoDetail::where('event_id', $stoEvent->id)
+                ->where('product_detail_id', $productId)
+                ->where(function($q) use ($request) {
+                    if ($request->location_id) $q->where('location_id', $request->location_id);
+                    else $q->whereNull('location_id');
+                })
+                ->first();
+        }
 
         if (!$detail) {
-            // New Entry: Snapshot System Qty
             $detail = new StoDetail();
             $detail->event_id = $stoEvent->id;
             $detail->product_detail_id = $productId;
-            $detail->system_qty_snapshot = $product->current_stock_qty;
+            
+            // Snapshot Logic
+            $alreadyCountedForThisProduct = StoDetail::where('event_id', $stoEvent->id)
+                ->where('product_detail_id', $productId)
+                ->exists();
+                
+            if ($alreadyCountedForThisProduct) {
+                // Secondary location uses 0 snapshot so total diff is correct
+                $detail->system_qty_snapshot = 0;
+            } else {
+                $detail->system_qty_snapshot = $product->current_stock_qty;
+            }
         }
 
+        $detail->location_id = $request->location_id;
         $detail->real_qty_input = $request->real_qty;
         $detail->remark = $request->remark;
         
@@ -650,8 +684,31 @@ class StoController extends Controller
     }
 
     /**
-     * Finalize Event and Adjust Stock.
+     * Delete an STO Detail record.
      */
+    public function deleteDetail($id, $detailId)
+    {
+        $stoEvent = StoEvent::findByHashOrFail($id);
+        
+        if ($stoEvent->status !== 'OPEN') {
+            return response()->json(['success' => false, 'message' => 'Event is not in OPEN status.']);
+        }
+
+        $detail = StoDetail::findByHashOrFail($detailId);
+        
+        if ((int)$detail->event_id !== (int)$stoEvent->id) {
+            return response()->json(['success' => false, 'message' => 'Detail does not belong to this event.']);
+        }
+
+        $detail->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Entry deleted successfully.',
+            'stats' => $this->getStoStats($stoEvent)
+        ]);
+    }
+
     /**
      * Submit STO for Verification (Owner/Operator).
      */
@@ -888,12 +945,14 @@ class StoController extends Controller
             ->select(
                 DB::raw('SUM(CASE WHEN inv_t_sto_detail.diff_qty > 0 THEN inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit ELSE 0 END) as inc_pcs'),
                 DB::raw('SUM(CASE WHEN inv_t_sto_detail.diff_qty < 0 THEN inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit ELSE 0 END) as dec_pcs'),
-                DB::raw('SUM(inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit) as net_pcs')
+                DB::raw('SUM(inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit) as net_pcs'),
+                DB::raw('SUM(inv_t_sto_detail.real_qty_input * inv_t_product_detail.pcs_per_unit) as total_recorded_pcs')
             )
             ->first();
 
         $stats = [
-            'total_items' => (clone $baseQuery)->count(),
+            'total_recorded_pcs' => $pcsStats->total_recorded_pcs ?? 0,
+            'total_items' => (clone $baseQuery)->distinct()->count('product_detail_id'),
             'total_diff' => (clone $baseQuery)->where('diff_qty', '!=', 0)->count(),
             'total_matched' => (clone $baseQuery)->where('diff_qty', 0)->count(),
             'total_increase' => (clone $baseQuery)->where('diff_qty', '>', 0)->sum('diff_qty'),
@@ -912,7 +971,7 @@ class StoController extends Controller
         $netAdjustment = (clone $baseQuery)->sum('diff_qty');
         
         $totalProducts = InventoryProduct::where('is_active', 1)->count();
-        $stats['total_unscanned'] = max(0, $totalProducts - $stats['total_items']);
+        $stats['total_missing_items'] = max(0, $totalProducts - $stats['total_items']);
         $stats['total_count'] = $totalProducts;
         
         $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;

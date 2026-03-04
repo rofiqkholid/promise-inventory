@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryModel\InventoryProduct;
+use App\Exports\StockMonitoringExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StockMonitoringController extends Controller
 {
@@ -18,7 +20,10 @@ class StockMonitoringController extends Controller
             ->get();
 
         // Calculate Stats for KPI
-        $products = InventoryProduct::where('is_active', 1)->get();
+        $products = InventoryProduct::where('inv_t_product_detail.is_active', 1)
+            ->leftJoin('inv_m_model_status', 'inv_m_model_status.model_id', '=', 'inv_t_product_detail.model_id')
+            ->select('inv_t_product_detail.*', 'inv_m_model_status.project_status')
+            ->get();
         
         $stats = [
             'total' => $products->count(),
@@ -29,7 +34,7 @@ class StockMonitoringController extends Controller
         ];
 
         foreach ($products as $p) {
-            $status = $this->calculateStockStatus($p->current_stock_qty, $p->min_stock, $p->pcs_per_unit);
+            $status = $this->calculateStockStatus($p->current_stock_qty, $p->min_stock, $p->pcs_per_unit, $p->project_status);
             if (isset($stats[$status])) {
                 $stats[$status]++;
             }
@@ -38,7 +43,13 @@ class StockMonitoringController extends Controller
         // Get Customers for Filter
         $customers = DB::table('customers')->select('id', 'code', 'name')->orderBy('code')->get();
 
-        return view('inventory.stock_monitoring', compact('categories', 'stats', 'customers'));
+        // Get Project Statuses for Filter
+        $project_statuses = DB::table('inv_m_model_status')
+            ->whereNotNull('project_status')
+            ->distinct()
+            ->pluck('project_status');
+
+        return view('inventory.stock_monitoring', compact('categories', 'stats', 'customers', 'project_statuses'));
     }
 
     public function data(Request $request)
@@ -70,9 +81,9 @@ class StockMonitoringController extends Controller
 
         // 3. Build Query
         $query = InventoryProduct::query()
-            // Joins for Product Details
             ->join('products', 'products.id', '=', 'inv_t_product_detail.product_id')
-            ->leftJoin('models', 'models.id', '=', 'products.model_id')
+            ->leftJoin('models', 'models.id', '=', 'inv_t_product_detail.model_id')
+            ->leftJoin('inv_m_model_status', 'inv_m_model_status.model_id', '=', 'models.id')
             ->leftJoin('customers', 'customers.id', '=', 'products.customer_id')
             ->leftJoin('inv_m_material_spec', 'inv_m_material_spec.id', '=', 'inv_t_product_detail.material_spec_id')
             ->leftJoin('inv_m_rank', 'inv_m_rank.id', '=', 'inv_t_product_detail.rank_id')
@@ -104,6 +115,9 @@ class StockMonitoringController extends Controller
                 'inv_t_product_detail.length_2',
                 'inv_t_product_detail.pitch',
                 'inv_t_product_detail.weight_kg',
+                'inv_t_product_detail.product_status',
+                'inv_t_product_detail.product_status_remark',
+                'inv_m_model_status.project_status as model_project_status',
                 'models.name as model_name',
                 'customers.code as customer_code',
                 'inv_m_rank.code as rank_code',
@@ -143,17 +157,41 @@ class StockMonitoringController extends Controller
                       ->where($minSql, '>', 0);
                 } elseif ($status === 'danger') {
                     $q->whereRaw("{$currentPcsSql} < ({$minSql} - 30)")
-                      ->where($minSql, '>', 0);
+                      ->where($minSql, '>', 0)
+                      ->where(function($sq) {
+                          $sq->where('inv_m_model_status.project_status', '!=', 'Regular')
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->orWhereNull('inv_m_model_status.project_status');
+                      });
                 } elseif ($status === 'warning') {
                     $q->whereRaw("{$currentPcsSql} >= ({$minSql} - 30)")
                       ->whereRaw("{$currentPcsSql} < {$minSql}")
-                      ->where($minSql, '>', 0);
+                      ->where($minSql, '>', 0)
+                      ->where(function($sq) {
+                          $sq->where('inv_m_model_status.project_status', '!=', 'Regular')
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->orWhereNull('inv_m_model_status.project_status');
+                      });
                 } elseif ($status === 'safe') {
                     $q->where(function($sq) use ($currentPcsSql, $minSql) {
-                        $sq->whereRaw("{$currentPcsSql} >= {$minSql}")
-                          ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
-                          ->where($minSql, '>', 0);
-                    })->orWhere($minSql, '<=', 0);
+                        // Standard safe range
+                        $sq->where(function($standard) use ($currentPcsSql, $minSql) {
+                            $standard->whereRaw("{$currentPcsSql} >= {$minSql}")
+                                     ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
+                                     ->where($minSql, '>', 0);
+                        })
+                        // OR Regular is always safe if not over
+                        ->orWhere(function($regular) use ($currentPcsSql, $minSql) {
+                            $regular->where(function($sq) {
+                                $sq->where('inv_m_model_status.project_status', 'Regular')
+                                   ->orWhereIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG']);
+                            })
+                            ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
+                            ->where($minSql, '>', 0);
+                        })
+                        // OR no min stock
+                        ->orWhere($minSql, '<=', 0);
+                    });
                 }
             });
         }
@@ -168,11 +206,24 @@ class StockMonitoringController extends Controller
             $query->where('products.model_id', $request->model_id);
         }
 
+        // Project Status Filter
+        if ($request->has('project_status') && !empty($request->project_status)) {
+            $status = $request->project_status;
+            if ($status === 'Project') {
+                $query->where(function($q) {
+                    $q->where('inv_m_model_status.project_status', 'Project')
+                      ->orWhereNull('inv_m_model_status.project_status');
+                });
+            } else {
+                $query->where('inv_m_model_status.project_status', $status);
+            }
+        }
+
         $recordsTotal = InventoryProduct::where('is_active', 1)->count();
         $filteredRecords = $query->count();
 
         // Sorting - Map frontend index to backend field
-        $sortableColumns = ['id', 'part_no', 'spec_size', 'remark', 'balance_pcs'];
+        $sortableColumns = ['id', 'part_no', 'spec_size', 'project_status', 'remark', 'balance_pcs'];
         
         foreach ($categories as $cat) {
             $sortableColumns[] = 'usage'; // Placeholder
@@ -189,6 +240,8 @@ class StockMonitoringController extends Controller
             $query->orderBy('products.part_no', $orderDir);
         } elseif ($orderCol === 'spec_size') {
             $query->orderBy('inv_m_material_spec.spec_name', $orderDir);
+        } elseif ($orderCol === 'project_status') {
+            $query->orderBy('inv_m_model_status.project_status', $orderDir);
         } elseif ($orderCol === 'balance_pcs') {
             $query->orderBy('inv_t_product_detail.current_stock_qty', $orderDir);
         } elseif ($orderCol === 'sto_qty') {
@@ -274,7 +327,8 @@ class StockMonitoringController extends Controller
                     'last_update' => $item->updated_at ? $item->updated_at->format('d M Y, H:i') : '-',
                     'pcs_per_unit' => $pcsPerUnit
                 ],
-                'stock_status' => $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $pcsPerUnit)
+                'stock_status' => $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $pcsPerUnit, $item->product_status ?: $item->model_project_status),
+                'project_status' => $item->product_status ?: ($item->model_project_status ?? 'Project')
             ];
 
             // Map Dynamic Columns
@@ -293,7 +347,9 @@ class StockMonitoringController extends Controller
                 }
             }
 
-            $row['stock_status'] = $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $pcsPerUnit);
+            $pPerUnit = (float)($item->pcs_per_unit ?? 1);
+            $row['stock_status'] = $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $pPerUnit, $item->product_status ?: $item->model_project_status);
+            $row['project_status'] = $item->product_status ?: ($item->model_project_status ?? 'Project');
 
             return $row;
         });
@@ -341,7 +397,7 @@ class StockMonitoringController extends Controller
         return "<span class='font-bold'>$pcsDisplay</span> <span class='text-xs text-gray-500'>($unitDisplay)</span>";
     }
 
-    private function calculateStockStatus($current, $min, $pcsPerUnit)
+    private function calculateStockStatus($current, $min, $pcsPerUnit, $projectStatus = null)
     {
         $min = floatval($min); // Assumed in PCS
         $currentPCS = floatval($current) * $pcsPerUnit; // Convert Unit to PCS
@@ -351,6 +407,13 @@ class StockMonitoringController extends Controller
         $maxStock = $min * 3;
 
         if ($currentPCS > $maxStock) return 'over'; // Blue
+        
+        // Skip Warning/Critical for Regular projects or Allsize OK/NG overrides
+        $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+        if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
+            return 'safe';
+        }
+
         if ($currentPCS < ($min - 30)) return 'danger'; // < Min - 30
         if ($currentPCS < $min) return 'warning'; // Min - 30 to Min - 1
 
@@ -447,6 +510,7 @@ class StockMonitoringController extends Controller
             ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
             ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->leftJoin('inv_m_model_status as ms_model', 'ms_model.model_id', '=', 'p.model_id')
             ->where('p.id', $inventoryProduct->id)
             ->select([
                 'prod.part_no',
@@ -465,7 +529,10 @@ class StockMonitoringController extends Controller
                 'p.pcs_per_unit',
                 'u.code as unit_code',
                 'u.name as unit_name',
-                'p.min_stock'
+                'p.min_stock',
+                'p.product_status',
+                'p.product_status_remark',
+                'ms_model.project_status as model_project_status'
             ])
             ->first();
 
@@ -473,8 +540,13 @@ class StockMonitoringController extends Controller
 
         $pcsPerUnit = $data->pcs_per_unit ?? 1;
         $balancePcs = (float)$data->current_stock_qty * $pcsPerUnit;
-        
-        $status = $this->calculateStockStatus($data->current_stock_qty, $data->min_stock, $pcsPerUnit);
+
+        $status = $this->calculateStockStatus(
+            $data->current_stock_qty, 
+            $data->min_stock, 
+            $pcsPerUnit, 
+            $data->product_status ?: ($data->model_project_status ?? 'Project')
+        );
 
         // Format dimension dynamically
         $dimVal = [];
@@ -498,7 +570,10 @@ class StockMonitoringController extends Controller
             'balance_pcs' => number_format($balancePcs, 0),
             'balance_unit' => number_format($data->current_stock_qty, 0) . ' ' . ($data->unit_code ?? 'PCS'),
             'status' => $status,
-            'min_stock' => number_format($data->min_stock, 0)
+            'min_stock' => number_format($data->min_stock, 0),
+            'product_status' => $data->product_status,
+            'model_project_status' => $data->model_project_status ?: 'Project',
+            'product_status_remark' => $data->product_status_remark,
         ];
 
         // Find active STO
@@ -532,5 +607,126 @@ class StockMonitoringController extends Controller
             });
             
         return response()->json($logs);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $categories = \App\Models\InventoryModel\TransactionCategory::orderBy('effect', 'desc')
+            ->orderBy('name')
+            ->get();
+
+        $txSelects = ['t.product_detail_id'];
+        $txSelects[] = DB::raw("SUM(CASE WHEN tc.effect = 1 THEN t.qty ELSE 0 END) as total_in_sum");
+        $txSelects[] = DB::raw("SUM(CASE WHEN tc.effect = -1 THEN t.qty ELSE 0 END) as total_out_sum");
+
+        foreach ($categories as $cat) {
+            $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
+            $txSelects[] = DB::raw("SUM(CASE WHEN tc.code = '{$cat->code}' THEN t.qty ELSE 0 END) as {$alias}");
+        }
+
+        $txSubquery = DB::table('inv_t_inventory_transaction as t')
+            ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
+            ->select($txSelects)
+            ->groupBy('t.product_detail_id');
+
+        $query = InventoryProduct::query()
+            ->join('products', 'products.id', '=', 'inv_t_product_detail.product_id')
+            ->leftJoin('models', 'models.id', '=', 'inv_t_product_detail.model_id')
+            ->leftJoin('inv_m_model_status', 'inv_m_model_status.model_id', '=', 'models.id')
+            ->leftJoin('customers', 'customers.id', '=', 'products.customer_id')
+            ->leftJoin('inv_m_material_spec', 'inv_m_material_spec.id', '=', 'inv_t_product_detail.material_spec_id')
+            ->leftJoin('inv_m_rank', 'inv_m_rank.id', '=', 'inv_t_product_detail.rank_id')
+            ->leftJoin('inv_m_unit', 'inv_m_unit.id', '=', 'inv_t_product_detail.unit_id')
+            ->leftJoinSub($txSubquery, 'tx', 'tx.product_detail_id', '=', 'inv_t_product_detail.id')
+            ->leftJoin(DB::raw("(SELECT sd.product_detail_id, sd.diff_qty as sto_gap 
+                         FROM inv_t_sto_detail sd 
+                         WHERE sd.event_id = (SELECT TOP 1 id FROM inv_t_sto_event ORDER BY created_at DESC)
+                         AND sd.is_adjusted = 1
+                        ) as latest_sto"), 'latest_sto.product_detail_id', '=', 'inv_t_product_detail.id')
+            ->select([
+                'inv_t_product_detail.*',
+                'products.part_no',
+                'products.part_name',
+                'models.name as model_name',
+                'customers.code as customer_code',
+                'inv_m_unit.code as unit_code',
+                'inv_m_material_spec.spec_name',
+                'inv_m_material_spec.coating_type',
+                'inv_m_rank.code as rank_code',
+                'inv_t_product_detail.product_status',
+                'inv_t_product_detail.product_status_remark',
+                'inv_m_model_status.project_status as model_project_status',
+                'latest_sto.sto_gap',
+                'tx.*'
+            ]);
+
+        // Apply same filters as DataTables
+        if ($request->has('stock_status') && !empty($request->stock_status)) {
+            $status = $request->stock_status;
+            $currentPcsSql = "inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1)";
+            $minSql = "inv_t_product_detail.min_stock";
+            
+            if ($status === 'over') { $query->whereRaw("{$currentPcsSql} > ({$minSql} * 3)")->where($minSql, '>', 0); }
+            elseif ($status === 'danger') { 
+                $query->whereRaw("{$currentPcsSql} < ({$minSql} - 30)")->where($minSql, '>', 0)
+                      ->where(function($q) {
+                          $q->where('inv_m_model_status.project_status', '!=', 'Regular')
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->orWhereNull('inv_m_model_status.project_status');
+                      });
+            }
+            elseif ($status === 'warning') { 
+                $query->whereRaw("{$currentPcsSql} >= ({$minSql} - 30)")->whereRaw("{$currentPcsSql} < {$minSql}")->where($minSql, '>', 0)
+                      ->where(function($q) {
+                          $q->where('inv_m_model_status.project_status', '!=', 'Regular')
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->orWhereNull('inv_m_model_status.project_status');
+                      });
+            }
+            elseif ($status === 'safe') { 
+                $query->where(function($sq) use ($currentPcsSql, $minSql) {
+                    $sq->where(fn($standard) => $standard->whereRaw("{$currentPcsSql} >= {$minSql}")->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")->where($minSql, '>', 0))
+                       ->orWhere(function($regular) use ($currentPcsSql, $minSql) {
+                           $regular->where(function($sq2) {
+                               $sq2->where('inv_m_model_status.project_status', 'Regular')
+                                   ->orWhereIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG']);
+                           })
+                           ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
+                           ->where($minSql, '>', 0);
+                       })
+                       ->orWhere($minSql, '<=', 0);
+                });
+            }
+        }
+
+        if ($request->customer_id) $query->where('products.customer_id', $request->customer_id);
+        if ($request->model_id) $query->where('inv_t_product_detail.model_id', $request->model_id);
+        if ($request->project_status) {
+            $pStatus = $request->project_status;
+            if ($pStatus === 'Project') {
+                $query->where(function($q) {
+                    $q->where('inv_m_model_status.project_status', 'Project')
+                      ->orWhereNull('inv_m_model_status.project_status');
+                });
+            } else {
+                $query->where('inv_m_model_status.project_status', $pStatus);
+            }
+        }
+
+        // Apply Search (if any)
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('products.part_no', 'like', '%' . $search . '%')
+                    ->orWhere('inv_m_material_spec.spec_name', 'like', '%' . $search . '%')
+                    ->orWhere('models.name', 'like', '%' . $search . '%')
+                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN ' - ' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%'])
+                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN '-' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%']);
+            });
+        }
+
+        $data = $query->orderBy('products.part_no', 'asc')->get();
+
+        return Excel::download(new StockMonitoringExport($data, $categories), 'Stock_Monitoring_' . date('Ymd_His') . '.xlsx');
     }
 }
