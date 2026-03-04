@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('inv_t_product_detail', function (Blueprint $table) {
-            $table->string('product_status_remark')->nullable()->after('product_status');
+        Schema::create('inv_m_sto_reasons', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('category')->comment('SHORTAGE, EXCESS, OTHERS');
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('inv_t_product_detail', function (Blueprint $table) {
-            $table->dropColumn('product_status_remark');
-        });
+        Schema::dropIfExists('inv_m_sto_reasons');
     }
 };

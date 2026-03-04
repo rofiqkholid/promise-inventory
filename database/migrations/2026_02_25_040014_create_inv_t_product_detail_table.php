@@ -29,6 +29,8 @@ return new class extends Migration {
             $table->decimal('material_price', 15, 2)->nullable()->default(20000);
             $table->boolean('is_active')->default(true);
             $table->string('remark', 100)->nullable();
+            $table->string('product_status')->nullable();
+            $table->string('product_status_remark')->nullable();
             $table->timestamps();
 
             $table->foreign('product_id')->references('id')->on('products')->onDelete('no action');

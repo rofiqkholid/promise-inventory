@@ -84,6 +84,13 @@ class InventoryMenuSeeder extends Seeder
                         'order' => 8,
                         'roles' => ['admin', 'approver'],
                     ],
+                    [
+                        'title' => 'Location',
+                        'route' => 'inventory.master.location.index',
+                        'icon' => 'fa-solid fa-location-dot',
+                        'order' => 9,
+                        'roles' => ['admin', 'approver'],
+                    ],
                 ]
             ],
             [
