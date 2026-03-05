@@ -1,12 +1,14 @@
-<div id="sto-log-popover" class="fixed z-[9999] bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 w-80 text-left hidden p-0 overflow-hidden font-sans">
-    <div class="bg-gray-50 dark:bg-gray-700 px-3 py-2 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
-        <h4 class="font-bold text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wider">STO Log History</h4>
-        <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors" onclick="$('#sto-log-popover').addClass('hidden')">
-            <i class="fa-solid fa-times"></i>
+<div id="sto-log-popover" class="fixed z-[9999] bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 w-80 text-left hidden p-0 overflow-hidden font-sans scale-in">
+    <div class="bg-slate-50 dark:bg-slate-900/50 px-4 py-3 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">
+        <h4 class="font-bold text-slate-800 dark:text-gray-200 text-[10px] uppercase tracking-widest flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-primary-500"></i> STO Log History
+        </h4>
+        <button type="button" class="text-gray-400 hover:text-red-500 transition-colors" onclick="$('#sto-log-popover').addClass('hidden')">
+            <i class="fa-solid fa-xmark text-lg"></i>
         </button>
     </div>
     <div id="sto-log-content" class="max-h-60 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-        <div class="p-4 text-center text-gray-500 text-xs">
+        <div class="p-4 text-center text-gray-500 text-xs uppercase tracking-widest font-bold opacity-50">
             <i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading...
         </div>
     </div>
@@ -59,35 +61,35 @@
             });
             
             // Loading State
-            contentDiv.html('<div class="p-4 text-center text-gray-500 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading log...</div>');
+            contentDiv.html('<div class="p-4 text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading log...</div>');
             
             // Fetch Data
             $.ajax({
                 url: "{{ url('inventory/stock-monitoring/log') }}/" + id,
                 success: function(data) {
                     if (data.length === 0) {
-                        contentDiv.html('<div class="p-4 text-center text-gray-500 text-xs italic">No STO history found for this item.</div>');
+                        contentDiv.html('<div class="p-4 text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest italic opacity-60">No STO history found for this item.</div>');
                         return;
                     }
                     
-                    let html = '<table class="w-full text-xs text-left border-collapse">';
-                    html += '<thead class="bg-gray-50 dark:bg-gray-800 text-gray-500 border-b border-gray-100 dark:border-gray-600"><tr><th class="p-2 py-1.5 font-semibold">Date / Event</th><th class="p-2 py-1.5 text-right font-semibold">Sys</th><th class="p-2 py-1.5 text-right font-semibold">Act</th><th class="p-2 py-1.5 text-right font-semibold">Diff</th></tr></thead>';
-                    html += '<tbody class="divide-y divide-gray-100 dark:divide-gray-700">';
+                    let html = '<table class="w-full text-[10px] text-left border-collapse">';
+                    html += '<thead class="bg-slate-50 dark:bg-slate-900/30 text-slate-400 border-b border-slate-100 dark:border-gray-700"><tr><th class="p-3 py-2 font-bold uppercase tracking-wider">Date / Event</th><th class="p-3 py-2 text-right font-bold uppercase tracking-wider">Sys</th><th class="p-3 py-2 text-right font-bold uppercase tracking-wider">Act</th><th class="p-3 py-2 text-right font-bold uppercase tracking-wider text-primary-500">Diff</th></tr></thead>';
+                    html += '<tbody class="divide-y divide-slate-50 dark:divide-gray-700">';
                     
                     data.forEach(log => {
                         let diffClass = log.diff > 0 ? 'text-green-600 dark:text-green-400' : (log.diff < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-400');
                         let diffSign = log.diff > 0 ? '+' : '';
                         
                         html += `
-                            <tr class="hover:bg-blue-50 dark:hover:bg-gray-700/50 transition-colors">
-                                <td class="p-2 align-top">
-                                    <div class="font-bold text-gray-700 dark:text-gray-300 mb-0.5">${log.event}</div>
-                                    <div class="text-[10px] text-gray-400 mb-0.5">${log.date}</div>
-                                    ${log.remark && log.remark !== '-' ? `<div class="text-[10px] text-gray-500 italic truncate max-w-[120px]" title="${log.remark}">${log.remark}</div>` : ''}
+                            <tr class="hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors">
+                                <td class="p-3 align-top">
+                                    <div class="font-bold text-slate-800 dark:text-gray-200 mb-0.5 uppercase tracking-tight">${log.event}</div>
+                                    <div class="text-[9px] text-slate-400 font-medium mb-1 uppercase tracking-tighter">${log.date}</div>
+                                    ${log.remark && log.remark !== '-' ? `<div class="text-[9px] text-slate-500 italic max-w-[140px] leading-tight" title="${log.remark}">${log.remark}</div>` : ''}
                                 </td>
-                                <td class="p-2 text-right font-mono text-gray-600 dark:text-gray-400 align-top">${log.system}</td>
-                                <td class="p-2 text-right font-mono text-gray-600 dark:text-gray-400 align-top">${log.actual}</td>
-                                <td class="p-2 text-right font-mono font-bold ${diffClass} align-top">${diffSign}${log.diff}</td>
+                                <td class="p-3 text-right font-bold text-slate-600 dark:text-gray-400 align-top">${log.system}</td>
+                                <td class="p-3 text-right font-bold text-slate-600 dark:text-gray-400 align-top">${log.actual}</td>
+                                <td class="p-3 text-right font-black ${diffClass} align-top">${diffSign}${log.diff}</td>
                             </tr>
                         `;
                     });
@@ -96,7 +98,7 @@
                     contentDiv.html(html);
                 },
                 error: function() {
-                    contentDiv.html('<div class="p-4 text-center text-red-500 text-xs">Failed to load log data.</div>');
+                    contentDiv.html('<div class="p-4 text-center text-red-500 text-[10px] font-bold uppercase tracking-widest">Failed to load log data.</div>');
                 }
             });
         });

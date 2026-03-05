@@ -14,9 +14,6 @@ class InventoryTransaction extends Model
 
     protected $table = 'inv_t_inventory_transaction';
 
-    // Disable updated_at since the user schema only showed created_at
-    const UPDATED_AT = null;
-
     protected $fillable = [
         'product_detail_id',
         'transaction_date',

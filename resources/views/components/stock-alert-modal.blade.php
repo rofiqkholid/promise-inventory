@@ -12,22 +12,22 @@
         <div class="relative w-full max-w-xl transform transition-all duration-300 ease-out scale-95 opacity-0" id="stockAlertContent">
             
             <!-- Card Body -->
-            <div class="bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 flex flex-col">
+            <div class="bg-white dark:bg-gray-800 rounded-xs overflow-hidden border border-slate-200 dark:border-gray-700 flex flex-col">
                 
                 <!-- Professional Header -->
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center border border-rose-100 dark:border-rose-900/30">
+                        <div class="w-10 h-10 rounded-xs bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400 flex items-center justify-center border border-rose-100 dark:border-rose-900/30">
                             <i class="fa-solid fa-triangle-exclamation text-lg"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Stock Alerts</h3>
-                            <p class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mt-1">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white tracking-tight leading-none">Stock Alerts</h3>
+                            <p class="text-[10px] font-medium text-slate-400 dark:text-gray-500 uppercase tracking-widest mt-1">
                                 {{ count($stockAlerts) }} item{{ count($stockAlerts) !== 1 ? 's' : '' }} need attention
                             </p>
                         </div>
                     </div>
-                    <button type="button" id="closeStockAlert" class="w-8 h-8 flex items-center justify-center rounded-md text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-800 transition-all">
+                    <button type="button" id="closeStockAlert" class="w-8 h-8 flex items-center justify-center rounded-xs text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-700 transition-all">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
@@ -45,7 +45,7 @@
                                 <div class="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-900/10 text-emerald-500 flex items-center justify-center mb-4 border border-emerald-100 dark:border-emerald-900/30">
                                     <i class="fa-solid fa-check text-3xl"></i>
                                 </div>
-                                <h4 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">All Clear</h4>
+                                <h4 class="text-base font-semibold text-slate-900 dark:text-white tracking-tight">All Clear</h4>
                                 <p class="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-[200px]">
                                     Stock levels are within safe ranges.
                                 </p>
@@ -54,16 +54,16 @@
                             @if(count($criticalItems) > 0)
                                 <div>
                                     <div class="flex items-center gap-3 mb-3">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/30 px-2 py-1 rounded border border-rose-200 dark:border-rose-800">Critical Stock</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/30 px-2 py-1 rounded-xs border border-rose-200 dark:border-rose-800">Critical Stock</span>
                                         <div class="h-px flex-1 bg-rose-200 dark:bg-rose-900/30"></div>
                                     </div>
                                     <div class="space-y-2">
                                         @foreach($criticalItems as $item)
-                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:border-rose-300 dark:hover:border-rose-700 transition-colors group">
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-rose-300 dark:hover:border-rose-700 transition-colors group">
                                             <div class="flex items-start justify-between gap-4">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="flex items-center gap-2 mb-1">
-                                                        <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate group-hover:text-rose-600 transition-colors">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white tracking-tight truncate group-hover:text-rose-600 transition-colors">
                                                             {{ $item->part_no }}
                                                         </span>
                                                         @if($item->revision)
@@ -71,9 +71,9 @@
                                                         @endif
                                                     </div>
                                                     <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
-                                                        <span class="font-bold uppercase tracking-wide">{{ $item->customer_code }}</span>
+                                                        <span class="font-semibold uppercase tracking-wide">{{ $item->customer_code }}</span>
                                                         <span class="text-slate-300 dark:text-gray-600">|</span>
-                                                        <span>{{ $item->model_name }}</span>
+                                                        <span class="font-medium">{{ $item->model_name }}</span>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded border border-slate-100 dark:border-gray-700">
@@ -97,16 +97,16 @@
                             @if(count($warningItems) > 0)
                                 <div class="mt-6">
                                     <div class="flex items-center gap-3 mb-3">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded border border-amber-200 dark:border-amber-800">Overstock</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-xs border border-amber-200 dark:border-amber-800">Overstock</span>
                                         <div class="h-px flex-1 bg-amber-200 dark:bg-amber-900/30"></div>
                                     </div>
                                     <div class="space-y-2">
                                         @foreach($warningItems as $item)
-                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:border-amber-300 dark:hover:border-amber-700 transition-colors group">
+                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-700 transition-colors group">
                                             <div class="flex items-start justify-between gap-4">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="flex items-center gap-2 mb-1">
-                                                        <span class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-tight truncate group-hover:text-amber-600 transition-colors">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white tracking-tight truncate group-hover:text-amber-600 transition-colors">
                                                             {{ $item->part_no }}
                                                         </span>
                                                         @if($item->revision)
@@ -114,9 +114,9 @@
                                                         @endif
                                                     </div>
                                                     <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
-                                                        <span class="font-bold uppercase tracking-wide">{{ $item->customer_code }}</span>
+                                                        <span class="font-semibold uppercase tracking-wide">{{ $item->customer_code }}</span>
                                                         <span class="text-slate-300 dark:text-gray-600">|</span>
-                                                        <span>{{ $item->model_name }}</span>
+                                                        <span class="font-medium">{{ $item->model_name }}</span>
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded border border-slate-100 dark:border-gray-700">
@@ -141,8 +141,8 @@
                 </div>
 
                 <!-- Action Footer -->
-                <div class="p-4 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md font-bold text-xs uppercase tracking-widest transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2">
+                <div class="p-4 border-t border-slate-100 dark:border-gray-800 bg-white dark:bg-gray-800">
+                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xs font-semibold text-xs tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                         <i class="fa-solid fa-check text-sm"></i>
                         Acknowledge
                     </button>

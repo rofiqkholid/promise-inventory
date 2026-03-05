@@ -285,15 +285,11 @@ class StockMonitoringController extends Controller
                 $size .= ' / ' . $l2;
             }
 
-            $sizeHtml = '<span class="text-xs text-gray-500">' . $size . '</span>';
-            if ($p > 0) {
-                $sizeHtml .= ' <span class="text-[10px] text-blue-500 font-bold">(P: ' . $p . ')</span>';
-            }
-            if ($weight > 0) {
-                $sizeHtml .= ' <span class="text-[10px] text-emerald-600 font-bold ml-1">(Wt: ' . $weight . ' kg)</span>';
-            }
+            $sizeFormatted = $size;
+            if ($p > 0) $sizeFormatted .= ' (P: ' . $p . ')';
+            if ($weight > 0) $sizeFormatted .= ' (Wt: ' . $weight . ' kg)';
 
-            $specSize = ($item->spec_name ?? '-') . ' <br>' . $sizeHtml;
+            $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
 
             $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
 
@@ -305,7 +301,6 @@ class StockMonitoringController extends Controller
                 'id' => $item->id,
                 'hash_id' => $hashId,
                 'part_no' => $partNoDisplay,
-                'spec_size' => $specSize,
                 'remark' => $item->remark ?? '-',
                 'balance_pcs'  => number_format($calculatedQty * $pcsPerUnit, 0),
                 'balance_unit' => $item->unit_code,
@@ -322,6 +317,15 @@ class StockMonitoringController extends Controller
                     'rank' => $item->rank_code ?? '-',
                     'limit_value' => $item->limit_value ?? '-',
                     'min_stock' => $item->min_stock ?? '-',
+                    'spec' => $item->spec_name ?? '-',
+                    'thickness' => (float)$item->thickness,
+                    'width' => (float)$item->width,
+                    'length' => (float)$item->length,
+                    'length_2' => (float)$item->length_2,
+                    'pitch' => (float)$item->pitch,
+                    'weight' => (float)$item->weight_kg,
+                    'unit_name' => strtolower($item->unit_name ?? ''),
+                    'remark' => $item->remark ?? '-',
                     'coating_type' => $item->coating_type ?? '-',
                     'unit_per_car' => $item->unit_per_car ?? '-',
                     'last_update' => $item->updated_at ? $item->updated_at->format('d M Y, H:i') : '-',

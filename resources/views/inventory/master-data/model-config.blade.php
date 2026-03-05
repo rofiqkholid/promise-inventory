@@ -4,7 +4,7 @@
 @section('header-title', 'Model Config & Setup')
 
 @section('content')
-<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
+<div class="text-gray-900 dark:text-gray-100">
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Model Configuration</h2>
@@ -14,12 +14,12 @@
 
     <!-- Data Table -->
     <x-table id="modelConfigTable">
-        <thead>
+        <thead class="bg-gray-50 dark:bg-gray-800/50">
             <tr>
-                <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Customer</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 w-full">Model Name</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 min-w-[150px]">Project Status</th>
+                <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-full">Model Name</th>
+                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">Project Status</th>
             </tr>
         </thead>
         <tbody>
@@ -50,26 +50,26 @@
                 },
                 {
                     data: 'customer_code',
-                    className: 'px-4 py-3 text-xs font-semibold'
+                    className: 'px-4 py-3 text-xs font-medium'
                 },
                 {
                     data: 'name',
-                    className: 'px-4 py-3 text-sm font-bold text-slate-800 dark:text-gray-200'
+                    className: 'px-4 py-3 text-sm font-medium text-slate-800 dark:text-gray-200'
                 },
                 {
                     data: 'project_status',
                     className: 'px-4 py-3 text-center',
                     orderable: false,
                     render: function(data, type, row) {
-                        const isProject = data === 'Project';
-                        // Switch toggle design for status
+                        const isRegular = data === 'Regular';
+                        // Switch toggle design for status: Regular is ON, Project is OFF
                         return `
                             <div class="flex justify-center items-center">
                                 <label class="relative inline-flex items-center cursor-pointer group" title="Toggle Project Status">
-                                    <input type="checkbox" class="sr-only peer status-toggle" data-id="${row.hash_id}" ${isProject ? 'checked' : ''}>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    <span class="ml-3 text-xs font-bold uppercase tracking-wider ${isProject ? 'text-orange-500 dark:text-orange-400' : 'text-emerald-500 dark:text-emerald-400'} status-text">
-                                        ${isProject ? 'Project' : 'Regular'}
+                                    <input type="checkbox" class="sr-only peer status-toggle" data-id="${row.hash_id}" ${isRegular ? 'checked' : ''}>
+                                    <div class="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+                                    <span class="ml-3 text-[10px] font-bold uppercase tracking-wider ${isRegular ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'} status-text">
+                                        ${isRegular ? 'Regular' : 'Project'}
                                     </span>
                                 </label>
                             </div>
@@ -85,13 +85,13 @@
             const $checkbox = $(this);
             const hashId = $checkbox.data('id');
             const isChecked = $checkbox.is(':checked');
-            const newStatus = isChecked ? 'Project' : 'Regular';
+            const newStatus = isChecked ? 'Regular' : 'Project';
             const $textSpan = $checkbox.siblings('.status-text');
 
             // Optimistic UI update
             $textSpan.text(newStatus)
-                .removeClass('text-orange-500 text-emerald-500 dark:text-orange-400 dark:text-emerald-400')
-                .addClass(isChecked ? 'text-orange-500 dark:text-orange-400' : 'text-emerald-500 dark:text-emerald-400');
+                .removeClass('text-primary-600 text-gray-500 dark:text-primary-400 dark:text-gray-400')
+                .addClass(isChecked ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400');
 
             $.ajax({
                 url: '{{ route("inventory.master.modelConfig.updateStatus") }}',

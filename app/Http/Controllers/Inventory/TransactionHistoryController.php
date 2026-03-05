@@ -156,7 +156,9 @@ class TransactionHistoryController extends Controller
                 $item->supplier?->code,
                 $item->destination?->code ? '(To: ' . $item->destination->code . ')' : null
             ])->filter()->implode(' '),
-            'remark' => $item->remark
+            'remark' => $item->remark,
+            'created_at' => $item->created_at ? $item->created_at->format('d M Y H:i:s') : '-',
+            'updated_at' => $item->updated_at ? $item->updated_at->format('d M Y H:i:s') : '-',
         ];
     });
 

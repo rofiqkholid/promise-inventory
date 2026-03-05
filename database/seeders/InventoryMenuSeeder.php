@@ -115,8 +115,8 @@ class InventoryMenuSeeder extends Seeder
                 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']
             ],
             [
-                'title' => 'Auto PR',
-                'route' => 'inventory.autoPr.index',
+                'title' => 'Purchase Requisition',
+                'route' => 'inventory.purchaseRequisition.index',
                 'icon' => 'fa-solid fa-receipt',
                 'order' => 7,
                 'roles' => ['admin', 'approver', 'checker']

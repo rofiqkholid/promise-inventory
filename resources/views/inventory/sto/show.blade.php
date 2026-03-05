@@ -2,7 +2,7 @@
 
 @section('title', 'STO Event Details')
 @section('page_title', 'Stock Opname')
-
+ 
 @push('styles')
 <style>
     .custom-scrollbar::-webkit-scrollbar {
@@ -26,7 +26,7 @@
         width: 100% !important;
     }
     .select2-selection {
-        height: 42px !important;
+        height: 42px !important;    
         display: flex !important;
         align-items: center !important;
         border-color: #d1d5db !important;
@@ -44,8 +44,12 @@
         margin: 1em 0 0 !important;
         padding: 0 1.25em !important;
     }
+    .swal2-popup, .swal2-confirm, .swal2-cancel, .swal2-deny {
+        border-radius: 0.125rem !important;
+    }
 </style>
 @endpush
+
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
@@ -57,7 +61,7 @@
                     <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Back to Monitor
                 </a>
                 <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
-                <span class="px-2 py-0.5 text-[9px] rounded font-black uppercase tracking-widest border {{ $stoEvent->status === 'OPEN' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-800' }}">
+                <span class="px-2 py-0.5 text-[9px] rounded-xs font-black uppercase tracking-widest border {{ $stoEvent->status === 'OPEN' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800' }}">
                     {{ str_replace('_', ' ', $stoEvent->status) }}
                 </span>
             </div>
@@ -65,11 +69,11 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">{{ $stoEvent->name }}</h2>
             
             <div class="mt-3 flex flex-wrap items-center gap-4 text-[11px] font-bold">
-                <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-xs border border-gray-100 dark:border-gray-700">
                     <span class="text-[9px] uppercase tracking-wider opacity-60">Code:</span>
                     <span class="font-mono text-gray-700 dark:text-gray-300">#{{ $stoEvent->code }}</span>
                 </div>
-                <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-xs border border-gray-100 dark:border-gray-700">
                     <i class="fa-solid fa-calendar-alt opacity-60"></i>
                     <span class="text-[9px] uppercase tracking-wider opacity-60 mr-0.5">Started:</span>
                     <span class="text-gray-700 dark:text-gray-300">{{ $stoEvent->period_start->format('d M Y') }}</span>
@@ -78,8 +82,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
-            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="h-10 inline-flex items-center gap-2 px-5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black rounded shadow-sm shadow-emerald-100 dark:shadow-none transition-all uppercase tracking-wider">
-                <i class="fa-solid fa-file-excel text-sm"></i> Export Result
+            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                <i class="fa-solid fa-file-excel text-sm"></i> 
+                Export Result
             </a>
 
             @php
@@ -92,8 +97,9 @@
             @if($stoEvent->status === 'OPEN' && $isPic)
                 <form action="{{ route('inventory.sto.submitForCheck', $stoEvent->hash_id) }}" method="POST" id="submitForCheckForm" class="inline">
                     @csrf
-                    <button type="button" onclick="confirmSubmitForCheck()" class="h-10 inline-flex items-center gap-2 px-5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black rounded shadow-sm shadow-blue-100 dark:shadow-none transition-all uppercase tracking-wider">
-                        <i class="fa-solid fa-paper-plane text-sm"></i> Submit for Check
+                    <button type="button" onclick="confirmSubmitForCheck()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                        <i class="fa-solid fa-paper-plane text-sm"></i> 
+                        Submit for Check
                     </button>
                 </form>
             @endif
@@ -101,32 +107,37 @@
             @if($stoEvent->status === 'WAITING CHECK' && $isChecker)
                 <form action="{{ route('inventory.sto.verify', $stoEvent->hash_id) }}" method="POST" id="verifyForm" class="inline">
                     @csrf
-                    <button type="button" onclick="confirmVerify()" class="h-10 inline-flex items-center gap-2 px-5 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black rounded shadow-sm shadow-amber-100 dark:shadow-none transition-all uppercase tracking-wider">
-                        <i class="fa-solid fa-check-double text-sm"></i> Verify Data
+                    <button type="button" onclick="confirmVerify()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                        <i class="fa-solid fa-check-double text-sm"></i> 
+                        Verify Data
                     </button>
                 </form>
-                <button type="button" onclick="openRejectModal()" class="h-10 inline-flex items-center gap-2 px-5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-black rounded transition-all uppercase tracking-wider">
-                    <i class="fa-solid fa-xmark text-sm"></i> Reject
+                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                    <i class="fa-solid fa-xmark text-sm"></i> 
+                    Reject
                 </button>
             @endif
 
             @if($stoEvent->status === 'WAITING APPROVAL' && $isApprover)
                 <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="inline">
                     @csrf
-                    <button type="submit" class="h-10 inline-flex items-center gap-3 px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[11px] font-black rounded hover:bg-slate-800 transition-all shadow-lg uppercase tracking-widest">
-                        <i class="fa-solid fa-lock text-sm"></i> Finalize & Adjust
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold rounded-xs hover:bg-slate-800 transition-all uppercase tracking-widest active:scale-[0.98]">
+                        <i class="fa-solid fa-lock text-sm"></i> 
+                        Finalize & Adjust
                     </button>
                 </form>
-                <button type="button" onclick="openRejectModal()" class="h-10 inline-flex items-center gap-2 px-5 bg-red-500 hover:bg-red-600 text-white text-[11px] font-black rounded transition-all uppercase tracking-wider">
-                    <i class="fa-solid fa-xmark text-sm"></i> Reject
+                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                    <i class="fa-solid fa-xmark text-sm"></i> 
+                    Reject
                 </button>
             @endif
 
             @if(($stoEvent->status === 'CLOSED' || $stoEvent->status === 'WAITING CHECK' || $stoEvent->status === 'WAITING APPROVAL') && $isApprover)
                 <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="inline">
                     @csrf
-                    <button type="button" onclick="confirmReopen()" class="h-10 inline-flex items-center gap-2 px-5 bg-gray-600 hover:bg-gray-700 text-white text-[11px] font-black rounded transition-all uppercase tracking-wider">
-                        <i class="fa-solid fa-rotate-left text-sm"></i> Reopen
+                    <button type="button" onclick="confirmReopen()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                        <i class="fa-solid fa-rotate-left text-sm"></i> 
+                        Reopen
                     </button>
                 </form>
             @endif
@@ -134,23 +145,23 @@
     </div>
 
     <!-- Statistics Dashboard -->
-    <div class="mb-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden relative">
+    <div class="mb-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden relative">
         <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded-xs text-blue-600 dark:text-blue-400">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Recorded</span>
                 <div class="flex items-baseline gap-1">
                     <span id="stat-total-items" class="text-xl font-bold text-gray-900 dark:text-white">{{ $stats['total_items'] }}</span>
-                    <span class="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded-full"><span id="stat-progress">{{ $progress }}</span>%</span>
+                    <span class="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded-xs"><span id="stat-progress">{{ $progress }}</span>%</span>
                 </div>
                 <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Items Recorded</span>
             </div>
 
             <!-- Total Recorded PCS -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 rounded-xs text-indigo-600 dark:text-indigo-400">
                     <i class="fa-solid fa-calculator"></i>
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Qty Counted</span>
@@ -162,7 +173,7 @@
 
             <!-- Remaining -->
             <div onclick="openRemainingModal()" class="p-4 flex flex-col items-center text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all relative overflow-hidden">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-lg text-amber-600 dark:text-amber-400">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-xs text-amber-600 dark:text-amber-400">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Remaining</span>
@@ -173,7 +184,7 @@
 
             <!-- Increment -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 rounded-xs text-emerald-600 dark:text-emerald-400">
                     <i class="fa-solid fa-square-plus text-lg"></i>
                 </div>
                 <span class="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400 uppercase tracking-widest mb-1">Stock Increment</span>
@@ -183,17 +194,17 @@
 
             <!-- Decrement -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-red-50 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400 group-hover:scale-110 transition-transform">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-rose-50 dark:bg-rose-900/30 rounded-xs text-rose-600 dark:text-rose-400">
                     <i class="fa-solid fa-square-minus text-lg"></i>
                 </div>
-                <span class="text-[9px] font-bold text-red-600/70 dark:text-red-400 uppercase tracking-widest mb-1">Stock Decrement</span>
-                <span id="stat-total-decrease-pcs" class="text-lg font-bold text-red-700 dark:text-red-400 leading-none">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
+                <span class="text-[9px] font-bold text-rose-600/70 dark:text-rose-400 uppercase tracking-widest mb-1">Stock Decrement</span>
+                <span id="stat-total-decrease-pcs" class="text-lg font-bold text-rose-700 dark:text-rose-400 leading-none">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
                 <span id="stat-total-decrease" class="text-[9px] font-medium text-gray-400 mt-1">({{ number_format($stats['total_decrease'], 0) }} Unit / {{ $stats['count_decrease'] }} items)</span>
             </div>
 
             <!-- Net Adjustment -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 rounded-xs text-purple-600 dark:text-purple-400">
                     <span class="font-black text-xs">NET</span>
                 </div>
                 <span class="text-[9px] font-bold text-purple-600/70 dark:text-purple-400 uppercase tracking-widest mb-1">Adjustment Impact</span>
@@ -203,11 +214,11 @@
 
             <!-- Financial Impact -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div id="stat-net-amount-bg" class="w-10 h-10 mb-2 flex items-center justify-center rounded-lg group-hover:scale-110 transition-transform {{ $stats['net_amount_impact'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600' }}">
+                <div id="stat-net-amount-bg" class="w-10 h-10 mb-2 flex items-center justify-center rounded-xs {{ $stats['net_amount_impact'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' }}">
                     <i class="fa-solid fa-coins text-lg"></i>
                 </div>
                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Financial Impact</span>
-                <span id="stat-net-amount-impact" class="text-lg font-bold leading-none {{ $stats['net_amount_impact'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
+                <span id="stat-net-amount-impact" class="text-lg font-bold leading-none {{ $stats['net_amount_impact'] >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
                     {{ ($stats['net_amount_impact'] > 0 ? '+' : ($stats['net_amount_impact'] < 0 ? '-' : '')) . number_format(abs($stats['net_amount_impact'] ?? 0), 0) }}
                 </span>
                 <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Total Currency</span>
@@ -215,7 +226,7 @@
 
             <!-- Perfect Match -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-lg text-slate-400 group-hover:scale-110 transition-transform border border-slate-100 dark:border-slate-800">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-xs text-slate-400 border border-slate-100 dark:border-slate-800">
                     <i class="fa-solid fa-circle-check text-lg"></i>
                 </div>
                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Perfect Match</span>
@@ -226,9 +237,9 @@
     </div>
 
     @if($stoEvent->status === 'OPEN' && $stoEvent->rejection_note)
-    <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 mb-6 rounded-md shadow-sm animate-pulse-once">
+    <div class="bg-rose-50 dark:bg-rose-900/20 border-l-4 border-rose-500 p-4 mb-6 rounded-xs shadow-sm animate-pulse-once">
         <div class="flex items-start gap-4">
-            <div class="p-2 bg-red-100 dark:bg-red-900/40 rounded-md text-red-600 dark:text-red-400 shadow-sm border border-red-200 dark:border-red-800">
+            <div class="p-2 bg-rose-100 dark:bg-rose-900/40 rounded-xs text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                 <i class="fa-solid fa-circle-exclamation text-xl"></i>
             </div>
             <div class="flex-1">
@@ -248,7 +259,7 @@
 
     @if($stoEvent->status === 'OPEN')
     <!-- ATTENTION BANNER -->
-    <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 mb-6 rounded shadow-sm">
+    <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 mb-6 rounded-xs shadow-sm">
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="flex-shrink-0 w-8 h-8 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -261,14 +272,14 @@
                     </p>
                 </div>
             </div>
-            <button onclick="openRemainingModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-1.5 rounded text-[10px] font-bold uppercase tracking-wider transition-all">
+            <button onclick="openRemainingModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
                 VIEW MISSING
             </button>
         </div>
     </div>
 
     <!-- SCANNER SECTION -->
-    <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg p-5 mb-6 shadow-sm">
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs p-5 mb-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-xs flex items-center gap-2">
                 <i class="fa-solid fa-barcode text-blue-600"></i> Count Entry
@@ -287,30 +298,31 @@
                     @endforeach
                 </select>
             </div>
-            <button id="btn-scan" class="w-full sm:w-auto flex-shrink-0 bg-gray-50 hover:bg-gray-100 text-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 px-5 py-2.5 rounded border border-gray-200 dark:border-gray-600 transition-all shadow-sm flex items-center justify-center gap-2" title="Open Scanner Camera">
-                <i class="fa-solid fa-camera text-lg"></i>
-                <span class="sm:hidden font-bold text-xs uppercase tracking-wider">Scan QR Code</span>
+            <button id="btn-scan" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-700 dark:text-gray-100 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98]" title="Open Scanner Camera">
+                <i class="fa-solid fa-camera text-sm"></i>
+                <span class="sm:hidden">Scan QR Code</span>
             </button>
         </div>
 
         <div class="mt-4 hidden" id="scanResultArea">
-             <div class="flex flex-col md:flex-row items-stretch gap-6 p-4 md:p-5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+             <div class="flex flex-col md:flex-row items-stretch gap-6 p-4 md:p-5 rounded-xs border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
                  
                  <!-- Product Info Section -->
                  <div class="flex-1 flex flex-col justify-center min-w-0">
-                    <div class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 truncate" id="resPartNo">-</div>
-                    <div class="text-xl font-bold text-gray-900 dark:text-white leading-tight mb-4 break-words" id="resPartName">-</div>
+                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 opacity-70">Selected Product</span>
+                     <div class="text-xl font-semibold text-gray-900 dark:text-white tracking-tighter leading-none mb-1 break-all" id="resPartNo">-</div>
+                     <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate" id="resPartName">-</div>
                     
                     <div class="grid grid-cols-3 gap-2">
-                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700">
+                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
                             <span class="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Unit</span>
                             <span class="text-xs font-bold text-gray-900 dark:text-white truncate" id="resUnit">-</span>
                         </div>
-                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700">
+                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
                             <span class="text-[8px] font-bold text-blue-400 uppercase leading-none mb-1">System</span>
                             <span class="text-xs font-bold text-blue-600 dark:text-blue-400 truncate" id="resSystemQty">0</span>
                         </div>
-                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700">
+                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
                             <span class="text-[8px] font-bold text-purple-400 uppercase leading-none mb-1">Entries</span>
                             <span class="text-xs font-bold text-purple-600 dark:text-purple-400 truncate" id="resEntriesCount">0</span>
                         </div>
@@ -325,13 +337,14 @@
                   </div>
                </div>
                <div class="mt-4 flex justify-center">
-                  <button type="button" onclick="addNewEntryRow()" class="flex items-center gap-2 px-6 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full font-bold text-[10px] uppercase tracking-widest hover:bg-emerald-100 transition-all">
-                      <i class="fa-solid fa-plus"></i> Add New
+                  <button type="button" onclick="addNewEntryRow()" class="flex items-center justify-center gap-2 px-6 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]">
+                      <i class="fa-solid fa-plus text-sm"></i> 
+                      Add New
                   </button>
                </div>
              <input type="hidden" id="currentHashId">
         </div>
-        <div id="scanError" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold rounded-md border border-red-100 dark:border-red-800 hidden items-center gap-2">
+        <div id="scanError" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold rounded-xs border border-red-100 dark:border-red-800 hidden items-center gap-2">
             <i class="fa-solid fa-triangle-exclamation"></i> <span id="errorMsg"></span>
         </div>
     </div>
@@ -340,10 +353,10 @@
     @include('components.scanner-modal')
 
     <!-- RESULTS TABLE -->
-    <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-md shadow-sm overflow-hidden">
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden">
         <div class="p-4 md:p-6 border-b border-gray-50 dark:border-gray-700 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div class="flex items-center gap-3">
-                <div class="p-2 bg-slate-100 dark:bg-slate-700 rounded-md">
+                <div class="p-2 bg-slate-100 dark:bg-slate-700 rounded-xs">
                    <i class="fa-solid fa-list-check text-slate-600 dark:text-slate-300"></i>
                 </div>
                 <div>
@@ -353,11 +366,11 @@
             </div>
             
             <div class="flex items-center gap-3">
-                <div class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-md flex items-center gap-3">
+                <div class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xs flex items-center gap-3">
                     <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Matched</span>
                     <span id="table-total-matched" class="text-sm font-bold text-emerald-700 dark:text-emerald-400">{{ $stats['total_matched'] }}</span>
                 </div>
-                <div class="px-4 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-md flex items-center gap-3">
+                <div class="px-4 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-xs flex items-center gap-3">
                     <span class="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">Mismatch</span>
                     <span id="table-total-diff" class="text-sm font-bold text-red-700 dark:text-red-400">{{ $stats['total_diff'] }}</span>
                 </div>
@@ -379,7 +392,7 @@
                         <th rowspan="2" class="text-left">Reason</th>
                         <th rowspan="2" class="text-left">Remark</th>
                         @if($stoEvent->status === 'OPEN')
-                        <th rowspan="2" class="text-center">Action</th>
+                        <th rowspan="2" class="w-[60px] text-center">Action</th>
                         @endif
                     </tr>
                     <tr>
@@ -395,18 +408,17 @@
             </x-table>
         </div>
     </div>
-</div>
 
 <!-- Finalize Modal & Reject Modal UI logic remains the same, but styled consistently -->
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-all">
-    <div class="bg-white dark:bg-gray-800 rounded-md shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-gray-700">
-        <div class="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800 flex justify-between items-center">
-            <h3 class="font-bold text-red-900 dark:text-red-400 flex items-center gap-3 text-sm uppercase tracking-widest">
+<div id="rejectModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm transition-all">
+    <div class="bg-white dark:bg-gray-800 rounded-xs shadow-xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-gray-700">
+        <div class="px-6 py-4 bg-rose-50 dark:bg-rose-900/20 border-b border-rose-100 dark:border-rose-800 flex justify-between items-center">
+            <h3 class="font-bold text-rose-900 dark:text-rose-400 flex items-center gap-3 text-sm uppercase tracking-widest">
                 <i class="fa-solid fa-ban"></i> Reject Submission
             </h3>
-            <button onclick="closeRejectModal()" class="text-red-400 hover:text-red-900 dark:hover:text-white transition-colors">
+            <button onclick="closeRejectModal()" class="text-rose-400 hover:text-rose-900 dark:hover:text-white transition-colors">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
@@ -415,14 +427,14 @@
             <div class="mb-5">
                 <label for="rejection_note" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Feedback for the PIC</label>
                 <textarea name="rejection_note" id="rejection_note" rows="4" required 
-                    class="w-full bg-gray-50 dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-700 rounded-md p-4 text-sm font-bold focus:ring-0 focus:border-red-500 transition-all dark:text-gray-200 placeholder-gray-300"
-                    placeholder="Provide clear reasons for rejection (e.g. invalid count for ITEM-X)..."></textarea>
+                    class="w-full bg-slate-50 dark:bg-gray-900 border-2 border-slate-100 dark:border-gray-700 rounded-xs p-4 text-sm font-bold focus:ring-0 focus:border-rose-500 transition-all dark:text-gray-200 placeholder-slate-300 outline-none"
+                    placeholder="Provide clear reasons for rejection..."></textarea>
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="closeRejectModal()" class="flex-1 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all">
+                <button type="button" onclick="closeRejectModal()" class="flex-1 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-gray-800 rounded-xs transition-all">
                     Cancel
                 </button>
-                <button type="submit" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold rounded-md shadow-lg shadow-red-200 dark:shadow-none transition-all active:scale-95 uppercase tracking-widest">
+                <button type="submit" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold rounded-xs transition-all active:scale-95 uppercase tracking-widest shadow-lg shadow-rose-100 dark:shadow-none">
                     Confirm Reject
                 </button>
             </div>
@@ -432,12 +444,12 @@
 
 <!-- Unscanned Items Modal -->
 <div id="remainingItemsModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/50 transition-all">
-    <div class="bg-white dark:bg-gray-800 rounded shadow-xl w-full max-w-2xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col max-h-[85vh]">
-        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center shrink-0">
+    <div class="bg-white dark:bg-gray-800 rounded-xs shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-gray-700 flex flex-col max-h-[85vh]">
+        <div class="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center shrink-0">
             <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-3 text-sm uppercase tracking-widest">
-                <i class="fa-solid fa-clipboard-list text-blue-600"></i> Remaining Products
+                <i class="fa-solid fa-clipboard-list text-primary-600"></i> Remaining Products
             </h3>
-            <button onclick="closeRemainingModal()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+            <button onclick="closeRemainingModal()" class="text-slate-400 hover:text-rose-500 transition-colors">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
@@ -459,9 +471,9 @@
                         <td class="px-6 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $p->part_name }}</td>
                         <td class="px-6 py-3 text-center">
                             <button onclick="closeRemainingModal(); editFromTable('{{ $p->hash_id }}', null)" 
-                                    class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" title="Record Now">
-                            <i class="fa-solid fa-pen-to-square text-lg"></i>
-                        </button>
+                                    class="h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-all" title="Record Now">
+                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                            </button>
                     </tr>
                     @empty
                     <tr>
@@ -484,6 +496,128 @@
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
 
+    // --- Modal Handlers ---
+    function openRemainingModal() {
+        document.getElementById('remainingItemsModal').classList.remove('hidden');
+        document.getElementById('remainingItemsModal').classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRemainingModal() {
+        document.getElementById('remainingItemsModal').classList.add('hidden');
+        document.getElementById('remainingItemsModal').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+
+    function openRejectModal() {
+        document.getElementById('rejectModal').classList.remove('hidden');
+        document.getElementById('rejectModal').classList.add('flex');
+    }
+
+    function closeRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+        document.getElementById('rejectModal').classList.remove('flex');
+    }
+
+    // --- Confirmation Handlers ---
+    function confirmSubmitForCheck() {
+        Swal.fire({
+            title: 'Submit for Verification?',
+            text: "This will notify the checker to review the data. You won't be able to edit while it's in review.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'Yes, Submit'
+        }).then((result) => {
+            if (result.isConfirmed) document.getElementById('submitForCheckForm').submit();
+        });
+    }
+
+    function confirmVerify() {
+        Swal.fire({
+            title: 'Verify Data?',
+            text: "Confirm that all counted data is accurate and ready for final approval.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#f59e0b',
+            confirmButtonText: 'Yes, Verify'
+        }).then((result) => {
+            if (result.isConfirmed) document.getElementById('verifyForm').submit();
+        });
+    }
+
+    function confirmReopen() {
+        Swal.fire({
+            title: 'Reopen Event?',
+            text: "This will return the event to OPEN status for further editing.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#6b7280',
+            confirmButtonText: 'Yes, Reopen'
+        }).then((result) => {
+            if (result.isConfirmed) document.getElementById('reopenForm').submit();
+        });
+    }
+
+    // --- Stats Update Logic ---
+    window.updateStatsCard = function(stats) {
+        if (!stats) return;
+        
+        const formatNumber = (num, dec = 0) => parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: dec});
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = val;
+        };
+
+        setVal('stat-total-items', stats.total_items);
+        setVal('stat-progress', stats.progress || 0);
+        setVal('stat-total-recorded-pcs', formatNumber(stats.total_recorded_pcs));
+        setVal('stat-total-missing-items', stats.total_missing_items);
+        setVal('stat-total-increase-pcs', formatNumber(stats.total_increase_pcs) + ' Pcs');
+        setVal('stat-total-increase', '(' + formatNumber(stats.total_increase) + ' Unit / ' + stats.count_increase + ' items)');
+        setVal('stat-total-decrease-pcs', formatNumber(stats.total_decrease_pcs) + ' Pcs');
+        setVal('stat-total-decrease', '(' + formatNumber(stats.total_decrease) + ' Unit / ' + stats.count_decrease + ' items)');
+        
+        const netPcsPrefix = stats.net_adjustment_pcs >= 0 ? '+' : '';
+        setVal('stat-net-adjustment-pcs', netPcsPrefix + formatNumber(stats.net_adjustment_pcs) + ' Pcs');
+        
+        const netUnitPrefix = stats.net_adjustment >= 0 ? '+' : '';
+        setVal('stat-net-adjustment', '(' + netUnitPrefix + formatNumber(stats.net_adjustment) + ' Unit)');
+        
+        const amountPrefix = stats.net_amount_impact > 0 ? '+' : (stats.net_amount_impact < 0 ? '-' : '');
+        setVal('stat-net-amount-impact', amountPrefix + formatNumber(Math.abs(stats.net_amount_impact)));
+        
+        setVal('stat-total-matched', stats.total_matched);
+        setVal('table-total-matched', stats.total_matched);
+        setVal('table-total-diff', stats.total_diff);
+
+        // Financial Impact Color
+        const amountBg = document.getElementById('stat-net-amount-bg');
+        const amountText = document.getElementById('stat-net-amount-impact');
+        if (amountBg && amountText) {
+            if (stats.net_amount_impact >= 0) {
+                amountBg.classList.replace('bg-rose-50', 'bg-emerald-50');
+                amountBg.classList.replace('text-rose-600', 'text-emerald-600');
+                amountText.classList.replace('text-rose-700', 'text-emerald-700');
+            } else {
+                amountBg.classList.replace('bg-emerald-50', 'bg-rose-50');
+                amountBg.classList.replace('text-emerald-600', 'text-rose-600');
+                amountText.classList.replace('text-emerald-700', 'text-rose-700');
+            }
+        }
+
+        // Banner Alert
+        const banner = document.getElementById('missing-alert-banner');
+        if (banner) {
+            if (stats.total_missing_items > 0) {
+                banner.classList.remove('hidden');
+                setVal('banner-missing-count', stats.total_missing_items);
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+    };
+
     let table;
     $(document).ready(function() {
         if (window.defaultDataTable) {
@@ -497,7 +631,7 @@
                 columns: [
                     { data: 'row_number', className: 'text-center font-bold text-gray-300', orderable: false, searchable: false },
                     { data: 'updated_at', className: 'text-[10px] font-mono font-bold text-gray-500' },
-                    { data: 'product_info', className: 'font-bold' },
+                    { data: 'product_info', className: 'font-medium' },
                     { data: 'auditor', className: 'text-xs font-semibold text-blue-600 dark:text-blue-400' },
                     { data: 'system_qty', className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800' },
                     { data: 'system_amount', className: 'text-right pr-4 bg-gray-50/30 dark:bg-gray-800/20' },
@@ -652,7 +786,9 @@
             },
             templateSelection: function(data) {
                 if (!data.id) return data.text;
-                return $(`<span class="text-xs font-bold truncate block w-full">${data.text}</span>`);
+                // Focus on Part Number for selection display
+                const partNo = $(data.element).data('partno');
+                return $(`<span class="text-xs font-bold text-gray-900 dark:text-white truncate block w-full">${partNo || data.text}</span>`);
             }
         });
         productSelect.on('change', function() {
@@ -776,30 +912,30 @@
         });
 
         const rowHtml = `
-            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-lg bg-white dark:bg-gray-800 border ${entry ? 'border-blue-100 dark:border-blue-900/30 bg-blue-50/10' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-all">
+            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30">
                 <input type="hidden" class="row-detail-hash" value="${entry ? entry.detail_id_hash : ''}">
                 
                 <div class="flex-1 w-full">
                     <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Quantity (${currentProductData.unit || 'PCS'})</div>
-                    <input type="number" class="row-qty w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded h-[40px] text-center font-bold text-md focus:border-blue-500 transition-all outline-none" 
+                    <input type="number" class="row-qty w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xs h-[40px] text-center font-semibold text-sm focus:border-primary-500 transition-all outline-none" 
                            placeholder="0.00" value="${entry ? entry.real_qty : ''}">
                 </div>
 
                 <div class="flex-[1.5] w-full">
                     <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Location</div>
-                    <select class="row-location w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-blue-500 rounded h-[40px] text-xs px-3 outline-none transition-all">
+                    <select class="row-location w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 rounded-xs h-[40px] text-xs px-3 outline-none transition-all">
                         ${locationOptions}
                     </select>
                 </div>
 
                 <div class="flex-[2] w-full">
                     <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Remark</div>
-                    <input type="text" class="row-remark w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-blue-500 rounded h-[40px] text-xs px-3 outline-none transition-all" 
+                    <input type="text" class="row-remark w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 rounded-xs h-[40px] text-xs px-3 outline-none transition-all" 
                            placeholder="Optional Note..." value="${entry ? entry.remark || '' : ''}">
                 </div>
 
                 <button type="button" onclick="saveRowCount('${rowId}')" 
-                        class="h-[40px] px-4 rounded font-bold text-[10px] uppercase tracking-widest transition-all ${entry ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-slate-900 hover:bg-black text-white'} flex items-center justify-center gap-2">
+                        class="h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2 active:scale-95">
                     ${entry ? '<i class="fa-solid fa-check"></i> Update' : '<i class="fa-solid fa-plus"></i> Save'}
                 </button>
                 
@@ -869,7 +1005,7 @@
                 
                 row.querySelector('.row-detail-hash').value = data.detail_id_hash || '';
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Update';
-                btn.className = 'h-[40px] px-4 rounded font-bold text-[10px] uppercase tracking-widest transition-all bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2';
+                btn.className = 'h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2';
                 btn.disabled = false;
                 row.classList.replace('border-gray-200', 'border-blue-100');
                 row.classList.add('bg-blue-50/10');

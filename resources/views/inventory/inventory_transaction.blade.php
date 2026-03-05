@@ -4,29 +4,36 @@
 @section('header-title', 'Inventory Transaction')
 
 @section('content')
-<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="text-gray-900 dark:text-gray-100">
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Inventory Transaction</h2>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage incoming and outgoing parts movement.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {{-- Transaction Form Panel --}}
         <div class="lg:col-span-1">
-            <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-md overflow-hidden shadow-sm">
-                <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-widest">
-                        <i class="fa-solid fa-right-left text-blue-600"></i> Transaction Form
+            <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
+                    <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-widest">
+                        <i class="fa-solid fa-right-left text-primary-600"></i> Transaction Input
                     </h3>
                 </div>
                 <div class="p-6">
                     <form id="transactionForm">
                         @csrf
                         {{-- Product Selection --}}
-                        <div class="mb-5">
+                        <div class="mb-6">
                             <div class="flex justify-between items-end mb-3">
-                                <label for="product_detail_id" class="block text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Product <span class="text-red-500">*</span></label>
-                                <button type="button" id="btn-scan" class="inline-flex items-center px-4 py-1.5 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800 transition-all shadow-sm uppercase tracking-wider">
+                                <label for="product_detail_id" class="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider mb-2">Part <span class="text-red-500">*</span></label>
+                                <button type="button" id="btn-scan" class="inline-flex items-center justify-center px-4 h-9 text-[10px] font-bold text-primary-700 bg-primary-50/80 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-all uppercase tracking-widest active:scale-95">
                                     <i class="fa-solid fa-barcode mr-2"></i> Scan Camera
                                 </button>
                             </div>
-                            <select name="product_detail_id" id="product_detail_id" class="premium-input select2" data-placeholder="Select Product via Search or Scanner..." required>
-                                <option value="">Select Product via Search or Scanner...</option>
+                            <select name="product_detail_id" id="product_detail_id" class="premium-input select2" data-placeholder="Select Part via Search or Scanner..." required>
+                                <option value="">Select Part via Search or Scanner...</option>
                                 @foreach($products as $product)
                                     <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}" data-pcs="{{ $product->pcs_per_unit ?? 1 }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                 @endforeach
@@ -34,8 +41,8 @@
                         </div>
 
                         {{-- Transaction Category --}}
-                        <div class="mb-5">
-                            <label for="transaction_category_id" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Category <span class="text-red-500">*</span></label>
+                        <div class="mb-6">
+                            <label for="transaction_category_id" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Category <span class="text-red-500">*</span></label>
                             <select name="transaction_category_id" id="transaction_category_id" class="premium-input" required>
                                 <option value="">Select Category...</option>
                                 @foreach($categories as $category)
@@ -47,8 +54,8 @@
                         </div>
 
                         {{-- Coil Center (For IN) --}}
-                        <div class="mb-5 hidden" id="coilCenterContainer">
-                            <label for="coil_center_id" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Coil Center <span class="text-red-500">*</span></label>
+                        <div class="mb-6 hidden" id="coilCenterContainer">
+                            <label for="coil_center_id" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Coil Center <span class="text-red-500">*</span></label>
                             <select name="coil_center_id" id="coil_center_id" class="premium-input select2" style="width: 100%">
                                 <option value="">Select Coil Center...</option>
                                 @foreach($coilCenters as $cc)
@@ -58,9 +65,9 @@
                         </div>
 
                         {{-- Supplier & Destination Row (For OUT) --}}
-                        <div class="grid grid-cols-2 gap-4 mb-5 hidden" id="outFieldsContainer">
+                        <div class="grid grid-cols-2 gap-5 mb-6 hidden" id="outFieldsContainer">
                             <div>
-                                <label for="supplier_id" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Supplier <span class="text-red-500">*</span></label>
+                                <label for="supplier_id" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Supplier <span class="text-red-500">*</span></label>
                                 <select name="supplier_id" id="supplier_id" class="premium-input select2" style="width: 100%">
                                     <option value="">Select Supplier...</option>
                                     @foreach($suppliers as $supplier)
@@ -69,7 +76,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="destination_id" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Destination <span class="text-red-500">*</span></label>
+                                <label for="destination_id" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Destination <span class="text-red-500">*</span></label>
                                 <select name="destination_id" id="destination_id" class="premium-input select2" style="width: 100%">
                                     <option value="">Select Destination...</option>
                                     @foreach($suppliers as $supplier)
@@ -80,22 +87,22 @@
                         </div>
 
                         {{-- Qty & Date Row --}}
-                        <div class="grid grid-cols-2 gap-4 mb-5">
+                        <div class="grid grid-cols-2 gap-5 mb-6">
                             <div>
-                                <label for="qty" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Qty (Unit) <span class="text-red-500">*</span></label>
+                                <label for="qty" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Qty (Unit) <span class="text-red-500">*</span></label>
                                 <input type="number" name="qty" id="qty" step="1" min="1" class="premium-input w-full" required placeholder="0">
                                 
                                 {{-- Calculator Preview --}}
                                 <div id="qtyPreview" class="mt-2 opacity-0 transition-opacity flex items-center gap-2 text-[10px]">
-                                    <i class="fa-solid fa-calculator text-blue-500"></i>
-                                    <div class="flex items-center gap-1 font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                                    <i class="fa-solid fa-calculator text-primary-500"></i>
+                                    <div class="flex items-center gap-1 font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
                                         <span id="calcResult">0</span> <span>PCS</span>
                                     </div>
                                     <span class="text-gray-400 text-[9px] font-normal uppercase tracking-tight">(@<span id="pcsInfo">0</span>/Unit)</span>
                                 </div>
                             </div>
                             <div>
-                                <label for="transaction_date" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Date <span class="text-red-500">*</span></label>
+                                <label for="transaction_date" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Date <span class="text-red-500">*</span></label>
                                 <input type="date" name="transaction_date" id="transaction_date" value="{{ date('Y-m-d') }}" 
                                     onclick="this.showPicker()"
                                     class="premium-input w-full" required>
@@ -103,23 +110,23 @@
                         </div>
 
                         {{-- PIC --}}
-                        <div class="mb-5">
-                            <label class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">PIC Name</label>
-                            <div class="bg-gray-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 text-slate-500 text-xs font-semibold rounded-md block w-full px-4 h-10 flex items-center gap-2">
+                        <div class="mb-6">
+                            <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">PIC Name</label>
+                            <div class="bg-gray-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 text-slate-500 text-xs font-semibold rounded-xs block w-full px-4 h-10 flex items-center gap-2">
                                 <i class="fa-solid fa-user-circle text-gray-400 text-sm"></i>
                                 <span>{{ Auth::user()->name }}</span>
                             </div>
                         </div>
 
                         {{-- Remark --}}
-                        <div class="mb-6">
-                            <label for="remark" class="block mb-3 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Remark</label>
-                            <textarea name="remark" id="remark" rows="2" class="block p-3 w-full text-xs font-semibold text-gray-900 bg-white dark:bg-gray-900 rounded-md border border-slate-200 dark:border-gray-700 focus:ring-0 focus:border-blue-500 transition-all dark:text-white placeholder-gray-300" placeholder="Optional notes..."></textarea>
+                        <div class="mb-8">
+                            <label for="remark" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Remark</label>
+                            <textarea name="remark" id="remark" rows="2" class="block p-3 w-full text-xs font-semibold text-gray-900 bg-white dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700 focus:ring-0 focus:border-primary-500 transition-all dark:text-white placeholder-gray-300" placeholder="Optional notes..."></textarea>
                         </div>
 
                         {{-- Submit Button --}}
-                        <button type="submit" class="w-full h-12 text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 focus:ring-4 focus:ring-slate-300 font-bold rounded-md text-xs px-5 py-3 text-center transition-all shadow-md uppercase tracking-widest active:scale-[0.98]">
-                            <i class="fa-solid fa-save mr-2 text-[10px]"></i> Save Transaction
+                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+                            <i class="fa-solid fa-save"></i> Save Transaction
                         </button>
                     </form>
                 </div>
@@ -128,31 +135,31 @@
 
         {{-- Recent Transactions Table --}}
         <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-md shadow-sm overflow-hidden h-full flex flex-col">
-                <div class="px-6 py-4 border-b border-gray-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div class="flex flex-wrap justify-between items-center gap-4 mb-2" id="activityHeader">
+            <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden h-full flex flex-col">
+                <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
+                    <div class="flex flex-wrap justify-between items-center gap-4" id="activityHeader">
                         <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
-                            <i class="fa-solid fa-clock-rotate-left mr-2 text-blue-600 text-sm"></i> Transaction Activity Log
+                            <i class="fa-solid fa-clock-rotate-left mr-3 text-primary-600"></i> Transaction Log
                         </h3>
                         <div class="flex items-center gap-3">
-                            <button id="toggleFilters" class="flex items-center gap-2 px-4 h-9 text-[10px] font-bold text-gray-500 hover:text-blue-600 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm transition-all uppercase tracking-widest group">
-                                <i class="fa-solid fa-filter text-[10px] text-gray-400 group-hover:text-blue-500 transition-colors"></i>
+                            <button id="toggleFilters" class="flex items-center gap-2 px-4 h-9 text-xs font-bold text-gray-500 hover:text-primary-600 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs transition-all uppercase tracking-widest group active:scale-95">
+                                <i class="fa-solid fa-filter text-xs text-gray-400 group-hover:text-primary-500 transition-colors"></i>
                                 <span>Filter</span>
-                                <i class="fa-solid fa-chevron-down text-[8px] transition-transform duration-300 ml-1" id="filterChevron"></i>
+                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 ml-1" id="filterChevron"></i>
                             </button>
-                            <button id="refreshTable" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md shadow-sm">
+                            <button id="refreshTable" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs active:scale-95">
                                 <i class="fa-solid fa-arrows-rotate text-sm"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div id="filterContainer" class="hidden mt-6 pt-6 border-t border-slate-100 dark:border-gray-700/50">
+                    <div id="filterContainer" class="hidden pt-6 border-t border-slate-100 dark:border-gray-700/50">
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {{-- Material Filter --}}
+                            {{-- Part Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">Material</label>
+                                <label class="block mb-2 text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em] uppercase">Part</label>
                                 <select id="filter_product_detail_id" class="select2-filter-log w-full">
-                                    <option value="">All Materials</option>
+                                    <option value="">All Parts</option>
                                     @foreach($products as $product)
                                         <option value="{{ $product->hash_id }}">{{ $product->part_no }} - {{ $product->part_name }}</option>
                                     @endforeach
@@ -161,7 +168,7 @@
 
                             {{-- Category Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">Category</label>
+                                <label class="block mb-2 text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em] uppercase">Category</label>
                                 <select id="filter_category_id" class="select2-filter-log w-full">
                                     <option value="">All Categories</option>
                                     @foreach($categories as $category)
@@ -172,7 +179,7 @@
 
                             {{-- PIC Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">PIC</label>
+                                <label class="block mb-2 text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em] uppercase">PIC</label>
                                 <select id="filter_pic_id" class="select2-filter-log w-full">
                                     <option value="">All PIC</option>
                                     @foreach($pics as $p)
@@ -183,28 +190,30 @@
 
                             {{-- Date Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[9px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em]">Date Range</label>
+                                <label class="block mb-2 text-[10px] font-medium text-gray-400 dark:text-gray-500 tracking-[0.05em] uppercase">Date Range</label>
                                 <div class="relative">
                                     <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none transition-colors z-10"></i>
                                     <input type="text" id="filter_date_range" readonly 
                                         value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
-                                        class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-md pl-9 pr-2 h-9 text-[11px] font-normal text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer shadow-sm w-full transition-all" 
+                                        class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer w-full transition-all" 
                                         placeholder="Filter by Date">
                                 </div>
                             </div>
                     </div>
                 </div>
-                <div class="overflow-x-auto flex-1 bg-white dark:bg-gray-800">
+            </div>
+
+            <div class="overflow-x-auto flex-1 bg-white dark:bg-gray-800">
                     <x-table id="recentTransactionTable">
                         <thead>
                             <tr>
-                                <th class="w-32 text-left font-bold uppercase tracking-wider text-[10px]">Timestamp</th>
-                                <th class="text-left font-bold uppercase tracking-wider text-[10px]">Product Information</th>
-                                <th class="w-32 text-center font-bold uppercase tracking-wider text-[10px]">Category</th>
-                                <th class="w-24 text-center font-bold uppercase tracking-wider text-[10px]">Qty</th>
-                                <th class="w-40 text-left font-bold uppercase tracking-wider text-[10px]">PIC</th>
+                                <th class="w-32 text-left font-bold uppercase tracking-wider text-xs">Timestamp</th>
+                                <th class="text-left font-bold uppercase tracking-wider text-xs">Part Information</th>
+                                <th class="w-32 text-center font-bold uppercase tracking-wider text-xs">Category</th>
+                                <th class="w-24 text-center font-bold uppercase tracking-wider text-xs">Qty</th>
+                                <th class="w-40 text-left font-bold uppercase tracking-wider text-xs">PIC</th>
                                 @if(Auth::user()->hasAppRole('supervisor') || Auth::user()->hasAppRole('admin'))
-                                <th class="w-20 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
+                                <th class="w-[100px] text-center font-bold uppercase tracking-wider text-xs">Action</th>
                                 @endif
                             </tr>
                         </thead>
@@ -220,38 +229,41 @@
 @include('components.scanner-modal')
 
 {{-- Edit Transaction Modal --}}
-<div id="editTransactionModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/60 backdrop-blur-sm p-4">
+<div id="editTransactionModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-950/60 transition-all p-4">
     <div class="relative w-full max-w-lg">
-        <div class="relative bg-white rounded-md shadow-2xl dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-3">
+        <div class="relative bg-white rounded-xs dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <button type="button" onclick="closeEditModal()" class="text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-3">
                     <i class="fa-solid fa-pen-nib text-blue-600"></i> Adjust Transaction
                 </h3>
-                <button type="button" onclick="closeEditModal()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium tracking-tight">Modify transaction record and audit history</p>
             </div>
 
-            <form id="editTransactionForm" class="p-6">
+            <form id="editTransactionForm" class="px-6 py-5">
                 @csrf
                 @method('PUT')
                 <input type="hidden" id="edit_id" name="id">
 
-                <div class="space-y-4">
+                <div class="space-y-3.5">
                     {{-- Product Selection --}}
                     <div>
-                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Material <span class="text-red-500">*</span></label>
-                        <select name="product_detail_id" id="edit_product_detail_id" class="select2-modal" required>
+                        <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material <span class="text-red-500">*</span></label>
+                        <select id="edit_product_detail_id" class="select2-modal" disabled>
                             <option value="">Select Material...</option>
                             @foreach($products as $product)
                             <option value="{{ $product->hash_id }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                             @endforeach
                         </select>
+                        <input type="hidden" name="product_detail_id" id="hidden_edit_product_detail_id">
                     </div>
 
                     {{-- Transaction Category --}}
                     <div>
-                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Category <span class="text-red-500">*</span></label>
                         <select name="transaction_category_id" id="edit_transaction_category_id" class="select2-modal" required>
                             <option value="">Select Category...</option>
                             @foreach($categories as $category)
@@ -264,7 +276,7 @@
 
                     {{-- Conditional Fields --}}
                     <div id="editCoilCenterContainer" class="hidden">
-                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Coil Center <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Coil Center <span class="text-red-500">*</span></label>
                         <select name="coil_center_id" id="edit_coil_center_id" class="select2-modal">
                             <option value="">Select Coil Center...</option>
                             @foreach($coilCenters as $cc)
@@ -273,9 +285,9 @@
                         </select>
                     </div>
 
-                    <div id="editOutFieldsContainer" class="grid grid-cols-2 gap-4 hidden">
+                    <div id="editOutFieldsContainer" class="grid grid-cols-2 gap-5 hidden">
                         <div>
-                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Supplier <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Supplier <span class="text-red-500">*</span></label>
                             <select name="supplier_id" id="edit_supplier_id" class="select2-modal">
                                 <option value="">Select Supplier...</option>
                                 @foreach($suppliers as $supplier)
@@ -284,7 +296,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Destination <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Destination <span class="text-red-500">*</span></label>
                             <select name="destination_id" id="edit_destination_id" class="select2-modal">
                                 <option value="">Select Destination...</option>
                                 @foreach($suppliers as $supplier)
@@ -295,39 +307,43 @@
                     </div>
 
                     {{-- Qty & Date Row --}}
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-5">
                         <div>
-                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quantity <span class="text-red-500">*</span></label>
-                            <input type="number" name="qty" id="edit_qty" step="1" min="1" class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-bold focus:border-blue-500 focus:ring-0 outline-none transition-all" required placeholder="0">
+                            <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Quantity <span class="text-red-500">*</span></label>
+                            <input type="number" name="qty" id="edit_qty" step="1" min="1" class="w-full h-10 px-3 bg-gray-50 border border-slate-200 dark:bg-gray-900 dark:border-gray-700 rounded-xs text-[11px] font-bold focus:border-primary-500 focus:ring-0 outline-none transition-all dark:text-white" required placeholder="0">
                         </div>
                         <div>
-                            <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date <span class="text-red-500">*</span></label>
-                            <input type="date" name="transaction_date" id="edit_transaction_date" class="w-full h-10 px-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-xs font-bold focus:border-blue-500 focus:ring-0 outline-none transition-all uppercase" required>
+                            <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Date <span class="text-red-500">*</span></label>
+                            <input type="date" name="transaction_date" id="edit_transaction_date" class="w-full h-10 px-3 bg-gray-50 border border-slate-200 dark:bg-gray-900 dark:border-gray-700 rounded-xs text-[10px] font-bold focus:border-primary-500 focus:ring-0 outline-none transition-all dark:text-white" required>
                         </div>
                     </div>
 
                     {{-- PIC Info --}}
-                    <div class="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-md border border-blue-100 dark:border-blue-800/50">
-                        <label class="block mb-1.5 text-[8px] font-bold text-blue-500 uppercase tracking-widest">Registered By (PIC)</label>
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-user-shield text-blue-400"></i>
-                            <span id="edit_pic_name" class="text-xs font-medium text-gray-700 dark:text-gray-300">-</span>
+                    <div class="p-3 bg-primary-50/50 dark:bg-primary-900/10 rounded-xs border border-primary-100/50 dark:border-primary-800/30 flex items-center justify-between mt-1">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                                <i class="fa-solid fa-user-shield text-xs"></i>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-primary-400 dark:text-primary-500 uppercase tracking-widest leading-none mb-1">PIC (Audit Log)</label>
+                                <span id="edit_pic_name" class="text-xs font-bold text-slate-700 dark:text-gray-300">-</span>
+                            </div>
                         </div>
                     </div>
 
                     {{-- Remark --}}
                     <div>
-                        <label class="block mb-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Remark</label>
-                        <textarea name="remark" id="edit_remark" rows="2" class="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-normal focus:border-blue-500 focus:ring-0 outline-none transition-all" placeholder="Optional audit explanation..."></textarea>
+                        <label class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Adjustment Remark</label>
+                        <textarea name="remark" id="edit_remark" rows="2" class="w-full p-4 bg-gray-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium focus:border-primary-500 focus:ring-0 outline-none transition-all dark:text-white placeholder-gray-400" placeholder="Optional audit explanation..."></textarea>
                     </div>
                 </div>
 
                 {{-- Action Buttons --}}
-                <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeEditModal()" class="flex-1 py-2.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-all">
-                        Discard
+                <div class="mt-6 flex gap-4">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 px-6 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-900 uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xs transition-all active:scale-95">
+                        Cancel
                     </button>
-                    <button type="submit" class="flex-1 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold rounded-md shadow-md transition-all active:scale-95 uppercase tracking-widest">
+                    <button type="submit" class="flex-1 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                         Save Changes
                     </button>
                 </div>
@@ -336,15 +352,6 @@
     </div>
 </div>
 @endsection
-
-@push('style')
-<style>
-    /* DataTable Search Box custom padding */
-    .dataTables_filter {
-        padding: 0 24px 20px 24px !important;
-    }
-</style>
-@endpush
 
 @push('scripts')
 {{-- html5-qrcode library --}}
@@ -435,7 +442,7 @@
                     render: (d, t, r) => `
                         <div class="flex flex-col">
                             <span class="font-bold text-gray-900 dark:text-white leading-tight uppercase tracking-tighter">${r.part_no}</span>
-                            <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-tight">${r.product_name || ''}</span>
+                            <span class="text-[9px] text-gray-400 uppercase tracking-tight">${r.product_name || ''}</span>
                         </div>
                     `
                 },
@@ -447,7 +454,7 @@
                         let badgeClass = isOut 
                             ? 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' 
                             : 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800';
-                        return `<span class="inline-block px-2 py-0.5 rounded border ${badgeClass} text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">${d}</span>`;
+                        return `<span class="inline-block px-2 py-0.5 rounded-xs border ${badgeClass} text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">${d}</span>`;
                     }
                 },
                 { 
@@ -466,12 +473,12 @@
                     className: 'text-center',
                     render: (d, t, r) => {
                         return `
-                            <div class="flex items-center justify-center gap-1">
-                                <button class="edit-transaction-btn p-1.5 text-slate-400 hover:text-blue-500 transition-colors" data-id="${r.id}" title="Edit">
-                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button class="edit-transaction-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.id}" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
                                 </button>
-                                <button class="delete-transaction-btn p-1.5 text-slate-400 hover:text-red-500 transition-colors" data-id="${r.id}" title="Delete">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                <button class="delete-transaction-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.id}" title="Delete">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
                                 </button>
                             </div>
                         `;
@@ -483,7 +490,7 @@
             pageLength: 10,
             lengthChange: false,
             bLengthChange: false,
-            dom: "<'flex justify-between items-center mb-2'f><'flex flex-col'rt><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
+            dom: "<'flex justify-between items-center mb-4'f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
             searching: true
         });
 
@@ -496,9 +503,9 @@
             element: document.getElementById('filter_date_range'),
             singleMode: false,
             autoApply: true,
-            format: 'YYYY-MM-DD',
+            format: 'DD-MM-YYYY',
             delimiter: ' - ',
-            dropdowns: { months: true, years: true },
+            // dropdowns: { months: true, years: true },
             startDate: "{{ date('Y-m-01') }}",
             endDate: "{{ date('Y-m-t') }}",
             setup: (picker) => {
@@ -521,7 +528,7 @@
             } else {
                 container.slideUp(300, function() {
                     $(this).addClass('hidden');
-                    header.removeClass('mb-4');
+                    header.removeClass('mb-6');
                 });
                 chevron.removeClass('rotate-180');
             }
@@ -628,7 +635,7 @@
                     $('#edit_remark').val(response.remark);
                     $('#edit_pic_name').text(response.pic_name || 'System');
                     
-                    // Open Modal
+                     // Open Modal
                     $('#editTransactionModal').removeClass('hidden').addClass('flex');
                     
                     // Init Select2 for Modal
@@ -636,7 +643,10 @@
                     
                     // Trigger changes for conditional fields
                     setTimeout(() => {
-                        $('#edit_product_detail_id').val(response.product_detail_id).trigger('change');
+                        const productDetailId = response.product_detail_id;
+                        $('#edit_product_detail_id').val(productDetailId).trigger('change');
+                        $('#hidden_edit_product_detail_id').val(productDetailId);
+                        
                         $('#edit_transaction_category_id').val(response.transaction_category_id).trigger('change');
                         
                         // Handle IN/OUT conditional fields after category change

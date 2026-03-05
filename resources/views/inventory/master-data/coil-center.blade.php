@@ -3,7 +3,7 @@
 @section('title', 'Coil Center Master')
 
 @section('content')
-<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
+<div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
@@ -11,22 +11,22 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage all industrial coil center configurations.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="coil-center">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all" data-target="coil-center">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
     </div>
 
     <x-table id="coilCenterTable">
-        <thead class="bg-gray-50 dark:bg-gray-700">
+        <thead>
             <tr>
-                <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Code</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Name</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Email</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Phone</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Address</th>
-                <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
+                <th class="text-center w-16">No</th>
+                <th class="text-left w-32">Code</th>
+                <th class="text-left">Name</th>
+                <th class="text-left">Email</th>
+                <th class="text-left">Phone</th>
+                <th class="text-left">Address</th>
+                <th class="text-center w-[100px]">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -34,93 +34,97 @@
 </div>
 
 {{-- Modals --}}
-<div id="modal-coil-center-add" class="modal-container hidden">
-    <div class="relative p-4 w-full max-w-md">
-        <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal text-gray-400 absolute top-2.5 right-2.5 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
+<div id="modal-coil-center-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 transition-opacity">
+    <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Add Coil Center</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h3 class="mb-4 text-xl text-center font-bold text-slate-900 dark:text-white uppercase tracking-tight">Add Coil Center</h3>
+        </div>
+        <div class="overflow-y-auto px-6 py-6 custom-scrollbar flex-1">
             <form class="modal-form" data-action="{{ route('inventory.master.coilCenter.store') }}">
                 @csrf
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Code <span class="text-red-500">*</span></label>
-                    <input type="text" name="code" required class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm" placeholder="e.g. CC001">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
+                    <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all" placeholder="e.g. CC001">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Name</label>
-                    <input type="text" name="name" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name</label>
+                    <input type="text" name="name" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="col-span-2 sm:col-span-1">
-                        <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Email</label>
-                        <input type="email" name="email" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Email</label>
+                        <input type="email" name="email" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <p class="error-msg hidden"></p>
                     </div>
-                    <div class="col-span-2 sm:col-span-1">
-                        <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Phone</label>
-                        <input type="text" name="phone" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Phone</label>
+                        <input type="text" name="phone" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <p class="error-msg hidden"></p>
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Address</label>
-                    <textarea name="address" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm"></textarea>
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Address</label>
+                    <textarea name="address" rows="3" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all"></textarea>
                     <p class="error-msg hidden"></p>
                 </div>
-                <div class="flex gap-4 border-t border-gray-100 pt-4 mt-4">
-                    <button type="button" class="close-modal flex-1 px-5 py-2.5 bg-white border border-gray-300 rounded-md text-[10px] font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" class="flex-1 px-5 py-2.5 bg-slate-900 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-sm">Save</button>
-                </div>
             </form>
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
+            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save</button>
         </div>
     </div>
 </div>
 
-<div id="modal-coil-center-edit" class="modal-container hidden">
-    <div class="relative p-4 w-full max-w-md">
-        <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal text-gray-400 absolute top-2.5 right-2.5 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
+<div id="modal-coil-center-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 transition-opacity">
+    <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Edit Coil Center</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h3 class="mb-4 text-xl text-center font-bold text-slate-900 dark:text-white uppercase tracking-tight">Edit Coil Center</h3>
+        </div>
+        <div class="overflow-y-auto px-6 py-6 custom-scrollbar flex-1">
             <form class="modal-form">
                 @csrf
                 @method('PUT')
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Code <span class="text-red-500">*</span></label>
-                    <input type="text" name="code" required class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
+                    <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all" placeholder="e.g. CC001">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Name</label>
-                    <input type="text" name="name" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name</label>
+                    <input type="text" name="name" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div class="col-span-2 sm:col-span-1">
-                        <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Email</label>
-                        <input type="email" name="email" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Email</label>
+                        <input type="email" name="email" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <p class="error-msg hidden"></p>
                     </div>
-                    <div class="col-span-2 sm:col-span-1">
-                        <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Phone</label>
-                        <input type="text" name="phone" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Phone</label>
+                        <input type="text" name="phone" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <p class="error-msg hidden"></p>
                     </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Address</label>
-                    <textarea name="address" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm"></textarea>
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Address</label>
+                    <textarea name="address" rows="3" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all"></textarea>
                     <p class="error-msg hidden"></p>
                 </div>
-                <div class="flex gap-4 border-t border-gray-100 pt-4 mt-4">
-                    <button type="button" class="close-modal flex-1 px-5 py-2.5 bg-white border border-gray-300 rounded-md text-[10px] font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" class="flex-1 px-5 py-2.5 bg-slate-900 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-sm">Save Changes</button>
-                </div>
             </form>
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
+            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save Changes</button>
         </div>
     </div>
 </div>
@@ -128,13 +132,15 @@
 <x-inventory.delete-modal />
 
 <style>
+<style>
 .modal-container {
     position: fixed; top: 0; right: 0; left: 0; bottom: 0; z-index: 50;
     display: none; justify-content: center; align-items: center;
-    width: 100%; height: 100%; background-color: rgb(15 23 42 / 0.5); backdrop-filter: blur(4px);
+    width: 100%; height: 100%; background-color: rgb(2 6 23 / 0.6);
 }
 .modal-container:not(.hidden) { display: flex; }
 .error-msg { margin-top: 0.25rem; font-size: 0.75rem; line-height: 1rem; color: rgb(239 68 68); }
+</style>
 </style>
 
 @endsection
@@ -159,11 +165,11 @@
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center', width: '100px',
                     render: (d, t, r) => `
-                        <div class="flex items-center justify-center gap-2">
-                            <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200" data-id="${r.hash_id}" title="Edit">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.hash_id}" title="Edit">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
-                            <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200" data-id="${r.hash_id}" title="Delete">
+                            <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.hash_id}" title="Delete">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
                         </div>`

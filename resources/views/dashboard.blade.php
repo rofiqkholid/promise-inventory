@@ -8,12 +8,12 @@
     {{-- Header & Filters --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Inventory Overview</h2>
-            <p class="text-[11px] text-slate-500 font-medium tracking-wide">Real-time stock monitoring and transaction analytics</p>
+            <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight uppercase">Inventory Overview</h2>
+            <p class="text-[11px] text-slate-500 font-bold tracking-wide">Real-time stock monitoring and transaction analytics</p>
         </div>
         <div class="flex items-center gap-2">
-            <button id="btnToggleDashFilter" class="group flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg shadow-sm hover:shadow-md hover:border-blue-400 transition-all">
-                <i class="fa-solid fa-filter text-slate-400 group-hover:text-blue-500 transition-colors"></i>
+            <button id="btnToggleDashFilter" class="group flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xs">
+                <i class="fa-solid fa-filter text-slate-400 transition-colors"></i>
                 <span class="text-xs font-bold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Filters</span>
                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 transition-transform duration-300" id="filterChevron"></i>
             </button>
@@ -23,34 +23,34 @@
     </div>
 
     {{-- Collapsible Filter Card --}}
-    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xl border border-slate-100 dark:border-gray-700 p-4 shadow-sm mb-2">
+    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4 mb-2">
         <form id="filterForm">
             <div class="flex flex-col xl:flex-row gap-4 xl:items-end">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Period</label>
-                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-bold border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-lg h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm transition-all">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Period</label>
+                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-bold border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Customer</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer</label>
                         <select id="filterCustomer" name="customer[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Model</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model</label>
                         <select id="filterModel" name="model[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance Status</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Balance Status</label>
                         <select id="filterBalance" name="status_balance[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Usage Status</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Usage Status</label>
                         <select id="filterUsage" name="status_usage[]" class="w-full text-xs"></select>
                     </div>
                 </div>
 
                 <div class="flex gap-2 pt-2 xl:pt-0">
-                    <button type="button" id="btnReset" class="h-[40px] px-6 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-[10px] font-black text-slate-600 dark:text-gray-300 uppercase tracking-widest transition-all">
+                    <button type="button" id="btnReset" class="h-[40px] px-6 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xs text-[10px] font-bold text-slate-600 dark:text-gray-300 uppercase tracking-widest transition-all">
                         Reset Filters
                     </button>
                 </div>
@@ -69,13 +69,13 @@
                 ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'purple', 'id' => 'stat_out_event'],
                 ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'rose', 'id' => 'stat_out_trial'],
             ] as $stat)
-            <div class="flex-1 min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm transition-all duration-300 flex items-center gap-3">
-                <div class="flex-shrink-0 w-9 h-9 rounded-lg bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-base shadow-inner">
+            <div class="flex-1 min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xs border border-slate-200 dark:border-gray-600 flex items-center gap-3">
+                <div class="flex-shrink-0 w-9 h-9 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-base">
                     <i class="fa-solid {{ $stat['icon'] }}"></i>
                 </div>
                 <div class="min-w-0">
                     <div class="flex items-baseline flex-wrap gap-x-2 gap-y-0.5">
-                        <h3 class="text-xl font-black text-slate-900 dark:text-white leading-tight tracking-tight shrink-0" id="{{ $stat['id'] }}">{{ $stat['val'] }}</h3>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight shrink-0" id="{{ $stat['id'] }}">{{ $stat['val'] }}</h3>
                         <p class="text-[9px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-tighter leading-none">{{ $stat['label'] }}</p>
                     </div>
                 </div>
@@ -88,50 +88,50 @@
         <div class="col-span-12 xl:col-span-8 flex flex-col gap-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
                 {{-- Chart Card 1 --}}
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm flex flex-col relative transition-all duration-300">
+                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xs border border-slate-200 dark:border-gray-600 flex flex-col relative">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-1.5 h-5 bg-blue-500 rounded-full"></div>
-                            <h4 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider">Stock Status</h4>
+                            <div class="w-1 h-4 bg-primary-500 rounded-full"></div>
+                            <h4 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Stock Status</h4>
                         </div>
                         <div class="flex items-center gap-2">
-                            <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-all"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                            <button class="w-7 h-7 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700"><i class="fa-solid fa-expand text-[10px]"></i></button>
                         </div>
                     </div>
                     <div class="flex-1 min-h-[220px] relative"><canvas id="stockStatusChart"></canvas></div>
                 </div>
                 {{-- Chart Card 2 --}}
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm flex flex-col relative transition-all duration-300">
+                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xs border border-slate-200 dark:border-gray-600 flex flex-col relative">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-1.5 h-5 bg-amber-500 rounded-full"></div>
-                            <h4 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider">Usage by Models</h4>
+                            <div class="w-1 h-4 bg-amber-500 rounded-full"></div>
+                            <h4 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Usage by Models</h4>
                         </div>
-                        <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-all"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                        <button class="w-7 h-7 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-[220px] relative"><canvas id="usageModelChart"></canvas></div>
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
                 {{-- Chart Card 3 --}}
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm flex flex-col relative transition-all duration-300">
+                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xs border border-slate-200 dark:border-gray-600 flex flex-col relative">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-1.5 h-5 bg-emerald-500 rounded-full"></div>
-                            <h4 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider">Transaction Trend</h4>
+                            <div class="w-1 h-4 bg-emerald-500 rounded-full"></div>
+                            <h4 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Transaction Trend</h4>
                         </div>
-                        <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-all"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                        <button class="w-7 h-7 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-[220px] relative"><canvas id="trendlineChart"></canvas></div>
                 </div>
                 {{-- Chart Card 4 --}}
-                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm flex flex-col relative transition-all duration-300">
+                <div class="chart-card bg-white dark:bg-gray-800 p-5 rounded-xs border border-slate-200 dark:border-gray-600 flex flex-col relative">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-1.5 h-5 bg-indigo-500 rounded-full"></div>
-                            <h4 class="font-black text-xs text-slate-800 dark:text-white uppercase tracking-wider">Supply by Makers</h4>
+                            <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
+                            <h4 class="font-bold text-xs text-slate-800 dark:text-white uppercase tracking-wider">Supply by Makers</h4>
                         </div>
-                        <button class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-all"><i class="fa-solid fa-expand text-[10px]"></i></button>
+                        <button class="w-7 h-7 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
                     <div class="flex-1 min-h-[220px] relative"><canvas id="makerChart"></canvas></div>
                 </div>
@@ -140,40 +140,40 @@
 
         <div class="col-span-12 xl:col-span-4 flex flex-col gap-4 h-full">
             {{-- Balance Table --}}
-            <div class="table-container bg-white dark:bg-gray-800 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 transition-all duration-300">
+            <div class="table-container bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 overflow-hidden flex flex-col flex-1 min-h-0">
                 <div class="py-3 px-5 border-b border-slate-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-500 shadow-inner">
+                        <div class="w-7 h-7 rounded-xs bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-500">
                             <i class="fa-solid fa-triangle-exclamation text-[10px]"></i>
                         </div>
-                        <span class="font-black text-[10px] text-slate-800 dark:text-white uppercase tracking-wider">Balance Warnings</span>
+                        <span class="font-bold text-[10px] text-slate-800 dark:text-white uppercase tracking-wider">Balance Warnings</span>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
                     <table class="w-full text-left">
                         <thead class="bg-slate-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-2.5 px-5 text-[9px] font-black text-slate-400 uppercase tracking-widest">Component</th>
-                                <th class="py-2.5 px-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Stock</th>
-                                <th class="py-2.5 px-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
+                                <th class="py-2.5 px-5 text-[9px] font-bold text-slate-400 uppercase tracking-widest">Component</th>
+                                <th class="py-2.5 px-5 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Stock</th>
+                                <th class="py-2.5 px-5 text-[9px] font-bold text-slate-400 uppercase tracking-widest text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody id="balanceTableBody" class="divide-y divide-slate-50 dark:divide-gray-700">
                             @forelse($tables['balance'] as $row)
-                            <tr class="hover:bg-blue-50/20 dark:hover:bg-blue-900/5 transition-colors">
+                            <tr class="hover:bg-primary-50/20 dark:hover:bg-primary-900/5 transition-colors">
                                 <td class="py-2.5 px-5">
-                                    <p class="text-[11px] font-black text-slate-800 dark:text-white truncate max-w-[150px]">{{ $row->part_no }}</p>
-                                    <p class="text-[9px] font-medium text-slate-400 uppercase tracking-tight">{{ $row->customer_code }} • {{ $row->model_name }}</p>
+                                    <p class="text-[11px] font-bold text-slate-800 dark:text-white truncate max-w-[150px]">{{ $row->part_no }}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{{ $row->customer_code }} • {{ $row->model_name }}</p>
                                 </td>
                                 <td class="py-2.5 px-5 text-right font-mono">
-                                    <div class="text-[11px] font-black text-slate-900 dark:text-white">{{ number_format($row->current_stock_qty) }}</div>
+                                    <div class="text-[11px] font-bold text-slate-900 dark:text-white">{{ number_format($row->current_stock_qty) }}</div>
                                     <div class="text-[8px] text-slate-400">Min: {{ number_format($row->min_stock) }}</div>
                                 </td>
                                 <td class="py-2.5 px-5 text-right">
                                     @php 
-                                        $color = $row->status == 'Critical' ? 'red' : ($row->status == 'Over' ? 'blue' : 'emerald');
+                                        $color = $row->status == 'Critical' ? 'red' : ($row->status == 'Over' ? 'primary' : 'emerald');
                                     @endphp
-                                    <span class="inline-flex px-1.5 py-0.5 rounded text-[8px] font-black bg-{{ $color }}-50 text-{{ $color }}-600 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-400 border border-{{ $color }}-100 dark:border-{{ $color }}-800 uppercase italic">{{ $row->status }}</span>
+                                    <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[8px] font-bold bg-{{ $color == 'primary' ? 'primary' : $color }}-50 text-{{ $color == 'primary' ? 'primary' : $color }}-600 dark:bg-{{ $color == 'primary' ? 'primary' : $color }}-900/30 dark:text-{{ $color == 'primary' ? 'primary' : $color }}-400 border border-{{ $color == 'primary' ? 'primary' : $color }}-100 dark:border-{{ $color == 'primary' ? 'primary' : $color }}-800 uppercase italic">{{ $row->status }}</span>
                                 </td>
                             </tr>
                             @empty
@@ -185,13 +185,13 @@
             </div>
 
             {{-- Recent Transactions --}}
-            <div class="table-container bg-white dark:bg-gray-800 rounded-xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col flex-1 min-h-0 transition-all duration-300">
+            <div class="table-container bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 overflow-hidden flex flex-col flex-1 min-h-0">
                 <div class="py-3 px-5 border-b border-slate-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 shadow-inner">
+                        <div class="w-7 h-7 rounded-xs bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-primary-500">
                             <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
                         </div>
-                        <span class="font-black text-[10px] text-slate-800 dark:text-white uppercase tracking-wider">Recent Activity</span>
+                        <span class="font-bold text-[10px] text-slate-800 dark:text-white uppercase tracking-wider">Recent Activity</span>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar">
@@ -199,16 +199,16 @@
                         @forelse($tables['history'] as $row)
                         <div class="p-3.5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-gray-700/30 transition-all">
                             <div class="flex items-center gap-3">
-                                <div class="w-7 h-7 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-[9px] font-black text-slate-500">
+                                <div class="w-7 h-7 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-[9px] font-bold text-slate-500">
                                     {{ substr($row->category, 0, 1) }}
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[11px] font-black text-slate-800 dark:text-white truncate max-w-[120px]">{{ $row->part_no }}</p>
+                                    <p class="text-[11px] font-bold text-slate-800 dark:text-white truncate max-w-[120px]">{{ $row->part_no }}</p>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{{ $row->category }} • {{ \Carbon\Carbon::parse($row->transaction_date)->format('d M, H:i') }}</p>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-[11px] font-black text-slate-900 dark:text-white">{{ number_format($row->qty * $row->pcs_per_unit) }}</p>
+                                <p class="text-[11px] font-bold text-slate-900 dark:text-white">{{ number_format($row->qty * $row->pcs_per_unit) }}</p>
                                 <p class="text-[8px] font-bold text-slate-400 uppercase">PCS</p>
                             </div>
                         </div>
@@ -242,24 +242,32 @@
         display: flex !important;
         align-items: center !important;
         border-color: #d1d5db !important; /* gray-300 */
-        border-radius: 0.375rem !important; /* rounded-md */
+        border-radius: 0.125rem !important; /* rounded-xs */
     }
     .dark .select2-container .select2-selection--single {
-        background-color: #374151 !important; /* gray-700 */
+        background-color: #1f2937 !important; /* gray-800 */
         border-color: #4b5563 !important; /* gray-600 */
         color: white !important;
     }
     .select2-container .select2-selection--single .select2-selection__rendered {
         padding-left: 0.75rem !important; /* px-3 */
         font-size: 0.75rem !important; /* text-xs */
-        font-weight: 500 !important;
-        color: #0f172a !important; /* slate-900 */
+        font-weight: 600 !important;
+        color: #1e293b !important; /* slate-800 */
     }
     .dark .select2-container .select2-selection--single .select2-selection__rendered {
-        color: white !important;
+        color: #e2e8f0 !important;
     }
     .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px !important;
+        height: 38px !important;
+        top: 0 !important;
+        right: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        margin-top: 0 !important;
+        top: auto !important;
     }
 </style>
 <script>
@@ -595,7 +603,7 @@
             }
 
 
-        if (document.getElementById('stockStatusChart')) {
+                if (document.getElementById('stockStatusChart')) {
             stockStatusChart = new Chart(document.getElementById('stockStatusChart'), {
                 type: 'bar',
                 data: {
@@ -604,19 +612,19 @@
                             label: 'Critical',
                             data: chartsData.stockData.map(d => d.critical),
                             backgroundColor: chartColors.rose.solid,
-                            borderRadius: 4
+                            borderRadius: 2
                         },
                         {
                             label: 'Over',
                             data: chartsData.stockData.map(d => d.over),
                             backgroundColor: chartColors.blue.solid,
-                            borderRadius: 4
+                            borderRadius: 2
                         },
                         {
                             label: 'Safe',
                             data: chartsData.stockData.map(d => d.safe),
                             backgroundColor: chartColors.emerald.solid,
-                            borderRadius: 4
+                            borderRadius: 2
                         }
                     ]
                 },
@@ -656,7 +664,7 @@
                         label: 'Usage',
                         data: chartsData.usageModelData,
                         backgroundColor: chartColors.amber.solid,
-                        borderRadius: 6
+                        borderRadius: 2
                     }]
                 },
                 options: {
@@ -742,7 +750,7 @@
                         label: 'Supply (IN)',
                         data: chartsData.makerData,
                         backgroundColor: chartColors.indigo.solid,
-                        borderRadius: 6
+                        borderRadius: 2
                     }]
                 },
                 options: {

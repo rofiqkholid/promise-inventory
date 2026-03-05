@@ -260,21 +260,23 @@ class DashboardController extends Controller
     public function getModels(Request $request)
     {
         $term = $request->term;
-        $customerIds = $request->input('customer_id');
+        $customerIds = (array) $request->input('customer_id');
 
-        $query = DB::table('models')->select('models.id', 'models.name as text');
+        // Main query: GROUP BY name to remove redundancy
+        $query = DB::table('models')
+            ->select(DB::raw('MIN(id) as id'), 'name as text')
+            ->groupBy('name');
 
         if (!empty($customerIds)) {
-            $query->join('products', 'products.model_id', '=', 'models.id')
-                  ->whereIn('products.customer_id', (array)$customerIds)
-                  ->distinct();
+            // Join with products if customer specified
+            $query->whereIn('customer_id', $customerIds);
         }
 
         if ($term) {
-            $query->where('models.name', 'like', '%' . $term . '%');
+            $query->where('name', 'like', '%' . $term . '%');
         }
 
-        $data = $query->orderBy('models.name')->simplePaginate(20);
+        $data = $query->orderBy('name')->simplePaginate(20);
 
         return response()->json([
             'results' => $data->items(),

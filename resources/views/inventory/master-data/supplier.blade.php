@@ -3,7 +3,7 @@
 @section('title', 'Supplier Master')
 
 @section('content')
-<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
+<div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
@@ -11,21 +11,21 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage local and global suppliers.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest shadow-md active:scale-[0.98] transition-all" data-target="supplier">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all" data-target="supplier">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
     </div>
 
     <x-table id="supplierTable">
-        <thead class="bg-gray-50 dark:bg-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800/50">
             <tr>
-                <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Code</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Name</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Email</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Phone</th>
-                <th scope="col" class="px-6 py-3 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
+                <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Code</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Name</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Email</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Phone</th>
+                <th scope="col" class="px-6 py-4 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -33,34 +33,36 @@
 </div>
 
 {{-- Modals --}}
-<div id="modal-supplier-add" class="modal-container hidden">
-    <div class="relative p-4 w-full max-w-2xl">
-        <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal text-gray-400 absolute top-2.5 right-2.5 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
+<div id="modal-supplier-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 transition-opacity">
+    <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Add Supplier</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h3 class="mb-4 text-xl text-center font-bold text-slate-900 dark:text-white uppercase tracking-tight">Add Supplier</h3>
+        </div>
+        <div class="overflow-y-auto px-6 py-6 custom-scrollbar flex-1">
             <form class="modal-form" data-action="{{ route('inventory.master.supplier.store') }}">
                 @csrf
-                <div class="mb-6 p-4 bg-slate-50 dark:bg-gray-700/50 rounded-lg flex items-center justify-center gap-8 border border-slate-100 dark:border-gray-600">
+                <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xs flex items-center justify-center gap-8 border border-gray-100 dark:border-gray-700">
                     <label class="inline-flex items-center gap-3 cursor-pointer group">
                         <input type="radio" name="source_type" value="manual" checked class="hidden peer">
-                        <div class="w-5 h-5 border-2 border-slate-300 dark:border-gray-500 rounded-full flex items-center justify-center peer-checked:border-slate-900 dark:peer-checked:border-white transition-all group-hover:scale-110">
-                            <div class="w-2.5 h-2.5 bg-slate-900 dark:bg-white rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                        <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center peer-checked:border-primary-600 dark:peer-checked:border-primary-500 transition-all group-hover:scale-110">
+                            <div class="w-2.5 h-2.5 bg-primary-600 dark:bg-primary-500 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
                         </div>
-                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest peer-checked:text-slate-900 dark:peer-checked:text-white">Manual Input</span>
+                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest peer-checked:text-gray-900 dark:peer-checked:text-white">Manual Input</span>
                     </label>
                     <label class="inline-flex items-center gap-3 cursor-pointer group">
                         <input type="radio" name="source_type" value="global" class="hidden peer">
-                        <div class="w-5 h-5 border-2 border-slate-300 dark:border-gray-500 rounded-full flex items-center justify-center peer-checked:border-slate-900 dark:peer-checked:border-white transition-all group-hover:scale-110">
-                            <div class="w-2.5 h-2.5 bg-slate-900 dark:bg-white rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
+                        <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center peer-checked:border-primary-600 dark:peer-checked:border-primary-500 transition-all group-hover:scale-110">
+                            <div class="w-2.5 h-2.5 bg-primary-600 dark:bg-primary-500 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
                         </div>
-                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest peer-checked:text-slate-900 dark:peer-checked:text-white">Global Promise</span>
+                        <span class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest peer-checked:text-gray-900 dark:peer-checked:text-white">Global Promise</span>
                     </label>
                 </div>
 
                 <div id="global-supplier-container" class="hidden mb-6">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Search Global Supplier</label>
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Search Global Supplier</label>
                     <select id="global_supplier_search" class="select2-global-supplier w-full"></select>
                     <input type="hidden" name="promise_supp_id" id="add_promise_supp_id">
                 </div>
@@ -68,69 +70,70 @@
                 <div id="supplier-detail-fields">
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Code <span class="text-red-500">*</span></label>
-                            <input type="text" name="code" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
+                            <input type="text" name="code" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400">
                             <p class="error-msg hidden"></p>
                         </div>
                         <div>
-                            <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="name" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400">
                             <p class="error-msg hidden"></p>
                         </div>
                     </div>
                 </div>
 
-                <div id="supplier-card-preview" class="hidden mb-6 p-6 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xl shadow-sm">
+                <div id="supplier-card-preview" class="hidden mb-6 p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs">
                     <div class="grid grid-cols-2 gap-y-4 gap-x-8">
                         <div>
                             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Code</p>
-                            <p id="card-code" class="text-sm font-medium text-slate-700 dark:text-gray-200">-</p>
+                            <p id="card-code" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
                         </div>
                         <div>
                             <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Name</p>
-                            <p id="card-name" class="text-sm font-medium text-slate-700 dark:text-gray-200">-</p>
+                            <p id="card-name" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
                         </div>
                     </div>
                 </div>
-
-                <div class="flex gap-4 border-t border-gray-100 pt-4 mt-4">
-                    <button type="button" class="close-modal flex-1 px-5 py-2.5 bg-white border border-gray-300 rounded-md text-[10px] font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" class="flex-1 px-5 py-2.5 bg-slate-900 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-sm">Save Supplier</button>
-                </div>
             </form>
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
+            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save Supplier</button>
         </div>
     </div>
 </div>
 
-<div id="modal-supplier-edit" class="modal-container hidden">
-    <div class="relative p-4 w-full max-w-2xl">
-        <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal text-gray-400 absolute top-2.5 right-2.5 hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
+<div id="modal-supplier-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 transition-opacity">
+    <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Edit Supplier</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
+                <i class="fa-solid fa-xmark text-lg"></i>
             </button>
-            <h3 class="mb-4 text-xl text-center font-bold text-slate-900 dark:text-white uppercase tracking-tight">Edit Supplier</h3>
+        </div>
+        <div class="overflow-y-auto px-6 py-6 custom-scrollbar flex-1">
             <form class="modal-form">
                 @csrf
                 @method('PUT')
                 <div id="supplier-edit-detail-fields">
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Code <span class="text-red-500">*</span></label>
-                            <input type="text" name="code" required class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
+                            <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                             <p class="error-msg hidden"></p>
                         </div>
                         <div>
-                            <label class="block mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Name <span class="text-red-500">*</span></label>
-                            <input type="text" name="name" required class="bg-white border border-gray-300 text-gray-900 text-sm rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                             <p class="error-msg hidden"></p>
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-4 border-t border-gray-100 pt-4 mt-4">
-                    <button type="button" class="close-modal flex-1 px-5 py-2.5 bg-white border border-gray-300 rounded-md text-[10px] font-bold text-gray-700 uppercase tracking-widest hover:bg-gray-50 transition-colors">Cancel</button>
-                    <button type="submit" class="flex-1 px-5 py-2.5 bg-slate-900 border border-transparent rounded-md text-[10px] font-bold text-white uppercase tracking-widest hover:bg-slate-800 transition-colors shadow-sm">Save Changes</button>
-                </div>
             </form>
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
+            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save Changes</button>
         </div>
     </div>
 </div>
@@ -138,12 +141,6 @@
 <x-inventory.delete-modal />
 
 <style>
-.modal-container {
-    position: fixed; top: 0; right: 0; left: 0; bottom: 0; z-index: 50;
-    display: none; justify-content: center; align-items: center;
-    width: 100%; height: 100%; background-color: rgb(15 23 42 / 0.5); backdrop-filter: blur(4px);
-}
-.modal-container:not(.hidden) { display: flex; }
 .error-msg { margin-top: 0.25rem; font-size: 0.75rem; line-height: 1rem; color: rgb(239 68 68); }
 </style>
 @endsection
@@ -169,11 +166,11 @@
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center', width: '100px',
                     render: (d, t, r) => `
-                        <div class="flex items-center justify-center gap-2">
-                            <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-blue-600 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-blue-400 transition-all duration-200" data-id="${r.hash_id}" title="Edit">
+                        <div class="flex items-center justify-center gap-1.5">
+                             <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.hash_id}" title="Edit">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
-                            <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-red-400 transition-all duration-200" data-id="${r.hash_id}" title="Delete">
+                            <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.hash_id}" title="Delete">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
                         </div>`
@@ -245,9 +242,16 @@
             });
         });
 
+        $(document).on('click', '.submit-btn', function() { $(this).closest('.modal-container').find('form').submit(); });
+
         $(document).on('submit', '.modal-form', function(e) {
             e.preventDefault();
             const $form = $(this); const formData = new FormData(this);
+            const $submitBtn = $form.closest('.modal-container').find('.submit-btn');
+            const originalText = $submitBtn.text();
+
+            $submitBtn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...');
+
             $.ajax({
                 url: $form.attr('action'), method: 'POST', headers: { 'X-CSRF-TOKEN': csrf },
                 data: formData, processData: false, contentType: false,
@@ -258,7 +262,8 @@
                     const errors = xhr.responseJSON?.errors; $form.find('.error-msg').addClass('hidden');
                     if (errors) { Object.keys(errors).forEach(key => { $form.find(`[name="${key}"]`).next('.error-msg').text(errors[key][0]).removeClass('hidden'); }); }
                     toast('error', 'Error', xhr.responseJSON?.message || 'Operation failed');
-                }
+                },
+                complete: () => { $submitBtn.prop('disabled', false).text(originalText); }
             });
         });
     });

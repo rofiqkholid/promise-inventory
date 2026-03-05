@@ -7,7 +7,7 @@ use App\Models\InventoryModel\InventoryProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AutoPrController extends Controller
+class PurchaseRequisitionController extends Controller
 {
     public function index()
     {
@@ -26,8 +26,9 @@ class AutoPrController extends Controller
         }
 
         $customers = DB::table('customers')->select('id', 'code', 'name')->orderBy('code')->get();
+        $models = DB::table('models')->select('id', 'name')->orderBy('name')->get();
 
-        return view('inventory.auto_pr.index', compact('stats', 'customers'));
+        return view('inventory.purchase_requisition.index', compact('stats', 'customers', 'models'));
     }
 
     public function data(Request $request)
@@ -85,6 +86,25 @@ class AutoPrController extends Controller
             $query->where('products.customer_id', $request->customer_id);
         }
 
+        // Model Filter
+        if ($request->has('model_id') && !empty($request->model_id)) {
+            $query->where('products.model_id', $request->model_id);
+        }
+
+        // Status Filter
+        if ($request->has('status') && !empty($request->status)) {
+            $status = $request->status;
+            $currentPcsSql = "(inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1))";
+            $minSql = "inv_t_product_detail.min_stock";
+
+            if ($status === 'critical') {
+                $query->whereRaw("{$currentPcsSql} < ({$minSql} - 30)");
+            } elseif ($status === 'warning') {
+                $query->whereRaw("{$currentPcsSql} >= ({$minSql} - 30)")
+                      ->whereRaw("{$currentPcsSql} < {$minSql}");
+            }
+        }
+
         $recordsFiltered = $query->count();
         $recordsTotal = InventoryProduct::where('is_active', 1)->count(); // Simplified for now
 
@@ -104,10 +124,10 @@ class AutoPrController extends Controller
                 'customer' => $item->customer_code,
                 'model' => $item->model_name,
                 'material' => $item->spec_name . ' (' . (float)$item->thickness . 'x' . (float)$item->width . 'x' . (float)$item->length . ')',
-                'min_stock' => number_format($shortage, 0), // User wants Shortage to be called Min Stock
-                'min_stock_val' => number_format($item->min_stock, 0) . ' PCS', // The actual target
+                'min_stock' => number_format($item->min_stock, 0),
                 'current_stock' => number_format($currentPCS, 0),
                 'shortage' => number_format($shortage, 0),
+                'shortage_raw' => $shortage,
                 'status' => $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $item->pcs_per_unit ?? 1),
                 'unit_name' => $item->unit_code,
                 'pcs_per_unit' => $item->pcs_per_unit ?? 1,

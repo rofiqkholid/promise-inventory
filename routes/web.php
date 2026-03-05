@@ -14,7 +14,7 @@ use App\Http\Controllers\Inventory\InventoryProductController;
 use App\Http\Controllers\Inventory\InventoryTransactionController;
 use App\Http\Controllers\Inventory\StockMonitoringController;
 use App\Http\Controllers\Inventory\TransactionHistoryController;
-use App\Http\Controllers\Inventory\AutoPrController;
+use App\Http\Controllers\Inventory\PurchaseRequisitionController;
 use App\Http\Controllers\Inventory\ModelConfigController;
 use App\Http\Controllers\DashboardController;
 
@@ -165,6 +165,9 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/get-preview-code', [\App\Http\Controllers\Inventory\StoController::class, 'previewCode'])->name('previewCode');
         Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
         Route::get('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [\App\Http\Controllers\Inventory\StoController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/details-data', [\App\Http\Controllers\Inventory\StoController::class, 'detailsData'])->name('detailsData');
         Route::post('/{id}/scan', [\App\Http\Controllers\Inventory\StoController::class, 'scan'])->name('scan');
         Route::post('/{id}/save-count', [\App\Http\Controllers\Inventory\StoController::class, 'saveCount'])->name('saveCount');
@@ -189,10 +192,10 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::delete('/rfq/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyRfq'])->name('destroyRfq');
     });
 
-    // Auto PR (Admin, Approver, Checker)
-    Route::middleware(['inventory.role:admin,approver,checker'])->prefix('inventory/auto-pr')->name('inventory.autoPr.')->group(function () {
-        Route::get('/', [AutoPrController::class, 'index'])->name('index');
-        Route::get('/data', [AutoPrController::class, 'data'])->name('data');
+    // Purchase Requisition (Admin, Approver, Checker)
+    Route::middleware(['inventory.role:admin,approver,checker'])->prefix('inventory/purchase-requisition')->name('inventory.purchaseRequisition.')->group(function () {
+        Route::get('/', [PurchaseRequisitionController::class, 'index'])->name('index');
+        Route::get('/data', [PurchaseRequisitionController::class, 'data'])->name('data');
     });
 
     // Transaction History (Admin, Approver, Checker)

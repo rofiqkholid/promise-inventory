@@ -14,12 +14,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css?v=2') }}">
 
     <script>
         // On page load or when changing themes, best to add inline in `head` to avoid FOUC
@@ -29,60 +27,6 @@
             document.documentElement.classList.remove('dark');
         }
     </script>
-
-    <style>
-        [x-cloak] {
-            display: none !important;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-        /* Standardize SweetAlert Backdrop - Modals Only */
-        /* Targets the backdrop when a modal is shown */
-        .swal2-container.swal2-backdrop-show,
-        .swal2-container.swal2-center.swal2-backdrop-show {
-            background: rgba(15, 23, 42, 0.5) !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-
-        /* Explicitly remove backdrop for Toasts */
-        body.swal2-toast-shown .swal2-container.swal2-backdrop-show,
-        .swal2-container.swal2-top-end.swal2-backdrop-show {
-            background: transparent !important;
-        }
-
-        .swal2-popup {
-            border-radius: 0.75rem !important;
-            /* rounded-xl */
-        }
-
-        #filter_date_range {
-            padding-left: 2.5rem !important;
-            /* = pl-10 */
-        }
-    </style>
 
     @yield('css')
     @stack('styles')
@@ -123,14 +67,12 @@
 
             @include('layouts.header')
 
-            <main class="flex-1 overflow-y-auto scroll-smooth">
-                <div class="flex flex-col min-h-full p-4 md:p-6 lg:p-8">
+            <main class="flex-1 overflow-y-auto scroll-smooth flex flex-col">
+                <div class="flex-1 p-4 md:p-6 lg:p-8">
                     @include('components.toast')
-
                     @yield('content')
-
-                    @include('layouts.footer')
                 </div>
+                @include('layouts.footer')
             </main>
         </div>
 

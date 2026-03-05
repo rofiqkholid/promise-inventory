@@ -4,12 +4,12 @@
         
         <!-- Left Side -->
         <div class="flex items-center gap-4">
-            <button @click="toggleSidebar()" class="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <button @click="toggleSidebar()" class="w-10 h-10 flex items-center justify-center text-slate-500 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-xs transition-colors">
                 <i class="fa-solid fa-bars text-lg"></i>
             </button>
             
             <!-- Breadcrumb / Title -->
-            <div>
+            <div class="hidden md:block">
                 <h2 class="text-xl font-bold text-slate-800 dark:text-white tracking-wide">@yield('page_title', 'Inventory')</h2>
             </div>
         </div>
@@ -20,7 +20,7 @@
             <!-- Notifications -->
             <button 
                 @click="$dispatch('open-stock-alert')"
-                class="relative w-10 h-10 flex items-center justify-center text-slate-400 dark:text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                class="relative w-10 h-10 flex items-center justify-center text-slate-400 dark:text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-xs transition-colors"
                 title="Stock Alerts">
                 <i class="fa-regular fa-bell text-xl"></i>
                 @if(isset($stockAlerts) && count($stockAlerts) > 0)
@@ -46,7 +46,7 @@
                         }
                     }" 
                     @click="toggleTheme()" 
-                    class="w-10 h-10 flex items-center justify-center text-slate-400 dark:text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    class="w-10 h-10 flex items-center justify-center text-slate-400 dark:text-gray-400 hover:text-slate-600 dark:hover:text-gray-200 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-xs transition-colors"
                     title="Toggle Dark Mode">
                 <i class="fa-solid fa-sun text-xl" x-show="!darkMode"></i>
                 <i class="fa-solid fa-moon text-xl" x-show="darkMode" style="display: none;"></i>
@@ -70,7 +70,7 @@
 
                 <!-- Dropdown -->
                 <div x-show="open" x-transition.origin.top.right
-                    class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg border border-slate-100 dark:border-gray-700 py-1 shadow-lg" style="display: none;">
+                    class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xs border border-slate-100 dark:border-gray-700 py-1 shadow-lg" style="display: none;">
                     
                     <div class="px-4 py-3 border-b border-slate-50 dark:border-gray-700 md:hidden">
                         <p class="text-sm font-semibold text-slate-800 dark:text-gray-200">{{ Auth::user()->name }}</p>

@@ -68,25 +68,25 @@ class UserAccessController extends Controller
             $roleName = $row->role->name ?? '';
 
             $colors = [
-                'admin' => 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                'approver' => 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-                'checker' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                'operator' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                'viewer' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                'admin' => 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50',
+                'approver' => 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/50',
+                'checker' => 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
+                'operator' => 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
+                'viewer' => 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/50',
             ];
-            $color = $colors[$roleCode] ?? 'bg-slate-100 text-slate-800';
-            $badge = '<span class="px-2.5 py-0.5 rounded text-xs font-black ' . $color . '">' . $roleName . '</span>';
+            $colorClass = $colors[$roleCode] ?? 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+            $badge = '<span class="px-2 py-1 border rounded-xs text-[10px] font-bold uppercase tracking-wide ' . $colorClass . '">' . $roleName . '</span>';
             
             $btn = '
-                <div class="flex items-center justify-center gap-2">
-                    <button class="edit-user-role-btn text-blue-600 hover:text-blue-900 dark:text-blue-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-pen-to-square"></i>
+                <div class="flex items-center justify-center gap-1.5">
+                    <button class="edit-user-role-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
+                        <i class="fa-solid fa-pen-to-square text-sm"></i>
                     </button>
-                    <button class="user-permission-btn text-amber-600 hover:text-amber-900 dark:text-amber-400" data-id="' . $row->user_id . '" data-name="' . ($row->user->name ?? 'User') . '">
-                        <i class="fa-solid fa-key"></i>
+                    <button class="user-permission-btn h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors" data-id="' . $row->user_id . '" data-name="' . ($row->user->name ?? 'User') . '" title="Permissions">
+                        <i class="fa-solid fa-key text-xs"></i>
                     </button>
-                    <button class="delete-access-btn text-red-600 hover:text-red-900 dark:text-red-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-trash"></i>
+                    <button class="delete-access-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="' . $row->id . '" title="Revoke">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 </div>
             ';
@@ -206,15 +206,15 @@ class UserAccessController extends Controller
         $roles = \App\Models\InventoryModel\InvRole::all();
         $formattedData = $roles->map(function ($row, $index) {
             $btn = '
-                <div class="flex items-center justify-center gap-2">
-                    <button class="edit-role-btn text-blue-600 hover:text-blue-900 dark:text-blue-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-pen-to-square"></i>
+                <div class="flex items-center justify-center gap-1.5">
+                    <button class="edit-role-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
+                        <i class="fa-solid fa-pen-to-square text-sm"></i>
                     </button>
-                    <button class="permission-role-btn text-purple-600 hover:text-purple-900 dark:text-purple-400" data-id="' . $row->id . '" data-name="' . $row->name . '">
-                        <i class="fa-solid fa-key"></i>
+                    <button class="permission-role-btn h-8 w-8 inline-flex items-center justify-center text-purple-600 rounded-xs bg-purple-50 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-colors" data-id="' . $row->id . '" data-name="' . $row->name . '" title="Privileges">
+                        <i class="fa-solid fa-key text-sm"></i>
                     </button>
-                    <button class="delete-role-btn text-red-600 hover:text-red-900 dark:text-red-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-trash"></i>
+                    <button class="delete-role-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="' . $row->id . '" title="Delete">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 </div>
             ';
@@ -290,12 +290,12 @@ class UserAccessController extends Controller
         $users = \App\Models\User::orderBy('name')->get();
         $formattedData = $users->map(function ($row, $index) {
             $btn = '
-                <div class="flex items-center justify-center gap-2">
-                    <button class="edit-user-btn text-blue-600 hover:text-blue-900 dark:text-blue-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-user-pen"></i>
+                <div class="flex items-center justify-center gap-1.5">
+                    <button class="edit-user-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
+                        <i class="fa-solid fa-user-pen text-sm"></i>
                     </button>
-                    <button class="delete-user-btn text-red-600 hover:text-red-900 dark:text-red-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-user-minus"></i>
+                    <button class="delete-user-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="' . $row->id . '" title="Wipe">
+                        <i class="fa-solid fa-user-minus text-sm"></i>
                     </button>
                 </div>
             ';
@@ -373,16 +373,16 @@ class UserAccessController extends Controller
             $iconHtml = '<div class="flex items-center justify-center bg-gray-50 dark:bg-gray-700/50 w-8 h-8 rounded-md"><i class="' . $row->icon . ' text-blue-500"></i></div>';
             
             $statusBadge = $row->is_active 
-                ? '<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px] font-black rounded uppercase">Active</span>'
-                : '<span class="px-2 py-0.5 bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500 text-[10px] font-black rounded uppercase">Inactive</span>';
+                ? '<span class="px-2 py-1 border border-emerald-100 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50 text-[10px] font-bold rounded-xs uppercase tracking-wide">Active</span>'
+                : '<span class="px-2 py-1 border border-gray-100 bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-500 text-[10px] font-bold rounded-xs uppercase tracking-wide">Inactive</span>';
 
             $btn = '
-                <div class="flex items-center justify-center gap-2">
-                    <button class="edit-menu-btn text-blue-600 hover:text-blue-900 dark:text-blue-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-pen-to-square"></i>
+                <div class="flex items-center justify-center gap-1.5">
+                    <button class="edit-menu-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
+                        <i class="fa-solid fa-pen-to-square text-sm"></i>
                     </button>
-                    <button class="delete-menu-btn text-red-600 hover:text-red-900 dark:text-red-400" data-id="' . $row->id . '">
-                        <i class="fa-solid fa-trash"></i>
+                    <button class="delete-menu-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="' . $row->id . '" title="Delete">
+                        <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 </div>
             ';
@@ -392,7 +392,7 @@ class UserAccessController extends Controller
                 'parent' => $parentTitle,
                 'status' => $statusBadge,
                 'icon' => $iconHtml,
-                'order' => '<span class="font-black text-gray-500">' . $row->order . '</span>',
+                'order' => '<span class="font-bold text-gray-500">' . $row->order . '</span>',
                 'action' => $btn
             ];
         });

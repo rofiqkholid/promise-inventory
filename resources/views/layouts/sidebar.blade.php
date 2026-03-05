@@ -35,7 +35,7 @@
                 {{-- PARENT MENU WITH DROPDOWN --}}
                 <div x-data="{ open: {{ $isParentActive ? 'true' : 'false' }} }" class="relative">
                     <button @click="open = !open; sidebarExpanded = true"
-                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xs transition-all duration-200 group relative
                         {{ $isParentActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
                         :class="!sidebarExpanded ? 'justify-center' : ''">
                         
@@ -56,7 +56,7 @@
                     <div x-show="open && sidebarExpanded" x-collapse class="pl-4 space-y-1 mt-1">
                         @foreach($menu->children as $child)
                             <a href="{{ route($child->route) }}"
-                                class="flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200 text-sm
+                                class="flex items-center gap-3 px-3 py-2 rounded-xs transition-all duration-200 text-sm
                                 {{ request()->routeIs($child->route.'*') ? 'text-blue-700 dark:text-blue-400 font-medium bg-blue-100/50 dark:bg-blue-900/20' : 'text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-gray-700/50' }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs($child->route.'*') ? 'bg-blue-700 dark:bg-blue-400' : 'bg-slate-400 dark:bg-gray-600' }}"></span>
                                 <span class="whitespace-nowrap">{{ $child->title }}</span>
@@ -67,7 +67,7 @@
             @else
                 {{-- SINGLE MENU ITEM --}}
                 <a href="{{ $menu->route === '#' ? '#' : route($menu->route) }}"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xs transition-all duration-200 group relative
                 {{ $isParentActive ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 font-semibold' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
                     :class="!sidebarExpanded ? 'justify-center' : ''">
 
@@ -89,7 +89,7 @@
 
     <!-- Footer Profile / Settings -->
     <div class="p-4 border-t border-slate-200 dark:border-gray-700">
-        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors group relative"
+        <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors group relative"
             :class="!sidebarExpanded ? 'justify-center' : ''">
             <i class="fa-solid fa-gear w-6 text-center text-lg text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300"></i>
             <span x-show="sidebarExpanded" class="text-sm font-medium whitespace-nowrap text-slate-600 dark:text-gray-400 group-hover:text-slate-900 dark:group-hover:text-white">Settings</span>

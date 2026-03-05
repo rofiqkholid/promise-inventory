@@ -5,6 +5,102 @@
 @import './style-bundle.css';
 @import './datatables-custom.css';
 
+:root {
+    /* Global Primary Color Palette (Tailwind Blue) */
+    --primary-50: #eff6ff;
+    --primary-100: #dbeafe;
+    --primary-200: #bfdbfe;
+    --primary-300: #93c5fd;
+    --primary-400: #60a5fa;
+    --primary-500: #3b82f6;
+    --primary-600: #2563eb;
+    --primary-700: #1d4ed8;
+    --primary-800: #1e40af;
+    --primary-900: #1e3a8a;
+    --primary-950: #172554;
+}
+
+/* 
+   ==========================================================================
+   GLOBAL BASE STYLES
+   ========================================================================== 
+*/
+
+[x-cloak] {
+    display: none !important;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    @apply bg-gray-100 dark:bg-gray-900 text-slate-800 dark:text-gray-200 antialiased;
+}
+
+/* Custom Scrollbar - Global */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 2px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Special Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+}
+
+/* SweetAlert Backdrop - Modals Only */
+.swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-center.swal2-backdrop-show {
+    background: rgba(15, 23, 42, 0.5) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Remove SweetAlert backdrop for Toasts */
+body.swal2-toast-shown .swal2-container.swal2-backdrop-show,
+.swal2-container.swal2-top-end.swal2-backdrop-show {
+    background: transparent !important;
+}
+
+.swal2-popup {
+    border-radius: 0.125rem !important;
+    /* rounded-xs */
+}
+
+/* 
+   ==========================================================================
+   FORM & COMPONENT STYLES
+   ========================================================================== 
+*/
+
 /* Form Input Base Styles for Tailwind v4 */
 input[type='text'],
 input[type='email'],
@@ -24,7 +120,7 @@ select {
     background-color: #ffffff;
     border-width: 1px;
     border-color: #d1d5db;
-    border-radius: 0.375rem;
+    border-radius: 0.125rem;
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.5rem;
@@ -47,15 +143,15 @@ textarea:focus,
 select:focus {
     outline: 2px solid transparent;
     outline-offset: 2px;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 0.5rem center;
     background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
+    background-size: 1.25rem 1.25rem;
     padding-right: 2.5rem;
 }
 
@@ -88,19 +184,7 @@ select {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
 }
 
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-track {
-    background: #1f2937;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-    background: #4b5563;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
-}
-
+/* Loader Styles */
 #main-content {
     visibility: hidden;
     opacity: 0;
@@ -109,7 +193,7 @@ select {
 
 .loader-spinner {
     border: 8px solid #f3f3f3;
-    border-top: 8px solid #3b82f6;
+    border-top: 8px solid var(--primary-500);
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -131,18 +215,40 @@ select {
     }
 }
 
+/* 
+   ==========================================================================
+   UTILITIES & OVERRIDES
+   ========================================================================== 
+*/
 
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+button:disabled,
+input:disabled,
+input[disabled],
+select:disabled,
+select[disabled],
+textarea:disabled,
+textarea[disabled] {
+    background-color: #f3f4f6 !important;
+    border-color: #e5e7eb !important;
+    color: #2f2f2f !important;
+    cursor: not-allowed !important;
+    opacity: 0.7 !important;
 }
 
-button:disabled:hover {
-    color: inherit;
+.dark button:disabled,
+.dark input:disabled,
+.dark input[disabled],
+.dark select:disabled,
+.dark select[disabled],
+.dark textarea:disabled,
+.dark textarea[disabled] {
+    background-color: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #6b7280 !important;
 }
 
 .search-highlight {
-    color: #3b82f6;
+    color: var(--primary-500);
     font-weight: 500;
     background: transparent;
     padding: 0;
@@ -153,13 +259,12 @@ button:disabled:hover {
     background: transparent;
 }
 
-
 /* Force Dark Mode Visibility Fixes */
-.dark .dark\:bg-blue-900\/40 {
+.dark .dark\:bg-primary-900\/40 {
     background-color: rgba(30, 58, 138, 0.4) !important;
 }
 
-.dark .dark\:bg-blue-900\/30 {
+.dark .dark\:bg-primary-900\/30 {
     background-color: rgba(30, 58, 138, 0.3) !important;
 }
 
@@ -176,40 +281,42 @@ button:disabled:hover {
     border-color: #6b7280 !important;
 }
 
-.search-menu-item {
+/* Global Stock Alert/Utility Inputs */
+#filter_date_range {
+    padding-left: 2rem !important;
+    /* = pl-10 */
+}
+
+/* Search Dropdown & History Items */
+.search-menu-item,
+.search-history-item {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid #f1f5f9;
     transition: all 0.2s ease;
 }
 
-.dark .search-menu-item {
-    border-bottom-color: #374151;
-}
-
-.search-menu-item:last-child {
-    border-bottom: none;
-}
-
-.search-menu-item:hover {
-    background-color: #f8fafc;
-}
-
-.dark .search-menu-item:hover {
-    background-color: #1e293b;
-}
-
 .search-history-item {
     padding: 0.6rem 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    transition: all 0.2s ease;
 }
 
+.dark .search-menu-item,
 .dark .search-history-item {
     border-bottom-color: #374151;
 }
 
+.search-menu-item:last-child,
 .search-history-item:last-child {
     border-bottom: none;
+}
+
+.search-menu-item:hover,
+.search-history-item:hover {
+    background-color: #f8fafc;
+}
+
+.dark .search-menu-item:hover,
+.dark .search-history-item:hover {
+    background-color: #1e293b;
 }
 
 .search-dropdown-container {
@@ -228,44 +335,17 @@ button:disabled:hover {
     border-bottom-color: #374151;
 }
 
-.d-none-custom {
-    display: none !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__rendered:empty {
-    display: none;
-}
-
-.filter-pill-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
+/* Filter Pills */
 .filter-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     background-color: #E0E7FF;
-    border-radius: 9999px;
+    border-radius: 0.125rem;
     padding: 4px 10px;
     font-size: 0.875rem;
     font-weight: 500;
     color: #3730A3;
-}
-
-.filter-pill-remove {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 2px;
-    color: #4338CA;
-    line-height: 1;
-}
-
-.filter-pill-remove:hover {
-    color: #C7D2FE;
 }
 
 .dark .filter-pill {
@@ -273,37 +353,11 @@ button:disabled:hover {
     color: #E0E7FF;
 }
 
-.dark .filter-pill-remove {
-    color: #A5B4FC;
-}
-
-.dark .filter-pill-remove:hover {
-    color: #E0E7FF;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.5);
-    border-radius: 20px;
-}
-
-/*
-
-Eco Animation in Monitoring
-
-/* Animasi Jalan ke Kanan */
+/* Animations */
 @keyframes flowRight {
     0% {
         opacity: 0;
         transform: translateX(-60px);
-        /* Mulai dari posisi Icon Kiri */
     }
 
     30% {
@@ -317,7 +371,6 @@ Eco Animation in Monitoring
     100% {
         opacity: 0;
         transform: translateX(50px);
-        /* Berakhir di dekat Icon Kanan */
     }
 }
 
@@ -325,217 +378,18 @@ Eco Animation in Monitoring
     animation: flowRight 2s infinite ease-in-out;
 }
 
-/* ==========================================================================
-   PREMIUM UI COMPONENTS (SELECT2, LITEPICKER, INPUTS)
-   ========================================================================== */
-
-/* --- Premium Input Utility (Matches Select2) --- */
+/* Premium Component Styling Overrides */
 .premium-input {
     height: 38px !important;
-    /* Matching example height */
-    border-radius: 6px !important;
+    border-radius: 2px !important;
     border: 1px solid #e2e8f0 !important;
     background-color: #ffffff !important;
     font-size: 0.875rem !important;
     font-weight: 400 !important;
-    font-family: 'Outfit', sans-serif !important;
     color: #334155 !important;
-    transition: all 0.2s ease;
-    outline: none !important;
-    text-transform: none !important;
-    letter-spacing: normal !important;
-    padding: 0 1rem !important;
-}
-
-.premium-input::placeholder {
-    color: #94a3b8 !important;
 }
 
 .dark .premium-input {
     background-color: #111827 !important;
     border-color: #374151 !important;
-    color: #94a3b8 !important;
-}
-
-.premium-input:focus {
-    border-color: #3b82f6 !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
-}
-
-.dark .premium-input:focus {
-    background-color: #1f2937 !important;
-}
-
-/* --- Global Premium Select2 Styling --- */
-.select2-container--default .select2-selection--single {
-    height: 38px !important;
-    /* Matching example height */
-    border-radius: 6px !important;
-    border: 1px solid #e2e8f0 !important;
-    background-color: #ffffff !important;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s ease;
-}
-
-.dark .select2-container--default .select2-selection--single {
-    background-color: #111827 !important;
-    border-color: #374151 !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    line-height: normal !important;
-    font-weight: 400 !important;
-    font-size: 0.875rem !important;
-    font-family: 'Outfit', sans-serif !important;
-    color: #334155 !important;
-    padding-left: 0.875rem !important;
-    padding-right: 2rem !important;
-    width: 100%;
-    text-transform: none !important;
-    letter-spacing: normal !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #94a3b8 !important;
-}
-
-.dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #94a3b8 !important;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow {
-    height: 100% !important;
-    top: 0 !important;
-    right: 10px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.select2-container--default .select2-selection--single .select2-selection__arrow b {
-    border-color: #64748b transparent transparent transparent !important;
-    border-width: 5px 4px 0 4px !important;
-    position: static !important;
-    margin: 0 !important;
-}
-
-.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
-    border-color: transparent transparent #64748b transparent !important;
-    border-width: 0 4px 5px 4px !important;
-}
-
-.select2-container--default.select2-container--focus .select2-selection--single,
-.select2-container--default.select2-container--open .select2-selection--single {
-    border-color: #3b82f6 !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1) !important;
-}
-
-.dark .select2-container--default.select2-container--focus .select2-selection--single,
-.dark .select2-container--default.select2-container--open .select2-selection--single {
-    background-color: #1f2937 !important;
-}
-
-/* --- Litepicker Premium Theme --- */
-.litepicker {
-    font-family: inherit !important;
-    border: none !important;
-    border-radius: 12px !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-    overflow: hidden !important;
-    background: #ffffff !important;
-    padding: 8px !important;
-}
-
-.dark .litepicker {
-    background: #1f2937 !important;
-    color: #f1f5f9 !important;
-    border: 1px solid #374151 !important;
-}
-
-.litepicker .container__months {
-    border-radius: 12px !important;
-    box-shadow: none !important;
-}
-
-.litepicker .container__months .month-item-header {
-    padding: 10px 5px !important;
-    display: flex !important;
-    justify-content: center !important;
-    gap: 5px !important;
-}
-
-.litepicker .container__months .month-item-header select {
-    appearance: none !important;
-    padding: 4px 24px 4px 10px !important;
-    border-radius: 6px !important;
-    border: 1px solid #e2e8f0 !important;
-    background-color: #f8fafc !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #334155 !important;
-    cursor: pointer !important;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
-    background-position: right 4px center !important;
-    background-repeat: no-repeat !important;
-    background-size: 1.25rem 1.25rem !important;
-    width: auto !important;
-}
-
-.dark .litepicker .container__months .month-item-header select {
-    background-color: #374151 !important;
-    border-color: #4b5563 !important;
-    color: #e5e7eb !important;
-}
-
-.litepicker .container__months .month-item-header .month-item-name,
-.litepicker .container__months .month-item-header .month-item-year {
-    font-weight: 600 !important;
-    text-transform: none !important;
-    font-size: 13px !important;
-    letter-spacing: normal !important;
-    color: #1e293b !important;
-}
-
-.dark .litepicker .container__months .month-item-header .month-item-name,
-.dark .litepicker .container__months .month-item-header .month-item-year {
-    color: #f8fafc !important;
-}
-
-.litepicker .container__days .day-item {
-    font-weight: 600 !important;
-    border-radius: 8px !important;
-    margin: 1px !important;
-    transition: all 0.2s ease !important;
-    font-size: 12px !important;
-}
-
-.litepicker .container__days .day-item.is-start-date,
-.litepicker .container__days .day-item.is-end-date {
-    background-color: #0f172a !important;
-    /* Premium Dark Style */
-    color: #ffffff !important;
-}
-
-.dark .litepicker .container__days .day-item.is-start-date,
-.dark .litepicker .container__days .day-item.is-end-date {
-    background-color: #ffffff !important;
-    color: #0f172a !important;
-}
-
-.litepicker .container__days .day-item.is-in-range {
-    background-color: #f1f5f9 !important;
-    color: #0f172a !important;
-}
-
-.dark .litepicker .container__days .day-item.is-in-range {
-    background-color: #334155 !important;
-    color: #f1f5f9 !important;
-}
-
-.litepicker .container__days .day-item:hover {
-    background-color: #3b82f6 !important;
-    color: white !important;
 }

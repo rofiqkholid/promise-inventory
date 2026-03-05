@@ -201,7 +201,10 @@ class InventoryProductController extends Controller
 
     public function getModels(Request $request)
     {
-        $query = DB::table('models')->select('id', 'name')->orderBy('name');
+        $query = DB::table('models')
+            ->select(DB::raw('MIN(id) as id'), 'name')
+            ->groupBy('name')
+            ->orderBy('name');
         
         if ($request->customer_id) {
             $query->where('customer_id', $request->customer_id);
