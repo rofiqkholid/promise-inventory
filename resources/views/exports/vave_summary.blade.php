@@ -5,12 +5,12 @@
 </head>
 <body>
     <table>
-        <thead>
+       <thead>
             <tr>
-                <td colspan="22" style="font-weight: bold; font-size: 14pt; text-align: center;">VA/VE MATERIAL EFFICIENCY SUMMARY</td>
+                <td colspan="24" style="font-weight: bold; font-size: 14pt; text-align: center;">VA/VE MATERIAL EFFICIENCY SUMMARY</td>
             </tr>
             <tr>
-                <td colspan="22" style="text-align: center; font-size: 10pt; color: #666;">Report Generated: {{ date('Y-m-d H:i') }}</td>
+                <td colspan="24" style="text-align: center; font-size: 10pt; color: #666;">Report Generated: {{ date('Y-m-d H:i') }}</td>
             </tr>
             <tr>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">No</th>
@@ -20,6 +20,10 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part Name</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Baseline</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Weight Baseline</th>
+                
+                {{-- HEADER BARU --}}
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Latest Revision</th>
+                
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Spec</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Stage</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">t</th>
@@ -30,11 +34,14 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Wt</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Net Wt</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Scrap (kg)</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Budomari (%)</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Yield Ratio (%)</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Status</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Price</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Cost</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Saving</th>
+                
+                {{-- HEADER BARU --}}
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gap (kg)</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gap (IDR)</th>
             </tr>
         </thead>
         <tbody>
@@ -80,9 +87,26 @@
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top;">{{ $p->part_no }}</td>
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top;">{{ $p->part_name }}</td>
                         
-                        {{-- New Columns --}}
+                       {{-- New Columns --}}
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb;">{{ $p->baseline_name }}</td>
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb; font-weight: bold;">{{ number_format($p->baseline_weight, 3) }}</td>
+                        
+                       {{-- KOLOM BARU: Latest Revision Name --}}
+                        @php
+                            $latestRevName = '-';
+                            $stagesCount = count($p->stages);
+                            
+                            if ($stagesCount > 0) {
+                                // 1. Ambil data urutan paling terakhir (paling bawah)
+                                $lastStage = $p->stages[$stagesCount - 1];
+                                
+                                // 2. Pastikan data terakhir tersebut BUKAN baseline (artinya ia adalah revisi)
+                                if (empty($lastStage['is_baseline'])) {
+                                    $latestRevName = strtoupper($lastStage['name']);
+                                }
+                            }
+                        @endphp
+                        <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #f0fdf4; font-weight: bold; color: #166534;">{{ $latestRevName }}</td>
                     @endif
                     
                     <td style="border: 1px solid #000000;">{{ $stage['spec'] }}</td>
@@ -105,7 +129,7 @@
                         $textColor = '#000000';
                         
                         if ($sIndex > 0) {
-                            $prevBud = $p->stages[$sIndex - 1]['budomari'];
+                            $prevBud = $p->stages[0]['budomari'];
                             $diff = $stage['budomari'] - $prevBud;
                             if (abs($diff) > 0.001) {
                                 $status = $diff > 0 ? 'MERIT' : 'LOSS';
@@ -127,11 +151,38 @@
                     <td style="border: 1px solid #000000; text-align: right;">{{ number_format($stage['material_price'], 2) }}</td>
                     <td style="border: 1px solid #000000; text-align: right; background-color: #f8fafc; font-weight: bold;">{{ number_format($stage['cost'], 2) }}</td>
                     
-                    @php
+                   @php
+                        // 1. GAP KG (Selisih Gross Weight)
+                        $gapKg = $p->baseline_weight - $stage['theoretical_weight'];
+                        $roundGapKg = round((float)$gapKg, 3);
+                        
+                        if ($roundGapKg > 0) {
+                            $gapKgColor = '#166534'; $gapKgBg = '#f0fdf4'; // Merit
+                        } elseif ($roundGapKg < 0) {
+                            $gapKgColor = '#991b1b'; $gapKgBg = '#fef2f2'; // Loss
+                        } else {
+                            $gapKgColor = '#000000'; $gapKgBg = '#ffffff'; // Netral
+                        }
+
+                        // 2. GAP IDR (Selisih Cost)
                         $saving = $baselineCost - $stage['cost'];
-                        $savingColor = $saving >= 0 ? '#166534' : '#991b1b';
-                        $savingBg = $saving >= 0 ? '#f0fdf4' : '#fef2f2';
+                        $roundSaving = round((float)$saving, 2);
+                        
+                        if ($roundSaving > 0) {
+                            $savingColor = '#166534'; $savingBg = '#f0fdf4'; // Merit
+                        } elseif ($roundSaving < 0) {
+                            $savingColor = '#991b1b'; $savingBg = '#fef2f2'; // Loss
+                        } else {
+                            $savingColor = '#000000'; $savingBg = '#ffffff'; // Netral
+                        }
                     @endphp
+
+                    {{-- KOLOM GAP (kg) --}}
+                    <td style="border: 1px solid #000000; text-align: right; color: {{ $gapKgColor }}; background-color: {{ $gapKgBg }}; font-weight: bold;">
+                        {{ $stage['is_baseline'] ? '-' : number_format($gapKg, 3) }}
+                    </td>
+
+                    {{-- KOLOM GAP (IDR) --}}
                     <td style="border: 1px solid #000000; text-align: right; color: {{ $savingColor }}; background-color: {{ $savingBg }}; font-weight: bold;">
                         {{ $stage['is_baseline'] ? '-' : number_format($saving, 2) }}
                     </td>

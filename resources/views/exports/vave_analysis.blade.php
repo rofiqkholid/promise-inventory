@@ -182,7 +182,7 @@
         @endphp
 
         <tr>
-            <td style="border: 1px solid #000000;">Budomari (%)</td>
+            <td style="border: 1px solid #000000;">Yield Ratio (%)</td>
             <td style="border: 1px solid #000000; text-align: center;">{{ number_format($baseBud, 1) }}%</td>
             <td style="border: 1px solid #000000; text-align: center;">{{ number_format($actBud, 1) }}%</td>
             <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb; font-weight: bold; color: {{ $deltaBud >= 0 ? '#16a34a' : '#dc2626' }};">{{ ($deltaBud > 0 ? '+' : '') . number_format($deltaBud, 1) }}%</td>
@@ -222,10 +222,24 @@
         <tr>
             <td colspan="{{ $totalCols }}"></td>
         </tr>
+       @php
+            // Gunakan pembulatan (round) agar nilai desimal tersembunyi tetap terbaca sebagai 0
+            $roundedImpact = round((float)$impactPct, 2);
+
+            if ($roundedImpact == 0) {
+                $finalText = 'NO CHANGE (0.00%)';
+                $finalBg = '#ffffff'; // Background putih
+                $finalColor = '#000000'; // Text hitam
+            } else {
+                $finalText = ($isSaving ? 'MERIT' : 'LOSS') . ' (' . ($isSaving ? 'IMPROVEMENT ' : 'INCREASE ') . number_format($impactPct, 2) . '%)';
+                $finalBg = $statusBg; 
+                $finalColor = $statusColor; 
+            }
+        @endphp
         <tr>
             <td style="border: 1px solid #000000; font-weight: bold; background-color: #f9fafb;">ANALYSIS STATUS</td>
-            <td colspan="{{ $totalCols - 1 }}" style="border: 1px solid #000000; text-align: left; font-weight: bold; background-color: {{ $statusBg }}; color: {{ $statusColor }};">
-                 {{ $isSaving ? 'MERIT' : 'LOSS' }} ({{ $isSaving ? 'IMPROVEMENT' : 'INCREASE' }} {{ number_format($impactPct, 2) }}%)
+            <td colspan="{{ $totalCols - 1 }}" style="border: 1px solid #000000; text-align: left; font-weight: bold; background-color: {{ $finalBg }}; color: {{ $finalColor }};">
+                 {{ $finalText }}
             </td>
         </tr>
     </table>

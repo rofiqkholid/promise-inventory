@@ -99,15 +99,21 @@ class VaveAnalysisController extends Controller
             $actW = (float)($item->latest_weight ?? 0);
             
             if ($baseW > 0 && $actW > 0) {
-                $diff = $baseW - $actW;
-                $item->status = $diff >= 0 ? 'MERIT' : 'LOSS';
-                $item->diff_kg = abs($diff);
-                $item->diff_pct = (abs($diff) / $baseW) * 100;
-            } else {
-                $item->status = $item->rfq_id ? 'WAITING ACTUAL' : 'NO BASELINE';
-                $item->diff_kg = 0;
-                $item->diff_pct = 0;
-            }
+    $diff = $baseW - $actW;
+    
+    // Hitung status dengan 3 kondisi
+    if ($diff > 0) {
+        $item->status = 'MERIT';
+    } elseif ($diff < 0) {
+        $item->status = 'LOSS';
+    } else {
+        // Kondisi ketika selisihnya tepat 0 (0%)
+        $item->status = 'NO CHANGE'; // Silakan ganti teks ini sesuai keinginan Anda
+    }
+    
+    $item->diff_kg = abs($diff);
+    $item->diff_pct = (abs($diff) / $baseW) * 100;
+}
             
             return $item;
         });

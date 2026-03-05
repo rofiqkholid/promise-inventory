@@ -226,6 +226,26 @@
                 <p id="comparisonSubtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium ml-8"></p>
             </div>
 
+            {{-- MULAI KODE BARU: Selection Toolbar --}}
+            <div class="px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between shadow-sm z-10 relative">
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye text-blue-500"></i> Plan (Base):
+                        </label>
+                        <select id="selectCompareBase" class="bg-blue-50/50 border border-blue-200 text-blue-800 text-xs font-bold rounded-md focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-48 shadow-sm cursor-pointer hover:bg-blue-50 transition-colors"></select>
+                    </div>
+                    <div class="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> Actual (Rev):
+                        </label>
+                        <select id="selectCompareActual" class="bg-emerald-50/50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-40 shadow-sm cursor-pointer hover:bg-emerald-50 transition-colors"></select>
+                    </div>
+                </div>
+            </div>
+            {{-- AKHIR KODE BARU --}}
+
             <div class="flex-1 overflow-auto p-6 bg-slate-50/30 dark:bg-gray-900">
                 <div id="comparisonContainer">
                     {{-- Table will be injected here --}}
@@ -698,370 +718,298 @@ $(function() {
         });
     });
 
-    // Handle VA/VE Comparison
+    // Global State untuk Comparison Data
+    window.compareState = { id: null, rfqs: [], revisions: [] };
+
+    // Handle VA/VE Comparison (Fetch Data & Isi Dropdown)
     $(document).on('click', '.compare-button', function() {
         const id = $(this).data('id');
+        window.compareState.id = id;
+
         $.get(`{{ url('inventory/vave/comparison') }}/${id}`, function(res) {
             $('#comparisonTitle').text(`VA/VE Material Analysis History`);
             const customer = res.product.customer ? res.product.customer.customer_name : (res.product.customer_code || '-');
             $('#comparisonSubtitle').text(`${res.product.part_no} - ${res.product.part_name} (${customer})`);
             
-            const rfqs = res.rfqs || [];
-            const revisions = res.revisions || [];
-            const benchmarkRfq = rfqs.find(r => r.is_active) || rfqs[0];
+            window.compareState.rfqs = res.rfqs || [];
+            window.compareState.revisions = res.revisions || [];
             
-            if (!benchmarkRfq) {
+            if (window.compareState.rfqs.length === 0) {
                 $('#comparisonContainer').html('<div class="p-12 text-center text-gray-400"><i class="fa-solid fa-file-circle-exclamation text-4xl mb-4"></i><p>No baseline data found for this product.</p></div>');
                 $('#comparisonModal').removeClass('hidden').addClass('flex');
                 return;
             }
 
-            // Calculate Summary Metrics
-            const latestRev = revisions[0];
-            let summaryBar = '';
-            
-            if (benchmarkRfq && latestRev) {
-                const saving = benchmarkRfq.weight_kg - latestRev.weight_kg;
-                const savingPct = (saving / benchmarkRfq.weight_kg) * 100;
-                const isPos = saving >= 0;
-                const colorClass = isPos ? 'text-green-700 bg-green-50 border-green-200' : 'text-red-700 bg-red-50 border-red-200';
-                
-                summaryBar = `
-                    <div class="flex items-center justify-between gap-4 mb-4 px-1">
-                        <div class="flex items-center gap-4">
-                            <div class="flex items-center gap-3 px-4 py-2 rounded-md border ${colorClass}">
-                                <span class="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Net Impact</span>
-                                <div class="h-4 w-px bg-current opacity-20"></div>
-                                <span class="font-bold text-lg tracking-tight">${Math.abs(savingPct).toFixed(2)}%</span>
-                                <span class="text-xs font-semibold opacity-80">(${Math.abs(saving).toFixed(3)} kg)</span>
-                                <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-white/50 ml-1 tracking-wider">${isPos ? 'MERIT' : 'LOSS'}</span>
-                            </div>
-                        </div>
-                         <div class="flex items-center gap-4">
-                              <a href="{{ url('inventory/vave/comparison') }}/${id}/export" class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-md bg-slate-900 hover:bg-slate-800 transition-all font-bold text-[10px] uppercase tracking-wider shadow-md active:scale-[0.98]">
-                                <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
-                            </a>
-                             <label class="inline-flex items-center cursor-pointer group px-2 py-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                <div class="relative flex items-center">
-                                    <input type="checkbox" id="toggleHistory" class="sr-only peer">
-                                    <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-slate-900"></div>
-                                </div>
-                                <span class="ms-2 text-[10px] font-bold text-gray-500 group-hover:text-blue-600 transition-colors uppercase tracking-[0.2em] pointer-events-none">View History</span>
-                            </label>
-                        </div>
-                    </div>
-                `;
-            }
+            // Isi Opsi Dropdown
+            const baseSelect = $('#selectCompareBase').empty();
+            const actualSelect = $('#selectCompareActual').empty();
 
-            // Sticky Calculations
-            // Param (w-48/12rem/192px) -> Left: 0
-            // Plan (w-48/12rem/192px) -> Left: 192px
-            // Actual (w-48/12rem/192px) -> Left: 384px
-            // Variance (w-32/8rem/128px) -> Left: 576px
-
-            // Build table HTML
-            let html = `
-                ${summaryBar}
-                <div class="overflow-x-auto custom-scrollbar rounded-lg border border-gray-200 dark:border-gray-700 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] bg-white dark:bg-gray-900">
-                    <table id="comparisonTable" class="table-fixed min-w-full text-sm text-left border-collapse whitespace-nowrap">
-                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-800 sticky top-0 z-30">
-                            <tr>
-                                <th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-gray-500 font-bold bg-gray-50 dark:bg-gray-800 border-b border-r border-gray-200 dark:border-gray-700 sticky left-0 z-40 text-left shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">PARAMETER</th>
-            `;
-            
-            // 1. Benchmark (Plan)
-            html += `
-                <th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-blue-50 sticky top-0 z-40" style="left: 160px;">
-                    <div class="flex flex-col items-center">
-                        <span class="text-[10px] text-blue-600 font-bold tracking-wider">PLAN (BASE)</span>
-                        <span class="font-bold text-gray-800 dark:text-gray-200 truncate max-w-[140px]" title="${benchmarkRfq.rfq_name}">${benchmarkRfq.rfq_name}</span>
-                    </div>
-                </th>
-            `;
-
-            // 2. Latest (Actual)
-            const latestRevision = revisions.length > 0 ? revisions[0] : null;
-            if (latestRevision) {
-                html += `
-                     <th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-emerald-50 sticky top-0 z-40" style="left: 320px;">
-                        <div class="flex flex-col items-center">
-                            <span class="text-[10px] text-emerald-600 font-bold tracking-wider">ACTUAL (REV)</span>
-                            <span class="font-bold text-gray-800 dark:text-gray-200">Rev ${latestRevision.revision}</span>
-                        </div>
-                    </th>
-                `;
-            }
-
-            // 3. Variance (Delta)
-            html += `
-                 <th class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-100 sticky top-0 z-40 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)]" style="left: 480px;">
-                    <div class="flex flex-col items-center">
-                        <span class="text-[10px] text-gray-500 font-bold tracking-wider">VARIANCE (Δ)</span>
-                        <span class="font-bold text-gray-600">Actual - Plan</span>
-                    </div>
-                </th>
-            `;
-
-            // 4. History Headers (Hidden)
-             rfqs.forEach(r => {
-                if (r.hash_id === benchmarkRfq.hash_id) return;
-                html += `
-                    <th class="w-[120px] min-w-[120px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 history-col hidden border-dashed">
-                        <div class="flex flex-col items-center opacity-60">
-                            <span class="text-[9px] text-gray-400 font-bold">HISTORY (BASE)</span>
-                            <span class="font-semibold text-gray-500 text-xs truncate max-w-[100px]">${r.rfq_name}</span>
-                        </div>
-                    </th>
-                `;
-            });
-            revisions.forEach((rev, idx) => {
-                if (idx === 0) return;
-                 html += `
-                    <th class="w-[120px] min-w-[120px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 history-col hidden border-dashed">
-                        <div class="flex flex-col items-center opacity-60">
-                            <span class="text-[9px] text-gray-400 font-bold">HISTORY (REV)</span>
-                            <span class="font-semibold text-gray-500 text-xs">Rev ${rev.revision}</span>
-                        </div>
-                    </th>
-                `;
+            const defaultBase = window.compareState.rfqs.find(r => r.is_active) || window.compareState.rfqs[0];
+            window.compareState.rfqs.forEach(r => {
+                const isActive = r.is_active ? ' (Active)' : '';
+                baseSelect.append(`<option value="${r.hash_id}" ${r.hash_id === defaultBase.hash_id ? 'selected' : ''}>${r.rfq_name}${isActive}</option>`);
             });
 
-            html += `</tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">`;
-
-             // Row helper
-            const buildRow = (label, valueFormatter, isNumeric = false) => {
-                let row = `<tr class="hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-150 text-xs text-gray-700 dark:text-gray-300">
-                    <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 font-semibold sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] transition-colors group-hover:bg-blue-50">${label}</td>`;
-                
-                // Benchmark Value
-                const baseVal = valueFormatter(benchmarkRfq);
-                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 160px;">${baseVal}</td>`;
-
-                // Latest Value
-                let actualVal = '-';
-                if (latestRevision) {
-                    actualVal = valueFormatter(latestRevision);
-                }
-                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 320px;">${actualVal}</td>`;
-
-                // Variance Logic
-                 row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-bold variance-cell sticky z-30 bg-gray-50 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-blue-100" style="left: 480px;">-</td>`;
-
-                // History Columns
-                rfqs.forEach(r => {
-                     if (r.hash_id === benchmarkRfq.hash_id) return;
-                     row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(r)}</td>`;
+            if (window.compareState.revisions.length > 0) {
+                const defaultRev = window.compareState.revisions[0];
+                window.compareState.revisions.forEach(rev => {
+                    actualSelect.append(`<option value="${rev.revision}" ${rev.revision === defaultRev.revision ? 'selected' : ''}>Rev ${rev.revision}</option>`);
                 });
-                revisions.forEach((rev, idx) => {
-                    if (idx === 0) return;
-                    row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(rev)}</td>`;
-                });
-
-                return row + `</tr>`;
-            };
-
-            // Custom Row Builder for Numerics and Computed Values
-             const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false) => {
-                // Determine Value Function
-                const getVal = (item) => {
-                    if (typeof valueGetter === 'function') return valueGetter(item);
-                    return parseFloat(item[valueGetter] || 0);
-                };
-
-                const baseValVal = getVal(benchmarkRfq);
-                let row = `<tr class="hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-150 text-xs group">
-                    <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] transition-colors group-hover:bg-blue-50">${label}</td>`;
-                
-                const baseVal = baseValVal;
-                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 160px;">${baseVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
-
-                let actualVal = 0;
-                if (latestRevision) {
-                    actualVal = getVal(latestRevision);
-                     row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-800 font-bold bg-yellow-50 group-hover:bg-yellow-100 sticky z-30 transform-gpu" style="left: 320px;">${actualVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
-                } else {
-                     row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 320px;">-</td>`;
-                }
-
-                // Variance
-                if (latestRevision) {
-                    const delta = actualVal - baseVal;
-                    const isGood = invertColor ? delta > 0 : delta <= 0;
-                    
-                    let colorClass = 'text-gray-400';
-                    let bgClass = 'bg-gray-50'; // Default Opaque
-                    if (Math.abs(delta) > 0.0001) {
-                         colorClass = isGood ? 'text-green-600' : 'text-red-600';
-                         bgClass = isGood ? 'bg-green-50' : 'bg-red-50';
-                    }
-                    const sign = delta > 0 ? '+' : '';
-                    row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono font-bold ${colorClass} sticky z-30 ${bgClass} shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-blue-100" style="left: 480px;">${sign}${delta.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
-                }
-
-                // History
-                 rfqs.forEach(r => {
-                     if (r.hash_id === benchmarkRfq.hash_id) return;
-                     const val = getVal(r);
-                     row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${val.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`;
-                });
-                revisions.forEach((rev, idx) => {
-                    if (idx === 0) return;
-                    const val = getVal(rev);
-                    row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${val.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`;
-                });
-
-                return row + `</tr>`;
-            };
-
-            // Section Header Builder
-            const buildSectionRow = (title) => {
-                let row = `<tr class="bg-gray-100 dark:bg-gray-700 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">
-                    <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 sticky left-0 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] pt-4 pb-1">${title}</td>`;
-                
-                // Spacers for sticky columns
-                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 pt-4 pb-1" style="left: 160px;"></td>`;
-                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 pt-4 pb-1" style="left: 320px;"></td>`;
-                row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] pt-4 pb-1" style="left: 480px;"></td>`;
-
-                // History Spacers
-                const histCount = (rfqs.length - 1) + (revisions.length - 1);
-                for(let i=0; i<histCount; i++) {
-                    row += `<td class="w-[120px] min-w-[120px] px-4 py-2 bg-gray-100 dark:bg-gray-700 history-col hidden border-dashed pt-4 pb-1"></td>`;
-                }
-                return row + `</tr>`;
-            };
-
-            // Rows
-            // Section 1: Specifications
-            html += buildSectionRow('Specification');
-            html += buildRow('Material Spec', item => item.material_spec ? item.material_spec.spec_name : '-');
-            html += buildRow('Unit Type', item => item.unit ? item.unit.name : '-');
-            
-            // Dimensions (Special case, mixed text)
-            // Fix: Clean zeros (0.60 -> 0.6)
-            const fmtDim = (i) => {
-                const unt = (i.unit ? i.unit.name : '').toLowerCase();
-                let d = `${parseFloat(i.thickness)} x ${parseFloat(i.width)}`;
-                if (unt.includes('coil')) {
-                    d += ` x ${parseFloat(i.pitch)} (P)`;
-                } else if (unt.includes('trapezoid')) {
-                    d += ` x (${parseFloat(i.length)} + ${parseFloat(i.length_2)})/2`;
-                } else {
-                    d += ` x ${parseFloat(i.length)}`;
-                }
-                return d;
-            };
-            html += buildRow('Dimensions', fmtDim);
-
-            // Numeric Rows
-            html += buildComputedRow('Thickness (mm)', 'thickness', '', 2, false); 
-            html += buildComputedRow('Width (mm)', 'width', '', 2, false);
-
-            const unitNameCompare = (benchmarkRfq.unit ? benchmarkRfq.unit.name : '').toLowerCase();
-            if (unitNameCompare.includes('trapezoid')) {
-                html += buildComputedRow('Length 1 (L1)', 'length', 'mm', 2, false);
-                html += buildComputedRow('Length 2 (L2)', 'length_2', 'mm', 2, false);
-            } else if (unitNameCompare.includes('coil')) {
-                html += buildComputedRow('Pitch (mm)', 'pitch', 'mm', 2, false);
             } else {
-                html += buildComputedRow('Length (mm)', 'length', 'mm', 2, false);
+                actualSelect.append(`<option value="">No Revisions Found</option>`);
             }
-            
-            // Section 2: Weight & Yield
-            html += buildSectionRow('Yield & Weight');
-            html += buildComputedRow('Density', 'density', '', 3, true);
-            html += buildComputedRow('Gross Weight (kg)', 'weight_kg', '', 3, false); // Lower weight is Merit (Green)
-            html += buildComputedRow('Net Weight/Part', 'net_weight', '', 3, false);
-            
-            // Scrap (Loss) Calculation
-            const calcScrap = (item) => {
-                const gross = parseFloat(item.weight_kg) || 0;
-                const net = parseFloat(item.net_weight) || 0;
-                return gross - net;
-            };
-            html += buildComputedRow('Scrap (kg)', calcScrap, 'kg', 3, false); // Lower scrap is Better
-            
-            // Budomari (Yield).
-            const calcBudomari = (item) => {
-                const gross = parseFloat(item.weight_kg) || 0;
-                const net = parseFloat(item.net_weight) || 0;
-                if (gross <= 0 || net <= 0) return 0;
-                return (net / gross) * 100;
-            };
-            html += buildComputedRow('Budomari (%)', calcBudomari, '%', 1, true); // Higher yield is Good (Green)
-            
-            // New Computed metrics
-             // Section 3: Commercial
-            html += buildSectionRow('Commercial');
-            html += buildComputedRow('Price/kg (IDR)', (item) => parseFloat(item.material_price || 0), '', 0, false);
-            
-            // Cost = Weight * Price
-            html += buildComputedRow('Cost (IDR)', (item) => (parseFloat(item.weight_kg||0) * parseFloat(item.material_price || 0)), '', 0, false); // Lower cost is Good
 
-
-             // Summary Section (Status & Rate)
-             // Status Row
-             let statusRow = `<tr class="bg-gray-50/50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-blue-900/40 text-xs border-t-2 border-gray-200 dark:border-gray-600 group">
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-blue-100">Status</td>
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-gray-50 dark:bg-gray-800 sticky z-30 group-hover:bg-blue-100" style="left: 160px;">-</td>`;
-             
-             // Rate Row
-             let rateRow = `<tr class="bg-white hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-blue-900/40 text-xs group">
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-blue-100">Rate</td>
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-blue-100" style="left: 160px;">-</td>`;
-
-
-             if (latestRevision) {
-                const saving = benchmarkRfq.weight_kg - latestRevision.weight_kg;
-                const savingPct = (saving / benchmarkRfq.weight_kg) * 100; // Positive = Saving
-                const isPos = saving >= 0; 
-                
-                // Status Cells
-                const statusText = isPos ? 'MERIT' : 'LOSS';
-                const statusColor = isPos ? 'text-green-700 bg-green-50' : 'text-red-700 bg-red-50';
-                statusRow += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 ${statusColor} font-bold sticky z-30 group-hover:bg-opacity-90" style="left: 320px;">${statusText}</td>`;
-                // Variance cell for STATUS (redundant)
-                statusRow += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-blue-100" style="left: 480px;">-</td>`;
-
-                // Rate Cells
-                const rateColor = isPos ? 'text-green-700' : 'text-red-700';
-                rateRow += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 font-bold ${rateColor} sticky z-30 bg-white dark:bg-gray-800 group-hover:bg-blue-100" style="left: 320px;">${Math.abs(savingPct).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}%</td>`;
-                // Variance cell for RATE (redundant)
-                rateRow += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-blue-100" style="left: 480px;">-</td>`;
-
-             } else {
-                 statusRow += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 sticky z-30 bg-gray-50" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 sticky z-30 bg-gray-50" style="left: 480px;">-</td>`;
-                 rateRow += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 sticky z-30 bg-white" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 sticky z-30 bg-white" style="left: 480px;">-</td>`;
-             }
-
-             // History Impact Placeholders
-             const histCount = (rfqs.length - 1) + (revisions.length - 1);
-             for(let i=0; i<histCount; i++) {
-                 statusRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center bg-gray-50 history-col hidden border-dashed">-</td>`;
-                 rateRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center bg-white history-col hidden border-dashed">-</td>`;
-             }
-             
-             statusRow += `</tr>`;
-             rateRow += `</tr>`;
-             
-             html += statusRow + rateRow;
-
-
-            html += `</tbody></table></div>`;
-            
-            $('#comparisonContainer').html(html);
+            renderComparisonTable();
             $('#comparisonModal').removeClass('hidden').addClass('flex');
-
-            // Bind Toggles
-            $('#toggleHistory').off().on('change', function() {
-                if(this.checked) {
-                    $('.history-col').removeClass('hidden');
-                } else {
-                    $('.history-col').addClass('hidden');
-                }
-            });
         });
     });
+
+    // Handle Perubahan Dropdown
+    $(document).on('change', '#selectCompareBase, #selectCompareActual', function() {
+        renderComparisonTable();
+        // Tampilkan ulang history jika toggle sedang nyala
+        if ($('#toggleHistory').is(':checked')) { $('.history-col').removeClass('hidden'); }
+    });
+
+    // Fungsi Render Ulang Tabel
+    function renderComparisonTable() {
+        const id = window.compareState.id;
+        const rfqs = window.compareState.rfqs;
+        const revisions = window.compareState.revisions;
+
+        const selectedBaseHash = $('#selectCompareBase').val();
+        const selectedRevId = $('#selectCompareActual').val();
+
+        // Gunakan data berdasarkan pilihan dropdown
+        const benchmarkRfq = rfqs.find(r => r.hash_id == selectedBaseHash) || rfqs[0];
+        const latestRevision = revisions.find(r => r.revision == selectedRevId) || null;
+
+        let summaryBar = '';
+        if (benchmarkRfq && latestRevision) {
+            const saving = benchmarkRfq.weight_kg - latestRevision.weight_kg;
+            const savingPct = (saving / benchmarkRfq.weight_kg) * 100;
+            
+            let statusBadge = 'NO CHANGE';
+            let colorClass = 'text-gray-700 bg-gray-50 border-gray-200';
+            if (saving > 0.0001) {
+                statusBadge = 'MERIT'; colorClass = 'text-green-700 bg-green-50 border-green-200';
+            } else if (saving < -0.0001) {
+                statusBadge = 'LOSS'; colorClass = 'text-red-700 bg-red-50 border-red-200';
+            }
+            
+            summaryBar = `
+                <div class="flex items-center justify-between gap-4 mb-4 px-1">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3 px-4 py-2 rounded-md border ${colorClass}">
+                            <span class="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Net Impact</span>
+                            <div class="h-4 w-px bg-current opacity-20"></div>
+                            <span class="font-bold text-lg tracking-tight">${Math.abs(savingPct).toFixed(2)}%</span>
+                            <span class="text-xs font-semibold opacity-80">(${Math.abs(saving).toFixed(3)} kg)</span>
+                            <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-white/50 ml-1 tracking-wider">${statusBadge}</span>
+                        </div>
+                    </div>
+                        <div class="flex items-center gap-4">
+                            <a href="{{ url('inventory/vave/comparison') }}/${id}/export" class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-md bg-slate-900 hover:bg-slate-800 transition-all font-bold text-[10px] uppercase tracking-wider shadow-md active:scale-[0.98]">
+                            <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
+                        </a>
+                            <label class="inline-flex items-center cursor-pointer group px-2 py-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <div class="relative flex items-center">
+                                <input type="checkbox" id="toggleHistory" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-slate-900"></div>
+                            </div>
+                            <span class="ms-2 text-[10px] font-bold text-gray-500 group-hover:text-blue-600 transition-colors uppercase tracking-[0.2em] pointer-events-none">View History</span>
+                        </label>
+                    </div>
+                </div>`;
+        }
+
+        let html = `
+            ${summaryBar}
+            <div class="overflow-x-auto custom-scrollbar rounded-lg border border-gray-200 dark:border-gray-700 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] bg-white dark:bg-gray-900">
+                <table id="comparisonTable" class="table-fixed min-w-full text-sm text-left border-collapse whitespace-nowrap">
+                    <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-800 sticky top-0 z-30">
+                        <tr>
+                            <th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-gray-500 font-bold bg-gray-50 dark:bg-gray-800 border-b border-r border-gray-200 dark:border-gray-700 sticky left-0 z-40 text-left shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">PARAMETER</th>
+        `;
+        
+        html += `<th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-blue-50 sticky top-0 z-40" style="left: 160px;">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-blue-600 font-bold tracking-wider">PLAN (BASE)</span>
+                    <span class="font-bold text-gray-800 dark:text-gray-200 truncate max-w-[140px]" title="${benchmarkRfq.rfq_name}">${benchmarkRfq.rfq_name}</span>
+                </div>
+            </th>`;
+
+        if (latestRevision) {
+            html += `<th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-emerald-50 sticky top-0 z-40" style="left: 320px;">
+                    <div class="flex flex-col items-center">
+                        <span class="text-[10px] text-emerald-600 font-bold tracking-wider">ACTUAL (REV)</span>
+                        <span class="font-bold text-gray-800 dark:text-gray-200">Rev ${latestRevision.revision}</span>
+                    </div>
+                </th>`;
+        } else {
+             html += `<th class="w-[160px] min-w-[160px] px-4 py-3 bg-emerald-50 sticky top-0 z-40 border-b border-r border-gray-200" style="left: 320px;">-</th>`;
+        }
+
+        html += `<th class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-100 sticky top-0 z-40 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)]" style="left: 480px;">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] text-gray-500 font-bold tracking-wider">VARIANCE (Δ)</span>
+                    <span class="font-bold text-gray-600">Actual - Plan</span>
+                </div>
+            </th>`;
+
+        rfqs.forEach(r => {
+            if (r.hash_id === benchmarkRfq.hash_id) return;
+            html += `<th class="w-[120px] min-w-[120px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 history-col hidden border-dashed">
+                    <div class="flex flex-col items-center opacity-60">
+                        <span class="text-[9px] text-gray-400 font-bold">HISTORY (BASE)</span>
+                        <span class="font-semibold text-gray-500 text-xs truncate max-w-[100px]">${r.rfq_name}</span>
+                    </div>
+                </th>`;
+        });
+        revisions.forEach(rev => {
+            if (latestRevision && rev.revision === latestRevision.revision) return;
+            html += `<th class="w-[120px] min-w-[120px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 history-col hidden border-dashed">
+                    <div class="flex flex-col items-center opacity-60">
+                        <span class="text-[9px] text-gray-400 font-bold">HISTORY (REV)</span>
+                        <span class="font-semibold text-gray-500 text-xs">Rev ${rev.revision}</span>
+                    </div>
+                </th>`;
+        });
+
+        html += `</tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">`;
+
+        const buildRow = (label, valueFormatter) => {
+            let row = `<tr class="hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-150 text-xs text-gray-700 dark:text-gray-300">
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 font-semibold sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] transition-colors group-hover:bg-blue-50">${label}</td>`;
+            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 160px;">${valueFormatter(benchmarkRfq)}</td>`;
+            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 320px;">${latestRevision ? valueFormatter(latestRevision) : '-'}</td>`;
+            row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-bold variance-cell sticky z-30 bg-gray-50 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-blue-100" style="left: 480px;">-</td>`;
+            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(r)}</td>`; });
+            revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(rev)}</td>`; });
+            return row + `</tr>`;
+        };
+
+        const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false) => {
+            const getVal = (item) => typeof valueGetter === 'function' ? valueGetter(item) : parseFloat(item[valueGetter] || 0);
+            const baseVal = getVal(benchmarkRfq);
+            let row = `<tr class="hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-150 text-xs group">
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] transition-colors group-hover:bg-blue-50">${label}</td>
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 160px;">${baseVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+
+            let actualVal = 0;
+            if (latestRevision) {
+                actualVal = getVal(latestRevision);
+                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-800 font-bold bg-yellow-50 group-hover:bg-yellow-100 sticky z-30 transform-gpu" style="left: 320px;">${actualVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+                const delta = actualVal - baseVal;
+                const isGood = invertColor ? delta > 0 : delta <= 0;
+                let cClass = 'text-gray-400', bClass = 'bg-gray-50'; 
+                if (Math.abs(delta) > 0.0001) { cClass = isGood ? 'text-green-600' : 'text-red-600'; bClass = isGood ? 'bg-green-50' : 'bg-red-50'; }
+                row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono font-bold ${cClass} sticky z-30 ${bClass} shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-blue-100" style="left: 480px;">${delta > 0 ? '+' : ''}${delta.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+            } else {
+                row += `<td class="w-[160px] min-w-[160px] px-4 py-2.5 bg-white border-r border-gray-200 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-2.5 bg-gray-50 border-r border-gray-200 sticky z-30" style="left: 480px;">-</td>`;
+            }
+
+            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${getVal(r).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`; });
+            revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${getVal(rev).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`; });
+            return row + `</tr>`;
+        };
+
+        const buildSectionRow = (title) => {
+            let row = `<tr class="bg-gray-100 dark:bg-gray-700 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 sticky left-0 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] pt-4 pb-1">${title}</td>
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 pt-4 pb-1" style="left: 160px;"></td>
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 pt-4 pb-1" style="left: 320px;"></td>
+                <td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] pt-4 pb-1" style="left: 480px;"></td>`;
+            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 bg-gray-100 dark:bg-gray-700 history-col hidden border-dashed pt-4 pb-1"></td>`; });
+            revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 bg-gray-100 dark:bg-gray-700 history-col hidden border-dashed pt-4 pb-1"></td>`; });
+            return row + `</tr>`;
+        };
+
+        html += buildSectionRow('Specification');
+        html += buildRow('Material Spec', item => item.material_spec ? item.material_spec.spec_name : '-');
+        html += buildRow('Unit Type', item => item.unit ? item.unit.name : '-');
+        html += buildRow('Dimensions', i => {
+            const unt = (i.unit ? i.unit.name : '').toLowerCase();
+            let d = `${parseFloat(i.thickness)} x ${parseFloat(i.width)}`;
+            if (unt.includes('coil')) d += ` x ${parseFloat(i.pitch)} (P)`;
+            else if (unt.includes('trapezoid')) d += ` x (${parseFloat(i.length)} + ${parseFloat(i.length_2)})/2`;
+            else d += ` x ${parseFloat(i.length)}`;
+            return d;
+        });
+
+        html += buildComputedRow('Thickness (mm)', 'thickness', '', 2, false); 
+        html += buildComputedRow('Width (mm)', 'width', '', 2, false);
+
+        const untCompare = (benchmarkRfq.unit ? benchmarkRfq.unit.name : '').toLowerCase();
+        if (untCompare.includes('trapezoid')) {
+            html += buildComputedRow('Length 1 (L1)', 'length', 'mm', 2, false);
+            html += buildComputedRow('Length 2 (L2)', 'length_2', 'mm', 2, false);
+        } else if (untCompare.includes('coil')) {
+            html += buildComputedRow('Pitch (mm)', 'pitch', 'mm', 2, false);
+        } else {
+            html += buildComputedRow('Length (mm)', 'length', 'mm', 2, false);
+        }
+        
+        html += buildSectionRow('Yield & Weight');
+        html += buildComputedRow('Density', 'density', '', 3, true);
+        html += buildComputedRow('Gross Weight (kg)', 'weight_kg', '', 3, false); 
+        html += buildComputedRow('Net Weight/Part', 'net_weight', '', 3, false);
+        html += buildComputedRow('Scrap (kg)', i => (parseFloat(i.weight_kg)||0) - (parseFloat(i.net_weight)||0), 'kg', 3, false); 
+        html += buildComputedRow('Yield Ratio (%)', i => {
+            const g = parseFloat(i.weight_kg)||0, n = parseFloat(i.net_weight)||0;
+            return (g>0 && n>0) ? (n/g)*100 : 0;
+        }, '%', 1, true); 
+        
+        html += buildSectionRow('Commercial');
+        html += buildComputedRow('Price/kg (IDR)', i => parseFloat(i.material_price || 0), '', 0, false);
+        html += buildComputedRow('Cost (IDR)', i => (parseFloat(i.weight_kg||0) * parseFloat(i.material_price || 0)), '', 0, false); 
+
+        let statusRow = `<tr class="bg-gray-50/50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-blue-900/40 text-xs border-t-2 border-gray-200 dark:border-gray-600 group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-blue-100">Status</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-gray-50 dark:bg-gray-800 sticky z-30 group-hover:bg-blue-100" style="left: 160px;">-</td>`;
+        let rateRow = `<tr class="bg-white hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-blue-900/40 text-xs group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-blue-100">Rate</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-blue-100" style="left: 160px;">-</td>`;
+
+        if (latestRevision) {
+            const saving = benchmarkRfq.weight_kg - latestRevision.weight_kg;
+            const savingPct = (saving / benchmarkRfq.weight_kg) * 100;
+            let sText = 'NO CHANGE', sColor = 'text-gray-700 font-bold bg-gray-100', rColor = 'text-gray-700'; 
+            if (saving > 0.0001) { sText = 'MERIT'; sColor = 'text-green-700 bg-green-50'; rColor = 'text-green-700'; }
+            else if (saving < -0.0001) { sText = 'LOSS'; sColor = 'text-red-700 bg-red-50'; rColor = 'text-red-700'; }
+            
+            statusRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 text-center border-r border-gray-300 ${sColor} font-bold sticky z-30 group-hover:bg-opacity-90" style="left: 320px;">${sText}</td><td class="w-[110px] min-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-blue-100" style="left: 480px;">-</td>`;
+            rateRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 text-center border-r border-gray-300 font-bold ${rColor} sticky z-30 bg-white dark:bg-gray-800 group-hover:bg-blue-100" style="left: 320px;">${Math.abs(savingPct).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}%</td><td class="w-[110px] min-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-blue-100" style="left: 480px;">-</td>`;
+        } else {
+            statusRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 bg-gray-50 border-r border-gray-300 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-3 bg-gray-100 sticky z-30" style="left: 480px;">-</td>`;
+            rateRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 bg-white border-r border-gray-300 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-3 bg-gray-100 sticky z-30" style="left: 480px;">-</td>`;
+        }
+
+        const buildHistStatus = (item) => {
+            const baseW = parseFloat(benchmarkRfq.weight_kg) || 0;
+            const itemW = parseFloat(item.weight_kg) || 0;
+            if (baseW <= 0 || itemW <= 0) {
+                statusRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center bg-gray-50 history-col hidden border-dashed text-gray-400">-</td>`;
+                rateRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center bg-white history-col hidden border-dashed text-gray-400">-</td>`;
+                return;
+            }
+            const hSaving = baseW - itemW, hPct = (hSaving / baseW) * 100;
+            let hText = 'NO CHANGE', hCol = 'text-gray-400';
+            if (hSaving > 0.0001) { hText = 'MERIT'; hCol = 'text-green-600'; }
+            else if (hSaving < -0.0001) { hText = 'LOSS'; hCol = 'text-red-600'; }
+            statusRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center font-bold ${hCol} bg-gray-50 history-col hidden border-dashed text-[10px] tracking-wider">${hText}</td>`;
+            rateRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center font-bold ${hCol} bg-white history-col hidden border-dashed">${Math.abs(hPct).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}%</td>`;
+        };
+
+        rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) buildHistStatus(r); });
+        revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) buildHistStatus(rev); });
+        
+        statusRow += `</tr>`; rateRow += `</tr>`;
+        html += statusRow + rateRow + `</tbody></table></div>`;
+        
+        $('#comparisonContainer').html(html);
+
+        $('#toggleHistory').off().on('change', function() {
+            if(this.checked) $('.history-col').removeClass('hidden');
+            else $('.history-col').addClass('hidden');
+        });
+    }
 
     function renderDetailItem(label, value) {
         return `
