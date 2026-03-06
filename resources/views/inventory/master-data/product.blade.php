@@ -259,7 +259,7 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     $(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -408,38 +408,7 @@
         });
 
 
-        // Toast helper
-        function toast(icon, title, text) {
-            const isDark = document.documentElement.classList.contains('dark');
-            const theme = isDark ? {
-                bg: 'rgba(30, 41, 59, 0.95)',
-                fg: '#E5E7EB',
-                icon: {
-                    success: '#22c55e',
-                    error: '#ef4444'
-                }
-            } : {
-                bg: 'rgba(255, 255, 255, 0.98)',
-                fg: '#0f172a',
-                icon: {
-                    success: '#16a34a',
-                    error: '#dc2626'
-                }
-            };
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2600,
-                timerProgressBar: true,
-                icon,
-                title,
-                text,
-                iconColor: theme.icon[icon],
-                background: theme.bg,
-                color: theme.fg
-            });
-        }
+
 
         // Load dropdown data
         $.get('{{ route("inventory.master.product.dropdownData") }}', function(data) {
@@ -680,7 +649,7 @@
                     if (res.success) {
                         table.ajax.reload();
                         hideModal(formModal);
-                        toast('success', 'Success', res.message);
+                        window.showToast(res.message, 'success');
                     }
                 },
                 error: (xhr) => {
@@ -688,7 +657,7 @@
                     Object.keys(errors).forEach(key => {
                         $(`#error-${key}`).text(errors[key][0]).removeClass('hidden');
                     });
-                    toast('error', 'Error', xhr.responseJSON?.message || 'Operation failed');
+                    window.showToast(xhr.responseJSON?.message || 'Operation failed', 'error');
                 }
             });
         });
@@ -752,7 +721,7 @@
                 toggleUnitFields();
                 showModal(formModal);
                 
-                toast('info', 'Data Copied', 'Please select a NEW model to finish duplication.');
+                window.showToast('Please select a NEW model to finish duplication.', 'info');
             });
         });
 

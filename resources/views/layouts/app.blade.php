@@ -20,12 +20,19 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script>
-        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        // Theme initialization
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
+
+        // Sidebar state initialization (Prevent Flickering)
+        (function() {
+            const isExpanded = localStorage.getItem('sidebarExpanded') !== 'false';
+            document.documentElement.style.setProperty('--sidebar-width', isExpanded ? '16rem' : '5rem');
+            document.documentElement.classList.toggle('sidebar-collapsed', !isExpanded);
+        })();
     </script>
 
     @yield('css')
@@ -34,22 +41,26 @@
 
 <body class="bg-gray-100 dark:bg-gray-900 text-slate-800 dark:text-gray-200 antialiased">
     <div x-data="{ 
-            sidebarReady: false,
             sidebarExpanded: localStorage.getItem('sidebarExpanded') !== 'false',
             sidebarMobileOpen: false,
             toggleSidebar() {
                 if (window.innerWidth >= 1024) {
                     this.sidebarExpanded = !this.sidebarExpanded;
-                    localStorage.setItem('sidebarExpanded', this.sidebarExpanded);
                 } else {
                     this.sidebarMobileOpen = !this.sidebarMobileOpen;
                 }
             }
         }"
-        x-init="sidebarExpanded = localStorage.getItem('sidebarExpanded') !== 'false'"
+        x-init="
+            $watch('sidebarExpanded', value => {
+                localStorage.setItem('sidebarExpanded', value);
+                document.documentElement.style.setProperty('--sidebar-width', value ? '16rem' : '5rem');
+                document.documentElement.classList.toggle('sidebar-collapsed', !value);
+            });
+        "
         class="flex h-screen overflow-hidden">
 
-        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 transition-all duration-300 ease-in-out w-64"
+        <aside class="fixed inset-y-0 left-0 z-50 bg-sidebar dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 transition-all duration-300 ease-in-out w-[var(--sidebar-width)]"
             :class="{
                 'w-64': sidebarExpanded && window.innerWidth >= 1024, 
                 'w-20': !sidebarExpanded && window.innerWidth >= 1024,
@@ -59,7 +70,7 @@
             @include('layouts.sidebar')
         </aside>
 
-        <div class="flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300 lg:pl-64"
+        <div class="flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300 lg:pl-[var(--sidebar-width)]"
             :class="{
                  'lg:pl-64': sidebarExpanded,
                  'lg:pl-20': !sidebarExpanded

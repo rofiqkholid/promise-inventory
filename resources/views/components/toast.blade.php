@@ -34,7 +34,11 @@
             iconColor: theme.icon[icon] || theme.icon.info,
             background: theme.bg,
             color: theme.fg,
-            customClass: { popup: 'swal2-toast border' },
+            customClass: { 
+                popup: 'swal2-slim-toast border',
+                title: 'swal2-slim-title',
+                htmlContainer: 'swal2-slim-text'
+            },
             didOpen: (t) => {
                 const bar = t.querySelector('.swal2-timer-progress-bar');
                 if (bar) bar.style.background = theme.progress;
@@ -53,8 +57,45 @@
 </script>
 
 <style>
-    /* Custom Swiper/Swal Overrides for Dark Mode */
-    .dark .swal2-popup.swal2-toast {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    /* Refined Premium Toast - The Perfect Middle Ground */
+    .swal2-popup.swal2-slim-toast {
+        padding: 0.875rem 1.125rem !important;
+        align-items: center !important;
+        width: auto !important;
+        min-width: 320px;
+        max-width: 420px;
+        border-radius: 0.375rem !important;
+    }
+    
+    .swal2-slim-toast .swal2-icon {
+        margin: 0 0.875rem 0 0 !important;
+        grid-column: 1 !important;
+        grid-row: 1 / 3 !important;
+        zoom: 0.7;
+    }
+    
+    .swal2-slim-toast .swal2-title {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 0.9375rem !important;
+        font-weight: 700 !important;
+        text-align: left !important;
+        grid-column: 2 !important;
+        line-height: 1.2 !important;
+    }
+    
+    .swal2-slim-toast .swal2-html-container.swal2-slim-text {
+        margin: 0.1875rem 0 0 0 !important;
+        padding: 0 !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        text-align: left !important;
+        grid-column: 2 !important;
+        line-height: 1.35 !important;
+        opacity: 0.85;
+    }
+
+    .dark .swal2-popup.swal2-slim-toast {
+        box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.35), 0 8px 8px -4px rgba(0, 0, 0, 0.25);
     }
 </style>

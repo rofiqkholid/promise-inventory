@@ -207,7 +207,7 @@ $(function() {
     const table = window.defaultDataTable('#prTable', {
         processing: true,
         serverSide: true,
-        dom: "<'flex justify-between items-center mb-4'<'flex items-center gap-4'l B> f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
+        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-4 gap-4'<'flex items-center gap-4'l B> f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4 px-2'i p>",
         ajax: {
             url: '{{ route("inventory.purchaseRequisition.data") }}',
             data: function(d) {

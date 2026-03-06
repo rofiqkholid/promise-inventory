@@ -50,7 +50,7 @@
         background: black !important;
     }
     #qr-status.status-initializing {
-        @apply bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-800/30;
+        @apply bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30;
     }
     #qr-status.status-scanning {
         @apply bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800/30;
@@ -129,7 +129,7 @@
             $('#toggleMirror').on('click', (e) => {
                 this.isMirrored = !this.isMirrored;
                 this.applyMirror();
-                $(e.currentTarget).toggleClass('text-blue-600 dark:text-blue-400', this.isMirrored);
+                $(e.currentTarget).toggleClass('text-primary-600 dark:text-primary-400', this.isMirrored);
             });
         }
 

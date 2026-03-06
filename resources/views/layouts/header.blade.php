@@ -57,8 +57,8 @@
             <div x-data="{ open: false }" class="relative pl-4 border-l border-slate-200 dark:border-gray-700">
                 
                 <button @click="open = !open" @click.outside="open = false" 
-                    class="flex items-center gap-3 hover:bg-blue-50 dark:hover:bg-gray-700 p-1.5 pr-3 rounded-full transition-colors border border-transparent hover:border-slate-100 dark:hover:border-gray-600">
-                    <div class="h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-sm border border-blue-200 dark:border-blue-800">
+                    class="flex items-center gap-3 hover:bg-primary-50 dark:hover:bg-gray-700 p-1.5 pr-3 rounded-full transition-colors border border-transparent hover:border-slate-100 dark:hover:border-gray-600">
+                    <div class="h-9 w-9 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center font-bold text-sm border border-primary-200 dark:border-primary-800">
                         {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
                     </div>
                     <div class="hidden md:block text-right">
@@ -77,11 +77,11 @@
                         <p class="text-xs text-slate-500 dark:text-gray-400">{{ Auth::user()->email }}</p>
                     </div>
 
-                    <a href="#" class="block px-4 py-2 text-sm text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-2">
+                    <a href="#" class="block px-4 py-2 text-sm text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-2">
                         <i class="fa-regular fa-user w-4"></i> Profile
                     </a>
                     
-                    <a href="#" class="block px-4 py-2 text-sm text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-2">
+                    <a href="#" class="block px-4 py-2 text-sm text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-2">
                         <i class="fa-solid fa-gear w-4"></i> Settings
                     </a>
                     
@@ -97,7 +97,7 @@
             </div>
             @else
             <div class="pl-4 border-l border-slate-200 dark:border-gray-700">
-                <a href="{{ route('login') }}" class="text-sm font-medium text-blue-600 hover:underline">Login</a>
+                <a href="{{ route('login') }}" class="text-sm font-medium text-primary-600 hover:underline">Login</a>
             </div>
             @endauth
 

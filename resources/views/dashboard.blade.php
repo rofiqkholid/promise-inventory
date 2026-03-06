@@ -62,7 +62,7 @@
     <div class="overflow-x-auto pb-1 scrollbar-hide">
         <div class="flex gap-3 min-w-max">
             @foreach([
-                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'blue', 'id' => 'stat_total_stock'],
+                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'primary', 'id' => 'stat_total_stock'],
                 ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'emerald', 'id' => 'stat_material_in'],
                 ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'amber', 'id' => 'stat_material_out'],
                 ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'indigo', 'id' => 'stat_out_pp'],
@@ -297,10 +297,10 @@
         };
 
         const chartColors = {
-            blue: {
-                solid: '#3b82f6',
-                light: 'rgba(59, 130, 246, 0.1)',
-                grad: ['rgba(59, 130, 246, 0.5)', 'rgba(59, 130, 246, 0.05)']
+            primary: {
+                solid: '#0ea5e9',
+                light: 'rgba(14, 165, 233, 0.1)',
+                grad: ['rgba(14, 165, 233, 0.5)', 'rgba(14, 165, 233, 0.05)']
             },
             emerald: {
                 solid: '#10b981',
@@ -557,14 +557,14 @@
             function generateBalanceRow(row) {
                  const statusColors = {
                      'Critical': 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-red-100 dark:border-red-800',
-                     'Over': 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-blue-100 dark:border-blue-800',
+                     'Over': 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 border-primary-100 dark:border-primary-800',
                      'Safe': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
                  };
                  const colorClass = statusColors[row.status] || statusColors['Safe'];
                  let partName = row.part_no + (row.revision ? ' - ' + row.revision : '');
                  
                  return `
-                    <tr class="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors">
+                    <tr class="hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-colors">
                         <td class="py-3 px-5">
                             <p class="text-xs font-black text-slate-800 dark:text-white truncate max-w-[150px]">${partName}</p>
                             <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tight">${row.customer_code || '-'} • ${row.model_name || '-'}</p>
@@ -586,7 +586,7 @@
                 return `
                     <div class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-all group/item">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-slate-500 group-hover/item:bg-blue-500 group-hover/item:text-white transition-all">
+                            <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-slate-500 group-hover/item:bg-primary-500 group-hover/item:text-white transition-all">
                                 ${row.category.substring(0, 1)}
                             </div>
                             <div>
@@ -617,7 +617,7 @@
                         {
                             label: 'Over',
                             data: chartsData.stockData.map(d => d.over),
-                            backgroundColor: chartColors.blue.solid,
+                            backgroundColor: chartColors.primary.solid,
                             borderRadius: 2
                         },
                         {
@@ -696,7 +696,7 @@
             const trendData = chartsData.trendData;
             const dates = trendData ? [...new Set(trendData.map(d => d.transaction_date))] : [];
             const cats = trendData ? [...new Set(trendData.map(d => d.category))] : [];
-            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+            const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
             trendlineChart = new Chart(document.getElementById('trendlineChart'), {
                 type: 'line',

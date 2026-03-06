@@ -79,134 +79,21 @@ class StoController extends Controller
             // Transform Data for View
             $rowNumber = $start + 1;
             $transformedData = $data->map(function ($event) use (&$rowNumber) {
-                $period = $event->period_start->format('d M Y');
-                if ($event->period_end && $event->status === 'CLOSED') {
-                    $period .= ' - ' . $event->period_end->format('d M Y');
-                }
-
-                $statusClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-                if ($event->status === 'OPEN') {
-                    $statusClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-                } elseif ($event->status === 'WAITING CHECK') {
-                    $statusClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-                } elseif ($event->status === 'WAITING APPROVAL') {
-                    $statusClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-                }
-                
-                $statusBadge = '<span class="px-2 py-1 text-[10px] font-black uppercase tracking-widest rounded-xs whitespace-nowrap ' . $statusClass . '">' . str_replace('_', ' ', $event->status) . '</span>';
-                
-                $user = auth()->user();
-                $isPicRole = $user->hasAppRole('pic') || $user->hasAppRole('admin');
-                $isApprover = $user->hasAppRole('approver') || $user->hasAppRole('admin');
-                $isChecker = $user->hasAppRole('checker') || $user->hasAppRole('approver') || $user->hasAppRole('admin');
-
-                $baseUrl = route('inventory.sto.show', $event->hash_id);
-                
-                // Helper to create step button
-                $getStep = function($label, $icon, $statusTarget, $activeColor, $isDone, $isCurrent, $hasPermission, $formAction = null) use ($baseUrl) {
-                    $opacity = $isDone || $isCurrent ? 'opacity-100' : 'opacity-30 grayscale';
-                    $cursor = $isDone || $isCurrent ? '' : 'cursor-not-allowed';
-                    $color = $isDone ? 'bg-emerald-600' : ($isCurrent ? $activeColor : 'bg-slate-400');
-                    $border = $isCurrent ? 'ring-2 ring-offset-1 ring-slate-200 dark:ring-slate-700' : '';
-                    
-                    $content = '<i class="fa-solid ' . $icon . ' text-[10px]"></i> <span class="hidden md:inline">' . $label . '</span>';
-                    
-                    if ($isCurrent && $hasPermission && $formAction) {
-                        return '
-                            <form action="' . $formAction . '" method="POST" class="inline">
-                                ' . csrf_field() . '
-                                <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 ' . $color . ' text-white rounded-xs text-[10px] font-bold transition-all hover:scale-105 shadow-sm" onclick="return confirm(\'Proceed with ' . $label . '?\')">
-                                    ' . $content . '
-                                </button>
-                            </form>';
-                    }
-
-                    $tag = ($isDone || $isCurrent) ? 'a' : 'div';
-                    $href = ($isDone || $isCurrent) ? ' href="' . $baseUrl . '"' : '';
-                    
-                    return '<' . $tag . $href . ' class="inline-flex items-center gap-1 px-2.5 py-1.5 ' . $color . ' ' . $opacity . ' ' . $cursor . ' ' . $border . ' text-white rounded-xs text-[10px] font-bold shadow-sm">
-                        ' . $content . '
-                    </' . $tag . '>';
-                };
-
-        $steps = [];
-                
-                // Step 1: Count (Anyone)
-                $steps[] = $getStep('Count', 'fa-list-check', 'OPEN', 'bg-primary-600', 
-                    $event->status !== 'OPEN', 
-                    $event->status === 'OPEN', 
-                    true);
-
-                // Step 2: Verify (Checker/Admin)
-                $steps[] = $getStep('Verify', 'fa-magnifying-glass', 'WAITING CHECK', 'bg-amber-500', 
-                    in_array($event->status, ['WAITING APPROVAL', 'CLOSED']), 
-                    $event->status === 'WAITING CHECK', 
-                    $isChecker);
-
-                // Step 3: Approve (Approver/Admin)
-                $steps[] = $getStep('Approve', 'fa-lock', 'WAITING APPROVAL', 'bg-indigo-600', 
-                    $event->status === 'CLOSED', 
-                    $event->status === 'WAITING APPROVAL', 
-                    $isApprover);
-
-                $controlBtn = '
-                    <div class="flex items-center justify-center gap-1 py-1">
-                        ' . implode('<div class="w-2 h-px bg-slate-100 dark:bg-slate-700/50"></div>', $steps) . '
-                    </div>';
-
-                $actionBtn = '';
-                // Only PIC, SV (mapped to approver), and Admin can edit/delete
-                $canManage = $user->hasAppRole('pic') || $user->hasAppRole('approver') || $user->hasAppRole('admin');
-                
-                if ($canManage) {
-                    $actionBtn = '
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="editSto(\'' . $event->hash_id . '\')" class="h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" title="Edit Event Details">
-                                <i class="fa-solid fa-pen-to-square text-sm"></i>
-                            </button>
-                            <button onclick="deleteSto(\'' . $event->hash_id . '\', \'' . $event->code . '\')" class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Event & All Details">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
-                        </div>';
-                }
-
-                if ($event->status === 'CLOSED' && $isApprover) {
-                    $controlBtn .= '
-                        <div class="mt-2 flex justify-center">
-                            <form action="' . route('inventory.sto.reopen', $event->hash_id) . '" method="POST" class="inline">
-                                ' . csrf_field() . '
-                                <button type="submit" class="text-[9px] font-bold text-gray-400 hover:text-gray-600 uppercase tracking-tighter" onclick="return confirm(\'Reopen this event?\')">
-                                    <i class="fa-solid fa-rotate-left"></i> Reopen Event
-                                </button>
-                            </form>
-                        </div>';
-                }
-
-                $netPcs = $event->net_pcs ?? 0;
-                $netAmt = $event->net_amount ?? 0;
-
-                $amtHtml = '<span class="text-[11px] font-bold text-slate-300">0</span>';
-                if ($netAmt != 0) {
-                    $prefix = $netAmt > 0 ? '+' : '-';
-                    $amtHtml = '<span class="text-[11px] font-bold text-red-600">' . $prefix . number_format(abs($netAmt), 0) . '</span>';
-                }
-
-                $pcsHtml = '<span class="text-[11px] font-bold text-slate-300">0</span>';
-                if ($netPcs != 0) {
-                    $prefix = $netPcs > 0 ? '+' : '-';
-                    $pcsHtml = '<span class="text-[11px] font-bold text-red-600">' . $prefix . number_format(abs($netPcs), 0) . ' <span class="text-[9px] opacity-70">Pcs</span></span>';
-                }
-
+                // Determine step statuses
                 return [
-                    $rowNumber++,
-                    $event->code,
-                    $period,
-                    $statusBadge,
-                    $event->pic->name ?? '-',
-                    $amtHtml,
-                    $pcsHtml,
-                    $controlBtn,
-                    $actionBtn 
+                    'row_no' => $rowNumber++,
+                    'hash_id' => $event->hash_id,
+                    'code' => $event->code,
+                    'period_start' => $event->period_start->format('d M Y'),
+                    'period_end' => $event->period_end ? $event->period_end->format('d M Y') : null,
+                    'status' => $event->status,
+                    'pic_name' => $event->pic->name ?? '-',
+                    'net_pcs' => $event->net_pcs ?? 0,
+                    'net_amount' => $event->net_amount ?? 0,
+                    // Minimal flags for UI logic in Blade/JS
+                    'can_manage' => auth()->user()->hasAppRole('pic') || auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'),
+                    'is_approver' => auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'),
+                    'is_checker' => auth()->user()->hasAppRole('checker') || auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'),
                 ];
             });
 
@@ -253,7 +140,7 @@ class StoController extends Controller
      */
     public function edit($id)
     {
-        $event = StoEvent::findByHashIdOrFail($id);
+        $event = StoEvent::findByHashOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -272,7 +159,7 @@ class StoController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $event = StoEvent::findByHashIdOrFail($id);
+        $event = StoEvent::findByHashOrFail($id);
         
         $request->validate([
             'period_start' => 'required|date',
@@ -294,7 +181,7 @@ class StoController extends Controller
      */
     public function destroy($id)
     {
-        $event = StoEvent::findByHashIdOrFail($id);
+        $event = StoEvent::findByHashOrFail($id);
         
         DB::beginTransaction();
         try {
@@ -434,30 +321,9 @@ class StoController extends Controller
         $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline) {
             $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
             $unitCode = $detail->product->unit->code ?? 'PCS';
-
-            $formatQty = function($qty, $pcsPerUnit, $unitCode, $prefix = '') {
-                // Formatting helper
-                $qty = floatval($qty);
-                $pcs = $qty * $pcsPerUnit;
-                
-                $pcsDisplay = number_format($pcs, 0);
-                
-                if ($pcsPerUnit == 1) {
-                    return "<span class='font-bold'>{$prefix}{$pcsDisplay}</span>";
-                }
-                
-                $unitDisplay = number_format($qty, 0); 
-                return "
-                    <div class='flex flex-col items-center justify-center'>
-                        <span class='font-bold'>{$prefix}{$pcsDisplay}</span>
-                        <span class='text-[10px] text-gray-400 leading-none mt-0.5'>({$unitDisplay} {$unitCode})</span>
-                    </div>
-                ";
-            };
-
             $diff = $detail->real_qty_input - $detail->system_qty_snapshot;
             
-            // Financial Calculation
+            // Financial Calculation raw values
             $pricePerKg = $detail->product->material_price ?? 0;
             $weightPerPcs = $detail->product->weight_kg ?? 0;
             
@@ -465,126 +331,32 @@ class StoController extends Controller
             $realAmount = $detail->real_qty_input * $weightPerPcs * $pricePerKg;
             $diffAmount = $diff * $weightPerPcs * $pricePerKg;
 
-            $formatCurrency = function($val, $isDiff = false) {
-                if ($val == 0) {
-                    if ($isDiff) return '<span class="text-[11px] font-mono font-bold text-green-600">0</span>';
-                    return '<span class="text-gray-300">-</span>';
-                }
-                
-                $color = 'text-gray-600 dark:text-gray-400';
-                $prefix = '';
-                if ($isDiff) {
-                    $color = 'text-red-600';
-                    $prefix = $val > 0 ? '+' : '-';
-                }
-                
-                return '<span class="text-[11px] font-mono font-bold ' . $color . '">' . $prefix . number_format(abs($val), 0) . '</span>';
-            };
-            
-            $productInfo = '
-                <div class="flex flex-col">
-                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">' . ($detail->product->product->part_no ?? '-') . ' - ' . ($detail->product->revision ?? '') . '</span>
-                    <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">' . ($detail->product->product->part_name ?? '-') . '</span>';
-            
-            
-            $productInfo .= '</div>';
-
-            $diffHtml = '';
-            
-            if ($diff > 0) {
-                $diffHtml = '<div class="text-red-600 font-medium">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '+') . '</div>';
-            } elseif ($diff < 0) {
-                $diffHtml = '<div class="text-red-600 font-medium">' . $formatQty(abs($diff), $pcsPerUnit, $unitCode, '-') . '</div>';
-            } else {
-                $diffHtml = '<span class="text-sm font-medium text-emerald-600">0</span>';
-            }
-
-            // Inline editable QTY field for OPEN status - Permission restricted
-            $qtyHtml = '';
-            if ($canEditInline) {
-                $qtyHtml = '
-                    <div class="flex items-center justify-center gap-1">
-                        <input type="number" step="any" 
-                            class="qty-input text-center font-medium text-sm px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-                            style="width: 80px; min-width: 80px;"
-                            data-detail-id="' . $detail->hash_id . '" 
-                            data-product-id="' . $detail->product->hash_id . '"
-                            value="' . ($detail->real_qty_input + 0) . '" 
-                            placeholder="Qty" />
-                        <span class="text-[9px] font-bold text-gray-400 uppercase">' . $unitCode . '</span>
-                    </div>';
-            } else {
-                $qtyHtml = '<div class="text-blue-600 dark:text-blue-400">' . $formatQty($detail->real_qty_input, $pcsPerUnit, $unitCode) . '</div>';
-            }
-            
-            // Inline editable REMARK field - Permission restricted
-            $remarkHtml = '';
-            if ($canEditInline) {
-                $remarkValue = htmlspecialchars($detail->remark ?? '', ENT_QUOTES);
-                $remarkHtml = '<input type="text" 
-                    class="remark-input text-xs px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300" 
-                    style="width: 180px; min-width: 180px;"
-                    data-detail-id="' . $detail->hash_id . '" 
-                    value="' . $remarkValue . '" 
-                    placeholder="Add note..." />';
-            } else {
-                $remarkHtml = '<span class="text-xs text-gray-600 dark:text-gray-400">' . ($detail->remark ?: '-') . '</span>';
-            }
-
-            // Reason Select - ONLY for PIC / Admin when there is a difference
-            $reasonHtml = '';
-            if ($diff != 0) {
-                if ($canEditInline) {
-                    $reasonHtml = '<select class="reason-input text-xs pl-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 outline-none focus:border-primary-500" style="width: 180px; min-width: 180px;" data-detail-id="' . $detail->hash_id . '">';
-                    $reasonHtml .= '<option value="">-- Select Reason --</option>';
-                    
-                    // Filter reasons by category (Shortage/Excess) based on diff
-                    $category = $diff < 0 ? 'SHORTAGE' : 'EXCESS';
-                    $reasons = \App\Models\InventoryModel\StoReason::where('is_active', true)
-                                ->where(function($q) use ($category) {
-                                    $q->where('category', $category)->orWhere('category', 'OTHERS');
-                                })->get();
-
-                    foreach ($reasons as $r) {
-                        $selected = $detail->reason_id == $r->id ? 'selected' : '';
-                        $reasonHtml .= '<option value="' . $r->id . '" ' . $selected . '>' . $r->name . '</option>';
-                    }
-                    $reasonHtml .= '</select>';
-                } else {
-                    $reasonHtml = '<span class="text-[10px] text-red-500 font-bold">' . ($detail->reason->name ?? 'Reason Required') . '</span>';
-                }
-            } else {
-                $reasonHtml = '<span class="text-[10px] text-gray-400 italic">No Diff</span>';
-            }
-
-            $actionHtml = '';
-            if ($stoEvent->status === 'OPEN') {
-                $actionHtml = '
-                    <div class="flex items-center justify-center">
-                        <button type="button" onclick="deleteItem(\'' . $detail->hash_id . '\')" 
-                                class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Entry">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
-                    </div>';
-            }
-            
             $currentRow = $rowNumber++;
 
             return [
                 'row_number' => $currentRow,
+                'hash_id' => $detail->hash_id,
                 'updated_at' => $detail->updated_at->format('d/m/Y H:i'),
-                'product_info' => $productInfo,
+                'part_no' => $detail->product->product->part_no ?? '-',
+                'revision' => $detail->product->revision ?? '',
+                'part_name' => $detail->product->product->part_name ?? '-',
                 'auditor' => $detail->auditor->name ?? '-',
-                'system_qty' => $formatQty($detail->system_qty_snapshot, $pcsPerUnit, $unitCode),
-                'system_amount' => $formatCurrency($systemAmount),
-                'real_qty' => $qtyHtml,
-                'real_amount' => $formatCurrency($realAmount),
-                'diff' => $diffHtml,
-                'diff_amount' => $formatCurrency($diffAmount, true),
-                'location' => $detail->location->name ?? '<span class="text-gray-400 italic">No Location</span>',
-                'reason' => $reasonHtml,
-                'remark' => $remarkHtml,
-                'action' => $actionHtml
+                'system_qty' => (float)$detail->system_qty_snapshot,
+                'system_amount' => (float)$systemAmount,
+                'real_qty_input' => (float)$detail->real_qty_input,
+                'real_amount' => (float)$realAmount,
+                'diff_qty' => (float)$diff,
+                'diff_amount' => (float)$diffAmount,
+                'pcs_per_unit' => (float)$pcsPerUnit,
+                'unit_code' => $unitCode,
+                'location_name' => $detail->location->name ?? null,
+                'reason_id' => $detail->reason_id,
+                'reason_name' => $detail->reason->name ?? null,
+                'category' => $diff < 0 ? 'SHORTAGE' : 'EXCESS',
+                'remark' => $detail->remark,
+                'can_edit_inline' => $canEditInline,
+                'status' => $stoEvent->status,
+                'product_hash_id' => $detail->product->hash_id,
             ];
         });
 

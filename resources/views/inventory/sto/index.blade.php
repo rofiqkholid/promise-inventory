@@ -26,8 +26,6 @@
                 @endif
             </div>
         </div>
-
-        {{-- No Legend Popover --}}
     </div>
 
     <!-- Events Table -->
@@ -38,10 +36,10 @@
                     <th class="w-16 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-xs">No</th>
                     <th class="text-left w-48 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Event Code</th>
                     <th class="text-left border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Counting Period</th>
-                    <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Status</th>
                     <th class="text-left w-40 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">PIC</th>
                     <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Net Amount</th>
                     <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Net PCS</th>
+                    <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Status</th>
                     <th class="text-center w-40 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">STO Control</th>
                     <th class="w-[100px] text-center border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Action</th>
                 </tr>
@@ -122,13 +120,13 @@
                 @method('PUT')
                 <div class="space-y-4">
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Code</label>
-                        <input type="text" id="edit_code" readonly class="w-full p-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-mono font-bold text-slate-400">
-                    </div>
-
-                    <div>
                         <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Date</label>
                         <input type="date" id="edit_period_start" name="period_start" required class="w-full p-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-xs font-bold focus:ring-1 focus:ring-primary-500 outline-none">
+                    </div>
+                    
+                    <div>
+                        <label class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Code</label>
+                        <input type="text" id="edit_code" readonly class="w-full p-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-mono font-bold text-slate-400">
                     </div>
 
                     <div>
@@ -155,15 +153,106 @@
                 ajax: "{{ route('inventory.sto.index') }}",
                 order: [[1, 'desc']],
                 columns: [
-                    { data: 0, className: 'text-center text-slate-400 text-[11px]' },
-                    { data: 1, className: 'text-left font-bold text-slate-800 dark:text-white text-xs' },
-                    { data: 2, className: 'text-left text-xs text-slate-600 dark:text-gray-400' },
-                    { data: 3, className: 'text-center' },
-                    { data: 4, className: 'text-left font-medium text-slate-700 dark:text-gray-300 text-xs' },
-                    { data: 5, className: 'text-center' },
-                    { data: 6, className: 'text-center' },
-                    { data: 7, className: 'text-center', orderable: false },
-                    { data: 8, className: 'text-center', orderable: false }
+                    { data: 'row_no', className: 'text-center text-slate-500 text-[11px]' },
+                    { data: 'code', className: 'text-left font-bold text-slate-800 dark:text-white text-xs' },
+                    { 
+                        data: null, 
+                        className: 'text-left text-xs text-slate-600 dark:text-gray-400',
+                        render: function(data) {
+                            let period = data.period_start;
+                            if (data.period_end && data.status === 'CLOSED') {
+                                period += ' - ' + data.period_end;
+                            }
+                            return period;
+                        }
+                    },
+                    { data: 'pic_name', className: 'text-left font-medium text-slate-700 dark:text-gray-300 text-xs' },
+                    { 
+                        data: 'net_amount', 
+                        className: 'text-center',
+                        render: function(val) {
+                            if (val == 0) return '<span class="text-[11px] font-bold text-slate-300">0</span>';
+                            let prefix = val > 0 ? '+' : '-';
+                            return `<span class="text-[11px] font-bold text-red-600">${prefix}${Math.abs(val).toLocaleString()}</span>`;
+                        }
+                    },
+                    { 
+                        data: 'net_pcs', 
+                        className: 'text-center',
+                        render: function(val) {
+                            if (val == 0) return '<span class="text-[11px] font-bold text-slate-300">0</span>';
+                            let prefix = val > 0 ? '+' : '-';
+                            return `<span class="text-[11px] font-bold text-red-600">${prefix}${Math.abs(val).toLocaleString()} <span class="text-[9px] opacity-70">Pcs</span></span>`;
+                        }
+                    },
+                    { 
+                        data: 'status', 
+                        className: 'text-center',
+                        render: function(status) {
+                            let statusClass = 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800';
+                            if (status === 'OPEN') statusClass = 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800';
+                            else if (status === 'WAITING CHECK') statusClass = 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800';
+                            else if (status === 'WAITING APPROVAL') statusClass = 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800';
+                            
+                            return `<span class="px-2 py-1 text-[10px] font-black uppercase tracking-widest rounded-xs whitespace-nowrap border ${statusClass}">${status.replace('_', ' ')}</span>`;
+                        }
+                    },
+                    { 
+                        data: null, 
+                        className: 'text-center', 
+                        orderable: false,
+                        render: function(data) {
+                            const baseUrl = "{{ url('inventory/sto') }}/" + data.hash_id;
+                            
+                            const getStep = (label, icon, statusTarget, colorKey, isDone, isCurrent, hasPermission) => {
+                                let opacity = isDone || isCurrent ? 'opacity-100' : 'opacity-20 grayscale';
+                                let cursor = isDone || isCurrent ? '' : 'cursor-not-allowed';
+                                
+                                const configs = {
+                                    emerald: { bg: 'bg-emerald-50', hover: 'hover:bg-emerald-100', text: 'text-emerald-600', border: 'border-emerald-200', dark: 'dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800' },
+                                    primary: { bg: 'bg-primary-50', hover: 'hover:bg-primary-100', text: 'text-primary-600', border: 'border-primary-200', dark: 'dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800' },
+                                    amber: { bg: 'bg-amber-50', hover: 'hover:bg-amber-100', text: 'text-amber-600', border: 'border-amber-200', dark: 'dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800' },
+                                    indigo: { bg: 'bg-indigo-50', hover: 'hover:bg-indigo-100', text: 'text-indigo-600', border: 'border-indigo-200', dark: 'dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800' },
+                                    slate: { bg: 'bg-slate-50', hover: 'hover:bg-slate-100', text: 'text-slate-400', border: 'border-slate-200', dark: 'dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800' }
+                                };
+
+                                let config = isDone ? configs.emerald : (isCurrent ? configs[colorKey] : configs.slate);
+                                let ringClass = isCurrent ? 'ring-2 ring-primary-500/30' : '';
+                                
+                                let tag = (isDone || isCurrent) ? 'a' : 'div';
+                                let href = (isDone || isCurrent) ? ` href="${baseUrl}"` : '';
+                                
+                                return `<${tag}${href} class="h-10 w-10 inline-flex items-center justify-center ${config.bg} ${config.text} ${config.dark} border ${config.border} ${config.hover} ${opacity} ${cursor} ${ringClass} rounded-full transition-colors shadow-sm" title="${label}">
+                                    <i class="fa-solid ${icon} text-sm"></i>
+                                </${tag}>`;
+                            };
+
+                            let steps = [];
+                            steps.push(getStep('Count', 'fa-list-check', 'OPEN', 'primary', data.status !== 'OPEN', data.status === 'OPEN', true));
+                            steps.push(getStep('Verify', 'fa-magnifying-glass', 'WAITING CHECK', 'amber', ['WAITING APPROVAL', 'CLOSED'].includes(data.status), data.status === 'WAITING CHECK', data.is_checker));
+                            steps.push(getStep('Approve', 'fa-lock', 'WAITING APPROVAL', 'indigo', data.status === 'CLOSED', data.status === 'WAITING APPROVAL', data.is_approver));
+
+                            let html = `<div class="flex items-center justify-center gap-0 py-1">${steps.join('<div class="w-4 h-[2px] bg-slate-200 dark:bg-slate-700"></div>')}</div>`;
+                            return html;
+                        }
+                    },
+                    { 
+                        data: null, 
+                        className: 'text-center', 
+                        orderable: false,
+                        render: function(data) {
+                            if (!data.can_manage) return '';
+                            return `
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <button onclick="editSto('${data.hash_id}')" class="h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" title="Edit Event Details">
+                                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                    </button>
+                                    <button onclick="deleteSto('${data.hash_id}', '${data.code}')" class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Event & All Details">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                    </button>
+                                </div>`;
+                        }
+                    }
                 ]
             });
         }
@@ -215,12 +304,12 @@
                         document.getElementById('edit_description').value = data.data.description || '';
                         modal.classList.remove('hidden');
                     } else {
-                        toastr.error('Failed to fetch STO details.');
+                        window.showToast('Failed to fetch STO details.', 'error');
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    toastr.error('An error occurred while fetching details.');
+                    window.showToast('An error occurred while fetching details.', 'error');
                 });
         };
 
@@ -235,15 +324,15 @@
                 data: formData,
                 success: function(data) {
                     if (data.success) {
-                        toastr.success(data.message);
+                        window.showToast(data.message, 'success');
                         document.getElementById('editEventModal').classList.add('hidden');
                         if (window.stoTable) window.stoTable.ajax.reload(null, false);
                     } else {
-                        toastr.error(data.message || 'Update failed.');
+                        window.showToast(data.message || 'Update failed.', 'error');
                     }
                 },
                 error: function(err) {
-                    toastr.error('Failed to update event.');
+                    window.showToast('Failed to update event.', 'error');
                 }
             });
         });
@@ -267,14 +356,14 @@
                         data: { _token: "{{ csrf_token() }}" },
                         success: function(data) {
                             if (data.success) {
-                                toastr.success(data.message);
+                                window.showToast(data.message, 'success');
                                 if (window.stoTable) window.stoTable.ajax.reload(null, false);
                             } else {
-                                toastr.error(data.message || 'Delete failed.');
+                                window.showToast(data.message || 'Delete failed.', 'error');
                             }
                         },
                         error: function(err) {
-                            toastr.error('Failed to delete event.');
+                            window.showToast('Failed to delete event.', 'error');
                         }
                     });
                 }

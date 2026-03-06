@@ -8,7 +8,7 @@
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Transaction Journal</h2>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Transaction History</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Audit trail of all inventory movements and manual adjustments.</p>
         </div>
     </div>
@@ -17,7 +17,7 @@
     <div class="mb-8 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
             <h3 class="text-[10px] font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-[0.15em]">
-                <i class="fa-solid fa-filter text-primary-600"></i> Journal Filter
+                <i class="fa-solid fa-filter text-primary-600"></i> History Filter
             </h3>
         </div>
         <div class="p-6">
@@ -26,10 +26,10 @@
                 <div class="w-full">
                     <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Timeline</label>
                     <div class="relative group">
-                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 text-[10px] pointer-events-none transition-colors z-10"></i>
+                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 text-[10px] pointer-events-none transition-colors z-10"></i>
                         <input type="text" id="filter_date_range" readonly 
                             value="{{ date('01-m-Y') . ' - ' . date('t-m-Y') }}"
-                            class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer w-full pl-10 transition-all font-medium" 
+                            class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-primary-500 cursor-pointer w-full pl-10 transition-all font-medium" 
                             placeholder="Filter by Date">
                     </div>
                 </div>
@@ -49,7 +49,7 @@
 
                 {{-- CATEGORY --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Type</label>
+                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Category</label>
                     <select id="filter_category" class="select2-filter w-full">
                         <option value="">All Transactions</option>
                         @foreach($categories as $category)
@@ -79,11 +79,11 @@
         </div>
     </div>
 
-    {{-- Journal Table Panel --}}
+    {{-- History Table Panel --}}
     <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden flex flex-col shadow-sm">
         <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
             <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
-                <i class="fa-solid fa-table-list mr-3 text-primary-600"></i> Journal Data
+                <i class="fa-solid fa-table-list mr-3 text-primary-600"></i> History Data
             </h3>
         </div>
         <div class="overflow-x-auto">
@@ -94,7 +94,7 @@
                         <th class="w-28 text-left text-xs font-bold uppercase tracking-wider">Trans. Date</th>
                         <th class="w-40 text-left text-xs font-bold uppercase tracking-wider">Timestamp</th>
                         <th class="text-left text-xs font-bold uppercase tracking-wider">Part Details</th>
-                        <th class="w-28 text-center text-xs font-bold uppercase tracking-wider">Type</th>
+                        <th class="w-28 text-center text-xs font-bold uppercase tracking-wider">Category</th>
                         <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">Origin / Destination</th>
                         <th class="w-20 text-center text-xs font-bold uppercase tracking-wider">Qty</th>
                         <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">PIC</th>
@@ -139,7 +139,7 @@
         table = window.defaultDataTable('#TransactionHistoryTable', {
             processing: true,
             serverSide: true,
-            dom: "<'flex justify-between items-center mb-4'<'flex items-center gap-4'l B> f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
+            dom: "<'flex flex-col sm:flex-row justify-between items-center mb-4 gap-4'<'flex items-center gap-4'l B> f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4 px-2'i p>",
             language: {
                 infoFiltered: "",
                 processing: '<div class="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] flex items-center justify-center z-20"><div class="loader-spinner !w-8 !h-8 !border-2"></div></div>'
@@ -156,11 +156,11 @@
                 }
             },
             columns: [
-                { data: null, className: 'text-center text-gray-400', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
-                { data: 'transaction_date', className: 'text-xs text-slate-500 font-medium' },
+                { data: null, className: 'text-center text-gray-600', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
+                { data: 'transaction_date', className: 'text-xs text-gray-600 font-medium' },
                 { 
                     data: 'updated_at', 
-                    className: 'text-[10px] text-slate-400 font-mono',
+                    className: 'text-[10px] text-gray-500 font-mono',
                     render: d => d || '-'
                 },
                 { 
@@ -168,7 +168,7 @@
                     className: 'py-3 min-w-[200px]',
                     render: row => `
                         <div class="font-bold text-slate-800 dark:text-white leading-tight uppercase">${row.part_no}</div>
-                        <div class="text-[10px] text-slate-400 uppercase truncate max-w-[250px]">${row.product_name}</div>
+                        <div class="text-[10px] text-slate-500 uppercase truncate max-w-[250px]">${row.product_name}</div>
                     `
                 },
                 { 
@@ -178,7 +178,7 @@
                         const style = d === 'IN' 
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' 
                             : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
-                        return `<span class="px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-widest border ${style}">${d}</span>`;
+                        return `<span class="inline-block px-2 py-0.5 rounded-xs border text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${style}">${d}</span>`;
                     }
                 },
                 { data: 'origin_destination', className: 'text-xs text-gray-600 dark:text-gray-400' },

@@ -77,7 +77,7 @@
         $('#RolesTable').on('click', '.edit-role-btn', function() {
             $.get("{{ url('inventory/roles') }}/" + $(this).data('id'), function(data) {
                 $('#role_id_input').val(data.id); $('#role_name_input').val(data.name); $('#role_code_input').val(data.code); $('#role_description_input').val(data.description);
-                $('#roleModalTitle').html('<i class="fa-solid fa-pen-to-square text-blue-500"></i> Edit Role');
+                $('#roleModalTitle').html('<i class="fa-solid fa-pen-to-square text-primary-500"></i> Edit Role');
                 $('#roleModal').removeClass('hidden').addClass('flex');
             });
         });

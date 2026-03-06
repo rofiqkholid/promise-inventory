@@ -389,7 +389,18 @@ textarea[disabled] {
     color: #334155 !important;
 }
 
-.dark .premium-input {
-    background-color: #111827 !important;
-    border-color: #374151 !important;
+
+/* Sidebar Toggle Label Continuity (Zero Flicker) */
+.side-label {
+    display: inline-block;
+}
+
+.sidebar-collapsed .side-label,
+.sidebar-collapsed .submenu-container {
+    display: none !important;
+}
+
+/* Specific for Logo/Header container inside sidebar */
+.sidebar-collapsed .logo-label {
+    display: none !important;
 }

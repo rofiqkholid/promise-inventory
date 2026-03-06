@@ -30,11 +30,11 @@
         <!-- Navigation Header -->
         <div class="w-full max-w-2xl mb-6 flex justify-between items-center bg-white dark:bg-slate-900 px-5 py-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
              @auth
-             <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-blue-600 transition-colors">
+             <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-primary-600 transition-colors">
                 <i class="fa-solid fa-chevron-left text-[10px]"></i> Dashboard
              </a>
              @else
-             <a href="{{ route('login') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+             <a href="{{ route('login') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors">
                 <i class="fa-solid fa-right-to-bracket"></i> Login to System
              </a>
              @endauth
@@ -50,8 +50,8 @@
         <!-- Quick Actions -->
         <div class="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <a href="{{ route('inventory.transaction', ['product' => $product->hash_id]) }}" 
-               class="group h-14 bg-blue-600 text-white rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-blue-700 transition-all">
-                <i class="fa-solid fa-plus-circle text-lg text-blue-200"></i>
+               class="group h-14 bg-primary-600 text-white rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-primary-700 transition-all">
+                <i class="fa-solid fa-plus-circle text-lg text-primary-200"></i>
                 <span>New Transaction</span>
                 @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
             </a>
@@ -77,7 +77,7 @@
                     <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
                         {{ $product->part_no }}
                         @if($product->revision)
-                        <span class="text-blue-600 dark:text-blue-400 font-mono text-xl">/ {{ $product->revision }}</span>
+                        <span class="text-primary-600 dark:text-primary-400 font-mono text-xl">/ {{ $product->revision }}</span>
                         @endif
                     </h1>
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{{ $product->part_name }}</p>
@@ -88,7 +88,7 @@
                         'safe' => ['bg' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'label' => 'Safe Stock'],
                         'warning' => ['bg' => 'bg-amber-50 text-amber-700 border-amber-200', 'label' => 'Warning'],
                         'danger' => ['bg' => 'bg-red-50 text-red-700 border-red-200', 'label' => 'Critical'],
-                        'over' => ['bg' => 'bg-blue-50 text-blue-700 border-blue-200', 'label' => 'Overstock']
+                        'over' => ['bg' => 'bg-primary-50 text-primary-700 border-primary-200', 'label' => 'Overstock']
                     ];
                     $st = $statusStyles[$product->status] ?? ['bg' => 'bg-slate-50 text-slate-700 border-slate-200', 'label' => 'Unknown'];
                 @endphp
@@ -121,7 +121,7 @@
                                 $u = $unitParts[1] ?? 'UNIT';
                             @endphp
                             <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black text-indigo-600 dark:text-indigo-400 leading-none">{{ $val }}</span>
+                                <span class="text-4xl font-black text-primary-600 dark:text-primary-400 leading-none">{{ $val }}</span>
                                 <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">{{ $u }}</span>
                             </div>
                         </div>
@@ -159,7 +159,7 @@
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Project Status</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">
                                 {{ $product->product_status ?: $product->model_project_status }}
-                                @if($product->product_status) <span class="text-[9px] text-blue-500 font-bold ml-1 uppercase">(Override)</span> @endif
+                                @if($product->product_status) <span class="text-[9px] text-primary-500 font-bold ml-1 uppercase">(Override)</span> @endif
                             </span>
                         </div>
                         <div class="flex flex-col gap-1">
@@ -182,14 +182,14 @@
                     Data as of {{ date('d M Y, H:i:s') }}
                 </div>
                 <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-shield-circle-check text-blue-500"></i>
+                    <i class="fa-solid fa-shield-circle-check text-primary-500"></i>
                     Official Inventory Record
                 </div>
             </div>
         </div>
 
         <div class="mt-8 text-center">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">PROMISE <span class="text-blue-600">INVENTORY</span> SYSTEM</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">PROMISE <span class="text-primary-600">INVENTORY</span> SYSTEM</p>
         </div>
     </div>
 </body>

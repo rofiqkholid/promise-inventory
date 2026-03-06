@@ -33,6 +33,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 
+                            400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 
+                            800: '#1e40af', 900: '#1e3a8a', 950: '#172554',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <style>
         body { font-family: 'Outfit', sans-serif; }
         .bg-text-giant {
@@ -70,14 +93,14 @@
         <!-- Header Section -->
         <div class="mb-10">
             <div class="flex justify-center items-center gap-6 mb-8">
-                <div class="h-[2px] w-12 bg-blue-600 dark:bg-blue-500 rounded-full opacity-40"></div>
-                <div class="text-[11px] font-black tracking-[0.5em] uppercase text-blue-600 dark:text-blue-500">
+                <div class="h-[2px] w-12 bg-primary-600 dark:bg-primary-500 rounded-xs opacity-40"></div>
+                <div class="text-[11px] font-black tracking-[0.5em] uppercase text-primary-600 dark:text-primary-500">
                     System Alert
                 </div>
-                <div class="h-[2px] w-12 bg-blue-600 dark:bg-blue-500 rounded-full opacity-40"></div>
+                <div class="h-[2px] w-12 bg-primary-600 dark:bg-primary-500 rounded-xs opacity-40"></div>
             </div>
             
-            <div class="text-8xl sm:text-9xl font-black tracking-tighter text-blue-600 dark:text-blue-500 mb-2">
+            <div class="text-8xl sm:text-9xl font-black tracking-tighter text-primary-600 dark:text-primary-500 mb-2">
                 {{ $code }}
             </div>
         </div>
@@ -93,14 +116,14 @@
 
         <!-- Actions -->
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-4 px-6 md:px-0">
-            <a href="{{ url('/') }}" class="btn-custom bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 active:scale-95">
+            <a href="{{ url('/') }}" class="btn-custom bg-slate-950 dark:bg-white text-white dark:text-slate-950 hover:scale-105 hover:shadow-2xl hover:shadow-primary-500/10 active:scale-60">
                 Return to Home
             </a>
             
             @if(auth()->check())
             <form action="{{ route('logout') }}" method="POST" class="flex flex-col sm:inline-flex">
                 @csrf
-                <button type="submit" class="btn-custom border-2 border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95">
+                <button type="submit" class="btn-custom border-2 border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-60">
                     Sign Out
                 </button>
             </form>

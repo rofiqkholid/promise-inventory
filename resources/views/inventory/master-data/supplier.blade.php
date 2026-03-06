@@ -160,7 +160,7 @@
                 { data: 'code' },
                 {
                     data: 'name',
-                    render: (d, t, r) => r.is_linked == 1 ? `<div class="flex items-center gap-2"><span>${d}</span><i class="fa-solid fa-cloud text-blue-500"></i></div>` : d
+                    render: (d, t, r) => r.is_linked == 1 ? `<div class="flex items-center gap-2"><span>${d}</span><i class="fa-solid fa-cloud text-primary-500"></i></div>` : d
                 },
                 { data: 'email' }, { data: 'phone' },
                 {

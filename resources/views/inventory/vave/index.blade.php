@@ -4,33 +4,35 @@
 @section('header-title', 'VA/VE Analysis')
 
 @section('content')
-<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">VA/VE Analysis</h2>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Compare baseline RFQ data with production revisions to analyze material efficiency.</p>
+<div class="text-gray-900 dark:text-gray-100">
+    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">VA/VE Analysis</h2>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Compare baseline RFQ data with production revisions to analyze material efficiency.</p>
+        </div>
     </div>
 
     {{-- Filter Card --}}
-    <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-lg border border-slate-200 dark:border-gray-700">
+    <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
         <div class="flex flex-col md:flex-row items-end gap-5">
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Customer</label>
-                <select id="filterCustomer" class="select2-simple w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Customer</label>
+                <select id="filterCustomer" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Customers</option>
                 </select>
             </div>
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Model</label>
-                <select id="filterModel" class="select2-simple w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Model</label>
+                <select id="filterModel" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Models</option>
                 </select>
             </div>
             <div class="flex items-center gap-3 ml-auto w-full md:w-auto mt-4 md:mt-0">
-                <button type="button" id="btnResetFilter" class="flex-1 md:flex-none px-4 py-2.5 text-xs font-bold text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2 uppercase tracking-wider">
-                    <i class="fa-solid fa-rotate-left"></i> Reset
+                <button type="button" id="btnResetFilter" class="h-10 px-4 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all text-[10px] font-bold uppercase tracking-widest active:scale-95">
+                    <i class="fa-solid fa-rotate-left mr-2"></i> Reset
                 </button>
-                <div class="hidden md:block h-8 w-px bg-gray-100 dark:bg-gray-700 mx-1"></div>
-                <button type="button" id="btnExportSummary" class="flex-1 md:flex-none inline-flex items-center justify-center px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-widest rounded-md transition-all gap-2">
+                <div class="hidden md:block h-8 w-px bg-slate-100 dark:bg-gray-700 mx-1"></div>
+                <button type="button" id="btnExportSummary" class="h-10 px-6 inline-flex items-center justify-center bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-xs transition-all gap-2 active:scale-95">
                     <i class="fa-solid fa-file-excel text-sm"></i> Export Summary
                 </button>
             </div>
@@ -40,15 +42,15 @@
     <x-table id="vaveTable">
         <thead>
             <tr>
-                <th scope="col" class="px-6 py-3 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">No</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 w-48 min-w-[180px]">Part No</th>
-                <th scope="col" class="px-6 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Part Name</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Customer</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Model</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Baseline (Kg)</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Latest (Kg)</th>
-                <th scope="col" class="px-6 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Analysis Status</th>
-                <th scope="col" class="px-6 py-3 text-center w-[180px] text-[10px] font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400">Action</th>
+                <th class="text-center w-16">No</th>
+                <th class="text-left w-48 min-w-[180px]">Part No</th>
+                <th class="text-left">Part Name</th>
+                <th class="text-center">Customer</th>
+                <th class="text-center">Model</th>
+                <th class="text-center">Baseline (Kg)</th>
+                <th class="text-center">Latest (Kg)</th>
+                <th class="text-center">Analysis Status</th>
+                <th class="text-center w-[180px]">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -56,14 +58,14 @@
 </div>
 
 {{-- RFQ Management Modal --}}
-<div id="rfqModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 backdrop-blur-sm">
-    <div class="relative p-4 w-full max-w-4xl h-full md:h-auto">
-        <div class="relative bg-white rounded-lg border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
-                <i class="fa-solid fa-xmark text-lg"></i>
+<div id="rfqModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-950/60 backdrop-blur-sm transition-all duration-300">
+    <div class="relative p-4 w-full max-w-4xl max-h-screen">
+        <div class="relative bg-white rounded-xs border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
+            <button type="button" class="close-modal-button text-slate-400 absolute top-4 right-4 bg-transparent hover:bg-slate-100 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white rounded-xs text-sm w-9 h-9 flex items-center justify-center z-10 transition-all active:scale-95">
+                <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             
-            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-slate-50/80 dark:bg-slate-900/50">
                 <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest" id="rfqModalTitle">Manage Baseline (RFQ)</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Define baseline parameters for VA/VE analysis</p>
             </div>
@@ -76,19 +78,19 @@
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <div class="p-8">
                         {{-- Version Management Toolbar --}}
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 p-1 bg-white dark:bg-gray-700/50 rounded-lg border border-slate-200 dark:border-gray-700">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 p-1 bg-white dark:bg-gray-700/50 rounded-xs border border-slate-200 dark:border-gray-700">
                             <div class="flex-[2] p-3">
-                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">
+                                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">
                                     Baseline Version
                                 </label>
                                 <div class="flex gap-2">
-                                    <select id="rfq_history_select" class="select2-rfq flex-1 bg-gray-50 border border-gray-300 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <select id="rfq_history_select" class="select2-rfq flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-[11px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                         <option value="">-- Load/Select Version --</option>
                                     </select>
-                                    <button type="button" id="btn_new_baseline" class="py-2 px-4 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 focus:outline-none dark:bg-gray-800 dark:text-blue-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-wider" title="Create New Draft">
+                                    <button type="button" id="btn_new_baseline" class="py-2 px-4 text-[10px] font-black text-primary-600 bg-primary-50 border border-primary-200 rounded-xs hover:bg-primary-100 focus:outline-none dark:bg-gray-900 dark:text-primary-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-widest active:scale-95" title="Create New Draft">
                                         <i class="fa-solid fa-plus mr-1"></i> New
                                     </button>
-                                    <button type="button" id="btn_delete_baseline" class="py-2 px-4 text-xs font-bold text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 focus:outline-none dark:bg-gray-800 dark:text-red-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-wider" title="Delete This Baseline">
+                                    <button type="button" id="btn_delete_baseline" class="py-2 px-4 text-[10px] font-black text-red-600 bg-red-50 border border-red-200 rounded-xs hover:bg-red-100 focus:outline-none dark:bg-gray-900 dark:text-red-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-widest active:scale-95" title="Delete This Baseline">
                                         <i class="fa-solid fa-trash-can mr-1"></i> Delete
                                     </button>
                                 </div>
@@ -97,10 +99,10 @@
                             <div class="flex-1 p-2 flex flex-col md:items-end justify-center">
                                 <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Active Baseline Status</span>
                                 <div class="flex flex-col gap-1 w-full md:w-auto min-w-[220px]">
-                                    <div id="active_baseline_display" class="text-[10px] font-bold text-slate-700 dark:text-gray-200 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded border border-amber-100 dark:border-amber-800/50 text-center">
+                                    <div id="active_baseline_display" class="text-[10px] font-bold text-slate-700 dark:text-gray-200 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded-xs border border-amber-100 dark:border-amber-800/50 text-center uppercase tracking-widest">
                                         -
                                     </div>
-                                    <div id="active_weight_display" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 px-3 py-1 bg-blue-50/30 dark:bg-blue-900/10 rounded border border-blue-100/50 dark:border-blue-800/50 text-center">
+                                    <div id="active_weight_display" class="text-[10px] font-bold text-primary-600 dark:text-primary-400 px-3 py-1 bg-primary-50/30 dark:bg-primary-900/10 rounded-xs border border-primary-100/50 dark:border-primary-800/50 text-center uppercase tracking-widest">
                                         -
                                     </div>
                                 </div>
@@ -114,20 +116,20 @@
                             <div class="space-y-6">
                                 <div class="hidden">
                                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Baseline Name</label>
-                                    <input type="text" name="rfq_name" id="rfq_name" readonly class="bg-gray-50 border border-slate-200 text-gray-400 text-xs font-semibold rounded-md block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <input type="text" name="rfq_name" id="rfq_name" readonly class="bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold rounded-xs block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all uppercase tracking-widest">
                                     <input type="hidden" name="is_active" value="1">
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
-                                        <select name="material_spec_id" id="rfq_material_spec_id" class="select2-rfq bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <select name="material_spec_id" id="rfq_material_spec_id" class="select2-rfq bg-white border border-slate-200 text-slate-900 text-[11px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                             <option value="">Select Spec</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit Type</label>
-                                        <select name="unit_id" id="rfq_unit_id" class="select2-rfq bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                        <select name="unit_id" id="rfq_unit_id" class="select2-rfq bg-white border border-slate-200 text-slate-900 text-[11px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                             <option value="">Select Unit</option>
                                         </select>
                                     </div>
@@ -135,38 +137,38 @@
                                 
                                 <div class="space-y-2">
                                     <label for="remark" class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Remark / Notes</label>
-                                    <textarea name="remark" id="remark" rows="3" class="block p-3 w-full text-xs font-medium text-gray-900 bg-white rounded-md border border-slate-200 focus:ring-slate-500 focus:border-slate-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-gray-300" placeholder="Optional notes..."></textarea>
+                                    <textarea name="remark" id="remark" rows="3" class="block p-3 w-full text-xs font-bold text-slate-800 bg-white rounded-xs border border-slate-200 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-slate-300" placeholder="Optional notes..."></textarea>
                                 </div>
                             </div>
 
                             {{-- Parameters & Calculations --}}
                             <div class="space-y-6">
-                                <div class="p-5 bg-slate-50 dark:bg-gray-700/50 rounded-lg border border-slate-200 dark:border-gray-600 relative">
-                                    <h5 class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-4 flex items-center absolute -top-3 left-4 bg-white dark:bg-gray-800 px-2 border border-slate-100 dark:border-gray-600 rounded">
-                                        <i class="fa-solid fa-ruler-combined mr-2 text-blue-500"></i>
+                                <div class="p-5 bg-slate-50 dark:bg-gray-900/30 rounded-xs border border-slate-100 dark:border-gray-700 relative">
+                                    <h5 class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4 flex items-center absolute -top-3 left-4 bg-white dark:bg-gray-800 px-3 py-1 border border-slate-100 dark:border-gray-700 rounded-xs shadow-sm">
+                                        <i class="fa-solid fa-ruler-combined mr-2 text-primary-500"></i>
                                         Dimensions (mm)
                                     </h5>
                                     
                                     <div class="grid grid-cols-2 gap-4 mt-2">
                                          <div>
                                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Thickness</label>
-                                            <input type="number" step="0.01" name="thickness" id="rfq_thickness" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <input type="number" step="0.01" name="thickness" id="rfq_thickness" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div>
                                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Width</label>
-                                            <input type="number" step="0.01" name="width" id="rfq_width" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <input type="number" step="0.01" name="width" id="rfq_width" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_length_container">
-                                            <label class="block mb-2 text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]" id="label_rfq_length">Length</label>
-                                            <input type="number" step="0.01" name="length" id="rfq_length" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-400 uppercase tracking-wider" id="label_rfq_length">Length</label>
+                                            <input type="number" step="0.01" name="length" id="rfq_length" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_length2_container" class="hidden">
                                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Length 2 (L2)</label>
-                                            <input type="number" step="0.01" name="length_2" id="rfq_length_2" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <input type="number" step="0.01" name="length_2" id="rfq_length_2" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_pitch_container" class="hidden">
                                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pitch (mm)</label>
-                                            <input type="number" step="0.01" name="pitch" id="rfq_pitch" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <input type="number" step="0.01" name="pitch" id="rfq_pitch" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                     </div>
                                 </div>
@@ -174,19 +176,19 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Density</label>
-                                        <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
+                                        <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
                                     </div>
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Gross Weight (Kg)</label>
-                                        <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-blue-50 border border-blue-100 text-blue-600 text-xs font-bold rounded-md block w-full h-10 px-3 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 cursor-not-allowed" placeholder="0.000">
+                                        <label class="block mb-2 text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider">Gross Weight (Kg)</label>
+                                        <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-black rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed uppercase tracking-tighter" placeholder="0.000">
                                     </div>
                                     <div>
                                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Net Weight (Kg)</label>
-                                        <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-md focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
+                                        <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
                                     </div>
                                     <div>
                                         <label class="block mb-2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Price (Rp/Kg)</label>
-                                        <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all" placeholder="0.00">
+                                        <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-black rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all uppercase tracking-tighter" placeholder="0.00">
                                     </div>
                                 </div>
                             </div>
@@ -194,12 +196,12 @@
                     </div>
                 </div>
 
-                <div class="flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 focus:ring-4 focus:outline-none focus:ring-gray-100 rounded-md border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all">
+                <div class="flex items-center justify-end gap-3 px-8 py-6 border-t border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/40">
+                    <button type="button" class="close-modal-button text-slate-500 bg-white hover:bg-slate-50 focus:outline-none rounded-xs border border-slate-200 text-[10px] font-bold uppercase tracking-widest px-8 py-3 transition-all active:scale-95">
                         Cancel
                     </button>
-                    <button type="submit" class="text-white bg-slate-900 hover:bg-slate-800 focus:ring-4 focus:outline-none focus:ring-slate-200 font-bold rounded-md text-[10px] uppercase tracking-widest px-6 py-3 text-center transition-all">
-                        <i class="fa-solid fa-save mr-1.5"></i> Save Baseline
+                    <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-bold rounded-xs text-[10px] uppercase tracking-widest px-8 py-3 text-center transition-all active:scale-95">
+                        <i class="fa-solid fa-save mr-2"></i> Save Baseline
                     </button>
                 </div>
             </form>
@@ -211,36 +213,36 @@
 {{-- Scripts for RFQ History Moved to @push('scripts') --}}
 
 {{-- Comparison Modal --}}
-<div id="comparisonModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/50 backdrop-blur-sm p-4">
+<div id="comparisonModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-950/60 backdrop-blur-sm p-4 transition-all duration-300">
     <div class="relative w-full max-w-6xl max-h-[90vh]">
-        <div class="relative text-left bg-white rounded-lg border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-4 right-4 bg-white dark:bg-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md text-sm w-8 h-8 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-20 transition-all border border-gray-200 dark:border-gray-600">
-                <i class="fa-solid fa-xmark text-lg"></i>
+        <div class="relative text-left bg-white rounded-xs border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
+            <button type="button" class="close-modal-button text-slate-400 absolute top-4 right-4 bg-white dark:bg-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xs text-sm w-9 h-9 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-20 transition-all border border-slate-200 dark:border-gray-600 active:scale-95">
+                <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             
-            <div class="p-6 border-b border-gray-100 dark:border-gray-700 pr-14 bg-slate-50/50 dark:bg-slate-900/30">
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3 uppercase tracking-tight" id="comparisonTitle">
-                    <i class="fa-solid fa-chart-line text-blue-600 dark:text-blue-400"></i>
-                    VA/VE Material Analysis
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50 relative">
+                <div class="absolute left-0 top-0 w-1.5 h-full bg-primary-600"></div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-3 uppercase tracking-widest" id="comparisonTitle">
+                    <i class="fa-solid fa-chart-line text-primary-600"></i> VA/VE Material Analysis
                 </h3>
                 <p id="comparisonSubtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium ml-8"></p>
             </div>
 
             {{-- MULAI KODE BARU: Selection Toolbar --}}
-            <div class="px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between shadow-sm z-10 relative">
+            <div class="px-6 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between z-10 relative">
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-3">
                         <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-bullseye text-blue-500"></i> Plan (Base):
+                            <i class="fa-solid fa-bullseye text-primary-500"></i> Plan (Base):
                         </label>
-                        <select id="selectCompareBase" class="bg-blue-50/50 border border-blue-200 text-blue-800 text-xs font-bold rounded-md focus:ring-blue-500 focus:border-blue-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-48 shadow-sm cursor-pointer hover:bg-blue-50 transition-colors"></select>
+                        <select id="selectCompareBase" class="bg-white border border-primary-200 text-primary-800 text-[10px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-56 cursor-pointer hover:bg-primary-50 transition-all uppercase tracking-widest"></select>
                     </div>
                     <div class="w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
                     <div class="flex items-center gap-3">
                         <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
                             <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> Actual (Rev):
                         </label>
-                        <select id="selectCompareActual" class="bg-emerald-50/50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-md focus:ring-emerald-500 focus:border-emerald-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-40 shadow-sm cursor-pointer hover:bg-emerald-50 transition-colors"></select>
+                        <select id="selectCompareActual" class="bg-white border border-emerald-200 text-emerald-800 text-[10px] font-bold rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-48 cursor-pointer hover:bg-emerald-50 transition-all uppercase tracking-widest"></select>
                     </div>
                 </div>
             </div>
@@ -308,17 +310,17 @@ $(function() {
                 className: 'text-center',
                 render: (d, t, r) => {
                     if (d === 'MERIT') {
-                        return `<div class="flex flex-col items-center">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 uppercase tracking-wider">MERIT</span>
-                            <span class="text-[10px] text-green-600 dark:text-green-500 mt-1 font-bold tracking-tight">${r.diff_pct.toFixed(1)}% Improvement</span>
+                        return `<div class="flex flex-col items-center gap-1">
+                            <span class="px-3 py-1 text-[9px] font-black rounded-xs bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 uppercase tracking-[0.1em]">MERIT</span>
+                            <span class="text-[9px] text-emerald-600 dark:text-emerald-500 font-bold tracking-tight italic">${r.diff_pct.toFixed(1)}% Saving</span>
                         </div>`;
                     } else if (d === 'LOSS') {
-                        return `<div class="flex flex-col items-center">
-                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 uppercase tracking-wider">LOSS</span>
-                            <span class="text-[10px] text-red-600 dark:text-red-500 mt-1 font-bold tracking-tight">${r.diff_pct.toFixed(1)}% Increase</span>
+                        return `<div class="flex flex-col items-center gap-1">
+                            <span class="px-3 py-1 text-[9px] font-black rounded-xs bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 uppercase tracking-[0.1em]">LOSS</span>
+                            <span class="text-[9px] text-red-600 dark:text-red-500 font-bold tracking-tight italic">${r.diff_pct.toFixed(1)}% Loss</span>
                         </div>`;
                     } else {
-                        return `<span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700 uppercase tracking-wider">${d}</span>`;
+                        return `<span class="px-3 py-1 text-[9px] font-black rounded-xs bg-slate-50 text-slate-500 dark:bg-gray-800 dark:text-gray-400 border border-slate-200 dark:border-gray-700 uppercase tracking-[0.1em]">NO DATA</span>`;
                     }
                 }
             },
@@ -326,12 +328,12 @@ $(function() {
                 data: null,
                 orderable: false,
                 render: row => `
-                    <div class="inline-flex rounded-md shadow-sm" role="group">
-                        <button class="rfq-button h-8 px-3 inline-flex items-center gap-1.5 text-slate-600 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-l-md hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-blue-600 transition-all font-bold text-[10px] uppercase tracking-wider" data-id="${row.hash_id}" title="Manage Baseline (RFQ)">
+                    <div class="flex items-center justify-center gap-1.5">
+                        <button class="rfq-button h-8 px-4 inline-flex items-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95" data-id="${row.hash_id}" title="Manage Baseline (RFQ)">
                             <i class="fa-solid fa-pen-to-square"></i> RFQ
                         </button>
-                        <button class="compare-button h-8 px-3 inline-flex items-center gap-1.5 text-slate-600 bg-white dark:bg-gray-800 border border-l-0 border-slate-200 dark:border-gray-700 rounded-r-md hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-purple-600 transition-all font-bold text-[10px] uppercase tracking-wider ${!row.has_rfq ? 'opacity-50 cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_rfq ? 'disabled' : ''} title="VAVE Analysis Comparison">
-                            <i class="fa-solid fa-chart-pie"></i> Analysis
+                        <button class="compare-button h-8 px-4 inline-flex items-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 ${!row.has_rfq ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_rfq ? 'disabled' : ''} title="VAVE Analysis Comparison">
+                            <i class="fa-solid fa-chart-line"></i> Analysis
                         </button>
                     </div>`
             }
@@ -800,24 +802,24 @@ $(function() {
             summaryBar = `
                 <div class="flex items-center justify-between gap-4 mb-4 px-1">
                     <div class="flex items-center gap-4">
-                        <div class="flex items-center gap-3 px-4 py-2 rounded-md border ${colorClass}">
-                            <span class="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80">Net Impact</span>
+                        <div class="flex items-center gap-3 px-5 py-2.5 rounded-xs border ${colorClass}">
+                            <span class="text-[10px] font-bold uppercase tracking-widest opacity-80">Net Impact</span>
                             <div class="h-4 w-px bg-current opacity-20"></div>
-                            <span class="font-bold text-lg tracking-tight">${Math.abs(savingPct).toFixed(2)}%</span>
-                            <span class="text-xs font-semibold opacity-80">(${Math.abs(saving).toFixed(3)} kg)</span>
-                            <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-white/50 ml-1 tracking-wider">${statusBadge}</span>
+                            <span class="font-bold text-lg tracking-tighter italic">${Math.abs(savingPct).toFixed(2)}%</span>
+                            <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest ml-1">(${Math.abs(saving).toFixed(3)} kg)</span>
+                            <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded-xs bg-white/40 ml-2 tracking-widest border border-white/20">${statusBadge}</span>
                         </div>
                     </div>
-                        <div class="flex items-center gap-4">
-                            <a href="{{ url('inventory/vave/comparison') }}/${id}/export" class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-md bg-slate-900 hover:bg-slate-800 transition-all font-bold text-[10px] uppercase tracking-wider shadow-md active:scale-[0.98]">
+                    <div class="flex items-center gap-4">
+                        <a href="{{ url('inventory/vave/comparison') }}/${id}/export" class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-xs bg-primary-600 hover:bg-primary-700 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-[0.98]">
                             <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
                         </a>
-                            <label class="inline-flex items-center cursor-pointer group px-2 py-1 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                             <label class="inline-flex items-center cursor-pointer group px-3 py-1.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-slate-100">
                             <div class="relative flex items-center">
                                 <input type="checkbox" id="toggleHistory" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-slate-900"></div>
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                             </div>
-                            <span class="ms-2 text-[10px] font-bold text-gray-500 group-hover:text-blue-600 transition-colors uppercase tracking-[0.2em] pointer-events-none">View History</span>
+                            <span class="ms-3 text-[10px] font-black text-slate-500 group-hover:text-primary-600 transition-colors uppercase tracking-[0.2em] pointer-events-none">View History Tracking</span>
                         </label>
                     </div>
                 </div>`;
@@ -825,35 +827,35 @@ $(function() {
 
         let html = `
             ${summaryBar}
-            <div class="overflow-x-auto custom-scrollbar rounded-lg border border-gray-200 dark:border-gray-700 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] bg-white dark:bg-gray-900">
+            <div class="overflow-x-auto custom-scrollbar rounded-xs border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 border-separate">
                 <table id="comparisonTable" class="table-fixed min-w-full text-sm text-left border-collapse whitespace-nowrap">
-                    <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-800 sticky top-0 z-30">
+                    <thead class="text-[10px] uppercase bg-slate-50 dark:bg-gray-800 sticky top-0 z-30">
                         <tr>
-                            <th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-gray-500 font-bold bg-gray-50 dark:bg-gray-800 border-b border-r border-gray-200 dark:border-gray-700 sticky left-0 z-40 text-left shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">PARAMETER</th>
+                            <th class="w-[160px] min-w-[160px] max-w-[160px] px-5 py-4 text-slate-400 font-black bg-slate-50 dark:bg-gray-800 border-b border-r border-slate-200 dark:border-gray-700 sticky left-0 z-40 text-left uppercase tracking-widest">PARAMETER</th>
         `;
         
-        html += `<th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-blue-50 sticky top-0 z-40" style="left: 160px;">
+        html += `<th class="w-[200px] min-w-[200px] max-w-[200px] px-5 py-4 text-center border-b border-r border-primary-200 dark:border-gray-700 bg-primary-50/50 dark:bg-primary-900/20 sticky top-0 z-40" style="left: 160px;">
                 <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-blue-600 font-bold tracking-wider">PLAN (BASE)</span>
-                    <span class="font-bold text-gray-800 dark:text-gray-200 truncate max-w-[140px]" title="${benchmarkRfq.rfq_name}">${benchmarkRfq.rfq_name}</span>
+                    <span class="text-[9px] text-primary-600 dark:text-primary-400 font-black tracking-[0.2em] mb-1">PLAN (BASE)</span>
+                    <span class="font-black text-slate-800 dark:text-white truncate max-w-[180px] uppercase tracking-tighter" title="${benchmarkRfq.rfq_name}">${benchmarkRfq.rfq_name}</span>
                 </div>
             </th>`;
 
         if (latestRevision) {
-            html += `<th class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-emerald-50 sticky top-0 z-40" style="left: 320px;">
+            html += `<th class="w-[200px] min-w-[200px] max-w-[200px] px-5 py-4 text-center border-b border-r border-emerald-200 dark:border-gray-700 bg-emerald-50/50 dark:bg-emerald-900/20 sticky top-0 z-40" style="left: 360px;">
                     <div class="flex flex-col items-center">
-                        <span class="text-[10px] text-emerald-600 font-bold tracking-wider">ACTUAL (REV)</span>
-                        <span class="font-bold text-gray-800 dark:text-gray-200">Rev ${latestRevision.revision}</span>
+                        <span class="text-[9px] text-emerald-600 dark:text-emerald-400 font-black tracking-[0.2em] mb-1">ACTUAL (REV)</span>
+                        <span class="font-black text-slate-800 dark:text-white uppercase tracking-tighter">Rev ${latestRevision.revision}</span>
                     </div>
                 </th>`;
         } else {
-             html += `<th class="w-[160px] min-w-[160px] px-4 py-3 bg-emerald-50 sticky top-0 z-40 border-b border-r border-gray-200" style="left: 320px;">-</th>`;
+             html += `<th class="w-[200px] min-w-[200px] px-5 py-4 bg-emerald-50/20 sticky top-0 z-40 border-b border-r border-emerald-100" style="left: 360px;">-</th>`;
         }
 
-        html += `<th class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-100 sticky top-0 z-40 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)]" style="left: 480px;">
+        html += `<th class="w-[130px] min-w-[130px] max-w-[130px] px-5 py-4 text-center border-b border-r border-slate-200 dark:border-gray-700 bg-slate-100 sticky top-0 z-40" style="left: 560px;">
                 <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-gray-500 font-bold tracking-wider">VARIANCE (Δ)</span>
-                    <span class="font-bold text-gray-600">Actual - Plan</span>
+                    <span class="text-[9px] text-slate-500 font-bold tracking-widest mb-1">VARIANCE (Δ)</span>
+                    <span class="font-bold text-slate-600 uppercase tracking-tighter italic">Diff ±</span>
                 </div>
             </th>`;
 
@@ -879,11 +881,11 @@ $(function() {
         html += `</tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700">`;
 
         const buildRow = (label, valueFormatter) => {
-            let row = `<tr class="hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-150 text-xs text-gray-700 dark:text-gray-300">
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 font-semibold sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] transition-colors group-hover:bg-blue-50">${label}</td>`;
-            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 160px;">${valueFormatter(benchmarkRfq)}</td>`;
-            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 320px;">${latestRevision ? valueFormatter(latestRevision) : '-'}</td>`;
-            row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-bold variance-cell sticky z-30 bg-gray-50 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-blue-100" style="left: 480px;">-</td>`;
+            let row = `<tr class="hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-150 text-xs text-gray-700 dark:text-gray-300">`;
+            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 font-semibold sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 transition-colors group-hover:bg-primary-50">${label}</td>`;
+            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${valueFormatter(benchmarkRfq)}</td>`;
+            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 320px;">${latestRevision ? valueFormatter(latestRevision) : '-'}</td>`;
+            row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-bold variance-cell sticky z-30 bg-gray-50 transition-colors group-hover:bg-primary-100" style="left: 480px;">-</td>`;
             rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(r)}</td>`; });
             revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(rev)}</td>`; });
             return row + `</tr>`;
@@ -892,9 +894,9 @@ $(function() {
         const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false) => {
             const getVal = (item) => typeof valueGetter === 'function' ? valueGetter(item) : parseFloat(item[valueGetter] || 0);
             const baseVal = getVal(benchmarkRfq);
-            let row = `<tr class="hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors duration-150 text-xs group">
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] transition-colors group-hover:bg-blue-50">${label}</td>
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-blue-50" style="left: 160px;">${baseVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+            let row = `<tr class="hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-150 text-xs group">
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 transition-colors group-hover:bg-primary-50">${label}</td>
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${baseVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
 
             let actualVal = 0;
             if (latestRevision) {
@@ -904,7 +906,7 @@ $(function() {
                 const isGood = invertColor ? delta > 0 : delta <= 0;
                 let cClass = 'text-gray-400', bClass = 'bg-gray-50'; 
                 if (Math.abs(delta) > 0.0001) { cClass = isGood ? 'text-green-600' : 'text-red-600'; bClass = isGood ? 'bg-green-50' : 'bg-red-50'; }
-                row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono font-bold ${cClass} sticky z-30 ${bClass} shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] transition-colors group-hover:bg-blue-100" style="left: 480px;">${delta > 0 ? '+' : ''}${delta.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+                row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono font-bold ${cClass} sticky z-30 ${bClass} transition-colors group-hover:bg-primary-100" style="left: 480px;">${delta > 0 ? '+' : ''}${delta.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
             } else {
                 row += `<td class="w-[160px] min-w-[160px] px-4 py-2.5 bg-white border-r border-gray-200 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-2.5 bg-gray-50 border-r border-gray-200 sticky z-30" style="left: 480px;">-</td>`;
             }
@@ -915,13 +917,13 @@ $(function() {
         };
 
         const buildSectionRow = (title) => {
-            let row = `<tr class="bg-gray-100 dark:bg-gray-700 text-xs uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 sticky left-0 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] pt-4 pb-1">${title}</td>
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 pt-4 pb-1" style="left: 160px;"></td>
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 pt-4 pb-1" style="left: 320px;"></td>
-                <td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 bg-gray-100 dark:bg-gray-700 border-r border-gray-300 dark:border-gray-600 sticky z-20 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] pt-4 pb-1" style="left: 480px;"></td>`;
-            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 bg-gray-100 dark:bg-gray-700 history-col hidden border-dashed pt-4 pb-1"></td>`; });
-            revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 bg-gray-100 dark:bg-gray-700 history-col hidden border-dashed pt-4 pb-1"></td>`; });
+            let row = `<tr class="bg-slate-100 dark:bg-gray-800/80 text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 dark:text-gray-400">
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-5 py-3 sticky left-0 bg-slate-100 dark:bg-gray-800 md:z-20 border-r border-slate-200 dark:border-gray-700">${title}</td>
+                <td class="w-[200px] min-w-[200px] max-w-[200px] px-4 py-3 bg-slate-100 dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 sticky md:z-20" style="left: 160px;"></td>
+                <td class="w-[200px] min-w-[200px] max-w-[200px] px-4 py-3 bg-slate-100 dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 sticky md:z-20" style="left: 360px;"></td>
+                <td class="w-[130px] min-w-[130px] max-w-[130px] px-4 py-3 bg-slate-100 dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 sticky md:z-20" style="left: 560px;"></td>`;
+            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-3 bg-slate-100 dark:bg-gray-800 history-col hidden border-dashed"></td>`; });
+            revisions.forEach(rev => { if (!latestRevision || rev.revision !== latestRevision.revision) row += `<td class="w-[120px] min-w-[120px] px-4 py-3 bg-slate-100 dark:bg-gray-800 history-col hidden border-dashed"></td>`; });
             return row + `</tr>`;
         };
 
@@ -964,8 +966,8 @@ $(function() {
         html += buildComputedRow('Price/kg (IDR)', i => parseFloat(i.material_price || 0), '', 0, false);
         html += buildComputedRow('Cost (IDR)', i => (parseFloat(i.weight_kg||0) * parseFloat(i.material_price || 0)), '', 0, false); 
 
-        let statusRow = `<tr class="bg-gray-50/50 hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-blue-900/40 text-xs border-t-2 border-gray-200 dark:border-gray-600 group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-blue-100">Status</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-gray-50 dark:bg-gray-800 sticky z-30 group-hover:bg-blue-100" style="left: 160px;">-</td>`;
-        let rateRow = `<tr class="bg-white hover:bg-blue-100 dark:bg-gray-800 dark:hover:bg-blue-900/40 text-xs group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)] group-hover:bg-blue-100">Rate</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-blue-100" style="left: 160px;">-</td>`;
+        let statusRow = `<tr class="bg-gray-50/50 hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs border-t-2 border-gray-200 dark:border-gray-600 group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Status</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-gray-50 dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;
+        let rateRow = `<tr class="bg-white hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Rate</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;
 
         if (latestRevision) {
             const saving = benchmarkRfq.weight_kg - latestRevision.weight_kg;
@@ -974,8 +976,8 @@ $(function() {
             if (saving > 0.0001) { sText = 'MERIT'; sColor = 'text-green-700 bg-green-50'; rColor = 'text-green-700'; }
             else if (saving < -0.0001) { sText = 'LOSS'; sColor = 'text-red-700 bg-red-50'; rColor = 'text-red-700'; }
             
-            statusRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 text-center border-r border-gray-300 ${sColor} font-bold sticky z-30 group-hover:bg-opacity-90" style="left: 320px;">${sText}</td><td class="w-[110px] min-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-blue-100" style="left: 480px;">-</td>`;
-            rateRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 text-center border-r border-gray-300 font-bold ${rColor} sticky z-30 bg-white dark:bg-gray-800 group-hover:bg-blue-100" style="left: 320px;">${Math.abs(savingPct).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}%</td><td class="w-[110px] min-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 shadow-[4px_0_5px_-2px_rgba(0,0,0,0.1)] group-hover:bg-blue-100" style="left: 480px;">-</td>`;
+            statusRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 text-center border-r border-gray-300 ${sColor} font-bold sticky z-30 group-hover:bg-opacity-90" style="left: 320px;">${sText}</td><td class="w-[110px] min-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 group-hover:bg-primary-100" style="left: 480px;">-</td>`;
+            rateRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 text-center border-r border-gray-300 font-bold ${rColor} sticky z-30 bg-white dark:bg-gray-800 group-hover:bg-primary-100" style="left: 320px;">${Math.abs(savingPct).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}%</td><td class="w-[110px] min-w-[110px] px-4 py-3 text-center border-r border-gray-300 bg-gray-100 text-gray-400 sticky z-30 group-hover:bg-primary-100" style="left: 480px;">-</td>`;
         } else {
             statusRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 bg-gray-50 border-r border-gray-300 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-3 bg-gray-100 sticky z-30" style="left: 480px;">-</td>`;
             rateRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 bg-white border-r border-gray-300 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-3 bg-gray-100 sticky z-30" style="left: 480px;">-</td>`;
@@ -1032,19 +1034,11 @@ $(function() {
 });
 </script>
 <style>
+    /* Custom Scrollbar Styles */
     .font-mono { font-family: 'JetBrains Mono', 'Fira Code', monospace; }
     .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 20px; border: 2px solid transparent; background-clip: content-box; }
     .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-    
-    /* Sticky Column Shadows Enhancement */
-    .sticky-shadow { position: relative; }
-    .sticky-shadow::after {
-        content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 4px;
-        background: linear-gradient(to right, rgba(0,0,0,0.05), transparent);
-        pointer-events: none;
-    }
-    .dark .sticky-shadow::after { background: linear-gradient(to right, rgba(0,0,0,0.2), transparent); }
 </style>
 @endpush

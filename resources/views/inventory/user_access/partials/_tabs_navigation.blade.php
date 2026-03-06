@@ -2,8 +2,8 @@
     <ul class="flex flex-wrap -mb-px text-sm font-medium text-center tracking-wider" id="accessTabs" role="tablist">
         <li class="mr-2" role="presentation">
             <button class="inline-flex items-center p-3 border-b-2 rounded-t-xs transition-all gap-2" id="users-tab" data-tabs-target="#users-panel" type="button" role="tab">
-                <div class="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-xs">
-                    <i class="fa-solid fa-users text-blue-600 dark:text-blue-400"></i>
+                <div class="p-1.5 bg-primary-50 dark:bg-primary-900/30 rounded-xs">
+                    <i class="fa-solid fa-users text-primary-600 dark:text-primary-400"></i>
                 </div>
                 User Allocation
             </button>

@@ -57,11 +57,21 @@
     <div class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
             <div class="flex items-center gap-3 mb-2.5">
-                <a href="{{ route('inventory.sto.index') }}" class="group inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-blue-600 transition-colors uppercase tracking-widest">
-                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Back to Monitor
+                <a href="{{ route('inventory.sto.index') }}" class="h-10 px-3 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all" title="Back to STO Monitor">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    <span class="ml-2 text-[10px] font-black uppercase tracking-widest">Back</span>
                 </a>
-                <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></span>
-                <span class="px-2 py-0.5 text-[9px] rounded-xs font-black uppercase tracking-widest border {{ $stoEvent->status === 'OPEN' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800' : 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800' }}">
+                <span class="w-1 h-1 rounded-xs bg-gray-300 dark:bg-gray-700"></span>
+                @php
+                    $statusClasses = [
+                        'OPEN' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800',
+                        'WAITING CHECK' => 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800',
+                        'WAITING APPROVAL' => 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800',
+                        'CLOSED' => 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
+                    ];
+                    $currentStatusClass = $statusClasses[$stoEvent->status] ?? $statusClasses['CLOSED'];
+                @endphp
+                <span class="px-2 py-1 text-xs rounded-xs font-black uppercase tracking-widest border {{ $currentStatusClass }}">
                     {{ str_replace('_', ' ', $stoEvent->status) }}
                 </span>
             </div>
@@ -148,24 +158,24 @@
     <div class="mb-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden relative">
         <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded-xs text-blue-600 dark:text-blue-400">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
                     <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Recorded</span>
                 <div class="flex items-baseline gap-1">
                     <span id="stat-total-items" class="text-xl font-bold text-gray-900 dark:text-white">{{ $stats['total_items'] }}</span>
-                    <span class="text-[9px] font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/40 px-1.5 py-0.5 rounded-xs"><span id="stat-progress">{{ $progress }}</span>%</span>
+                    <span class="text-[9px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/40 px-1.5 py-0.5 rounded-xs"><span id="stat-progress">{{ $progress }}</span>%</span>
                 </div>
                 <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Items Recorded</span>
             </div>
 
             <!-- Total Recorded PCS -->
             <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-indigo-50 dark:bg-indigo-900/30 rounded-xs text-indigo-600 dark:text-indigo-400">
+                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
                     <i class="fa-solid fa-calculator"></i>
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Qty Counted</span>
-                <span id="stat-total-recorded-pcs" class="text-xl font-bold text-indigo-700 dark:text-indigo-400 leading-none">
+                <span id="stat-total-recorded-pcs" class="text-xl font-bold text-primary-700 dark:text-primary-400 leading-none">
                     {{ number_format($stats['total_recorded_pcs'] ?? 0, 0) }} 
                 </span>
                 <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">PCS Recorded</span>
@@ -282,7 +292,7 @@
     <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs p-5 mb-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-xs flex items-center gap-2">
-                <i class="fa-solid fa-barcode text-blue-600"></i> Count Entry
+                <i class="fa-solid fa-barcode text-primary-600"></i> Count Entry
             </h3>
         </div>
         
@@ -319,8 +329,8 @@
                             <span class="text-xs font-bold text-gray-900 dark:text-white truncate" id="resUnit">-</span>
                         </div>
                         <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
-                            <span class="text-[8px] font-bold text-blue-400 uppercase leading-none mb-1">System</span>
-                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 truncate" id="resSystemQty">0</span>
+                            <span class="text-[8px] font-bold text-primary-400 uppercase leading-none mb-1">System</span>
+                            <span class="text-xs font-bold text-primary-600 dark:text-primary-400 truncate" id="resSystemQty">0</span>
                         </div>
                         <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
                             <span class="text-[8px] font-bold text-purple-400 uppercase leading-none mb-1">Entries</span>
@@ -361,7 +371,7 @@
                 </div>
                 <div>
                    <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-widest text-sm">Counting Journal</h3>
-                   <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Real-time log of recorded quantities.</p>
+                   <p class="text-xs text-gray-400 font-medium tracking-tighter">Real-time log of recorded quantities.</p>
                 </div>
             </div>
             
@@ -386,7 +396,7 @@
                         <th rowspan="2" class="text-left">Material Information</th>
                         <th rowspan="2" class="text-left">Auditor</th>
                         <th colspan="2" class="text-center bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
-                        <th colspan="2" class="text-center bg-blue-50/30 dark:bg-blue-900/10">Real Count</th>
+                        <th colspan="2" class="text-center bg-primary-50/30 dark:bg-primary-900/10">Real Count</th>
                         <th colspan="2" class="text-center bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
                         <th rowspan="2" class="text-left">Location</th>
                         <th rowspan="2" class="text-left">Reason</th>
@@ -495,6 +505,42 @@
     const scanUrl = "{{ route('inventory.sto.scan', $stoEvent->hash_id) }}";
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
+    
+    // Inject reasons for inline dropdowns
+    const stoReasons = @json(\App\Models\InventoryModel\StoReason::where('is_active', true)->get());
+
+    // JS Formatter Helpers
+    function formatQtyHtml(qty, pcsPerUnit, unitCode, prefix = '') {
+        qty = parseFloat(qty || 0);
+        let pcs = qty * pcsPerUnit;
+        let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
+        
+        if (pcsPerUnit == 1) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
+        
+        let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        return `
+            <div class='flex flex-col items-center justify-center'>
+                <span class='font-bold'>${prefix}${pcsDisplay}</span>
+                <span class='text-[10px] text-gray-400 leading-none mt-0.5'>(${unitDisplay} ${unitCode})</span>
+            </div>`;
+    }
+
+    function formatCurrencyHtml(val, isDiff = false) {
+        val = parseFloat(val || 0);
+        if (val == 0) {
+            if (isDiff) return '<span class="text-[11px] font-mono font-bold text-green-600">0</span>';
+            return '<span class="text-gray-300">-</span>';
+        }
+        
+        let color = 'text-gray-600 dark:text-gray-400';
+        let prefix = '';
+        if (isDiff) {
+            color = 'text-red-600';
+            prefix = val > 0 ? '+' : '-';
+        }
+        
+        return `<span class="text-[11px] font-mono font-bold ${color}">${prefix}${Math.abs(val).toLocaleString()}</span>`;
+    }
 
     // --- Modal Handlers ---
     function openRemainingModal() {
@@ -629,21 +675,125 @@
                     type: 'GET'
                 },
                 columns: [
-                    { data: 'row_number', className: 'text-center font-bold text-gray-300', orderable: false, searchable: false },
+                    { data: 'row_number', className: 'text-center font-bold text-gray-500', orderable: false, searchable: false },
                     { data: 'updated_at', className: 'text-[10px] font-mono font-bold text-gray-500' },
-                    { data: 'product_info', className: 'font-medium' },
-                    { data: 'auditor', className: 'text-xs font-semibold text-blue-600 dark:text-blue-400' },
-                    { data: 'system_qty', className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800' },
-                    { data: 'system_amount', className: 'text-right pr-4 bg-gray-50/30 dark:bg-gray-800/20' },
-                    { data: 'real_qty', className: 'text-center bg-blue-50/10 dark:bg-blue-900/5' },
-                    { data: 'real_amount', className: 'text-right pr-4 bg-blue-50/20 dark:bg-blue-900/10' },
-                    { data: 'diff', className: 'text-center font-bold' },
-                    { data: 'diff_amount', className: 'text-right pr-4 bg-slate-50/30 dark:bg-slate-800/20' },
-                    { data: 'location', className: 'text-center' },
-                    { data: 'reason', className: 'text-center' },
-                    { data: 'remark', className: 'text-xs text-gray-500 italic' },
+                    { 
+                        data: null, 
+                        className: 'font-medium',
+                        render: function(data) {
+                            return `
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">${data.part_no} - ${data.revision}</span>
+                                    <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">${data.part_name}</span>
+                                </div>`;
+                        }
+                    },
+                    { data: 'auditor', className: 'text-xs font-semibold text-primary-600 dark:text-primary-400' },
+                    { 
+                        data: null, 
+                        className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800',
+                        render: function(data) {
+                            return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code);
+                        }
+                    },
+                    { 
+                        data: 'system_amount', 
+                        className: 'text-right pr-4 bg-gray-50/30 dark:bg-gray-800/20',
+                        render: (val) => formatCurrencyHtml(val)
+                    },
+                    { 
+                        data: null, 
+                        className: 'text-center bg-primary-50/10 dark:bg-primary-900/5',
+                        render: function(data) {
+                            if (data.can_edit_inline) {
+                                return `
+                                    <div class="flex items-center justify-center gap-1">
+                                        <input type="number" step="any" 
+                                            class="qty-input text-center font-medium text-sm px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
+                                            style="width: 80px; min-width: 80px;"
+                                            data-detail-id="${data.hash_id}" 
+                                            data-product-id="${data.product_hash_id}"
+                                            value="${data.real_qty_input}" 
+                                            placeholder="Qty" />
+                                        <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code}</span>
+                                    </div>`;
+                            }
+                            return `<div class="text-primary-600 dark:text-primary-400">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code)}</div>`;
+                        }
+                    },
+                    { 
+                        data: 'real_amount', 
+                        className: 'text-right pr-4 bg-primary-50/20 dark:bg-primary-900/10',
+                        render: (val) => formatCurrencyHtml(val)
+                    },
+                    { 
+                        data: null, 
+                        className: 'text-center font-bold',
+                        render: function(data) {
+                            if (data.diff_qty > 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(data.diff_qty, data.pcs_per_unit, data.unit_code, '+')}</div>`;
+                            if (data.diff_qty < 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, '-')}</div>`;
+                            return `<span class="text-sm font-medium text-emerald-600">0</span>`;
+                        }
+                    },
+                    { 
+                        data: 'diff_amount', 
+                        className: 'text-right pr-4 bg-slate-50/30 dark:bg-slate-800/20',
+                        render: (val) => formatCurrencyHtml(val, true)
+                    },
+                    { 
+                        data: 'location_name', 
+                        className: 'text-center',
+                        render: (val) => val || '<span class="text-gray-400 italic">No Location</span>'
+                    },
+                    { 
+                        data: null, 
+                        className: 'text-center',
+                        render: function(data) {
+                            if (data.diff_qty === 0) return '<span class="text-[10px] text-gray-400 italic">No Diff</span>';
+                            if (data.can_edit_inline) {
+                                let category = data.category; // SHORTAGE or EXCESS
+                                let options = stoReasons.filter(r => r.category === category || r.category === 'OTHERS')
+                                    .map(r => `<option value="${r.id}" ${data.reason_id == r.id ? 'selected' : ''}>${r.name}</option>`)
+                                    .join('');
+                                return `<select class="reason-input text-xs pl-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 outline-none focus:border-primary-500" style="width: 180px; min-width: 180px;" data-detail-id="${data.hash_id}">
+                                    <option value="">-- Select Reason --</option>
+                                    ${options}
+                                </select>`;
+                            }
+                            return `<span class="text-[10px] text-red-500 font-bold">${data.reason_name || 'Reason Required'}</span>`;
+                        }
+                    },
+                    { 
+                        data: null, 
+                        className: 'text-xs text-gray-500 italic',
+                        render: function(data) {
+                            if (data.can_edit_inline) {
+                                return `<input type="text" 
+                                    class="remark-input text-xs px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300" 
+                                    style="width: 180px; min-width: 180px;"
+                                    data-detail-id="${data.hash_id}" 
+                                    value="${data.remark || ''}" 
+                                    placeholder="Add note..." />`;
+                            }
+                            return data.remark || '-';
+                        }
+                    },
                     @if($stoEvent->status === 'OPEN')
-                    { data: 'action', className: 'text-center', orderable: false }
+                    { 
+                        data: null, 
+                        className: 'text-center', 
+                        orderable: false,
+                        render: function(data) {
+                            if (data.status !== 'OPEN') return '';
+                            return `
+                                <div class="flex items-center justify-center">
+                                    <button type="button" onclick="deleteItem('${data.hash_id}')" 
+                                            class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Entry">
+                                        <i class="fa-solid fa-trash-can text-sm"></i>
+                                    </button>
+                                </div>`;
+                        }
+                    }
                     @endif
                 ],
                 order: [[1, 'desc']],
@@ -848,10 +998,10 @@
                 entryDetailsHtml += `
                     <tr>
                         <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
-                            <i class="fa-solid fa-location-dot text-blue-500 mr-1.5 opacity-70"></i>
+                            <i class="fa-solid fa-location-dot text-primary-500 mr-1.5 opacity-70"></i>
                             ${entry.location_name || 'No Location'}
                         </td>
-                        <td class="px-3 py-2 text-right text-blue-600 dark:text-blue-400 font-mono">
+                        <td class="px-3 py-2 text-right text-primary-600 dark:text-primary-400 font-mono">
                             ${qtyVal} <span class="text-[9px] text-gray-400 font-normal ml-0.5">${data.unit || 'PCS'}</span>
                         </td>
                     </tr>
@@ -1007,8 +1157,8 @@
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Update';
                 btn.className = 'h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2';
                 btn.disabled = false;
-                row.classList.replace('border-gray-200', 'border-blue-100');
-                row.classList.add('bg-blue-50/10');
+                row.classList.replace('border-gray-200', 'border-primary-100');
+                row.classList.add('bg-primary-50/10');
                 
                 if (!row.querySelector('.fa-trash')) {
                     const deleteBtnHtml = `

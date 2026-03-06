@@ -84,7 +84,7 @@
             ajax: "{{ route('inventory.users.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-medium text-gray-400' },
-                { data: 'nik', className: 'text-center font-medium text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/40 px-2 py-1 rounded border border-amber-100 dark:border-amber-800' },
+                { data: 'nik', className: 'text-center font-medium text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/40 px-2 py-1' },
                 { data: 'name', className: 'font-medium' },
                 { data: 'email', className: 'text-gray-500 text-sm' },
                 { data: 'action', className: 'text-center', orderable: false }

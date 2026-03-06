@@ -35,7 +35,7 @@
                     <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-2">Stock Status</h4>
                     <div class="space-y-2 mb-4">
                         <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-primary-500 mr-2 flex-shrink-0"></span>
                             <div class="text-gray-600 dark:text-gray-300 font-medium">Over <span class="text-gray-400 text-[10px] tracking-tighter">(&gt; Max)</span></div>
                         </div>
                         <div class="flex items-center text-xs">
@@ -184,11 +184,11 @@
 
         <!-- Over Stock -->
         <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg">
+            <div class="w-10 h-10 rounded-xs bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-400 text-lg">
                 <i class="fa-solid fa-arrow-trend-up"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest mb-1">Over Stock</div>
+                <div class="text-[9px] font-bold text-primary-600 dark:text-primary-500 uppercase tracking-widest mb-1">Over Stock</div>
                 <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['over'] ?? 0) }}</div>
             </div>
         </div>
@@ -315,8 +315,8 @@
                             indicatorClass = 'bg-red-500 animate-pulse';
                             textColorClass = 'text-red-700 dark:text-red-400';
                         } else if (status === 'over') {
-                            indicatorClass = 'bg-blue-500';
-                            textColorClass = 'text-blue-700 dark:text-blue-400';
+                            indicatorClass = 'bg-primary-500';
+                            textColorClass = 'text-primary-700 dark:text-primary-400';
                         }
 
                         const unitSub = row.current_qty + ' ' + row.balance_unit;
@@ -431,7 +431,7 @@
                 } else if (data.stock_status === 'warning') {
                     $(row).addClass('bg-amber-50 dark:bg-amber-900/10');
                 } else if (data.stock_status === 'over') {
-                    $(row).addClass('bg-blue-50 dark:bg-blue-900/10');
+                    $(row).addClass('bg-primary-50 dark:bg-primary-900/10');
                 }
             }
         });
@@ -450,7 +450,7 @@
             const card = $('#filterCard');
             
             card.slideToggle(200);
-            btn.toggleClass('bg-blue-50 text-blue-600 ring-2 ring-blue-500/50');
+            btn.toggleClass('bg-primary-50 text-primary-600 ring-2 ring-primary-500/50');
             
             // Close Legend if open
             if (!$('#legendPopover').hasClass('hidden')) {
@@ -462,7 +462,7 @@
         $(document).click(function(e) {
             if (!$(e.target).closest('#filterCard, #btnToggleFilter, .select2-container').length) {
                 $('#filterCard').slideUp(200);
-                $('#btnToggleFilter').removeClass('bg-blue-50 text-blue-600 ring-2 ring-blue-500/50');
+                $('#btnToggleFilter').removeClass('bg-primary-50 text-primary-600 ring-2 ring-primary-500/50');
             }
         });
 

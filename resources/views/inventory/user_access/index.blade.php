@@ -39,8 +39,8 @@
 
         tabBtns.on('click', function() {
             const target = $(this).data('tabs-target');
-            tabBtns.removeClass('border-blue-600 dark:border-blue-500 text-blue-600 dark:text-white').addClass('border-transparent text-gray-500 dark:text-gray-400');
-            $(this).removeClass('border-transparent text-gray-500 dark:text-gray-400').addClass('border-blue-600 dark:border-blue-500 text-blue-600 dark:text-white');
+            tabBtns.removeClass('border-primary-600 dark:border-primary-500 text-primary-600 dark:text-white').addClass('border-transparent text-gray-500 dark:text-gray-400');
+            $(this).removeClass('border-transparent text-gray-500 dark:text-gray-400').addClass('border-primary-600 dark:border-primary-500 text-primary-600 dark:text-white');
             panels.addClass('hidden');
             $(target).removeClass('hidden');
 
@@ -63,18 +63,12 @@
             type: 'POST',
             data: $(e.target).serialize(),
             success: function(res) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: res.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-                closeModal(modalId);
-                if (dataTable) dataTable.ajax.reload();
+                window.showToast(res.message, 'success');
+                if (modalId) closeModal(modalId);
+                if (dataTable) dataTable.ajax.reload(null, false);
             },
             error: function(xhr) {
-                Swal.fire('Error', xhr.responseJSON?.message || 'Something went wrong', 'error');
+                window.showToast(xhr.responseJSON?.message || 'Something went wrong', 'error');
             }
         });
     }
@@ -96,11 +90,11 @@
                     type: 'DELETE',
                     data: { _token: "{{ csrf_token() }}" },
                     success: function(res) {
-                        Swal.fire('Deleted!', res.message, 'success');
-                        table.ajax.reload();
+                        window.showToast(res.message, 'success');
+                        if (table) table.ajax.reload(null, false);
                     },
                     error: function(xhr) {
-                        Swal.fire('Error', xhr.responseJSON?.message || 'Failed to delete', 'error');
+                        window.showToast(xhr.responseJSON?.message || 'Failed to delete', 'error');
                     }
                 });
             }

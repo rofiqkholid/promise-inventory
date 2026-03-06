@@ -23,7 +23,6 @@
     width: 2.5rem;
 }
 
-/* Hide clear icon to avoid overlap and as per user preference */
 .select2-container--default .select2-selection--single .select2-selection__clear {
     display: none !important;
 }
@@ -57,7 +56,6 @@
     border: 1px solid #d1d5db;
 }
 
-/* 1. Aturan dasar untuk semua opsi */
 .select2-results__option {
     font-size: 0.775rem;
     font-weight: 500;
@@ -66,33 +64,19 @@
     border-radius: 2px;
 }
 
-/* * --- PERBAIKAN LOGIKA STATE (PROBLEM 2) DIMULAI DI SINI ---
- */
-
-/* 2. Aturan untuk item yang TERPILIH (SELECTED) tapi TIDAK DI-HOVER/FOKUS.
-   Ini adalah state "MMKI" saat Anda hover "HPM".
-   Kita paksa untuk transparan menggunakan !important */
 .select2-container--default .select2-results__option[aria-selected="true"]:not(.select2-results__option--highlighted),
 .select2-container--default .select2-results__option--selected:not(.select2-results__option--highlighted) {
     background-color: transparent !important;
-    color: #0284c7 !important;
-    /* Pastikan warna teks kembali normal */
+    color: var(--primary-600) !important;
 }
 
-/* 3. Aturan untuk item yang di-HOVER atau di-FOKUS (HIGHLIGHTED).
-   Ini adalah aturan prioritas tertinggi. Apapun yang di-highlight jadi biru.
-   Kita juga gunakan !important untuk memastikan ini menang. */
 .select2-container--default .select2-results__option--highlighted {
-    background-color: #e0f2fe !important;
-    /* Latar biru muda (sky-100) */
-    color: #0284c7 !important;
-    /* Teks biru tua (sky-600) */
+    background-color: var(--primary-100) !important;
+    color: var(--primary-700) !important;
 }
 
-/* --- PERBAIKAN LOGIKA STATE SELESAI DI SINI --- */
 
 
-/* KUNCI PERBAIKAN UTAMA (EFEK MENGAMBANG) */
 .select2-container--default .select2-dropdown {
     border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -102,16 +86,11 @@
     padding: 0.5rem;
 }
 
-/* --- PERBAIKAN SCROLLBAR DIMULAI DI SINI --- */
 
 .select2-results__options {
-    /* Diganti dari 'padding: 0;'
-       Menambahkan padding 0.25rem (4px) di KANAN
-       agar scrollbar tidak mepet */
     padding: 0 0.25rem 0 0;
 }
 
-/* Style scrollbar minimalis (seperti gambar) */
 .select2-results__options::-webkit-scrollbar {
     width: 5px;
 }
@@ -167,28 +146,16 @@
     color: #d1d5db;
 }
 
-/* * PERBAIKAN 1: Ini untuk state HOVER (HPM di gambar).
- * Ini adalah yang "terlalu terang". Kita tambahkan !important
- * agar warnanya jadi gelap (blue), mengalahkan biru muda.
-*/
 .dark .select2-results__option--highlighted {
-    background-color: #374151 !important;
-    /* DIUBAH: Tambah !important */
-    color: #0284c7 !important;
-    /* DIUBAH: Tambah !important */
+    background-color: var(--primary-900) !important;
+    color: var(--primary-400) !important;
 }
 
 
-/* * PERBAIKAN 2: Ini untuk state TERPILIH (MMKI di gambar).
- * Kita ganti aturan lama Anda dengan yang lebih spesifik
- * agar bisa mengalahkan teks biru dari mode terang.
-*/
 .dark .select2-results__option[aria-selected="true"]:not(.select2-results__option--highlighted),
 .dark .select2-results__option--selected:not(.select2-results__option--highlighted) {
     background-color: transparent !important;
-    /* gray-700, Tambah !important */
-    color: #0284c7 !important;
-    /* Teks abu-abu, ganti teks biru */
+    color: var(--primary-500) !important;
 }
 
 
@@ -197,7 +164,6 @@
 }
 
 
-/* ini untuk dropwon yg di disable mode gelap  */
 .select2-container--disabled .select2-selection--single {
     cursor: not-allowed !important;
 }
@@ -212,7 +178,7 @@
 }
 
 .dark .select2-container--disabled .select2-selection__rendered {
-    color: #0062e3;
+    color: var(--primary-600);
 }
 
 .dark .select2-container--disabled .select2-selection__arrow b {

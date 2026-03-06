@@ -130,8 +130,8 @@
 
 .dataTables_wrapper .dataTables_filter input:focus {
     outline: none !important;
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    border-color: var(--primary-500) !important;
+    box-shadow: 0 0 0 3px rgba(var(--primary-500-rgb, 59, 130, 246), 0.1) !important;
 }
 
 /* Dark Mode Overrides */
@@ -228,9 +228,9 @@
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #3b82f6 !important;
+    background: var(--primary-500) !important;
     color: #fff !important;
-    border-color: #3b82f6 !important;
+    border-color: var(--primary-500) !important;
     z-index: 2;
     /* Lift active button above neighbors */
 }
@@ -248,8 +248,8 @@
 }
 
 .dark .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-    background: #2563eb !important;
-    border-color: #2563eb !important;
+    background: var(--primary-600) !important;
+    border-color: var(--primary-600) !important;
 }
 
 /* Standard Sorting Arrows (Subtle FA) */
@@ -282,19 +282,19 @@ table.dataTable thead th.sorting_asc:after {
     content: "\f0de";
     /* sort-up */
     opacity: 0.8;
-    color: #3b82f6;
+    color: var(--primary-500);
 }
 
 table.dataTable thead th.sorting_desc:after {
     content: "\f0dd";
     /* sort-down */
     opacity: 0.8;
-    color: #3b82f6;
+    color: var(--primary-500);
 }
 
 .dark table.dataTable thead th.sorting_asc:after,
 .dark table.dataTable thead th.sorting_desc:after {
-    color: #60a5fa;
+    color: var(--primary-400);
 }
 
 /* Processing Line Style (Modern Progress Bar) */
@@ -324,12 +324,12 @@ table.dataTable thead th.sorting_desc:after {
     left: 0;
     height: 100%;
     width: 40%;
-    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+    background: linear-gradient(90deg, transparent, var(--primary-500), transparent);
     animation: loading-line 1.5s infinite ease-in-out;
 }
 
 .dark .dataTables_wrapper .dataTables_processing:after {
-    background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+    background: linear-gradient(90deg, transparent, var(--primary-400), transparent);
 }
 
 @keyframes loading-line {

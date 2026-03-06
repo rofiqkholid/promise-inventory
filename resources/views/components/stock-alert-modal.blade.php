@@ -142,7 +142,7 @@
 
                 <!-- Action Footer -->
                 <div class="p-4 border-t border-slate-100 dark:border-gray-800 bg-white dark:bg-gray-800">
-                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xs font-semibold text-xs tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-xs font-semibold text-xs tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                         <i class="fa-solid fa-check text-sm"></i>
                         Acknowledge
                     </button>

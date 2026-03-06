@@ -195,7 +195,7 @@
                                     <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none transition-colors z-10"></i>
                                     <input type="text" id="filter_date_range" readonly 
                                         value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
-                                        class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-blue-500 cursor-pointer w-full transition-all" 
+                                        class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-primary-500 cursor-pointer w-full transition-all" 
                                         placeholder="Filter by Date">
                                 </div>
                             </div>
@@ -238,7 +238,7 @@
 
             <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
                 <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-3">
-                    <i class="fa-solid fa-pen-nib text-blue-600"></i> Adjust Transaction
+                    <i class="fa-solid fa-pen-nib text-primary-600"></i> Adjust Transaction
                 </h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium tracking-tight">Modify transaction record and audit history</p>
             </div>
