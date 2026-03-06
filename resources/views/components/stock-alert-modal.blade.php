@@ -59,16 +59,15 @@
                                     </div>
                                     <div class="space-y-2">
                                         @foreach($criticalItems as $item)
-                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-rose-300 dark:hover:border-rose-700 transition-colors group">
+                                        <a href="{{ route('inventory.stockMonitoring') }}?search={{ urlencode($item->part_no) }}" 
+                                           class="block p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-rose-300 dark:hover:border-rose-700 transition-colors group"
+                                           title="Click to view in Stock Monitoring">
                                             <div class="flex items-start justify-between gap-4">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="flex items-center gap-2 mb-1">
                                                         <span class="text-xs font-bold text-slate-900 dark:text-white tracking-tight truncate group-hover:text-rose-600 transition-colors">
-                                                            {{ $item->part_no }}
+                                                            {{ $item->part_no }}{{ $item->revision ? ' - ' . $item->revision : '' }}
                                                         </span>
-                                                        @if($item->revision)
-                                                        <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">{{ $item->revision }}</span>
-                                                        @endif
                                                     </div>
                                                     <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
                                                         <span class="font-semibold uppercase tracking-wide">{{ $item->customer_code }}</span>
@@ -88,7 +87,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </a>
                                         @endforeach
                                     </div>
                                 </div>
@@ -102,16 +101,15 @@
                                     </div>
                                     <div class="space-y-2">
                                         @foreach($warningItems as $item)
-                                        <div class="p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-700 transition-colors group">
+                                        <a href="{{ route('inventory.stockMonitoring') }}?search={{ urlencode($item->part_no) }}"
+                                           class="block p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-700 transition-colors group"
+                                           title="Click to view in Stock Monitoring">
                                             <div class="flex items-start justify-between gap-4">
                                                 <div class="min-w-0 flex-1">
                                                     <div class="flex items-center gap-2 mb-1">
                                                         <span class="text-xs font-bold text-slate-900 dark:text-white tracking-tight truncate group-hover:text-amber-600 transition-colors">
-                                                            {{ $item->part_no }}
+                                                            {{ $item->part_no }}{{ $item->revision ? ' - ' . $item->revision : '' }}
                                                         </span>
-                                                        @if($item->revision)
-                                                        <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 font-mono">{{ $item->revision }}</span>
-                                                        @endif
                                                     </div>
                                                     <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
                                                         <span class="font-semibold uppercase tracking-wide">{{ $item->customer_code }}</span>
@@ -131,7 +129,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </a>
                                         @endforeach
                                     </div>
                                 </div>
@@ -142,7 +140,7 @@
 
                 <!-- Action Footer -->
                 <div class="p-4 border-t border-slate-100 dark:border-gray-800 bg-white dark:bg-gray-800">
-                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-slate-900 hover:bg-slate-800 dark:bg-primary-600 dark:hover:bg-primary-700 text-white rounded-xs font-semibold text-xs tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                    <button type="button" id="closeStockAlertBtn" class="w-full h-10 bg-primary-600 hover:bg-primary-700 text-white rounded-xs font-semibold text-xs tracking-widest transition-all active:scale-[0.98] flex items-center justify-center gap-2">
                         <i class="fa-solid fa-check text-sm"></i>
                         Acknowledge
                     </button>

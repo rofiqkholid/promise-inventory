@@ -389,6 +389,12 @@ textarea[disabled] {
     color: #334155 !important;
 }
 
+.dark .premium-input {
+    background-color: #111827 !important;
+    border-color: #374151 !important;
+    color: #e2e8f0 !important;
+}
+
 
 /* Sidebar Toggle Label Continuity (Zero Flicker) */
 .side-label {

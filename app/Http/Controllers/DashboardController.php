@@ -27,7 +27,17 @@ class DashboardController extends Controller
                      if ($status === 'Critical') {
                          $q->orWhere(function($w) {
                              $w->whereColumn('p.current_stock_qty', '<', 'p.min_stock')
-                               ->where('p.min_stock', '>', 0);
+                               ->where('p.min_stock', '>', 0)
+                               ->where(function($sq) {
+                                   $sq->where(function($inner) {
+                                       $inner->where('ms.project_status', '!=', 'Regular')
+                                             ->orWhereNull('ms.project_status');
+                                   })
+                                   ->where(function($inner) {
+                                       $inner->whereNotIn('p.product_status', ['Allsize OK', 'Allsize NG'])
+                                             ->orWhereNull('p.product_status');
+                                   });
+                               });
                          });
                      } elseif ($status === 'Over') {
                          $q->orWhere(function($w) {
@@ -37,10 +47,22 @@ class DashboardController extends Controller
                      } elseif ($status === 'Safe') {
                          $q->orWhere(function($w) {
                               $w->where(function($inner) {
-                                  $inner->whereColumn('p.current_stock_qty', '>=', 'p.min_stock')
-                                        ->whereColumn('p.current_stock_qty', '<=', DB::raw('p.min_stock * 3'));
-                              })->orWhere('p.min_stock', '<=', 0)
-                                ->orWhereNull('p.min_stock');
+                                  // Standard safe range
+                                  $inner->where(function($std) {
+                                      $std->whereColumn('p.current_stock_qty', '>=', 'p.min_stock')
+                                          ->whereColumn('p.current_stock_qty', '<=', DB::raw('p.min_stock * 3'));
+                                  })
+                                  // OR Safe Overrides (Shortage becomes Safe)
+                                  ->orWhere(function($override) {
+                                      $override->whereColumn('p.current_stock_qty', '<', 'p.min_stock')
+                                               ->where(function($sq) {
+                                                   $sq->where('ms.project_status', 'Regular')
+                                                      ->orWhereIn('p.product_status', ['Allsize OK', 'Allsize NG']);
+                                               });
+                                  })
+                                  ->orWhere('p.min_stock', '<=', 0)
+                                  ->orWhereNull('p.min_stock');
+                              });
                          });
                      }
                  }
@@ -50,10 +72,11 @@ class DashboardController extends Controller
         // 1. Stock Query (Filtered)
         $stockQuery = DB::table('inv_t_product_detail as p')
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
-            ->leftJoin('models as m', 'm.id', '=', 'prod.model_id')
-            ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id');
+            ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
+            ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
+            ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
 
-        if (!empty($selectedModels)) $stockQuery->whereIn('prod.model_id', $selectedModels);
+        if (!empty($selectedModels)) $stockQuery->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $stockQuery->whereIn('prod.customer_id', $selectedCustomers);
         $applyStatusFilter($stockQuery, $selectedStatusBalance);
 
@@ -64,12 +87,13 @@ class DashboardController extends Controller
         $recentTransQuery = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
-            ->join('products as prod', 'prod.id', '=', 'p.product_id');
+            ->join('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
         
         // 3. Filtered Transaction Query (For Charts/Stats)
         $queryTrans = clone $recentTransQuery;
 
-        if (!empty($selectedModels)) $queryTrans->whereIn('prod.model_id', $selectedModels);
+        if (!empty($selectedModels)) $queryTrans->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $queryTrans->whereIn('prod.customer_id', $selectedCustomers);
         if ($monthYear) $queryTrans->where('t.transaction_date', 'like', "$monthYear%");
         $applyStatusFilter($queryTrans, $selectedStatusBalance);
@@ -84,7 +108,9 @@ class DashboardController extends Controller
             'm.name as model_name',
             'c.code as customer_code',
             'p.current_stock_qty',
-            'p.min_stock'
+            'p.min_stock',
+            'p.product_status',
+            'ms.project_status'
         )->get();
 
         $stockDataGrouped = [];
@@ -99,16 +125,25 @@ class DashboardController extends Controller
             $maxStock = $min * 3;
 
             if ($min > 0) {
-                if ($current > $maxStock) $stockDataGrouped[$key]['over']++;
-                elseif ($current < $min) $stockDataGrouped[$key]['critical']++;
-                else $stockDataGrouped[$key]['safe']++;
+                if ($current > $maxStock) {
+                    $stockDataGrouped[$key]['over']++;
+                } elseif ($current < $min) {
+                    // Exclusion logic for KPIs
+                    $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+                    $isSafeOverride = in_array($prd->project_status, $safeStatuses) || in_array($prd->product_status, $safeStatuses);
+                    
+                    if ($isSafeOverride) $stockDataGrouped[$key]['safe']++;
+                    else $stockDataGrouped[$key]['critical']++;
+                } else {
+                    $stockDataGrouped[$key]['safe']++;
+                }
             } else {
                 $stockDataGrouped[$key]['safe']++;
             }
         }
 
         $usageByModel = (clone $queryTrans)
-            ->join('models as m', 'm.id', '=', 'prod.model_id')
+            ->join('models as m', 'm.id', '=', 'p.model_id')
             ->join('customers as c', 'c.id', '=', 'prod.customer_id')
             ->whereIn('tc.code', $outCategories)
             ->select(
@@ -129,7 +164,7 @@ class DashboardController extends Controller
         // So I must remove the month filter for the trend query, but keep other filters.
         
         $trendQuery = clone $recentTransQuery; // Start fresh from base (no month filter)
-        if (!empty($selectedModels)) $trendQuery->whereIn('prod.model_id', $selectedModels);
+        if (!empty($selectedModels)) $trendQuery->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $trendQuery->whereIn('prod.customer_id', $selectedCustomers);
         $applyStatusFilter($trendQuery, $selectedStatusBalance);
         

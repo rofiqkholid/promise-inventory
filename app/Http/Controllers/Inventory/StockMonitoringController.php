@@ -203,7 +203,7 @@ class StockMonitoringController extends Controller
 
         // Model Filter
         if ($request->has('model_id') && !empty($request->model_id)) {
-            $query->where('products.model_id', $request->model_id);
+            $query->where('inv_t_product_detail.model_id', $request->model_id);
         }
 
         // Project Status Filter
@@ -300,7 +300,9 @@ class StockMonitoringController extends Controller
             $row = [
                 'id' => $item->id,
                 'hash_id' => $hashId,
-                'part_no' => $partNoDisplay,
+                'part_no' => $item->part_no, // Send raw part_no
+                'part_name' => $item->part_name,
+                'revision' => $item->revision,
                 'remark' => $item->remark ?? '-',
                 'balance_pcs'  => number_format($calculatedQty * $pcsPerUnit, 0),
                 'balance_unit' => $item->unit_code,

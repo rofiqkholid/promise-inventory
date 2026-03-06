@@ -261,20 +261,28 @@
             {
                 data: 'part_no',
                 render: function(data, type, row) {
+                    const partNoDisplay = data + (row.revision ? ' - ' + row.revision : '');
                     if (type === 'display') {
                         if (row.details) {
                             const details = JSON.stringify(row.details).replace(/"/g, '&quot;');
                             return `
-                                <div class="hover-trigger cursor-pointer flex flex-col" data-details="${details}">
-                                    <span class="font-bold text-slate-800 dark:text-white leading-none uppercase tracking-tight">${data}</span>
-                                    <span class="text-[10px] text-slate-400 uppercase truncate max-w-[200px] mt-0.5">${row.product_name || ''}</span>
+                                <div class="hover-trigger cursor-pointer group/part relative pl-3 transition-all" data-details="${details}">
+                                    <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary-500 scale-y-0 group-hover/part:scale-y-100 transition-transform origin-center"></div>
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-700 dark:text-slate-200 leading-none uppercase tracking-tight group-hover/part:text-primary-600 transition-colors">
+                                            ${partNoDisplay}
+                                        </span>
+                                        <span class="text-[9px] text-slate-400 font-medium uppercase truncate max-w-[180px] mt-1 group-hover/part:text-slate-500 transition-colors">
+                                            ${row.part_name || ''}
+                                        </span>
+                                    </div>
                                 </div>
                             `;
                         }
                         return `
-                            <div class="flex flex-col">
-                                <span class="font-bold text-slate-800 dark:text-white leading-none uppercase tracking-tight">${data}</span>
-                                <span class="text-[10px] text-slate-400 uppercase truncate max-w-[200px] mt-0.5">${row.product_name || ''}</span>
+                            <div class="flex flex-col pl-3">
+                                <span class="font-bold text-slate-700 dark:text-slate-200 leading-none uppercase tracking-tight">${partNoDisplay}</span>
+                                <span class="text-[9px] text-slate-400 font-medium uppercase truncate max-w-[180px] mt-1">${row.part_name || ''}</span>
                             </div>
                         `;
                     }
@@ -343,11 +351,16 @@
             render: function(data, type, row) {
                 if (type === 'display') {
                     if (data === '-') return `<span class="text-gray-300 font-mono text-[10px]">-</span>`;
-                    let colorClass = 'text-gray-500 dark:text-gray-400';
-                    if (parseFloat(row.sto_gap) > 0) colorClass = 'text-green-600 dark:text-green-400';
-                    else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-red-600 dark:text-red-400';
+                    let colorClass = 'text-slate-500 dark:text-gray-400';
+                    if (parseFloat(row.sto_gap) > 0) colorClass = 'text-emerald-600 dark:text-emerald-400';
+                    else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-rose-600 dark:text-rose-400';
                     
-                    return `<span class="${colorClass} font-bold text-[11px] sto-log-trigger cursor-pointer hover:underline decoration-dotted underline-offset-4" data-id="${row.id}">${data} <i class="fa-solid fa-caret-down text-[8px] ml-0.5 opacity-50"></i></span>`;
+                    return `
+                        <div class="sto-log-trigger cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-all group/gap" data-id="${row.id}">
+                            <span class="${colorClass} font-mono font-black text-[13px] tracking-tight transition-transform group-hover/gap:scale-110">${data}</span>
+                            <i class="fa-solid fa-clock-rotate-left text-[9px] opacity-20 group-hover/gap:opacity-80 transition-opacity"></i>
+                        </div>
+                    `;
                 }
                 return data;
             }

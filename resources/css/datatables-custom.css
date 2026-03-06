@@ -252,6 +252,11 @@
     border-color: var(--primary-600) !important;
 }
 
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+    background: #1f2937 !important;
+    color: #fff !important;
+}
+
 /* Standard Sorting Arrows (Subtle FA) */
 table.dataTable thead th.sorting,
 table.dataTable thead th.sorting_asc,

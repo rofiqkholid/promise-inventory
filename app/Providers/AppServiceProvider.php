@@ -35,9 +35,20 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layouts.header', 'components.stock-alert-modal'], function ($view) {
             $stockAlerts = DB::table('inv_t_product_detail as p')
                 ->join('products as prod', 'prod.id', '=', 'p.product_id')
-                ->leftJoin('models as m', 'm.id', '=', 'prod.model_id')
+                ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
                 ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
-                ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock', 'p.pcs_per_unit')
+                ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
+                ->select([
+                    'prod.part_no', 
+                    'p.revision', 
+                    'c.code as customer_code', 
+                    'm.name as model_name', 
+                    'p.current_stock_qty', 
+                    'p.min_stock', 
+                    'p.pcs_per_unit',
+                    'p.product_status',
+                    'ms.project_status'
+                ])
                 ->get()
                 ->map(function ($item) {
                     $pcsPerUnit = intval($item->pcs_per_unit);
@@ -50,9 +61,17 @@ class AppServiceProvider extends ServiceProvider
                     $item->min_stock = $minPCS;
 
                     if ($minPCS > 0) {
-                        if ($currentPCS > $minPCS * 3) $item->status = 'Warning';
-                        elseif ($currentPCS < $minPCS) $item->status = 'Critical';
-                        else $item->status = 'Safe';
+                        if ($currentPCS > $minPCS * 3) {
+                            $item->status = 'Warning';
+                        } elseif ($currentPCS < $minPCS) {
+                            // Suppress Critical for Regular or Allsize status
+                            $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+                            $isSafeOverride = in_array($item->project_status, $safeStatuses) || in_array($item->product_status, $safeStatuses);
+                            
+                            $item->status = $isSafeOverride ? 'Safe' : 'Critical';
+                        } else {
+                            $item->status = 'Safe';
+                        }
                     } else {
                         $item->status = 'Safe';
                     }
