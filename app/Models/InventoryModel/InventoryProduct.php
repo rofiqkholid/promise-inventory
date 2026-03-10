@@ -20,7 +20,7 @@ class InventoryProduct extends Model
         'material_spec_id',
         'unit_id',
         'rank_id',
-        'revision',
+        'revision_id',
         'thickness',
         'width',
         'length',
@@ -84,5 +84,10 @@ class InventoryProduct extends Model
     public function rank()
     {
         return $this->belongsTo(Rank::class, 'rank_id');
+    }
+
+    public function revision()
+    {
+        return $this->belongsTo(Revision::class, 'revision_id');
     }
 }

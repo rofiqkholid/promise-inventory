@@ -28,7 +28,7 @@
     <div class="min-h-screen flex flex-col items-center justify-start p-4 md:p-10 lg:p-20">
         
         <!-- Navigation Header -->
-        <div class="w-full max-w-2xl mb-6 flex justify-between items-center bg-white dark:bg-slate-900 px-5 py-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="w-full max-w-2xl mb-6 flex justify-between items-center bg-white dark:bg-slate-900 px-5 py-4 rounded-xs border border-slate-200 dark:border-slate-800 shadow-sm">
              @auth
              <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-primary-600 transition-colors">
                 <i class="fa-solid fa-chevron-left text-[10px]"></i> Dashboard
@@ -50,7 +50,7 @@
         <!-- Quick Actions -->
         <div class="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <a href="{{ route('inventory.transaction', ['product' => $product->hash_id]) }}" 
-               class="group h-14 bg-primary-600 text-white rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-primary-700 transition-all">
+               class="group h-14 bg-primary-600 text-white rounded-xs flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-primary-700 transition-all">
                 <i class="fa-solid fa-plus-circle text-lg text-primary-200"></i>
                 <span>New Transaction</span>
                 @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
@@ -62,46 +62,75 @@
                     : route('inventory.sto.index');
             @endphp
             <a href="{{ $stoUrl }}" 
-               class="group h-14 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+               class="group h-14 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xs flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                 <i class="fa-solid fa-clipboard-check text-lg text-emerald-500"></i>
                 <span>Stock Opname</span>
                 @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
             </a>
         </div>
 
-        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+        <div class="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-xs border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
             
             <!-- Status Badge Area -->
-            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-                        {{ $product->part_no }}
-                        @if($product->revision)
-                        <span class="text-primary-600 dark:text-primary-400 font-mono text-xl">/ {{ $product->revision }}</span>
-                        @endif
-                    </h1>
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{{ $product->part_name }}</p>
-                </div>
-
-                @php
-                    $statusStyles = [
-                        'safe' => ['bg' => 'bg-emerald-50 text-emerald-700 border-emerald-200', 'label' => 'Safe Stock'],
-                        'warning' => ['bg' => 'bg-amber-50 text-amber-700 border-amber-200', 'label' => 'Warning'],
-                        'danger' => ['bg' => 'bg-red-50 text-red-700 border-red-200', 'label' => 'Critical'],
-                        'over' => ['bg' => 'bg-primary-50 text-primary-700 border-primary-200', 'label' => 'Overstock']
-                    ];
-                    $st = $statusStyles[$product->status] ?? ['bg' => 'bg-slate-50 text-slate-700 border-slate-200', 'label' => 'Unknown'];
-                @endphp
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{ $st['bg'] }} font-bold text-[10px] uppercase tracking-widest h-fit">
-                    <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
-                    {{ $st['label'] }}
-                </div>
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                    {{ $product->part_no }}
+                    @if($product->revision)
+                    <span class="text-primary-600 dark:text-primary-400 font-mono text-xl">/ {{ $product->revision }}</span>
+                    @endif
+                </h1>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{{ $product->part_name }}</p>
             </div>
 
             <div class="p-8">
                 <!-- Unified Stock KPI Section -->
                 <div class="mb-10">
-                    <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-100 dark:border-slate-800 transition-all text-center">
+                    @php
+                        $statusStyles = [
+                            'safe' => [
+                                'bg' => 'bg-emerald-600', 
+                                'gradient' => 'from-emerald-600 to-emerald-500',
+                                'text' => 'text-white', 
+                                'label' => 'Safe Stock Level',
+                                'icon' => 'fa-circle-check'
+                            ],
+                            'warning' => [
+                                'bg' => 'bg-amber-500', 
+                                'gradient' => 'from-amber-500 to-amber-400',
+                                'text' => 'text-white', 
+                                'label' => 'Warning Stock Level',
+                                'icon' => 'fa-triangle-exclamation'
+                            ],
+                            'danger' => [
+                                'bg' => 'bg-red-600', 
+                                'gradient' => 'from-red-600 to-red-500',
+                                'text' => 'text-white', 
+                                'label' => 'Critical Stock Alert',
+                                'icon' => 'fa-circle-exclamation'
+                            ],
+                            'over' => [
+                                'bg' => 'bg-primary-600', 
+                                'gradient' => 'from-primary-600 to-primary-500',
+                                'text' => 'text-white', 
+                                'label' => 'Overstock Detected',
+                                'icon' => 'fa-boxes-stacked'
+                            ]
+                        ];
+                        $st = $statusStyles[$product->status] ?? [
+                            'bg' => 'bg-slate-600', 
+                            'gradient' => 'from-slate-600 to-slate-500',
+                            'text' => 'text-white', 
+                            'label' => 'Unknown Status',
+                            'icon' => 'fa-question-circle'
+                        ];
+                    @endphp
+                    
+                    <div class="w-full h-11 bg-gradient-to-r {{ $st['gradient'] }} {{ $st['text'] }} rounded-t-xs flex items-center justify-center gap-3 shadow-lg">
+                        <i class="fa-solid {{ $st['icon'] }} text-sm"></i>
+                        <span class="font-black text-[11px] uppercase tracking-[0.3em]">{{ $st['label'] }}</span>
+                    </div>
+
+                    <div class="bg-primary-50 dark:bg-primary-900/50 p-6 rounded-b-xs border-x border-b border-slate-100 dark:border-slate-800 transition-all text-center">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3 text-center">Total Balance Available</span>
                         
                         <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">

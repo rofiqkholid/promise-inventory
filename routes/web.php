@@ -52,7 +52,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/product/get-products', [InventoryProductController::class, 'getProducts'])->name('product.getProducts');
             Route::get('/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('product.getCustomers');
             Route::get('/product/get-model', [InventoryProductController::class, 'getModels'])->name('product.getModels');
-            Route::get('/product/used-revisions/{productId}', [InventoryProductController::class, 'getUsedRevisions'])->name('product.usedRevisions');
+            Route::get('/product/latest-revision/{productId}', [InventoryProductController::class, 'getLatestRevision'])->name('product.latestRevision');
             Route::get('/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('product.print');
             Route::resource('product', InventoryProductController::class)->names('product')->parameters(['product' => 'inventoryProduct'])->except(['create', 'edit', 'index']);
 
@@ -100,6 +100,11 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/location', [\App\Http\Controllers\Inventory\LocationController::class, 'index'])->name('location.index');
             Route::get('/location/data', [\App\Http\Controllers\Inventory\LocationController::class, 'data'])->name('location.data');
             Route::resource('location', \App\Http\Controllers\Inventory\LocationController::class)->names('location')->except(['create', 'edit', 'index']);
+
+            // Revision (Master Data)
+            Route::get('/revision', [\App\Http\Controllers\Inventory\RevisionController::class, 'index'])->name('revision.index');
+            Route::get('/revision/data', [\App\Http\Controllers\Inventory\RevisionController::class, 'data'])->name('revision.data');
+            Route::resource('revision', \App\Http\Controllers\Inventory\RevisionController::class)->names('revision')->except(['create', 'edit', 'index']);
         });
 
 

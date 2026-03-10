@@ -18,6 +18,55 @@
         </div>
     </div>
 
+    {{-- FILTER BAR --}}
+    <div class="mb-8 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
+            <h3 class="text-[10px] font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-[0.15em]">
+                <i class="fa-solid fa-filter text-primary-600"></i> Product Filter
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                {{-- CUSTOMER --}}
+                <div class="w-full">
+                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Customer</label>
+                    <select id="filterCustomer" class="select2-filter w-full">
+                        <option value="">All Customers</option>
+                        @foreach($customers as $c)
+                            <option value="{{ $c->id }}">{{ $c->code }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- MODEL --}}
+                <div class="w-full">
+                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Model</label>
+                    <select id="filterModel" class="select2-filter w-full">
+                        <option value="">All Models</option>
+                        @foreach($models as $m)
+                            <option value="{{ $m->id }}">{{ $m->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- PART NUMBER (SELECT2 AJAX) --}}
+                <div class="w-full lg:col-span-1">
+                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Part Number</label>
+                    <select id="filterPartNo" class="w-full">
+                        <option value="">All Part Numbers</option>
+                    </select>
+                </div>
+
+                {{-- ACTIONS --}}
+                <div class="flex items-center w-full">
+                    <button type="button" id="btnResetFilter" class="w-full h-10 px-4 text-[10px] font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-100 dark:border-gray-700 transition-all uppercase tracking-widest active:scale-95">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <x-table id="inventoryProductTable">
         <thead>
             <tr>
@@ -90,17 +139,10 @@
                             </div>
                             <div>
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Revision <span class="text-red-500">*</span></label>
-                                <select name="revision" id="revision" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                <select name="revision_id" id="revision_id" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Revision</option>
-                                    <option value="R">R</option>
-                                    <option value="R1">R1</option>
-                                    <option value="R2">R2</option>
-                                    <option value="R3">R3</option>
-                                    <option value="RC">RC</option>
-                                    <option value="RC1">RC1</option>
-                                    <option value="RC2">RC2</option>
                                 </select>
-                                <p id="error-revision" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
+                                <p id="error-revision_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
 
                             <div>
@@ -259,661 +301,530 @@
 @endsection
 
 @push('scripts')
-
 <script>
-    $(function() {
-        const csrfToken = $('meta[name="csrf-token"]').attr('content');
-        let dropdownData = {};
-        let isEditMode = false;
-        let isDuplicateMode = false;
-
-        function toggleDuplicateMode(isDuplicate) {
-            isDuplicateMode = isDuplicate;
-            const fields = $('#productForm').find('input, select, textarea').not('#model_id, [name="_token"], [name="_method"]');
-            
-            fields.prop('disabled', isDuplicate);
-            
-            $('#productForm').find('select.select2-hidden-accessible').not('#model_id').each(function() {
-                $(this).trigger('change.select2');
-            });
-
-            $('#weight_kg').prop('disabled', true);
-            $('#min_stock').prop('disabled', true);
-            
-            if (isDuplicate) {
-                $('#model_id').prop('disabled', false).trigger('change.select2');
+$(function() {
+    /**
+     * ProductApp - Structured Application Logic
+     */
+    const ProductApp = {
+        config: {
+            csrfToken: $('meta[name="csrf-token"]').attr('content'),
+            routes: {
+                data: '{{ route("inventory.master.product.data") }}',
+                store: '{{ route("inventory.master.product.store") }}',
+                dropdown: '{{ route("inventory.master.product.dropdownData") }}',
+                customers: '{{ route("inventory.master.product.getCustomers") }}',
+                models: '{{ route("inventory.master.product.getModels") }}',
+                products: '{{ route("inventory.master.product.getProducts") }}',
+                base: '{{ url("inventory/master/product") }}'
             }
-        }
+        },
 
-        function initFormSelect2() {
+        state: {
+            isEditMode: false,
+            isDuplicateMode: false,
+            isAutoFilling: false,
+            dropdownData: {},
+            modelCache: {},
+            modelLoadPromise: Promise.resolve(),
+            deleteId: null,
+            table: null
+        },
+
+        elements: {
+            form: $('#productForm'),
+            formModal: $('#formModal'),
+            deleteModal: $('#modal-delete'),
+            customerFilter: $('#filterCustomer'),
+            modelFilter: $('#filterModel'),
+            partNoFilter: $('#filterPartNo'),
+            customerSelect: $('#customer_id'),
+            modelSelect: $('#model_id'),
+            productSelect: $('#product_id'),
+            unitSelect: $('#unit_id')
+        },
+
+        init: function() {
+            this.initTable();
+            this.initFilters();
+            this.initFormSelect2();
+            this.loadInitialData();
+            this.bindFilterEvents();
+            this.bindFormEvents();
+            this.bindTableEvents();
+        },
+
+        /**
+         * INITIALIZATION & DATA LOADING
+         */
+        initTable: function() {
+            this.state.table = window.defaultDataTable('#inventoryProductTable', {
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: this.config.routes.data,
+                    type: 'GET',
+                    data: d => {
+                        d.search = d.search.value;
+                        d.customer_id = this.elements.customerFilter.val();
+                        d.model_id = this.elements.modelFilter.val();
+                        d.part_no = this.elements.partNoFilter.val();
+                    }
+                },
+                columns: [
+                    { data: null, className: 'text-center', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
+                    { data: 'part_no', className: 'whitespace-nowrap font-medium text-slate-700 dark:text-gray-200' },
+                    { data: 'customer', className: 'text-center' },
+                    { data: 'model', className: 'text-center' },
+                    {
+                        data: 'product_status',
+                        className: 'text-center',
+                        render: (d, t, r) => {
+                            const status = d || r.model_project_status || 'Project';
+                            const colors = {
+                                'Project': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
+                                'Regular': 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
+                                'Allsize OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
+                                'Allsize NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
+                            }[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+                            const override = d ? ' <span class="text-[8px] opacity-50 underline">(O)</span>' : '';
+                            return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border ${colors}">${status}${override}</span>`;
+                        }
+                    },
+                    {
+                        data: null,
+                        render: r => `<div class="leading-snug">
+                            <div class="font-medium text-slate-700 dark:text-slate-300">${r.material_spec}</div>
+                            <div class="text-[10px] text-gray-400 tracking-tight">${r.coating_type || '-'}</div>
+                        </div>`
+                    },
+                    {
+                        data: null,
+                        className: 'whitespace-nowrap',
+                        render: r => this.logic.renderDimensions(r)
+                    },
+                    { data: 'pcs_per_unit', className: 'text-center' },
+                    { data: 'weight_kg', className: 'text-center', render: d => d ? parseFloat(d).toFixed(2) : '-' },
+                    { data: 'unit_per_car', className: 'text-center' },
+                    { data: 'rank', className: 'text-center' },
+                    { data: 'remark', className: 'text-xs text-gray-500', render: d => d || '-' },
+                    { data: 'updated_at', className: 'whitespace-nowrap text-[10px] text-gray-400', render: d => d || '-' },
+                    {
+                        data: null,
+                        orderable: false,
+                        className: 'text-center',
+                        render: r => `
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-xs bg-green-50 hover:bg-green-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-print"></i></button>
+                                <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="duplicate-button h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-copy"></i></button>
+                                <button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>`
+                    }
+                ],
+                order: [[0, 'desc']]
+            });
+        },
+
+        initFilters: function() {
+            $('.select2-filter').select2({ width: '100%', placeholder: 'Select...', allowClear: true });
+            
+            this.elements.partNoFilter.select2({
+                width: '100%',
+                placeholder: 'All Part Numbers',
+                allowClear: true,
+                ajax: {
+                    url: this.config.routes.products,
+                    dataType: 'json',
+                    delay: 250,
+                    data: p => ({
+                        q: p.term || '',
+                        customer_id: this.elements.customerFilter.val(),
+                        model_id: this.elements.modelFilter.val(),
+                        for_filter: 1
+                    }),
+                    processResults: d => ({
+                        results: d.results.map(i => ({ id: i.part_no, text: i.text }))
+                    })
+                }
+            });
+        },
+
+        initFormSelect2: function() {
             $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id').select2({
-                dropdownParent: $('#formModal'),
+                dropdownParent: this.elements.formModal,
                 width: '100%',
                 placeholder: 'Select...',
             });
-        }
-        
-        const routeCustomers = '{{ route("inventory.master.product.getCustomers") }}';
-        const routeModels = '{{ route("inventory.master.product.getModels") }}';
+            this.initProductSelect2();
+        },
 
-        function populateCustomers() {
-            const el = $('#customer_id');
-            el.empty().append('<option></option>');
-            if (dropdownData.customers) {
-                dropdownData.customers.forEach(c => {
-                    el.append(new Option(c.code, c.id));
+        initProductSelect2: function() {
+            const el = this.elements.productSelect;
+            if (el.data('select2')) el.select2('destroy');
+            el.select2({
+                dropdownParent: this.elements.formModal,
+                width: '100%',
+                placeholder: 'Search Product...',
+                ajax: {
+                    url: this.config.routes.products,
+                    dataType: 'json',
+                    delay: 250,
+                    data: p => ({
+                        q: p.term || '',
+                        model_id: this.elements.modelSelect.val(),
+                        customer_id: this.elements.customerSelect.val()
+                    }),
+                    processResults: d => ({ results: d.results, pagination: d.pagination })
+                }
+            });
+        },
+
+        loadInitialData: function() {
+            $.get(this.config.routes.dropdown, (data) => {
+                this.state.dropdownData = data;
+                this.populateFormDropdowns(data);
+            });
+        },
+
+        /**
+         * EVENT BINDING CATEGORIES
+         */
+        bindFilterEvents: function() {
+            this.elements.customerFilter.on('change', () => this.handleCustomerFilterChange());
+            this.elements.modelFilter.on('change', () => {
+                this.elements.partNoFilter.val(null).trigger('change');
+                this.state.table.ajax.reload();
+            });
+            this.elements.partNoFilter.on('change', () => this.state.table.ajax.reload());
+            $('#btnResetFilter').on('click', () => this.resetFilters());
+        },
+
+        bindFormEvents: function() {
+            $('#add-button').on('click', () => this.showAddModal());
+            $('.close-modal-button, .close-modal').on('click', e => this.ui.hideModal($(e.currentTarget).closest('[tabindex="-1"]')));
+            
+            this.elements.customerSelect.on('change', e => this.handleFormCustomerChange(e.target.value));
+            this.elements.productSelect.on('select2:select', e => this.handleProductSelect(e.params.data));
+            this.elements.unitSelect.on('change', () => this.ui.toggleUnitFields());
+            this.elements.form.on('submit', e => this.handleFormSubmit(e));
+            
+            // Calculations
+            $('#unit_per_car').on('input change', () => this.logic.calculateMinStock());
+            $('#thickness, #width, #length, #length_2, #pitch, #density').on('input change', () => this.logic.calculateWeight());
+        },
+
+        bindTableEvents: function() {
+            $(document).on('click', '.edit-button', e => this.showEditModal($(e.currentTarget).data('id')));
+            $(document).on('click', '.duplicate-button', e => this.showDuplicateModal($(e.currentTarget).data('id')));
+            $(document).on('click', '.print-button', e => window.open(`${this.config.routes.base}/${$(e.currentTarget).data('id')}/print`, '_blank'));
+            $(document).on('click', '.delete-button', e => {
+                this.state.deleteId = $(e.currentTarget).data('id');
+                this.ui.showModal(this.elements.deleteModal);
+            });
+            $('#confirmDelete').on('click', () => this.handleDelete());
+        },
+
+        /**
+         * CORE LOGIC METHODS
+         */
+        handleCustomerFilterChange: function() {
+            const cid = this.elements.customerFilter.val();
+            this.elements.modelFilter.empty().append('<option value="">All Models</option>');
+            this.elements.partNoFilter.val(null).trigger('change');
+            
+            $.get(this.config.routes.models, { customer_id: cid, for_filter: 1 }, (data) => {
+                data.forEach(m => this.elements.modelFilter.append(`<option value="${m.id}">${m.name}</option>`));
+                this.state.table.ajax.reload();
+            });
+        },
+
+        resetFilters: function() {
+            this.elements.customerFilter.val(null).trigger('change.select2');
+            this.elements.modelFilter.val(null).trigger('change.select2');
+            this.elements.partNoFilter.val(null).trigger('change.select2');
+            
+            $.get(this.config.routes.models, { for_filter: 1 }, (data) => {
+                this.elements.modelFilter.empty().append('<option value="">All Models</option>');
+                data.forEach(m => this.elements.modelFilter.append(`<option value="${m.id}">${m.name}</option>`));
+                this.state.table.ajax.reload();
+            });
+        },
+
+        showAddModal: function() {
+            this.state.isEditMode = false;
+            this.state.isDuplicateMode = false;
+            this.ui.resetForm('Add Inventory Product', 'POST', this.config.routes.store);
+            this.elements.productSelect.prop('disabled', false);
+            this.initProductSelect2();
+            this.ui.showModal(this.elements.formModal);
+        },
+
+        showEditModal: function(id) {
+            this.state.isEditMode = true;
+            this.state.isDuplicateMode = false;
+            this.ui.resetForm('Edit Inventory Product', 'PUT', `${this.config.routes.base}/${id}`);
+            this.loadProductData(id);
+        },
+
+        showDuplicateModal: function(id) {
+            this.state.isEditMode = false;
+            this.state.isDuplicateMode = true;
+            this.ui.resetForm('Duplicate Inventory Product', 'POST', this.config.routes.store);
+            this.ui.toggleDuplicateMode(true);
+            this.loadProductData(id, true);
+        },
+
+        loadProductData: function(id, isDuplicate = false) {
+            $.get(`${this.config.routes.base}/${id}`, (data) => {
+                this.elements.customerSelect.val(data.product.customer_id).trigger('change');
+                
+                this.state.modelLoadPromise.then(() => {
+                    if (!isDuplicate) this.elements.modelSelect.val(data.model_id).trigger('change');
+                    
+                    if (data.product) {
+                        const opt = new Option(`${data.product.part_no} - ${data.product.part_name}`, data.product.hash_id, true, true);
+                        this.state.isAutoFilling = true;
+                        this.elements.productSelect.append(opt).trigger('change');
+                        this.state.isAutoFilling = false;
+                    }
+
+                    // Fill other fields
+                    $('#revision_id').val(data.revision_id ? data.revision?.hash_id : '').trigger('change');
+                    $('#material_spec_id').val(data.material_spec?.hash_id).trigger('change');
+                    $('#thickness').val(parseFloat(data.thickness || 0));
+                    $('#width').val(parseFloat(data.width || 0));
+                    $('#length').val(parseFloat(data.length || 0));
+                    $('#length_2').val(parseFloat(data.length_2 || 0));
+                    $('#pitch').val(parseFloat(data.pitch || 0));
+                    this.elements.unitSelect.val(data.unit?.hash_id).trigger('change');
+                    $('#rank_id').val(data.rank?.hash_id).trigger('change');
+                    $('#pcs_per_unit').val(data.pcs_per_unit);
+                    $('#unit_per_car').val(data.unit_per_car);
+                    $('#min_stock').val(data.min_stock);
+                    $('#density').val(parseFloat(data.density || 7.85));
+                    $('#net_weight').val(parseFloat(data.net_weight || 0));
+                    $('#material_price').val(parseFloat(data.material_price || 20000));
+                    $('#remark').val(data.remark);
+                    $('#product_status').val(data.product_status).trigger('change');
+                    $('#product_status_remark').val(data.product_status_remark).trigger('change');
+
+                    this.ui.toggleUnitFields();
+                    this.ui.showModal(this.elements.formModal);
+                    if (isDuplicate) window.showToast('Please select a NEW model to finish duplication.', 'info');
                 });
-            }
-        }
+            });
+        },
 
-        const modelCache = {};
-
-        let modelLoadPromise = Promise.resolve();
-        let isAutoFilling = false;
-
-        function loadModels(customerId) {
-            const el = $('#model_id');
+        handleFormCustomerChange: function(cid) {
+            if (!this.state.isAutoFilling) this.elements.productSelect.val(null).trigger('change');
+            
+            const el = this.elements.modelSelect;
             el.prop('disabled', true).empty().append('<option></option>').trigger('change');
 
-            if (!customerId) {
-                 return Promise.resolve();
+            if (!cid) {
+                this.state.modelLoadPromise = Promise.resolve();
+                return;
             }
 
-            if (modelCache[customerId]) {
-                modelCache[customerId].forEach(m => {
-                    el.append(new Option(m.name, m.id));
-                });
+            if (this.state.modelCache[cid]) {
+                this.state.modelCache[cid].forEach(m => el.append(new Option(m.name, m.id)));
                 el.prop('disabled', false);
-                return Promise.resolve();
+                this.state.modelLoadPromise = Promise.resolve();
+                return;
             }
 
-            return new Promise((resolve, reject) => {
-                $.get(routeModels, { customer_id: customerId })
-                    .done(function(models) {
-                        modelCache[customerId] = models;
-                        models.forEach(m => {
-                            el.append(new Option(m.name, m.id));
-                        });
+            this.state.modelLoadPromise = new Promise((resolve, reject) => {
+                $.get(this.config.routes.models, { customer_id: cid })
+                    .done(models => {
+                        this.state.modelCache[cid] = models;
+                        models.forEach(m => el.append(new Option(m.name, m.id)));
                         el.prop('disabled', false);
                         resolve();
                     })
                     .fail(reject);
             });
-        }
+        },
 
-        $('#customer_id').on('change', function() {
-            const customerId = this.value;
+        handleProductSelect: function(data) {
+            if (this.state.isEditMode || this.state.isDuplicateMode || !data.id) return;
 
-            // reset product only if not auto-filling
-            if (!isAutoFilling) {
-                $('#product_id').val(null).trigger('change');
-            }
-
-            modelLoadPromise = loadModels(customerId);
-        });
-
-        function initProductSelect2() {
-            if ($('#product_id').data('select2')) {
-                $('#product_id').select2('destroy');
-            }
-
-            $('#product_id').select2({
-                dropdownParent: $('#formModal'),
-                width: '100%',
-                minimumInputLength: 0,
-                placeholder: 'Search Product...',
-                ajax: {
-                    url: '{{ route("inventory.master.product.getProducts") }}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: p => ({
-                        q: p.term || '',
-                        model_id: $('#model_id').val(),
-                        customer_id: $('#customer_id').val()
-                    }),
-                    processResults: d => ({
-                        results: d.results,
-                        pagination: d.pagination
-                    })
-                }
-            });
-        }
-
-        $('#product_id').on('select2:select', function(e) {
-            const data = e.params.data;
-            const currentCust = $('#customer_id').val();
-            
-            // Auto-fill customer and model
-            if (data.customer_id && data.customer_id != currentCust) {
-                isAutoFilling = true;
-                $('#customer_id').val(data.customer_id).trigger('change');
-                isAutoFilling = false;
-                
-                // Wait for models to load then set model
-                modelLoadPromise.then(() => {
-                    if (data.model_id) {
-                         $('#model_id').val(data.model_id).trigger('change');
-                    }
+            // Auto-fill logic for Add Mode
+            if (data.customer_id && data.customer_id != this.elements.customerSelect.val()) {
+                this.state.isAutoFilling = true;
+                this.elements.customerSelect.val(data.customer_id).trigger('change');
+                this.state.isAutoFilling = false;
+                this.state.modelLoadPromise.then(() => {
+                    if (data.model_id) this.elements.modelSelect.val(data.model_id).trigger('change');
                 });
-            } else if (data.model_id) {
-                // If customer was already same, just set model if not set
-                if (!$('#model_id').val() || $('#model_id').val() != data.model_id) {
-                     $('#model_id').val(data.model_id).trigger('change');
-                }
+            } else if (data.model_id && this.elements.modelSelect.val() != data.model_id) {
+                this.elements.modelSelect.val(data.model_id).trigger('change');
             }
-        });
 
-        $('#model_id').on('change', function() {
-             // Model change logic
-        });
-
-
-
-
-        // Load dropdown data
-        $.get('{{ route("inventory.master.product.dropdownData") }}', function(data) {
-            dropdownData = data;
-            
-            populateCustomers();
-
-            data.materialSpecs.forEach(ms => {
-                $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`);
-            });
-
-            data.units.forEach(u => {
-                $('#unit_id').append(`<option value="${u.hash_id}">${u.code} - ${u.name}</option>`);
-            });
-
-            data.ranks.forEach(r => {
-                $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`);
-            });
-        });
-
-
-
-
-
-
-
-        // DataTable
-        const table = window.defaultDataTable('#inventoryProductTable', {
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: '{{ route("inventory.master.product.data") }}',
-                type: 'GET',
-                data: d => {
-                    d.search = d.search.value;
+            $.get(`${this.config.routes.base}/latest-revision/${data.id}`, (res) => {
+                if (res.exists) {
+                    const d = res.data;
+                    $('#revision_id').val(res.next_revision_id).trigger('change');
+                    $('#material_spec_id').val(res.material_spec_hash).trigger('change');
+                    $('#thickness').val(parseFloat(d.thickness || 0));
+                    $('#width').val(parseFloat(d.width || 0));
+                    $('#length').val(parseFloat(d.length || 0));
+                    $('#length_2').val(parseFloat(d.length_2 || 0));
+                    $('#pitch').val(parseFloat(d.pitch || 0));
+                    this.elements.unitSelect.val(res.unit_hash).trigger('change');
+                    $('#rank_id').val(res.rank_hash).trigger('change');
+                    $('#pcs_per_unit').val(d.pcs_per_unit);
+                    $('#unit_per_car').val(d.unit_per_car);
+                    $('#density').val(parseFloat(d.density || 7.85));
+                    $('#net_weight').val(parseFloat(d.net_weight || 0));
+                    $('#material_price').val(parseFloat(d.material_price || 20000));
+                    $('#remark').val(d.remark);
+                    $('#product_status').val(d.product_status).trigger('change');
+                    $('#product_status_remark').val(d.product_status_remark).trigger('change');
+                    window.showToast(`Found existing revision. Auto-filled from ${d.revision?.code || '-'}.`, 'info');
+                } else {
+                    $('#revision_id').val(res.next_revision_id).trigger('change');
                 }
-            },
-            columns: [{
-                    data: null,
-                    className: 'text-center',
-                    render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
-                },
-                {
-                    data: 'part_no',
-                    className: 'whitespace-nowrap font-medium text-slate-700 dark:text-gray-200'
-                },
-                {
-                    data: 'customer',
-                    className: 'text-center'
-                },
-                {
-                    data: 'model',
-                    className: 'text-center'
-                },
-                {
-                    data: 'product_status',
-                    className: 'text-center',
-                    render: (d, t, r) => {
-                        const status = d || r.model_project_status || 'Project';
-                        const config = {
-                            'Project': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
-                            'Regular': 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
-                            'Allsize OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
-                            'Allsize NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
-                        };
-                        const colors = config[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+                this.ui.toggleUnitFields();
+            });
+        },
 
-                        const overrideLabel = d ? ' <span class="text-[8px] opacity-50 underline">(O)</span>' : '';
-                        return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border ${colors}">${status}${overrideLabel}</span>`;
-                    }
-                },
-                {
-                    data: null,
-                    render: row => `
-                        <div class="leading-snug">
-                            <div class="font-medium text-slate-700 dark:text-slate-300">${row.material_spec}</div>
-                            <div class="text-[10px] text-gray-400 uppercase tracking-tight">${row.coating_type || '-'}</div>
-                        </div>
-                    `
-                },
-                {
-                    data: null,
-                    className: 'whitespace-nowrap',
-                    render: row => {
-                        // Technical Dimension Format with Unit Logic
-                        const t = parseFloat(row.thickness) || 0;
-                        const w = parseFloat(row.width) || 0;
-                        const l = parseFloat(row.length) || 0;
-                        const l2 = parseFloat(row.length_2) || 0;
-                        const p = parseFloat(row.pitch) || 0;
-                        const unit = (row.unit_name || '').toLowerCase();
-
-                        const fmt = (lbl, val) => `
-                            <span class="inline-flex items-center gap-x-0.5">
-                                <span class="text-gray-500 dark:text-gray-400 font-bold">${lbl}:</span>
-                                <span class="text-slate-800 dark:text-gray-200 font-medium">${val}</span>
-                            </span>
-                        `;
-                        
-                        let items = [];
-                        items.push(fmt('T', t));
-                        items.push(fmt('W', w));
-                        
-                        if (unit.includes('coil')) {
-                            items.push(fmt('P', p));
-                        } else if (unit.includes('trapezoid')) {
-                            items.push(fmt('L', l));
-                            items.push(fmt('L2', l2));
-                        } else {
-                            // Default/Sheet
-                            items.push(fmt('L', l));
-                        }
-
-                        return `
-                            <div class="flex items-center gap-x-3 font-mono text-xs tracking-tight">
-                                ${items.join('')}
-                            </div>
-                        `;
-                    }
-                },
-                { data: 'pcs_per_unit', className: 'text-center' },
-                {
-                    data: 'weight_kg',
-                    className: 'text-center',
-                    render: d => d ? parseFloat(d).toFixed(2) : '-'
-                },
-                { data: 'unit_per_car', className: 'text-center' },
-                { data: 'rank', className: 'text-center' },
-                {
-                    data: 'remark',
-                    className: 'text-xs text-gray-500',
-                    render: d => d || '-'
-                },
-                {
-                    data: 'updated_at',
-                    className: 'whitespace-nowrap text-[10px] text-gray-400',
-                    render: d => d || '-'
-                },
-                {
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    className: 'text-center',
-                    width: '100px',
-                    render: row => `
-                    <div class="flex items-center justify-center gap-1.5">
-                        <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-xs bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 transition-colors" data-id="${row.id}" title="Print">
-                            <i class="fa-solid fa-print text-sm"></i>
-                        </button>
-                        <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${row.id}" title="Edit">
-                            <i class="fa-solid fa-pen-to-square text-sm"></i>
-                        </button>
-                        <button class="duplicate-button h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors" data-id="${row.id}" title="Duplicate">
-                            <i class="fa-solid fa-copy text-sm"></i>
-                        </button>
-                        <button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${row.id}" title="Delete">
-                            <i class="fa-solid fa-trash-can text-sm"></i>
-                        </button>
-                    </div>`
-                }
-            ],
-            order: [
-                [0, 'desc']
-            ]
-        });
-
-        // Modal helpers
-        function showModal(m) {
-            m.removeClass('hidden').addClass('flex');
-        }
-
-        function hideModal(m) {
-            m.addClass('hidden').removeClass('flex');
-        }
-
-        const formModal = $('#formModal');
-        const deleteModal = $('#modal-delete');
-        let deleteId = null;
-
-        // Add button
-        $('#add-button').on('click', function() {
-            initFormSelect2();
-            isEditMode = false;
-            $('#modalTitle').text('Add Inventory Product');
-            $('#formMethod').val('POST');
-            $('#productForm').attr('action', '{{ route("inventory.master.product.store") }}');
-            $('#productForm')[0].reset();
-            $('#pcs_per_unit').val(1);
-            $('#unit_per_car').val(1);
-            $('#min_stock').val(90);
-            $('#density').val('7.85');
-            $('#weight_kg').val('');
-            $('#net_weight').val('');
-            $('#material_price').val('20000');
-            if ($('#product_id').data('select2')) {
-                $('#product_id').select2('destroy');
-            }
-            $('#product_id')
-                .val(null)
-                .prop('disabled', false);
-            
-            initProductSelect2();
-            $('#unit_id').val('').trigger('change');
-            $('[id^="error-"]').addClass('hidden').text('');
-            toggleDuplicateMode(false);
-            toggleUnitFields();
-            showModal(formModal);
-        });
-
-        // Close modals
-        $('.close-modal-button, .close-modal').on('click', function() {
-            hideModal($(this).closest('.modal-container, [tabindex="-1"]'));
-        });
-
-        // Submit form
-        $('#productForm').on('submit', function(e) {
+        handleFormSubmit: function(e) {
             e.preventDefault();
-            $('[id^="error-"]').addClass('hidden').text('');
-
-            // Temporarily enable fields to capture data
-            const wasDuplicate = isDuplicateMode;
-            if (wasDuplicate) toggleDuplicateMode(false);
+            this.ui.clearErrors();
             
-            const formData = new FormData(this);
+            const wasDuplicate = this.state.isDuplicateMode;
+            if (wasDuplicate) this.ui.toggleDuplicateMode(false);
             
-            if (wasDuplicate) toggleDuplicateMode(true);
+            const formData = new FormData(this.elements.form[0]);
+            if (wasDuplicate) this.ui.toggleDuplicateMode(true);
 
             $.ajax({
-                url: $(this).attr('action'),
+                url: this.elements.form.attr('action'),
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
+                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
                 data: formData,
                 processData: false,
                 contentType: false,
                 success: (res) => {
-                    if (res.success) {
-                        table.ajax.reload();
-                        hideModal(formModal);
-                        window.showToast(res.message, 'success');
-                    }
+                    this.state.table.ajax.reload();
+                    this.ui.hideModal(this.elements.formModal);
+                    window.showToast(res.message, 'success');
+                    if (wasDuplicate) this.ui.toggleDuplicateMode(false);
                 },
-                error: (xhr) => {
-                    const errors = xhr.responseJSON?.errors || {};
-                    Object.keys(errors).forEach(key => {
-                        $(`#error-${key}`).text(errors[key][0]).removeClass('hidden');
-                    });
-                    window.showToast(xhr.responseJSON?.message || 'Operation failed', 'error');
-                }
+                error: (xhr) => this.handleAjaxError(xhr)
             });
-        });
+        },
 
-        // Duplicate button logic
-        $(document).on('click', '.duplicate-button', function() {
-            initProductSelect2();
-            const id = $(this).data('id');
-            isEditMode = false; // It's a new record
-            $('#modalTitle').text('Duplicate Inventory Product');
-            $('#formMethod').val('POST');
-            $('#productForm').attr('action', '{{ route("inventory.master.product.store") }}');
-            
-            toggleDuplicateMode(true);
-            $('[id^="error-"]').addClass('hidden').text('');
-
-            $.get(`{{ url('inventory/master/product') }}/${id}`, function(data) {
-                let chain = Promise.resolve();
-
-                if (data.product?.customer_id) {
-                    $('#customer_id').val(data.product.customer_id).trigger('change');
-                    chain = modelLoadPromise;
-                }
-
-                chain.then(() => {
-                    // We DON'T pre-fill model_id to force user to choose a NEW model
-                    $('#model_id').val(null).trigger('change');
-
-                    // Pre-fill Product Select2
-                    if (data.product) {
-                        const productText = `${data.product.part_no} - ${data.product.part_name}`;
-                        const newOption = new Option(productText, data.product.hash_id || data.product_id, true, true);
-                        isAutoFilling = true;
-                        $('#product_id').append(newOption).trigger('change');
-                        isAutoFilling = false;
-                    }
-                });
-
-                // Fill other specs
-                $('#revision').val(data.revision).trigger('change');
-                $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
-                $('#thickness').val(parseFloat(data.thickness || 0));
-                $('#width').val(parseFloat(data.width || 0));
-                $('#length').val(parseFloat(data.length || 0));
-                $('#length_2').val(parseFloat(data.length_2 || 0));
-                $('#pitch').val(parseFloat(data.pitch || 0));
-                $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
-                $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
-                $('#pcs_per_unit').val(data.pcs_per_unit);
-                $('#unit_per_car').val(data.unit_per_car);
-                $('#min_stock').val(data.min_stock);
-                $('#density').val(parseFloat(data.density || 7.85));
-                $('#weight_kg').val(parseFloat(data.weight_kg || 0));
-                $('#net_weight').val(parseFloat(data.net_weight || 0));
-                $('#material_price').val(parseFloat(data.material_price || 20000));
-                $('#remark').val(data.remark);
-
-                $('#product_status').val(data.product_status).trigger('change');
-                $('#product_status_remark').val(data.product_status_remark).trigger('change');
-
-                toggleUnitFields();
-                showModal(formModal);
-                
-                window.showToast('Please select a NEW model to finish duplication.', 'info');
-            });
-        });
-
-        // Edit button
-        $(document).on('click', '.edit-button', function() {
-            initProductSelect2(); // Initialize first
-            const id = $(this).data('id');
-            isEditMode = true;
-            $('#modalTitle').text('Edit Inventory Product');
-            $('#formMethod').val('PUT');
-            $('#productForm').attr('action', `{{ url('inventory/master/product') }}/${id}`);
-            
-            // Initial state: Product enabled (since we allow auto-fill) but we will set it specially
-            if ($('#product_id').data('select2')) {
-                $('#product_id').val(null).trigger('change');
-            }
-            $('[id^="error-"]').addClass('hidden').text('');
-
-            $.get(`{{ url('inventory/master/product') }}/${id}`, function(data) {
-                let chain = Promise.resolve();
-
-                if (data.product?.customer_id) {
-                    $('#customer_id').val(data.product.customer_id).trigger('change');
-                    chain = modelLoadPromise;
-                }
-
-                chain.then(() => {
-                    if (data.model_id) {
-                         $('#model_id').val(data.model_id).trigger('change');
-                    }
-
-                    // Pre-fill Product Select2
-                    if (data.product) {
-                        const productText = `${data.product.part_no} - ${data.product.part_name}`;
-                        const newOption = new Option(productText, data.product.hash_id || data.product_id, true, true);
-                        isAutoFilling = true;
-                        $('#product_id').append(newOption).trigger('change');
-                        isAutoFilling = false;
-                    }
-                });
-
-                $('#revision').val(data.revision).trigger('change');
-                $('#material_spec_id').val(data.material_spec ? data.material_spec.hash_id : '').trigger('change');
-                $('#thickness').val(parseFloat(data.thickness || 0));
-                $('#width').val(parseFloat(data.width || 0));
-                $('#length').val(parseFloat(data.length || 0));
-                $('#length_2').val(parseFloat(data.length_2 || 0));
-                $('#pitch').val(parseFloat(data.pitch || 0));
-                $('#unit_id').val(data.unit ? data.unit.hash_id : '').trigger('change');
-                $('#rank_id').val(data.rank ? data.rank.hash_id : '').trigger('change');
-                $('#pcs_per_unit').val(data.pcs_per_unit);
-                $('#unit_per_car').val(data.unit_per_car);
-                $('#min_stock').val(data.min_stock);
-                $('#density').val(parseFloat(data.density || 7.85));
-                $('#weight_kg').val(parseFloat(data.weight_kg || 0));
-                $('#net_weight').val(parseFloat(data.net_weight || 0));
-                $('#material_price').val(parseFloat(data.material_price || 20000));
-                $('#remark').val(data.remark);
-
-                $('#product_status').val(data.product_status).trigger('change');
-                $('#product_status_remark').val(data.product_status_remark).trigger('change');
-
-                toggleDuplicateMode(false);
-                toggleUnitFields();
-                showModal(formModal);
-            });
-        });
-
-        // Print button
-        $(document).on('click', '.print-button', function() {
-            const id = $(this).data('id');
-            window.open(`{{ url('inventory/master/product') }}/${id}/print`, '_blank');
-        });
-
-
-        // Toggle Unit fields visibility and Visibility of Fields based on Unit Type
-        function toggleUnitFields() {
-            const unitId = $('#unit_id').val();
-            const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
-            const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
-
-            // Reset all visibility first
-            $('#lengthContainer').hide();
-            $('#length2Container').hide();
-            $('#pitchContainer').hide();
-
-            // Logic Visibility
-            if (unitName.includes('sheet')) {
-                // Requirement said "Sheet: Hide L2, Pitch. Show Length"
-                $('#lengthContainer').show();
-                $('#length2Container').hide();
-                $('#pitchContainer').hide();
-            } else if (unitName.includes('trapezoid')) {
-                // Trapezoid: Show Length, Length 2. Hide Pitch.
-                $('#lengthContainer').show();
-                $('#length2Container').show();
-                $('#pitchContainer').hide();
-            } else if (unitName.includes('coil')) {
-                // Coil: Show Pitch. Hide Length, Length 2.
-                $('#lengthContainer').hide();
-                $('#length2Container').hide();
-                $('#pitchContainer').show();
-            } else {
-                // Default if unknown or empty: Show Length.
-                $('#lengthContainer').show();
-            }
-
-            // Trigger calculation when unit changes
-            calculateWeight();
-        }
-
-        $('#unit_id').on('change', function() {
-            toggleUnitFields();
-        });
-
-        // Auto-calculate Weight
-        // Formula:
-        // Sheet: (T x W x L x Density) / 1,000,000
-        // Coil: (T x W x Pitch x Density) / 1,000,000
-        // Trapezoid: (T x W x ((L + L2) / 2) x Density) / 1,000,000
-
-        const inputsForCalc = ['#thickness', '#width', '#length', '#length_2', '#pitch', '#density'];
-        $(inputsForCalc.join(', ')).on('input change', calculateWeight);
-
-        function calculateWeight() {
-            const unitId = $('#unit_id').val();
-            const selectedUnit = dropdownData.units ? dropdownData.units.find(u => u.hash_id === unitId) : null;
-            const unitName = selectedUnit ? selectedUnit.name.toLowerCase() : '';
-
-            const t = parseFloat($('#thickness').val()) || 0;
-            const w = parseFloat($('#width').val()) || 0;
-            const density = parseFloat($('#density').val()) || 0;
-
-            let weight = 0;
-
-            if (unitName.includes('sheet')) {
-                const l = parseFloat($('#length').val()) || 0;
-                weight = (t * w * l * density) / 1000000;
-            } else if (unitName.includes('coil')) {
-                const p = parseFloat($('#pitch').val()) || 0;
-                weight = (t * w * p * density) / 1000000;
-            } else if (unitName.includes('trapezoid')) {
-                const l = parseFloat($('#length').val()) || 0;
-                const l2 = parseFloat($('#length_2').val()) || 0;
-                const avgL = (l + l2) / 2;
-                weight = (t * w * avgL * density) / 1000000;
-            } else {
-                // Fallback default (Sheet logic) if unit not selected or known
-                const l = parseFloat($('#length').val()) || 0;
-                weight = (t * w * l * density) / 1000000;
-            }
-
-            $('#weight_kg').val(weight > 0 ? weight.toFixed(3) : '');
-        }
-
-        // Auto-calculate min stock
-        function calculateMinStock() {
-            const upc = parseInt($('#unit_per_car').val()) || 0;
-            $('#min_stock').val(upc * 90);
-        }
-
-        $('#unit_per_car').on('input change', calculateMinStock);
-
-        // Delete button
-        $(document).on('click', '.delete-button', function() {
-            deleteId = $(this).data('id');
-            showModal(deleteModal);
-        });
-
-        // Confirm delete
-        $('#confirmDelete').on('click', function() {
-            if (!deleteId) return;
-
+        handleDelete: function() {
+            if (!this.state.deleteId) return;
             $.ajax({
-                url: `{{ url('inventory/master/product') }}/${deleteId}`,
+                url: `${this.config.routes.base}/${this.state.deleteId}`,
                 method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
+                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
                 success: (res) => {
-                    if (res.success) {
-                        table.ajax.reload();
-                        hideModal(deleteModal);
-                        deleteId = null;
-                        toast('success', 'Success', res.message);
-                    }
+                    this.state.table.ajax.reload();
+                    this.ui.hideModal(this.elements.deleteModal);
+                    window.showToast(res.message, 'success');
                 },
-                error: (xhr) => {
-                    toast('error', 'Error', xhr.responseJSON?.message || 'Delete failed');
-                }
+                error: (xhr) => this.handleAjaxError(xhr)
             });
-        });
-    });
+        },
+
+        handleAjaxError: function(xhr) {
+            const errors = xhr.responseJSON?.errors || {};
+            Object.keys(errors).forEach(key => $(`#error-${key}`).text(errors[key][0]).removeClass('hidden'));
+            window.showToast(xhr.responseJSON?.message || 'Operation failed', 'error');
+        },
+
+        /**
+         * CALCULATION LOGIC
+         */
+        logic: {
+            calculateWeight: function() {
+                const unitId = ProductApp.elements.unitSelect.val();
+                const unit = ProductApp.state.dropdownData.units?.find(u => u.hash_id === unitId);
+                const name = (unit?.name || '').toLowerCase();
+                
+                const t = parseFloat($('#thickness').val()) || 0;
+                const w = parseFloat($('#width').val()) || 0;
+                const d = parseFloat($('#density').val()) || 0;
+                let weight = 0;
+
+                if (name.includes('sheet')) weight = (t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000;
+                else if (name.includes('coil')) weight = (t * w * (parseFloat($('#pitch').val()) || 0) * d) / 1000000;
+                else if (name.includes('trapezoid')) weight = (t * w * (((parseFloat($('#length').val()) || 0) + (parseFloat($('#length_2').val()) || 0)) / 2) * d) / 1000000;
+                else weight = (t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000;
+
+                $('#weight_kg').val(weight > 0 ? weight.toFixed(3) : '');
+            },
+
+            calculateMinStock: function() {
+                $('#min_stock').val((parseInt($('#unit_per_car').val()) || 0) * 90);
+            },
+
+            renderDimensions: function(row) {
+                const unit = (row.unit_name || '').toLowerCase();
+                const fmt = (l, v) => `<span class="inline-flex items-center gap-x-0.5"><span class="text-gray-500 font-bold">${l}:</span><span class="text-slate-800 font-medium">${v}</span></span>`;
+                let items = [fmt('T', parseFloat(row.thickness) || 0), fmt('W', parseFloat(row.width) || 0)];
+                if (unit.includes('coil')) items.push(fmt('P', parseFloat(row.pitch) || 0));
+                else if (unit.includes('trapezoid')) { items.push(fmt('L', parseFloat(row.length) || 0)); items.push(fmt('L2', parseFloat(row.length_2) || 0)); }
+                else items.push(fmt('L', parseFloat(row.length) || 0));
+                return `<div class="flex items-center gap-x-3 font-mono text-xs tracking-tight">${items.join('')}</div>`;
+            }
+        },
+
+        populateFormDropdowns: function(data) {
+            const self = this;
+            this.elements.customerSelect.empty().append('<option></option>');
+            data.customers?.forEach(c => this.elements.customerSelect.append(new Option(c.code, c.id)));
+            data.materialSpecs?.forEach(ms => $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`));
+            data.units?.forEach(u => this.elements.unitSelect.append(`<option value="${u.hash_id}">${u.code} - ${u.name}</option>`));
+            data.ranks?.forEach(r => $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`));
+            $('#revision_id').empty().append('<option value="">Select Revision</option>');
+            data.revisions?.forEach(rev => $('#revision_id').append(`<option value="${rev.hash_id}">${rev.code}</option>`));
+        },
+
+        /**
+         * UI UTILITIES
+         */
+        ui: {
+            showModal: m => m.removeClass('hidden').addClass('flex'),
+            hideModal: m => m.addClass('hidden').removeClass('flex'),
+            clearErrors: () => $('[id^="error-"]').addClass('hidden').text(''),
+            resetForm: (title, method, action) => {
+                $('#modalTitle').text(title);
+                $('#formMethod').val(method);
+                $('#productForm').attr('action', action)[0].reset();
+                $('#pcs_per_unit, #unit_per_car').val(1);
+                $('#min_stock').val(90);
+                $('#density').val('7.85');
+                $('#material_price').val('20000');
+                $('#weight_kg, #net_weight').val('');
+                $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id, #revision_id, #product_status, #product_status_remark').val('').trigger('change');
+                ProductApp.ui.clearErrors();
+            },
+            toggleDuplicateMode: function(isDup) {
+                ProductApp.state.isDuplicateMode = isDup;
+                const fields = $('#productForm').find('input, select, textarea').not('#model_id, [name="_token"], [name="_method"]');
+                fields.prop('disabled', isDup).trigger('change.select2');
+                if (isDup) $('#model_id').prop('disabled', false).trigger('change.select2');
+            },
+            toggleUnitFields: function() {
+                const unitId = ProductApp.elements.unitSelect.val();
+                const unit = ProductApp.state.dropdownData.units?.find(u => u.hash_id === unitId);
+                const name = (unit?.name || '').toLowerCase();
+                $('#lengthContainer, #length2Container, #pitchContainer').hide();
+                if (name.includes('sheet')) $('#lengthContainer').show();
+                else if (name.includes('trapezoid')) $('#lengthContainer, #length2Container').show();
+                else if (name.includes('coil')) $('#pitchContainer').show();
+                else $('#lengthContainer').show();
+                ProductApp.logic.calculateWeight();
+            }
+        }
+    };
+
+    ProductApp.init();
+});
 </script>
 @endpush

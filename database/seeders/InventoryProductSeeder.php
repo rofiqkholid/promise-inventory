@@ -162,11 +162,22 @@ class InventoryProductSeeder extends Seeder
             ],
         ];
 
+        // Pre-fetch all revisions for performance
+        $revisions = DB::table('inv_m_revision')->pluck('id', 'code');
+
         foreach ($products as $item) {
-            InventoryProduct::updateOrCreate(
-                ['product_id' => $item['product_id'], 'revision' => $item['revision']],
-                $item
-            );
+            $revisionCode = $item['revision'];
+            $revisionId = $revisions[$revisionCode] ?? null;
+
+            if ($revisionId) {
+                unset($item['revision']);
+                $item['revision_id'] = $revisionId;
+                
+                InventoryProduct::updateOrCreate(
+                    ['product_id' => $item['product_id'], 'revision_id' => $item['revision_id']],
+                    $item
+                );
+            }
         }
     }
 }

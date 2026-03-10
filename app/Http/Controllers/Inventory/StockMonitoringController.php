@@ -88,6 +88,7 @@ class StockMonitoringController extends Controller
             ->leftJoin('inv_m_material_spec', 'inv_m_material_spec.id', '=', 'inv_t_product_detail.material_spec_id')
             ->leftJoin('inv_m_rank', 'inv_m_rank.id', '=', 'inv_t_product_detail.rank_id')
             ->leftJoin('inv_m_unit', 'inv_m_unit.id', '=', 'inv_t_product_detail.unit_id')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
             // Join the aggregated transaction summary
             ->leftJoinSub($txSubquery, 'tx', 'tx.product_detail_id', '=', 'inv_t_product_detail.id')
             // Latest STO Join
@@ -103,7 +104,7 @@ class StockMonitoringController extends Controller
                 'products.part_name',
                 'inv_t_product_detail.current_stock_qty',
                 'inv_t_product_detail.pcs_per_unit',
-                'inv_t_product_detail.revision',
+                'r.code as revision',
                 'inv_t_product_detail.remark',
                 'inv_m_unit.code as unit_code',
                 'inv_m_unit.name as unit_name',
@@ -136,8 +137,7 @@ class StockMonitoringController extends Controller
                 $q->where('products.part_no', 'like', '%' . $search . '%')
                     ->orWhere('inv_m_material_spec.spec_name', 'like', '%' . $search . '%')
                     ->orWhere('models.name', 'like', '%' . $search . '%')
-                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN ' - ' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%'])
-                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN '-' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%']);
+                    ->orWhereRaw("(products.part_no + ' - ' + ISNULL(r.code, '')) LIKE ?", ['%' . $search . '%']);
             });
         }
 
@@ -222,28 +222,36 @@ class StockMonitoringController extends Controller
         $recordsTotal = InventoryProduct::where('is_active', 1)->count();
         $filteredRecords = $query->count();
 
-        // Sorting - Map frontend index to backend field
-        $sortableColumns = ['id', 'part_no', 'spec_size', 'project_status', 'remark', 'balance_pcs'];
+        // Sorting - Map frontend index to backend field accurately
+        $sortableColumns = [
+            0 => 'inv_t_product_detail.id', // No
+            1 => 'part_no',              // Part Information
+            2 => 'project_status',        // Status
+            3 => 'balance_pcs',           // Current Balance
+        ];
         
+        $currentIdx = 4;
         foreach ($categories as $cat) {
-            $sortableColumns[] = 'usage'; // Placeholder
+            $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
+            $sortableColumns[$currentIdx++] = $alias;
         }
         
-        $sortableColumns[] = 'sto_qty';
-        $sortableColumns[] = 'action';
-
+        $sortableColumns[$currentIdx++] = 'sto_qty'; // STO GAP
+        $sortableColumns[$currentIdx++] = 'action';  // Action
+        
         $orderColIdx = $request->input('order.0.column', 1);
         $orderDir = $request->input('order.0.dir', 'asc');
-        $orderCol = $sortableColumns[$orderColIdx] ?? 'products.part_no';
+        $orderCol = $sortableColumns[$orderColIdx] ?? 'part_no';
 
         if ($orderCol === 'part_no') {
             $query->orderBy('products.part_no', $orderDir);
-        } elseif ($orderCol === 'spec_size') {
-            $query->orderBy('inv_m_material_spec.spec_name', $orderDir);
         } elseif ($orderCol === 'project_status') {
-            $query->orderBy('inv_m_model_status.project_status', $orderDir);
+            // Sort by product_status override first, then by model's project_status
+            $query->orderBy(DB::raw("COALESCE(inv_t_product_detail.product_status, inv_m_model_status.project_status)"), $orderDir);
         } elseif ($orderCol === 'balance_pcs') {
             $query->orderBy('inv_t_product_detail.current_stock_qty', $orderDir);
+        } elseif (strpos($orderCol, 'usage_') === 0) {
+            $query->orderBy($orderCol, $orderDir);
         } elseif ($orderCol === 'sto_qty') {
             $query->orderBy('latest_sto.sto_gap', $orderDir);
         } else {
@@ -458,13 +466,14 @@ class StockMonitoringController extends Controller
             ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
             ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
             ->where('p.id', $inventoryProduct->id)
             ->select([
                 'prod.part_no',
                 'prod.part_name',
                 'cust.code as customer_code',
                 'model.name as model_name',
-                'p.revision',
+                'rev.code as revision',
                 'p.thickness',
                 'p.width',
                 'p.length',
@@ -516,6 +525,7 @@ class StockMonitoringController extends Controller
             ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
             ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
             ->leftJoin('inv_m_model_status as ms_model', 'ms_model.model_id', '=', 'p.model_id')
             ->where('p.id', $inventoryProduct->id)
             ->select([
@@ -523,7 +533,7 @@ class StockMonitoringController extends Controller
                 'prod.part_name',
                 'cust.code as customer_code',
                 'model.name as model_name',
-                'p.revision',
+                'rev.code as revision',
                 'p.thickness',
                 'p.width',
                 'p.length',
@@ -641,8 +651,9 @@ class StockMonitoringController extends Controller
             ->leftJoin('inv_m_model_status', 'inv_m_model_status.model_id', '=', 'models.id')
             ->leftJoin('customers', 'customers.id', '=', 'products.customer_id')
             ->leftJoin('inv_m_material_spec', 'inv_m_material_spec.id', '=', 'inv_t_product_detail.material_spec_id')
-            ->leftJoin('inv_m_rank', 'inv_m_rank.id', '=', 'inv_t_product_detail.rank_id')
-            ->leftJoin('inv_m_unit', 'inv_m_unit.id', '=', 'inv_t_product_detail.unit_id')
+            ->leftJoin('inv_m_rank as r', 'r.id', '=', 'inv_t_product_detail.rank_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'inv_t_product_detail.revision_id')
             ->leftJoinSub($txSubquery, 'tx', 'tx.product_detail_id', '=', 'inv_t_product_detail.id')
             ->leftJoin(DB::raw("(SELECT sd.product_detail_id, sd.diff_qty as sto_gap 
                          FROM inv_t_sto_detail sd 
@@ -659,9 +670,7 @@ class StockMonitoringController extends Controller
                 'inv_m_material_spec.spec_name',
                 'inv_m_material_spec.coating_type',
                 'inv_m_rank.code as rank_code',
-                'inv_t_product_detail.product_status',
-                'inv_t_product_detail.product_status_remark',
-                'inv_m_model_status.project_status as model_project_status',
+                'rev.code as revision',
                 'latest_sto.sto_gap',
                 'tx.*'
             ]);
@@ -726,8 +735,7 @@ class StockMonitoringController extends Controller
                 $q->where('products.part_no', 'like', '%' . $search . '%')
                     ->orWhere('inv_m_material_spec.spec_name', 'like', '%' . $search . '%')
                     ->orWhere('models.name', 'like', '%' . $search . '%')
-                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN ' - ' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%'])
-                    ->orWhereRaw("(products.part_no + CASE WHEN inv_t_product_detail.revision IS NOT NULL AND inv_t_product_detail.revision != '' THEN '-' + inv_t_product_detail.revision ELSE '' END) LIKE ?", ['%' . $search . '%']);
+                    ->orWhereRaw("(products.part_no + ' - ' + ISNULL(rev.code, '')) LIKE ?", ['%' . $search . '%']);
             });
         }
 

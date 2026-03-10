@@ -256,6 +256,8 @@
         // DataTable Configuration
         let columns = [{
                 data: null,
+                orderable: false, // Not sortable
+                searchable: false,
                 render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
             },
             {
@@ -346,18 +348,19 @@
         ];
 
         const stoColumnDef = {
-            data: 'sto_gap_display',
+            data: 'sto_gap', // Use raw data for sorting
             className: 'text-center',
             render: function(data, type, row) {
                 if (type === 'display') {
-                    if (data === '-') return `<span class="text-gray-300 font-mono text-[10px]">-</span>`;
+                    const display = row.sto_gap_display;
+                    if (display === '-') return `<span class="text-gray-300 font-mono text-[10px]">-</span>`;
                     let colorClass = 'text-slate-500 dark:text-gray-400';
                     if (parseFloat(row.sto_gap) > 0) colorClass = 'text-emerald-600 dark:text-emerald-400';
                     else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-rose-600 dark:text-rose-400';
                     
                     return `
                         <div class="sto-log-trigger cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-all group/gap" data-id="${row.id}">
-                            <span class="${colorClass} font-mono font-black text-[13px] tracking-tight transition-transform group-hover/gap:scale-110">${data}</span>
+                            <span class="${colorClass} font-mono font-black text-[13px] tracking-tight transition-transform group-hover/gap:scale-110">${display}</span>
                             <i class="fa-solid fa-clock-rotate-left text-[9px] opacity-20 group-hover/gap:opacity-80 transition-opacity"></i>
                         </div>
                     `;
@@ -436,6 +439,7 @@
                     d.project_status = $('#filter_project_status').val();
                 }
             },
+            order: [[1, 'asc']], // Default sort by Part Information
             columns: columns,
             pageLength: 25,
             createdRow: function(row, data, dataIndex) {

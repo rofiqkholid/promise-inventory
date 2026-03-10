@@ -30,14 +30,29 @@
     justify-content: flex-start;
     align-items: stretch;
     gap: 0.10in;
+    position: relative; /* Add relative for badge positioning */
     page-break-after: always;
   }
   .label.last {
     page-break-after: auto;
   }
 
+  .ga-badge-top {
+    position: absolute;
+    top: 0.15in;
+    right: 0.15in;
+    background: #000;
+    color: #fff;
+    padding: 2px 10px;
+    font-weight: 900;
+    font-size: 20px; /* Adjusted size */
+    border-radius: 4px;
+    line-height: 1;
+    z-index: 10;
+  }
+
   .qr-wrap {
-    flex: 0 0 45%;
+    flex: 0 0 45%; /* Reduced flex area */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -47,41 +62,54 @@
   .qr-wrap img,
   .qr-wrap canvas,
   .qr-wrap div {
-    width: 90% !important;
-    height: 90% !important;
+    width: 85% !important; /* Reduced QR size */
+    height: 85% !important; /* Reduced QR size */
     object-fit: contain;
   }
 
   .details {
     flex: 1;
     border: 1px solid #000;
-    padding: 0.08in;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.06in;
+    overflow: hidden;
   }
 
   .details .title {
     text-align: center;
     font-weight: bold;
-    font-size: 18px;
-    padding-bottom: 0.06in;
-    border-bottom: 1px solid #000;
+    font-size: 16px;
+    padding: 8px 0;
+    margin: 0;
+    background: #fff;
+    border-bottom: 1.5px solid #000;
+    letter-spacing: 1px;
   }
 
   .details table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 13.5px;
+    margin-top: 5px;
   }
   .details td {
-    padding: 3px 4px;
+    padding: 4px 8px;
     vertical-align: top;
-    line-height: 1.2;
+    line-height: 1.3;
   }
   .details .titleDetail {
-    width: 25%;
+    width: 75px;
     font-weight: bold;
+    color: #444;
+  }
+  .details .colon {
+    width: 10px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .details .valueContent {
+    font-weight: 500;
   }
 
   /* Dimension info styling */
@@ -91,6 +119,25 @@
     font-weight: normal;
     display: block;
     margin-top: 2px;
+  }
+
+  .badge {
+    background: #000;
+    color: #fff;
+    padding: 2px 6px;
+    margin-left: 4px;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 2px;
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  .dim-unit {
+    color: #000;
+    font-weight: bold;
+    margin-right: 2px;
   }
 
   @media screen {
@@ -113,6 +160,18 @@
 
   @foreach($products as $product)
     <section class="label {{ $loop->last ? 'last' : '' }}">
+      @php
+          // Extract GA/Non-GA from material or other source if available
+          preg_match('/(Non-GA|GA)/i', $product->material, $matches);
+          $gaStatus = $matches[0] ?? null;
+      @endphp
+      
+      @if($gaStatus)
+      <div class="ga-badge-top">
+        {{ strtoupper($gaStatus) }}
+      </div>
+      @endif
+
       <div class="qr-wrap">
         {!! $product->qrcode !!}
       </div>
@@ -121,36 +180,51 @@
         <table>
           <tr>
             <td class="titleDetail">Part No</td>
-            <td>:</td>
-            <td><b>{{ $product->item_no }}</b></td>
+            <td class="colon">:</td>
+            <td class="valueContent"><b>{{ $product->item_no }}</b></td>
           </tr>
           <tr>
             <td class="titleDetail">Part Name</td>
-            <td>:</td>
-            <td>{{ $product->item_name }}</td>
+            <td class="colon">:</td>
+            <td class="valueContent">{{ $product->item_name }}</td>
           </tr>
           <tr>
             <td class="titleDetail">Model</td>
-            <td>:</td>
-            <td>{{ $product->model_name }}</td>
+            <td class="colon">:</td>
+            <td class="valueContent">{{ $product->model_name }}</td>
           </tr>
           <tr>
             <td class="titleDetail">Customer</td>
-            <td>:</td>
-            <td>{{ $product->partner_code }}</td>
+            <td class="colon">:</td>
+            <td class="valueContent">{{ $product->partner_code }}</td>
           </tr>
           <tr>
             <td class="titleDetail">Dimension</td>
-            <td>:</td>
-            <td>
-                {{ $product->dimension }}
-                <span class="dim-info">{{ $product->dimension_label }}</span>
+            <td class="colon">:</td>
+            <td class="valueContent">
+                @php
+                    $dimValues = explode(' x ', $product->dimension);
+                    $dimLabelsRaw = str_replace(['(', ')'], '', $product->dimension_label);
+                    $dimLabels = explode(' x ', $dimLabelsRaw);
+                    $dimFormatted = [];
+                    foreach($dimValues as $i => $v) {
+                        $l = isset($dimLabels[$i]) ? trim($dimLabels[$i]) : '';
+                        // Bold specific headers for precision look
+                        $dimFormatted[] = ($l ? "<span class='dim-unit'>$l:</span>" : "") . trim($v);
+                    }
+                @endphp
+                {!! implode(' &nbsp; ', $dimFormatted) !!}
             </td>
           </tr>
           <tr>
             <td class="titleDetail">Material</td>
-            <td>:</td>
-            <td>{{ $product->material }}</td>
+            <td class="colon">:</td>
+            <td class="valueContent">
+                @php
+                    $mat = preg_replace('/\(?(Non-GA|GA)\)?/i', '', $product->material);
+                @endphp
+                {{ trim($mat) }}
+            </td>
           </tr>
         </table>
       </div>

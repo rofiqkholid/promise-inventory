@@ -21,7 +21,8 @@ class InventoryTransactionController extends Controller
         }
         
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
-            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision', 'inv_t_product_detail.pcs_per_unit')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
+            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'r.code as revision', 'inv_t_product_detail.pcs_per_unit')
             ->where('inv_t_product_detail.is_active', 1)
             ->orderBy('products.part_no')
             ->get();
@@ -38,7 +39,7 @@ class InventoryTransactionController extends Controller
 
     public function data(Request $request)
     {
-        $query = InventoryTransaction::with(['product.product', 'user', 'transactionCategory']);
+        $query = InventoryTransaction::with(['product.product', 'product.revision', 'user', 'transactionCategory']);
 
         // Filter by Product
         if ($request->has('product_detail_id') && !empty($request->product_detail_id)) {
@@ -101,11 +102,40 @@ class InventoryTransactionController extends Controller
             });
         }
 
-        // Sorting
-        $columns = ['id', 'transaction_date', 'product_detail_id', 'transaction_category_id', 'qty', 'user_id', 'remark'];
-        $orderBy = $columns[$request->input('order.0.column')] ?? 'created_at';
-        $orderDir = $request->input('order.0.dir') ?? 'desc';
-        $query->orderBy($orderBy, $orderDir);
+        // Sorting - Align with Blade: 0:Timestamp, 1:Part, 2:Category, 3:Qty, 4:PIC, 5:Action
+        if ($request->has('order')) {
+            $sortableColumns = [
+                0 => 'inv_t_inventory_transaction.transaction_date',
+                1 => 'products.part_no',
+                2 => 'inv_m_transaction_category.name',
+                3 => 'inv_t_inventory_transaction.qty',
+                4 => 'users.name',
+            ];
+            
+            $colIndex = $request->input('order.0.column');
+            $dir = $request->input('order.0.dir', 'desc');
+            $colName = $sortableColumns[$colIndex] ?? 'inv_t_inventory_transaction.created_at';
+
+            if ($colName === 'products.part_no') {
+                $query->join('inv_t_product_detail', 'inv_t_product_detail.id', '=', 'inv_t_inventory_transaction.product_detail_id')
+                      ->join('products', 'products.id', '=', 'inv_t_product_detail.product_id')
+                      ->select('inv_t_inventory_transaction.*')
+                      ->orderBy('products.part_no', $dir);
+            } elseif ($colName === 'users.name') {
+                $query->join('users', 'users.id', '=', 'inv_t_inventory_transaction.user_id')
+                      ->select('inv_t_inventory_transaction.*')
+                      ->orderBy('users.name', $dir);
+            } elseif ($colName === 'inv_m_transaction_category.name') {
+                $query->join('inv_m_transaction_category', 'inv_m_transaction_category.id', '=', 'inv_t_inventory_transaction.transaction_category_id')
+                      ->select('inv_t_inventory_transaction.*')
+                      ->orderBy('inv_m_transaction_category.name', $dir);
+            } else {
+                $query->orderBy($colName, $dir);
+                if (str_contains($colName, 'transaction_date')) $query->orderBy('inv_t_inventory_transaction.created_at', 'desc');
+            }
+        } else {
+            $query->orderBy('inv_t_inventory_transaction.transaction_date', 'desc')->orderBy('inv_t_inventory_transaction.created_at', 'desc');
+        }
 
         $perPage = $request->input('length', 10);
         $start = $request->input('start', 0);
@@ -121,7 +151,7 @@ class InventoryTransactionController extends Controller
             return [
                 'id' => $item->hash_id,
                 'transaction_date' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
-                'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision : ''),
+                'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision->code : ''),
                 'product_name' => $item->product->product->part_name ?? '-',
                 'category' => $item->transactionCategory->code ?? '-',
                 'qty' => $item->qty,

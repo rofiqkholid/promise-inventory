@@ -38,21 +38,32 @@ class StoController extends Controller
                 });
             }
 
-            // Ordering
+            // Ordering - Map index to Database field
             if ($request->has('order')) {
-                $columns = ['code', 'period_start', 'status', 'pic_id', 'created_at']; // Map index to col name
+                $sortableColumns = [
+                    0 => 'inv_t_sto_event.id',
+                    1 => 'code',
+                    2 => 'period_start',
+                    3 => 'pic_name',
+                    4 => 'net_amount',
+                    5 => 'net_pcs',
+                    6 => 'status',
+                ];
+                
                 $colIndex = $request->input('order.0.column');
-                $colName = $columns[$colIndex] ?? 'created_at';
+                $colName = $sortableColumns[$colIndex] ?? 'inv_t_sto_event.created_at';
                 $dir = $request->input('order.0.dir', 'desc');
                 
-                if ($colName === 'pic_id') {
-                    // Sort by relationship
-                    $query->orderBy('user_id', $dir); 
+                if ($colName === 'pic_name') {
+                    $query->join('users', 'users.id', '=', 'inv_t_sto_event.user_id')
+                          ->orderBy('users.name', $dir);
+                } elseif (in_array($colName, ['net_amount', 'net_pcs'])) {
+                    $query->orderBy($colName, $dir);
                 } else {
                     $query->orderBy($colName, $dir);
                 }
             } else {
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy('inv_t_sto_event.created_at', 'desc');
             }
 
             // Count Total & Filtered
@@ -248,7 +259,8 @@ class StoController extends Controller
 
         // Used for "Remaining Items" list
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
-            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
+            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'r.code as revision')
             ->where('inv_t_product_detail.is_active', 1)
             ->whereNotIn('inv_t_product_detail.id', $countedIds)
             ->orderBy('products.part_no')
@@ -256,7 +268,8 @@ class StoController extends Controller
 
         // Used for the search/scanner dropdown (contains all active products)
         $allProducts = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
-            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
+            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'r.code as revision')
             ->where('inv_t_product_detail.is_active', 1)
             ->orderBy('products.part_no')
             ->get();
@@ -274,7 +287,7 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'auditor', 'reason', 'location'])
+        $query = StoDetail::with(['product', 'product.product', 'product.unit', 'product.revision', 'auditor', 'reason', 'location'])
             ->where('event_id', $stoEvent->id);
 
         // Searching
@@ -287,21 +300,53 @@ class StoController extends Controller
             });
         }
 
-        // Ordering
-        $columns = ['row_number', 'updated_at', 'product_id', 'system_qty_snapshot', 'real_qty_input', 'diff_qty', 'remark', 'action']; 
-        $colIndex = $request->input('order.0.column', 0);
+        // Ordering - Align with Blade table structure
+        $sortableColumns = [
+            0 => 'inv_t_sto_detail.id',      // No
+            1 => 'updated_at',               // Timestamp
+            2 => 'part_no',                  // Material Info
+            3 => 'auditor_name',             // Auditor
+            4 => 'system_qty_snapshot',      // System Qty
+            5 => 'system_amount',            // System Amount
+            6 => 'real_qty_input',           // Real Qty
+            7 => 'real_amount',              // Real Amount
+            8 => 'diff_qty',                 // Variance Qty
+            9 => 'diff_amount',              // Variance Amount
+            10 => 'location_name',           // Location
+            11 => 'reason_name',             // Reason
+            12 => 'remark',                  // Remark
+            13 => 'action'                   // Action
+        ];
+        
+        $colIndex = $request->input('order.0.column', 1);
         $dir = $request->input('order.0.dir', 'desc');
-        $colName = $columns[$colIndex] ?? 'updated_at';
+        $colName = $sortableColumns[$colIndex] ?? 'updated_at';
 
-        if ($colName === 'product_id') {
-             $query->join('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
-                    ->join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
-                    ->orderBy('products.part_no', $dir)
-                    ->select('inv_t_sto_detail.*'); // Avoid column collision
-        } elseif ($colName !== 'action' && $colName !== 'row_number' && $colName !== 'remark') {
-             $query->orderBy($colName, $dir);
+        // Base Query with necessary calculated fields for sorting
+        $query->addSelect([
+            'auditor_name' => \App\Models\User::select('name')->whereColumn('id', 'inv_t_sto_detail.auditor_id')->limit(1),
+            'location_name' => \App\Models\InventoryModel\Location::select('name')->whereColumn('id', 'inv_t_sto_detail.location_id')->limit(1),
+            'reason_name' => \App\Models\InventoryModel\StoReason::select('name')->whereColumn('id', 'inv_t_sto_detail.reason_id')->limit(1),
+            // Material Info sort logic
+            'part_no' => \App\Models\InventoryModel\Product::select('part_no')
+                ->join('inv_t_product_detail', 'inv_t_product_detail.product_id', '=', 'products.id')
+                ->whereColumn('inv_t_product_detail.id', 'inv_t_sto_detail.product_detail_id')
+                ->limit(1),
+            // Prices/Amounts for sorting
+            'system_amount' => DB::raw("(inv_t_sto_detail.system_qty_snapshot * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0))"),
+            'real_amount' => DB::raw("(inv_t_sto_detail.real_qty_input * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0))"),
+            'diff_amount' => DB::raw("((inv_t_sto_detail.real_qty_input - inv_t_sto_detail.system_qty_snapshot) * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0))"),
+        ])
+        ->leftJoin('inv_t_product_detail as pd', 'pd.id', '=', 'inv_t_sto_detail.product_detail_id');
+
+        if ($colName === 'part_no') {
+            $query->orderBy('part_no', $dir);
+        } elseif (in_array($colName, ['auditor_name', 'location_name', 'reason_name', 'system_amount', 'real_amount', 'diff_amount'])) {
+            $query->orderBy($colName, $dir);
+        } elseif (in_array($colName, ['updated_at', 'system_qty_snapshot', 'real_qty_input', 'diff_qty', 'remark'])) {
+            $query->orderBy('inv_t_sto_detail.' . $colName, $dir);
         } else {
-             $query->orderBy('updated_at', 'desc');
+            $query->orderBy('inv_t_sto_detail.updated_at', 'desc');
         }
 
         $recordsTotal = StoDetail::where('event_id', $stoEvent->id)->count();
@@ -338,7 +383,7 @@ class StoController extends Controller
                 'hash_id' => $detail->hash_id,
                 'updated_at' => $detail->updated_at->format('d/m/Y H:i'),
                 'part_no' => $detail->product->product->part_no ?? '-',
-                'revision' => $detail->product->revision ?? '',
+                'revision' => $detail->product->revision->code ?? '',
                 'part_name' => $detail->product->product->part_name ?? '-',
                 'auditor' => $detail->auditor->name ?? '-',
                 'system_qty' => (float)$detail->system_qty_snapshot,
@@ -405,7 +450,7 @@ class StoController extends Controller
             }
         }
 
-        $product = InventoryProduct::with(['product', 'unit'])->find($productId);
+        $product = InventoryProduct::with(['product', 'unit', 'revision'])->find($productId);
         
         if (!$product) {
             return response()->json(['success' => false, 'message' => 'Product details missing.'], 404);
@@ -434,7 +479,7 @@ class StoController extends Controller
             'success' => true,
             'data' => [
                 'product_id_hash' => $product->hash_id,
-                'part_no' => ($product->product->part_no ?? '-') . ' - ' . ($product->revision ?? ''),
+                'part_no' => ($product->product->part_no ?? '-') . ' - ' . ($product->revision->code ?? ''),
                 'part_name' => $product->product->part_name ?? '-',
                 'unit' => $product->unit->code ?? 'PCS',
                 'system_qty' => $systemQty,

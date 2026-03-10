@@ -153,7 +153,7 @@
                 ajax: "{{ route('inventory.sto.index') }}",
                 order: [[1, 'desc']],
                 columns: [
-                    { data: 'row_no', className: 'text-center text-slate-500 text-[11px]' },
+                    { data: 'row_no', orderable: false, className: 'text-center text-slate-500 text-[11px]' },
                     { data: 'code', className: 'text-left font-bold text-slate-800 dark:text-white text-xs' },
                     { 
                         data: null, 

@@ -35,14 +35,14 @@
         <tr>
             <td style="border: 1px solid #000000; font-weight: bold; background-color: #f9fafb;">Revision / Name</td>
             <td style="border: 1px solid #000000; text-align: center; font-weight: bold; background-color: #dbeafe;">{{ $baseRfq->rfq_name ?? 'Baseline' }}</td>
-            <td style="border: 1px solid #000000; text-align: center; font-weight: bold; background-color: #d1fae5;">Rev {{ $latestRev->revision ?? '-' }}</td>
+            <td style="border: 1px solid #000000; text-align: center; font-weight: bold; background-color: #d1fae5;">Rev {{ $latestRev->revision->code ?? '-' }}</td>
             <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">Actual - Plan</td>
             @foreach($rfqHistory as $r)
                 <td style="border: 1px solid #000000; text-align: center; color: #6b7280; background-color: #f9fafb;">{{ $r->rfq_name }}</td>
             @endforeach
             @foreach($revisions as $idx => $rev)
                 @if($idx > 0)
-                    <td style="border: 1px solid #000000; text-align: center; color: #6b7280; background-color: #f9fafb;">Rev {{ $rev->revision }}</td>
+                    <td style="border: 1px solid #000000; text-align: center; color: #6b7280; background-color: #f9fafb;">Rev {{ $rev->revision->code ?? '-' }}</td>
                 @endif
             @endforeach
         </tr>

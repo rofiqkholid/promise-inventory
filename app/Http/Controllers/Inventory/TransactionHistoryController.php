@@ -20,7 +20,8 @@ class TransactionHistoryController extends Controller
         }
         
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
-            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_t_product_detail.revision')
+            ->leftJoin('inv_m_revision', 'inv_t_product_detail.revision_id', '=', 'inv_m_revision.id')
+            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'inv_m_revision.code as revision')
             ->where('inv_t_product_detail.is_active', 1)
             ->orderBy('products.part_no')
             ->get();
@@ -34,6 +35,7 @@ class TransactionHistoryController extends Controller
 {
     $query = InventoryTransaction::with([
         'product.product',
+        'product.revision',
         'user',
         'transactionCategory',
         'coilCenter',
@@ -110,22 +112,41 @@ class TransactionHistoryController extends Controller
     /* =====================================================
      * SORTING
      * ===================================================== */
-    $columns = [
-        'transaction_date',
-        'product_detail_id',
-        'transaction_category_id',
-        'qty',
-        'user_id',
-        'remark'
+    $sortableColumns = [
+        0 => 'id',                  // No (not really sortable, but placeholder)
+        1 => 'transaction_date',    // Trans. Date
+        2 => 'updated_at',          // Timestamp
+        3 => 'part_no',             // Part Details (Logic below)
+        4 => 'transaction_category_id', // Category
+        5 => 'origin_destination',  // Origin / Destination (Not easily sortable)
+        6 => 'qty',                 // Qty
+        7 => 'pic_name',            // PIC
+        8 => 'remark'               // Remarks
     ];
-
-    $orderColumnIndex = $request->input('order.0.column', 0);
+    
+    $orderColumnIndex = $request->input('order.0.column', 1);
     $orderDirection   = $request->input('order.0.dir', 'desc');
+    $orderCol = $sortableColumns[$orderColumnIndex] ?? 'transaction_date';
 
-    $query->orderBy(
-        $columns[$orderColumnIndex] ?? 'transaction_date',
-        $orderDirection
-    );
+    if ($orderCol === 'part_no') {
+        $query->join('inv_t_product_detail', 'inv_t_product_detail.id', '=', 'inv_t_inventory_transaction.product_detail_id')
+              ->join('products', 'products.id', '=', 'inv_t_product_detail.product_id')
+              ->orderBy('products.part_no', $orderDirection)
+              ->select('inv_t_inventory_transaction.*'); // Avoid column collision
+    } elseif ($orderCol === 'pic_name') {
+        $query->join('users', 'users.id', '=', 'inv_t_inventory_transaction.user_id')
+              ->orderBy('users.name', $orderDirection)
+              ->select('inv_t_inventory_transaction.*');
+    } elseif ($orderCol === 'transaction_category_id') {
+        $query->join('inv_m_transaction_category', 'inv_m_transaction_category.id', '=', 'inv_t_inventory_transaction.transaction_category_id')
+              ->orderBy('inv_m_transaction_category.code', $orderDirection)
+              ->select('inv_t_inventory_transaction.*');
+    } else {
+        $query->orderBy(
+            in_array($orderCol, ['transaction_date', 'updated_at', 'qty', 'remark']) ? $orderCol : 'transaction_date',
+            $orderDirection
+        );
+    }
 
     /* =====================================================
      * PAGINATION (DATATABLE)
@@ -146,7 +167,7 @@ class TransactionHistoryController extends Controller
             'id' => $item->hash_id,
             'transaction_date' => optional($item->transaction_date)->format('Y-m-d'),
             'part_no' => ($item->product->product->part_no ?? '-') .
-                         ($item->product->revision ? ' - '.$item->product->revision : ''),
+                         ($item->product->revision ? ' - '.$item->product->revision->code : ''),
             'product_name' => $item->product->product->part_name ?? '-',
             'category' => $item->transactionCategory->code ?? '-',
             'qty' => $item->qty,
@@ -177,7 +198,7 @@ class TransactionHistoryController extends Controller
             return response()->json(['error' => 'Invalid ID'], 404);
         }
 
-        $transaction = InventoryTransaction::with(['product.product', 'user', 'transactionCategory'])->find($decodedId);
+        $transaction = InventoryTransaction::with(['product.product', 'product.revision', 'user', 'transactionCategory'])->find($decodedId);
         if (!$transaction) {
             return response()->json(['error' => 'Transaction not found'], 404);
         }
@@ -186,7 +207,7 @@ class TransactionHistoryController extends Controller
             'id' => $transaction->hash_id,
             'transaction_date' => $transaction->transaction_date ? $transaction->transaction_date->format('Y-m-d') : null,
             'product_detail_id' => $transaction->product->hash_id,
-            'part_no' => $transaction->product->product->part_no ?? null,
+            'part_no' => ($transaction->product->product->part_no ?? null) . ($transaction->product->revision ? ' - ' . $transaction->product->revision->code : ''),
             'product_name' => $transaction->product->product->part_name ?? null,
             'transaction_category_id' => $transaction->transactionCategory->hash_id,
             'qty' => $transaction->qty,

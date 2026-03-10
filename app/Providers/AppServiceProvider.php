@@ -38,9 +38,10 @@ class AppServiceProvider extends ServiceProvider
                 ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
                 ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
                 ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
+                ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
                 ->select([
                     'prod.part_no', 
-                    'p.revision', 
+                    'r.code as revision', 
                     'c.code as customer_code', 
                     'm.name as model_name', 
                     'p.current_stock_qty', 

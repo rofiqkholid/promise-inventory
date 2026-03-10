@@ -36,13 +36,15 @@ class VaveAnalysisController extends Controller
                 $join->on('rfq.product_id', '=', 'p.id')
                      ->where('rfq.is_active', '=', 1);
             })
-            // Get Latest Revision Weight
+            // Get Latest Revision Weight (Highest sort_order in master)
             ->leftJoin(DB::raw('(
                 SELECT product_id, weight_kg 
                 FROM inv_t_product_detail t1
-                WHERE revision = (
-                    SELECT MAX(revision) 
+                JOIN inv_m_revision r1 ON r1.id = t1.revision_id
+                WHERE r1.sort_order = (
+                    SELECT MAX(r2.sort_order) 
                     FROM inv_t_product_detail t2 
+                    JOIN inv_m_revision r2 ON r2.id = t2.revision_id
                     WHERE t2.product_id = t1.product_id
                 )
             ) as latest_rev'), 'latest_rev.product_id', '=', 'p.id')
@@ -86,6 +88,33 @@ class VaveAnalysisController extends Controller
         }
 
         $recordsFiltered = $query->count();
+        
+        // Ordering - Align with Blade: 0:No, 1:Part No, 2:Part Name, 3:Customer, 4:Model, 5:Baseline, 6:Latest, 7:Status, 8:Action
+        if ($request->has('order')) {
+            $sortableColumns = [
+                1 => 'p.part_no',
+                2 => 'p.part_name',
+                3 => 'c.code',
+                4 => 'm.name',
+                5 => 'rfq.weight_kg',
+                6 => 'latest_weight',
+                7 => 'weight_diff', 
+            ];
+            
+            $colIndex = $request->input('order.0.column');
+            $dir = $request->input('order.0.dir', 'desc');
+            $colName = $sortableColumns[$colIndex] ?? 'p.part_no';
+
+            if ($colName === 'weight_diff') {
+                $query->orderByRaw("(rfq.weight_kg - latest_rev.weight_kg) {$dir}");
+            } elseif ($colName === 'latest_weight') {
+                $query->orderBy('latest_rev.weight_kg', $dir);
+            } else {
+                $query->orderBy($colName, $dir);
+            }
+        } else {
+            $query->orderBy('p.part_no', 'asc');
+        }
         
         $start = $request->input('start', 0);
         $length = $request->input('length', 10);
@@ -151,9 +180,11 @@ class VaveAnalysisController extends Controller
             'rfqHistory' => $rfqHistory,
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::all(),
-            'revisions' => InventoryProduct::with(['materialSpec', 'unit'])
+            'revisions' => InventoryProduct::with(['materialSpec', 'unit', 'revision'])
+                ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
                 ->where('product_id', $product->id)
-                ->orderBy('revision', 'desc')
+                ->orderBy('r.sort_order', 'desc')
+                ->select('inv_t_product_detail.*')
                 ->get()
         ]);
     }
@@ -245,9 +276,11 @@ class VaveAnalysisController extends Controller
             ->get();
             
         // Get All Production Revisions
-        $revisions = InventoryProduct::with(['materialSpec', 'unit'])
+        $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])
+            ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
             ->where('product_id', $product->id)
-            ->orderBy('revision', 'desc')
+            ->orderBy('r.sort_order', 'desc')
+            ->select('inv_t_product_detail.*')
             ->get();
 
         return response()->json([
@@ -302,9 +335,11 @@ class VaveAnalysisController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $revisions = InventoryProduct::with(['materialSpec', 'unit'])
+        $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])
+            ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
             ->where('product_id', $product->id)
-            ->orderBy('revision', 'desc')
+            ->orderBy('r.sort_order', 'desc')
+            ->select('inv_t_product_detail.*')
             ->get();
 
         if ($rfqs->isEmpty() || $revisions->isEmpty()) {
@@ -351,13 +386,13 @@ class VaveAnalysisController extends Controller
                 ->get();
 
             // Get Revisions
-            $revisions = DB::table('inv_t_product_detail as rev')
-                ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'rev.material_spec_id')
-                ->leftJoin('inv_m_unit as u', 'u.id', '=', 'rev.unit_id')
-                ->where('rev.product_id', $p->id)
-                // Remove ->where('rev.is_active', 1) to show full history
-                ->select('rev.*', 'ms.spec_name as spec_name', 'u.name as unit_name')
-                ->orderBy('rev.revision', 'asc')
+            $revisions = DB::table('inv_t_product_detail as rev_table')
+                ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'rev_table.material_spec_id')
+                ->leftJoin('inv_m_unit as u', 'u.id', '=', 'rev_table.unit_id')
+                ->leftJoin('inv_m_revision as r', 'r.id', '=', 'rev_table.revision_id')
+                ->where('rev_table.product_id', $p->id)
+                ->select('rev_table.*', 'ms.spec_name as spec_name', 'u.name as unit_name', 'r.code as revision_code')
+                ->orderBy('r.sort_order', 'asc')
                 ->get();
 
             $p->stages = [];
@@ -394,7 +429,7 @@ class VaveAnalysisController extends Controller
             foreach($revisions as $rev) {
                 $p->stages[] = [
                     'source' => 'ACTUAL',
-                    'name' => 'Revision ' . $rev->revision,
+                    'name' => 'Revision ' . ($rev->revision_code ?? '-'),
                     'spec' => $rev->spec_name,
                     'unit' => $rev->unit_name,
                     't' => $rev->thickness,

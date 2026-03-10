@@ -4,24 +4,45 @@ namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryModel\InventoryProduct;
-use App\Models\InventoryModel\CoilCenter;
 use App\Models\InventoryModel\MaterialSpec;
-use App\Models\InventoryModel\Unit;
 use App\Models\InventoryModel\Rank;
-use App\Models\InventoryModel\Supplier;
+use App\Models\InventoryModel\Unit;
+use App\Models\Products;
+use App\Services\Inventory\ProductService;
+use App\Traits\DecodesHashInputs;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class InventoryProductController extends Controller
 {
+    use DecodesHashInputs;
     /**
      * Display the inventory product page.
      */
     public function index()
     {
-        return view('inventory.master-data.product');
+        // Only show customers that have products in the master data
+        $customers = DB::table('customers as c')
+            ->join('products as p', 'p.customer_id', '=', 'c.id')
+            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+            ->select('c.id', 'c.code')
+            ->where('p.is_delete', 0)
+            ->where('pd.is_active', 1)
+            ->distinct()
+            ->orderBy('c.code')
+            ->get();
+
+        // Only show models that have products in the master data
+        $models = DB::table('models as m')
+            ->join('inv_t_product_detail as pd', 'pd.model_id', '=', 'm.id')
+            ->select(DB::raw('MIN(m.id) as id'), 'm.name')
+            ->where('pd.is_active', 1)
+            ->groupBy('m.name')
+            ->orderBy('m.name')
+            ->get();
+
+        return view('inventory.master-data.product', compact('customers', 'models'));
     }
 
     /**
@@ -47,112 +68,66 @@ class InventoryProductController extends Controller
             6 => 'p.thickness',
             7 => 'p.width',
             8 => 'u.code',
+            9 => 'r_master.code',
             12 => 'p.updated_at',
         ];
         $orderCol = $columnsMap[$orderColIdx] ?? 'p.id';
 
-        $query = DB::table('inv_t_product_detail as p')
-            ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
-            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
-            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
-            ->leftJoin('inv_m_model_status as ms_model', 'ms_model.model_id', '=', 'p.model_id')
-
-            ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
-            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
-            ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
-            ->where('prod.is_delete', 0)
-            ->where('p.is_active', 1)
-            ->select([
-                'p.id',
-                'p.product_id',
-                'p.model_id',
-                'p.product_status',
-                DB::raw("COALESCE(ms_model.project_status, 'Project') as model_project_status"),
-                'p.revision',
-                'p.thickness',
-                'p.width',
-                'p.length',
-                'p.length_2',
-                'p.pitch',
-                'p.density',
-                'p.weight_kg',
-                'p.net_weight',
-                'p.current_stock_qty',
-                'p.trial_usage_qty',
-                'p.min_stock',
-                'p.pcs_per_unit',
-                'p.unit_per_car',
-                DB::raw("COALESCE(prod.part_no,'') as part_no"),
-                DB::raw("COALESCE(prod.part_name,'') as part_name"),
-                DB::raw("COALESCE(cust.code,'') as customer_code"),
-                DB::raw("COALESCE(model.name,'') as model_name"),
-
-                DB::raw("COALESCE(ms.spec_name,'') as material_spec_name"),
-                DB::raw("COALESCE(ms.coating_type,'') as coating_type"),
-                DB::raw("COALESCE(u.code,'') as unit_code"),
-                DB::raw("COALESCE(u.name,'') as unit_name"),
-                DB::raw("COALESCE(r.code,'') as rank_code"),
-                'p.remark',
-                'p.updated_at',
-            ]);
-
+        $query = $this->buildBaseProductQuery();
         $recordsTotal = (clone $query)->count();
 
+        // Specific Filters from Dashboard
+        if ($request->filled('customer_id')) {
+            $query->where('prod.customer_id', $request->customer_id);
+        }
+        if ($request->filled('model_id')) {
+            $selectedModel = DB::table('models')->where('id', $request->model_id)->first();
+            if ($selectedModel) {
+                 $query->where('model.name', $selectedModel->name);
+            }
+        }
+        if ($request->filled('part_no')) {
+            $query->where('prod.part_no', 'like', "%{$request->part_no}%");
+        }
+
         // Global Search
-        $allParams = $request->all();
-        $search = $allParams['search'] ?? '';
-        $searchValue = is_string($search) ? $search : ($search['value'] ?? '');
-        
+        $searchValue = $request->input('search.value');
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('prod.part_no', 'like', "%{$searchValue}%")
                   ->orWhere('prod.part_name', 'like', "%{$searchValue}%")
                   ->orWhere('cust.code', 'like', "%{$searchValue}%")
                   ->orWhere('model.name', 'like', "%{$searchValue}%")
-                  ->orWhere('p.revision', 'like', "%{$searchValue}%")
-
+                  ->orWhere('r_master.code', 'like', "%{$searchValue}%")
                   ->orWhere('ms.spec_name', 'like', "%{$searchValue}%")
                   ->orWhere('u.code', 'like', "%{$searchValue}%")
-                  ->orWhere('u.code', 'like', "%{$searchValue}%")
                   ->orWhere('r.code', 'like', "%{$searchValue}%")
-                  ->orWhereRaw("(prod.part_no + CASE WHEN p.revision IS NOT NULL AND p.revision != '' THEN ' - ' + p.revision ELSE '' END) LIKE ?", ['%' . $searchValue . '%'])
-                  ->orWhereRaw("(prod.part_no + CASE WHEN p.revision IS NOT NULL AND p.revision != '' THEN '-' + p.revision ELSE '' END) LIKE ?", ['%' . $searchValue . '%']);
+                  ->orWhereRaw("(prod.part_no + ' - ' + ISNULL(r_master.code, '')) LIKE ?", ['%' . $searchValue . '%']);
             });
         }
 
         $recordsFiltered = $query->count();
 
-        // Instantiate Hashids for InventoryProduct
-        $salt = config('app.key') . InventoryProduct::class;
-        $length = config('hashids.connections.main.length', 10);
-        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
-        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
-
-        $perPage = $request->input('length', 10);
-        $start = $request->input('start', 0);
-        $draw = $request->input('draw', 1);
-
         $data = $query->orderByRaw("$orderCol $orderDir")
             ->skip($start)
-            ->take($perPage)
+            ->take($length)
             ->get()
             ->map(fn($r) => [
-                'id' => $hashids->encode($r->id),
+                'id' => InventoryProduct::encodeHash($r->id),
                 'product_id' => $r->product_id,
-                'part_no' => $r->part_no . ($r->revision ? ' - ' . $r->revision : ''),
+                'part_no' => $r->part_no . ($r->revision_code ? ' - ' . $r->revision_code : ''),
                 'part_name' => $r->part_name,
                 'customer' => $r->customer_code,
                 'model' => $r->model_name,
                 'model_project_status' => $r->model_project_status,
                 'product_status' => $r->product_status,
-                'revision' => $r->revision,
+                'revision' => $r->revision_code,
 
                 'material_spec' => $r->material_spec_name,
                 'coating_type' => $r->coating_type,
                 'thickness' => (float)$r->thickness,
                 'width' => (float)$r->width,
                 'length' => (float)$r->length,
-                'length_2' => (float)$r->length_2,
                 'length_2' => (float)$r->length_2,
                 'pitch' => (float)$r->pitch,
                 'density' => (float)$r->density,
@@ -179,119 +154,6 @@ class InventoryProductController extends Controller
     }
 
     /**
-     * Get dropdown data for all foreign keys.
-     */
-    public function getDropdownData()
-    {
-        return response()->json([
-            'customers' => DB::table('customers')->select('id', 'code')->orderBy('code')->get(),
-            'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
-            'units' => Unit::select('id', 'code', 'name')->get(),
-            'ranks' => Rank::select('id', 'code', 'description')->get(),
-        ]);
-    }
-
-    public function getCustomers()
-{
-    return DB::table('customers')
-        ->select('id', 'code')
-        ->orderBy('code')
-        ->get();
-}
-
-    public function getModels(Request $request)
-    {
-        $query = DB::table('models')
-            ->select(DB::raw('MIN(id) as id'), 'name')
-            ->groupBy('name')
-            ->orderBy('name');
-        
-        if ($request->customer_id) {
-            $query->where('customer_id', $request->customer_id);
-        }
-
-        return $query->get();
-    }
-
-
-    /**
-     * Get products for dropdown (Select2).
-     */
-    public function getProducts(Request $request)
-    {
-        $q = trim((string) $request->get('q', ''));
-        $page = max(1, (int) $request->get('page', 1));
-        $limit = 10;
-        $skip = ($page - 1) * $limit;
-
-        $query = DB::table('products as p')
-            ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
-            ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
-            ->where('p.is_delete', 0)
-            ->select('p.id', 'p.part_no', 'p.part_name', 'c.code as customer_code', 'm.name as model_name', 'p.customer_id', 'p.model_id');
-
-        if ($request->filled('customer_id')) {
-            $query->where('p.customer_id', $request->customer_id);
-        }
-
-        if ($request->filled('model_id')) {
-            $query->where('p.model_id', $request->model_id);
-        }
-
-        if ($q !== '') {
-            $query->where(function ($w) use ($q) {
-                $w->where('p.part_no', 'like', "%{$q}%")
-                  ->orWhere('p.part_name', 'like', "%{$q}%")
-                  ->orWhere('c.code', 'like', "%{$q}%");
-            });
-        }
-
-        $total = (clone $query)->count();
-        $rows = $query->orderBy('p.part_no')->skip($skip)->take($limit)->get();
-
-        // Instantiate Hashids for Products
-        $salt = config('app.key') . \App\Models\Products::class;
-        $length = config('hashids.connections.main.length', 10);
-        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
-        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
-
-        return response()->json([
-            'results' => $rows->map(fn($p) => [
-                'id' => $hashids->encode($p->id),
-                'text' => "{$p->part_no} - {$p->part_name} ({$p->customer_code})",
-                'customer_id' => $p->customer_id,
-                'model_id' => $p->model_id,
-            ]),
-            'pagination' => ['more' => ($skip + $limit) < $total],
-        ]);
-    }
-
-    /**
-     * Get used revisions for a product.
-     */
-    public function getUsedRevisions($productId)
-    {
-        $salt = config('app.key') . \App\Models\Products::class;
-        $length = config('hashids.connections.main.length', 10);
-        $alphabet = config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890');
-        $hashids = new \Hashids\Hashids($salt, $length, $alphabet);
-        
-        $decoded = $hashids->decode($productId);
-        $id = $decoded[0] ?? $productId;
-
-        $usedRevisions = InventoryProduct::where('product_id', $id)
-            ->pluck('revision')
-            ->toArray();
-
-        return response()->json($usedRevisions);
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    use \App\Traits\DecodesHashInputs;
-
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -301,35 +163,11 @@ class InventoryProductController extends Controller
             'material_spec_id' => MaterialSpec::class,
             'unit_id' => Unit::class,
             'rank_id' => Rank::class,
+            'revision_id' => \App\Models\InventoryModel\Revision::class,
         ]);
         
         $request->merge($data);
-
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'model_id' => 'required|exists:models,id',
-            'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
-            'unit_id' => 'nullable|exists:inv_m_unit,id',
-            'rank_id' => 'nullable|exists:inv_m_rank,id',
-            'revision' => 'required|string|max:20',
-            'thickness' => 'nullable|numeric|min:0',
-            'width' => 'nullable|numeric|min:0',
-            'length' => 'nullable|numeric|min:0',
-            'length_2' => 'nullable|numeric|min:0',
-            'pitch' => 'nullable|numeric|min:0',
-            'density' => 'nullable|numeric|min:0',
-            'weight_kg' => 'nullable|numeric|min:0',
-            'net_weight' => 'nullable|numeric|min:0',
-            'material_price' => 'nullable|numeric|min:0',
-            'pcs_per_unit' => 'nullable|integer|min:1',
-            'unit_per_car' => 'nullable|integer|min:1',
-            'min_stock' => 'nullable|integer|min:0',
-            'current_stock_qty' => 'nullable|numeric|min:0',
-            'trial_usage_qty' => 'nullable|numeric|min:0',
-            'remark' => 'nullable|string',
-            'product_status' => 'nullable|string|in:Allsize OK,Allsize NG',
-            'product_status_remark' => 'nullable|string|in:Damage,Other',
-        ]);
+        $validated = $request->validate($this->getValidationRules());
 
         InventoryProduct::create($validated);
 
@@ -342,7 +180,7 @@ class InventoryProductController extends Controller
     public function show($id)
     {
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
-        $inventoryProduct->load(['product', 'model', 'materialSpec', 'unit', 'rank']);
+        $inventoryProduct->load(['product', 'model', 'materialSpec', 'unit', 'rank', 'revision']);
         
         // Get model status
         $modelStatus = \App\Models\InventoryModel\ModelStatus::where('model_id', $inventoryProduct->model_id)->first();
@@ -367,35 +205,11 @@ class InventoryProductController extends Controller
             'material_spec_id' => MaterialSpec::class,
             'unit_id' => Unit::class,
             'rank_id' => Rank::class,
+            'revision_id' => \App\Models\InventoryModel\Revision::class,
         ]);
 
         $request->merge($data);
-
-        $validated = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'model_id' => 'required|exists:models,id',
-            'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
-            'unit_id' => 'nullable|exists:inv_m_unit,id',
-            'rank_id' => 'nullable|exists:inv_m_rank,id',
-            'revision' => 'required|string|max:20',
-            'thickness' => 'nullable|numeric|min:0',
-            'width' => 'nullable|numeric|min:0',
-            'length' => 'nullable|numeric|min:0',
-            'length_2' => 'nullable|numeric|min:0',
-            'pitch' => 'nullable|numeric|min:0',
-            'density' => 'nullable|numeric|min:0',
-            'weight_kg' => 'nullable|numeric|min:0',
-            'net_weight' => 'nullable|numeric|min:0',
-            'material_price' => 'nullable|numeric|min:0',
-            'pcs_per_unit' => 'nullable|integer|min:1',
-            'unit_per_car' => 'nullable|integer|min:1',
-            'min_stock' => 'nullable|integer|min:0',
-            'current_stock_qty' => 'nullable|numeric|min:0',
-            'trial_usage_qty' => 'nullable|numeric|min:0',
-            'remark' => 'nullable|string',
-            'product_status' => 'nullable|string|in:Allsize OK,Allsize NG',
-            'product_status_remark' => 'nullable|string|in:Damage,Other',
-        ]);
+        $validated = $request->validate($this->getValidationRules());
 
         $inventoryProduct->update($validated);
 
@@ -415,58 +229,235 @@ class InventoryProductController extends Controller
     /**
      * Print Label for the specified resource.
      */
-    public function printLabel($id)
+    public function printLabel($id, ProductService $productService)
     {
-        $inventoryProduct = InventoryProduct::findByHashOrFail($id);
-        $data = DB::table('inv_t_product_detail as p')
-            ->leftJoin('products as prod', 'prod.id', '=', 'p.product_id')
-            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
-            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
-            ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
-            ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
-            ->where('p.id', $inventoryProduct->id)
-            ->select([
-                'prod.part_no',
-                'prod.part_name',
-                'cust.code as customer_code',
-                'model.name as model_name',
-                'p.revision',
-                'p.thickness',
-                'p.width',
-                'p.length',
-                'p.length_2',
-                'p.pitch',
-                'ms.spec_name as material_spec',
-                'ms.coating_type',
-                'r.code as rank_code'
-            ])
-            ->first();
-
-        if (!$data) abort(404);
+        $products = $productService->generateLabelData($id);
         
-        
-        $dimVal = [];
-        $dimLbl = [];
-        if ((float)$data->thickness > 0) { $dimVal[] = (float)$data->thickness; $dimLbl[] = 'T'; }
-        if ((float)$data->width > 0) { $dimVal[] = (float)$data->width; $dimLbl[] = 'W'; }
-        if ((float)$data->length > 0) { $dimVal[] = (float)$data->length; $dimLbl[] = 'L'; }
-        if ((float)$data->length_2 > 0) { $dimVal[] = (float)$data->length_2; $dimLbl[] = 'L2'; }
-        if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
-
-        $product = (object) [
-            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
-            'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
-            'item_name' => $data->part_name,
-            'model_name' => $data->model_name ?? '-',
-            'partner_code' => $data->customer_code ?? '-',
-            'dimension' => implode(' x ', $dimVal),
-            'dimension_label' => !empty($dimLbl) ? '(' . implode(' x ', $dimLbl) . ')' : '',
-            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : '')
-        ];
-
-        $products = [$product];
+        if (empty($products)) abort(404);
 
         return view('inventory.qrcode', compact('products'));
     }
 
+    /**
+     * AJAX HELPERS
+     */
+
+    public function getDropdownData()
+    {
+        return response()->json([
+            'customers' => DB::table('customers')->select('id', 'code')->orderBy('code')->get(),
+            'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
+            'units' => Unit::select('id', 'code', 'name')->get(),
+            'ranks' => Rank::select('id', 'code', 'description')->get(),
+            'revisions' => \App\Models\InventoryModel\Revision::where('is_active', 1)->orderBy('group_name')->orderBy('sort_order')->get(),
+        ]);
+    }
+
+    public function getCustomers()
+    {
+        return DB::table('customers')
+            ->select('id', 'code')
+            ->orderBy('code')
+            ->get();
+    }
+
+    public function getModels(Request $request)
+    {
+        $query = DB::table('models as m')
+            ->select(DB::raw('MIN(m.id) as id'), 'm.name')
+            ->groupBy('m.name')
+            ->orderBy('m.name');
+
+        if ($request->for_filter) {
+            $query->join('inv_t_product_detail as pd', 'pd.model_id', '=', 'm.id')
+                  ->where('pd.is_active', 1);
+        }
+        
+        if ($request->customer_id) {
+            $query->where('m.customer_id', $request->customer_id);
+        }
+
+        return $query->get();
+    }
+
+    public function getProducts(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        $page = max(1, (int) $request->get('page', 1));
+        $limit = 10;
+        $skip = ($page - 1) * $limit;
+
+        // Base query mulai dari Part (products)
+        $query = DB::table('products as p')
+            ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
+            ->where('p.is_delete', 0)
+            ->select('p.id', 'p.part_no', 'p.part_name', 'c.code as customer_code', 'p.customer_id');
+
+        // Jika dipanggil dari Filter Dashboard (for_filter)
+        if ($request->for_filter) {
+            $query->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+                  ->leftJoin('models as m', 'm.id', '=', 'pd.model_id') // Join ke model melalui tabel DETAIL
+                  ->where('pd.is_active', 1)
+                  ->addSelect('m.name as model_name', 'pd.model_id')
+                  ->distinct();
+
+            // Filter Customer (di detail/induk)
+            if ($request->filled('customer_id')) {
+                $query->where('p.customer_id', $request->customer_id);
+            }
+
+            // Filter Model (di detail)
+            if ($request->filled('model_id')) {
+                $selectedModel = DB::table('models')->find($request->model_id);
+                if ($selectedModel) {
+                    $query->where('m.name', $selectedModel->name); // Mendukung gouping name
+                }
+            }
+        } else {
+            // Jika dipanggil dari Form Add/Edit (bukan filter)
+            $query->leftJoin('models as m', 'm.id', '=', 'p.model_id')
+                  ->addSelect('m.name as model_name', 'p.model_id');
+                  
+            if ($request->filled('customer_id')) {
+                $query->where('p.customer_id', $request->customer_id);
+            }
+            if ($request->filled('model_id')) {
+                $query->where('p.model_id', $request->model_id);
+            }
+        }
+
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('p.part_no', 'like', "%{$q}%")
+                  ->orWhere('p.part_name', 'like', "%{$q}%")
+                  ->orWhere('c.code', 'like', "%{$q}%");
+            });
+        }
+
+        $total = (clone $query)->count();
+        $rows = $query->orderBy('p.part_no')->skip($skip)->take($limit)->get();
+
+        return response()->json([
+            'results' => $rows->map(fn($p) => [
+                'id' => \App\Models\Products::encodeHash($p->id),
+                'part_no' => $p->part_no,
+                'part_name' => $p->part_name,
+                'text' => "{$p->part_no} - {$p->part_name}",
+                'customer_id' => $p->customer_id,
+                'model_id' => $p->model_id,
+            ]),
+            'pagination' => ['more' => ($skip + $limit) < $total],
+        ]);
+    }
+
+    public function getLatestRevision($productId)
+    {
+        $id = \App\Models\Products::decodeHash($productId) ?? $productId;
+
+        $latest = InventoryProduct::where('product_id', $id)
+            ->with(['materialSpec', 'unit', 'rank', 'revision'])
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$latest) {
+            $firstRev = \App\Models\InventoryModel\Revision::where('is_active', 1)->orderBy('group_name')->orderBy('sort_order')->first();
+            return response()->json([
+                'exists' => false, 
+                'next_revision' => $firstRev ? $firstRev->code : 'R',
+                'next_revision_id' => $firstRev ? $firstRev->hash_id : null
+            ]);
+        }
+
+        // Find current revision in master data
+        $currentRev = $latest->revision;
+        
+        $nextRevisionCode = '-'; 
+        $nextRevisionId = null;
+
+        if ($currentRev) {
+            // Find next revision in the SAME group with higher sort_order
+            $nextRev = \App\Models\InventoryModel\Revision::where('group_name', $currentRev->group_name)
+                ->where('is_active', 1)
+                ->where('sort_order', '>', $currentRev->sort_order)
+                ->orderBy('sort_order', 'asc')
+                ->first();
+
+            if ($nextRev) {
+                $nextRevisionCode = $nextRev->code;
+                $nextRevisionId = $nextRev->hash_id;
+            }
+        }
+
+        return response()->json([
+            'exists' => true,
+            'data' => $latest,
+            'next_revision' => $nextRevisionCode,
+            'next_revision_id' => $nextRevisionId,
+            'material_spec_hash' => $latest->materialSpec ? $latest->materialSpec->hash_id : null,
+            'unit_hash' => $latest->unit ? $latest->unit->hash_id : null,
+            'rank_hash' => $latest->rank ? $latest->rank->hash_id : null,
+        ]);
+    }
+
+    /**
+     * PRIVATE METHODS
+     */
+
+    private function getValidationRules()
+    {
+        return [
+            'product_id' => 'required|exists:products,id',
+            'model_id' => 'required|exists:models,id',
+            'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
+            'unit_id' => 'nullable|exists:inv_m_unit,id',
+            'rank_id' => 'nullable|exists:inv_m_rank,id',
+            'revision_id' => 'required|exists:inv_m_revision,id',
+            'thickness' => 'nullable|numeric|min:0',
+            'width' => 'nullable|numeric|min:0',
+            'length' => 'nullable|numeric|min:0',
+            'length_2' => 'nullable|numeric|min:0',
+            'pitch' => 'nullable|numeric|min:0',
+            'density' => 'nullable|numeric|min:0',
+            'weight_kg' => 'nullable|numeric|min:0',
+            'net_weight' => 'nullable|numeric|min:0',
+            'material_price' => 'nullable|numeric|min:0',
+            'pcs_per_unit' => 'nullable|integer|min:1',
+            'unit_per_car' => 'nullable|integer|min:1',
+            'min_stock' => 'nullable|integer|min:0',
+            'current_stock_qty' => 'nullable|numeric|min:0',
+            'trial_usage_qty' => 'nullable|numeric|min:0',
+            'remark' => 'nullable|string',
+            'product_status' => 'nullable|string|in:Allsize OK,Allsize NG',
+            'product_status_remark' => 'nullable|string|in:Damage,Other',
+        ];
+    }
+
+    private function buildBaseProductQuery()
+    {
+        return DB::table('inv_t_product_detail as p')
+            ->join('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
+        ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
+        ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
+        ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+        ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
+        ->leftJoin('inv_m_revision as r_master', 'r_master.id', '=', 'p.revision_id')
+        ->leftJoin('inv_m_model_status as ms_model', 'ms_model.model_id', '=', 'p.model_id')
+        ->where('p.is_active', 1)
+        ->where('prod.is_delete', 0)
+        ->select([
+            'p.*',
+            'prod.part_no',
+            'prod.part_name',
+            'cust.code as customer_code',
+            'model.name as model_name',
+            'ms.spec_name as material_spec_name',
+            'ms.coating_type',
+            'u.code as unit_code',
+            'u.name as unit_name',
+            'r.code as rank_code',
+            'r_master.code as revision_code',
+            'ms_model.project_status as model_project_status'
+        ]);
+}
 }

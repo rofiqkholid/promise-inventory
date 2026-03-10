@@ -156,7 +156,7 @@
                 }
             },
             columns: [
-                { data: null, className: 'text-center text-gray-600', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
+                { data: null, orderable: false, className: 'text-center text-gray-600', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
                 { data: 'transaction_date', className: 'text-xs text-gray-600 font-medium' },
                 { 
                     data: 'updated_at', 
@@ -181,12 +181,12 @@
                         return `<span class="inline-block px-2 py-0.5 rounded-xs border text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${style}">${d}</span>`;
                     }
                 },
-                { data: 'origin_destination', className: 'text-xs text-gray-600 dark:text-gray-400' },
+                { data: 'origin_destination', orderable: false, className: 'text-xs text-gray-600 dark:text-gray-400' },
                 { data: 'qty', className: 'text-center font-bold text-slate-900 dark:text-white' },
                 { data: 'pic_name', className: 'text-xs text-gray-600 dark:text-gray-400' },
                 { data: 'remark', defaultContent: '-', className: 'text-xs text-gray-500 font-normal leading-relaxed' }
             ],
-            order: [[1, 'desc']],
+            order: [[2, 'desc']], // Default sort by Timestamp Descending
         });
 
         // Events

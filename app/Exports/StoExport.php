@@ -47,7 +47,7 @@ class StoExport implements FromCollection, WithHeadings, WithMapping, WithTitle,
         return [
             $detail->product->product->part_no ?? '-',
             $detail->product->product->part_name ?? '-',
-            $detail->product->revision ?? '-',
+            $detail->product->revision->code ?? '-',
             $detail->system_qty_snapshot,
             $detail->real_qty_input,
             $detail->diff_qty,

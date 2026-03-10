@@ -192,7 +192,8 @@ class DashboardController extends Controller
             ->get();
 
         $balanceStatusTable = (clone $stockQuery)
-            ->select('prod.part_no', 'p.revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
+            ->select('prod.part_no', 'r.code as revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
             ->limit(10)
             ->get()
             ->map(function ($item) {
@@ -213,7 +214,8 @@ class DashboardController extends Controller
 
         // Recent Transactions (Unfiltered Global)
         $transactionHistory = (clone $recentTransQuery)
-            ->select('prod.part_no', 'p.revision', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
+            ->select('prod.part_no', 'r.code as revision', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
             ->orderByDesc('t.transaction_date')
             ->limit(10)
             ->get();

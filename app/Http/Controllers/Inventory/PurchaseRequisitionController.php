@@ -43,13 +43,14 @@ class PurchaseRequisitionController extends Controller
             ->leftJoin('inv_m_material_spec', 'inv_m_material_spec.id', '=', 'inv_t_product_detail.material_spec_id')
             ->leftJoin('inv_m_unit', 'inv_m_unit.id', '=', 'inv_t_product_detail.unit_id')
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'inv_t_product_detail.model_id')
+            ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
             ->select([
                 'inv_t_product_detail.id',
                 'products.part_no',
                 'products.part_name',
                 'inv_t_product_detail.current_stock_qty',
                 'inv_t_product_detail.pcs_per_unit',
-                'inv_t_product_detail.revision',
+                'r.code as revision',
                 'inv_t_product_detail.product_status',
                 'inv_m_unit.code as unit_code',
                 'inv_m_material_spec.spec_name',
@@ -122,10 +123,34 @@ class PurchaseRequisitionController extends Controller
         }
 
         $recordsFiltered = $query->count();
-        $recordsTotal = InventoryProduct::where('is_active', 1)->count(); // Simplified for now
+        $recordsTotal = InventoryProduct::where('is_active', 1)->count();
 
-        $data = $query->orderBy('products.part_no', 'asc')
-            ->skip($request->input('start', 0))
+        // Ordering - Align with Blade: 0:No, 1:Part, 2:Spec, 3:Model/Cust, 4:Stock, 5:Min, 6:Shortage, 7:Status, 8:Action
+        if ($request->has('order')) {
+            $sortableColumns = [
+                1 => 'products.part_no',
+                2 => 'inv_m_material_spec.spec_name',
+                3 => 'models.name',
+                4 => 'inv_t_product_detail.current_stock_qty',
+                5 => 'inv_t_product_detail.min_stock',
+                6 => 'shortage',
+            ];
+            
+            $colIndex = $request->input('order.0.column');
+            $dir = $request->input('order.0.dir', 'desc');
+            $colName = $sortableColumns[$colIndex] ?? 'shortage';
+
+            if ($colName === 'shortage') {
+                $query->orderByRaw("(inv_t_product_detail.min_stock - (inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1))) {$dir}");
+            } else {
+                $query->orderBy($colName, $dir);
+            }
+        } else {
+            // Default sort: Shortage DESC (highest shortage first)
+            $query->orderByRaw("(inv_t_product_detail.min_stock - (inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1))) desc");
+        }
+
+        $data = $query->skip($request->input('start', 0))
             ->take($request->input('length', 10))
             ->get();
 

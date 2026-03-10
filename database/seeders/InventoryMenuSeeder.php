@@ -91,6 +91,13 @@ class InventoryMenuSeeder extends Seeder
                         'order' => 9,
                         'roles' => ['admin', 'approver'],
                     ],
+                    [
+                        'title' => 'Revision',
+                        'route' => 'inventory.master.revision.index',
+                        'icon' => 'fa-solid fa-list-ol',
+                        'order' => 10,
+                        'roles' => ['admin', 'approver'],
+                    ],
                 ]
             ],
             [

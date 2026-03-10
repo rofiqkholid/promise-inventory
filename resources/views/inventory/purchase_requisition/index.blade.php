@@ -219,6 +219,7 @@ $(function() {
         columns: [
             { 
                 data: null, 
+                orderable: false,
                 className: 'text-center text-gray-400', 
                 render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 
             },
