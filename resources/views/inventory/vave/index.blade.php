@@ -946,15 +946,6 @@ $(function() {
                 </div>
             </th>`;
 
-        rfqs.forEach(r => {
-            if (r.hash_id === benchmarkRfq.hash_id) return;
-            html += `<th class="w-[120px] min-w-[120px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 history-col hidden border-dashed">
-                    <div class="flex flex-col items-center opacity-60">
-                        <span class="text-[9px] text-gray-400 font-bold">HISTORY (BASE)</span>
-                        <span class="font-semibold text-gray-500 text-xs truncate max-w-[100px]">${r.rfq_name}</span>
-                    </div>
-                </th>`;
-        });
         revisions.forEach(rev => {
             if (latestRevision && rev.revision === latestRevision.revision) return;
             html += `<th class="w-[120px] min-w-[120px] px-4 py-3 text-center border-b border-r border-gray-200 dark:border-gray-700 bg-gray-50/50 history-col hidden border-dashed">
@@ -973,7 +964,6 @@ $(function() {
             row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${valueFormatter(benchmarkRfq)}</td>`;
             row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 320px;">${latestRevision ? valueFormatter(latestRevision) : '-'}</td>`;
             row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-bold variance-cell sticky z-30 bg-gray-50 transition-colors group-hover:bg-primary-100" style="left: 480px;">-</td>`;
-            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed">${valueFormatter(r)}</td>`; });
             revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-200 text-gray-400 history-col hidden border-dashed">${valueFormatter(rev)}</td>`; });
             return row + `</tr>`;
         };
@@ -998,7 +988,6 @@ $(function() {
                 row += `<td class="w-[160px] min-w-[160px] px-4 py-2.5 bg-white border-r border-gray-200 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-2.5 bg-gray-50 border-r border-gray-200 sticky z-30" style="left: 480px;">-</td>`;
             }
 
-            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${getVal(r).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`; });
             revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${getVal(rev).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`; });
             return row + `</tr>`;
         };
@@ -1009,7 +998,6 @@ $(function() {
                 <td class="w-[200px] min-w-[200px] max-w-[200px] px-4 py-3 bg-slate-100 dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 sticky md:z-20" style="left: 160px;"></td>
                 <td class="w-[200px] min-w-[200px] max-w-[200px] px-4 py-3 bg-slate-100 dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 sticky md:z-20" style="left: 360px;"></td>
                 <td class="w-[130px] min-w-[130px] max-w-[130px] px-4 py-3 bg-slate-100 dark:bg-gray-800 border-r border-slate-200 dark:border-gray-700 sticky md:z-20" style="left: 560px;"></td>`;
-            rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) row += `<td class="w-[120px] min-w-[120px] px-4 py-3 bg-slate-100 dark:bg-gray-800 history-col hidden border-dashed"></td>`; });
             revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) row += `<td class="w-[120px] min-w-[120px] px-4 py-3 bg-slate-100 dark:bg-gray-800 history-col hidden border-dashed"></td>`; });
             return row + `</tr>`;
         };
@@ -1086,7 +1074,6 @@ $(function() {
             rateRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center font-bold ${hCol} bg-white history-col hidden border-dashed">${Math.abs(hPct).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2})}%</td>`;
         };
 
-        rfqs.forEach(r => { if (r.hash_id !== benchmarkRfq.hash_id) buildHistStatus(r); });
         revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) buildHistStatus(rev); });
         
         statusRow += `</tr>`; rateRow += `</tr>`;

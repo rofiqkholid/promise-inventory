@@ -90,24 +90,16 @@
                        {{-- New Columns --}}
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb;">{{ $p->baseline_name }}</td>
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb; font-weight: bold;">{{ number_format($p->baseline_weight, 3) }}</td>
-                        
-                       {{-- KOLOM BARU: Latest Revision Name --}}
-                        @php
-                            $latestRevName = '-';
-                            $stagesCount = count($p->stages);
-                            
-                            if ($stagesCount > 0) {
-                                // 1. Ambil data urutan paling terakhir (paling bawah)
-                                $lastStage = $p->stages[$stagesCount - 1];
-                                
-                                // 2. Pastikan data terakhir tersebut BUKAN baseline (artinya ia adalah revisi)
-                                if (empty($lastStage['is_baseline'])) {
-                                    $latestRevName = strtoupper($lastStage['name']);
-                                }
-                            }
-                        @endphp
-                        <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #f0fdf4; font-weight: bold; color: #166534;">{{ $latestRevName }}</td>
                     @endif
+                    
+                    {{-- KOLOM Latest Revision: 1 if latest, 0 otherwise --}}
+                    @php
+                        $isLatest = ($sIndex === $rowCount - 1) ? 1 : 0;
+                        $revBg = $isLatest ? '#f0fdf4' : '#ffffff';
+                    @endphp
+                    <td style="border: 1px solid #000000; text-align: center; background-color: {{ $revBg }}; font-weight: bold;">
+                        {{ $isLatest }}
+                    </td>
                     
                     <td style="border: 1px solid #000000;">{{ $stage['spec'] }}</td>
                     <td style="border: 1px solid #000000; font-weight: bold;">
