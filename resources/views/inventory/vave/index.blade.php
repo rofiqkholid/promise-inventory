@@ -329,11 +329,11 @@ $(function() {
                 orderable: false,
                 render: row => `
                     <div class="flex items-center justify-center gap-1.5">
-                        <button class="rfq-button h-8 px-4 inline-flex items-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95" data-id="${row.hash_id}" title="Manage Baseline (RFQ)">
-                            <i class="fa-solid fa-pen-to-square"></i> RFQ
+                        <button class="rfq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage Baseline (RFQ)">
+                            <i class="fa-solid fa-pen-to-square btn-icon"></i> <span class="btn-text">RFQ</span>
                         </button>
-                        <button class="compare-button h-8 px-4 inline-flex items-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 ${!row.has_rfq ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_rfq ? 'disabled' : ''} title="VAVE Analysis Comparison">
-                            <i class="fa-solid fa-chart-line"></i> Analysis
+                        <button class="compare-button h-8 px-4 inline-flex items-center justify-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[100px] ${!row.has_rfq ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_rfq ? 'disabled' : ''} title="VAVE Analysis Comparison">
+                            <i class="fa-solid fa-chart-line btn-icon"></i> <span class="btn-text">Analysis</span>
                         </button>
                     </div>`
             }
@@ -385,9 +385,57 @@ $(function() {
 
     loadMainFilters();
 
+    // Helper to handle AJAX download with blob (precise spinner control)
+    function handleAjaxDownload($btn, url, fileNameDefault) {
+        const originalHtml = $btn.html();
+        
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-wait');
+        if($btn.find('.btn-icon').length) {
+            $btn.find('.btn-icon').attr('class', 'fa-solid fa-circle-notch fa-spin');
+            if($btn.find('.btn-text').length) $btn.find('.btn-text').text('Processing...');
+        } else {
+            $btn.html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing...');
+        }
+
+        $.ajax({
+            url: url,
+            method: 'GET',
+            xhrFields: { responseType: 'blob' },
+            success: function(data, status, xhr) {
+                const contentType = xhr.getResponseHeader('content-type');
+                const blob = new Blob([data], { type: contentType });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                
+                // Try to get filename from header
+                let fileName = fileNameDefault;
+                const disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        fileName = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(link.href);
+            },
+            error: function() {
+                window.showToast('Error downloading file', 'error');
+            },
+            complete: function() {
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-wait').html(originalHtml);
+            }
+        });
+    }
+
     let vaveDropdownData = {};
 
-    // Handle Export Summary
+    // Handle Export Summary dengan AJAX Blob
     $('#btnExportSummary').on('click', function() {
         const customerId = $('#filterCustomer').val();
         const modelId = $('#filterModel').val();
@@ -397,7 +445,7 @@ $(function() {
         if (modelId) params.push(`model_id=${modelId}`);
         if (params.length > 0) url += '?' + params.join('&');
         
-        window.location.href = url;
+        handleAjaxDownload($(this), url, 'VAVE_Summary_' + new Date().getTime() + '.xlsx');
     });
 
     // Populate Dropdown Data for RFQ Form
@@ -563,9 +611,19 @@ $(function() {
         calculateRfqWeight();
     }
 
-    // Handle RFQ Management
+    // Handle RFQ Management dengan Loading State
     $(document).on('click', '.rfq-button', function() {
-        const id = $(this).data('id');
+        const $btn = $(this);
+        const id = $btn.data('id');
+        const $icon = $btn.find('.btn-icon');
+        const originalIconClass = $icon.attr('class');
+
+        if($btn.prop('disabled')) return;
+
+        // Start Loading
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-wait');
+        $icon.attr('class', 'fa-solid fa-circle-notch fa-spin');
+
         $('#rfqForm')[0].reset();
         $('#rfq_product_id').val(id);
         $('#rfq_id').val(''); 
@@ -619,7 +677,14 @@ $(function() {
             
             // Ensure UI state matches unit (safeguard)
             toggleRfqUnitFields();
+            
             $('#rfqModal').removeClass('hidden').addClass('flex');
+        }).always(function() {
+            // Stop Loading
+            $btn.prop('disabled', false).removeClass('opacity-70 cursor-wait');
+            $icon.attr('class', originalIconClass);
+        }).fail(function() {
+            window.showToast('Error loading RFQ data', 'error');
         });
     });
 
@@ -723,9 +788,19 @@ $(function() {
     // Global State untuk Comparison Data
     window.compareState = { id: null, rfqs: [], revisions: [] };
 
-    // Handle VA/VE Comparison (Fetch Data & Isi Dropdown)
+    // Handle VA/VE Comparison (Fetch Data & Isi Dropdown) dengan Loading State
     $(document).on('click', '.compare-button', function() {
-        const id = $(this).data('id');
+        const $btn = $(this);
+        const id = $btn.data('id');
+        const $icon = $btn.find('.btn-icon');
+        const originalIconClass = $icon.attr('class');
+
+        if($btn.prop('disabled')) return;
+
+        // Start Loading
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-wait');
+        $icon.attr('class', 'fa-solid fa-circle-notch fa-spin');
+
         window.compareState.id = id;
 
         $.get(`{{ url('inventory/vave/comparison') }}/${id}`, function(res) {
@@ -763,6 +838,12 @@ $(function() {
 
             renderComparisonTable();
             $('#comparisonModal').removeClass('hidden').addClass('flex');
+        }).always(function() {
+            // Stop Loading
+            $btn.prop('disabled', false).removeClass('opacity-70 cursor-wait');
+            $icon.attr('class', originalIconClass);
+        }).fail(function() {
+            window.showToast('Error loading comparison data', 'error');
         });
     });
 
@@ -811,9 +892,13 @@ $(function() {
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <a href="{{ url('inventory/vave/comparison') }}/${id}/export" class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-xs bg-primary-600 hover:bg-primary-700 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-[0.98]">
-                            <i class="fa-solid fa-file-excel text-sm"></i> Export Excel
-                        </a>
+                       <button type="button" 
+        id="btnExportAnalysis" 
+        data-url="{{ url('inventory/vave/comparison') }}/${id}/export" 
+        class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-xs bg-primary-600 hover:bg-primary-700 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-[0.98]">
+    <i class="fa-solid fa-file-excel text-sm btn-icon"></i> 
+    <span class="btn-text">Export Excel</span>
+</button>
                              <label class="inline-flex items-center cursor-pointer group px-3 py-1.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-slate-100">
                             <div class="relative flex items-center">
                                 <input type="checkbox" id="toggleHistory" class="sr-only peer">
@@ -1029,6 +1114,14 @@ $(function() {
 
     $('.close-modal-button').on('click', function() {
         $(this).closest('[tabindex="-1"]').addClass('hidden').removeClass('flex');
+    });
+
+    // Handle Export Analysis di dalam Modal dengan AJAX Blob
+    $(document).on('click', '#btnExportAnalysis', function(e) {
+        e.preventDefault();
+        const $btn = $(this);
+        const url = $btn.data('url') || $btn.attr('href');
+        handleAjaxDownload($btn, url, 'VAVE_Analysis_' + new Date().getTime() + '.xlsx');
     });
 
 });
