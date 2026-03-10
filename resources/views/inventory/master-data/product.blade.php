@@ -365,7 +365,6 @@ $(function() {
                     url: this.config.routes.data,
                     type: 'GET',
                     data: d => {
-                        d.search = d.search.value;
                         d.customer_id = this.elements.customerFilter.val();
                         d.model_id = this.elements.modelFilter.val();
                         d.part_no = this.elements.partNoFilter.val();
@@ -502,7 +501,7 @@ $(function() {
 
         bindFormEvents: function() {
             $('#add-button').on('click', () => this.showAddModal());
-            $('.close-modal-button, .close-modal').on('click', e => this.ui.hideModal($(e.currentTarget).closest('[tabindex="-1"]')));
+            $('.close-modal-button, .close-modal').on('click', e => this.ui.hideModal($(e.currentTarget).closest('[id^="modal-"], [id$="Modal"]')));
             
             this.elements.customerSelect.on('change', e => this.handleFormCustomerChange(e.target.value));
             this.elements.productSelect.on('select2:select', e => this.handleProductSelect(e.params.data));
