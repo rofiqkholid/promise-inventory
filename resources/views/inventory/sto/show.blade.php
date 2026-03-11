@@ -744,7 +744,7 @@
                     },
                     { 
                         data: 'location_name', 
-                        className: 'text-center font-bold text-xs',
+                        className: 'text-center text-xs',
                         render: (val) => val || '<span class="text-gray-400 italic">No Location</span>'
                     },
                     { 
@@ -779,7 +779,7 @@
                             return data.remark || '-';
                         }
                     },
-                    { data: 'updated_at', className: 'text-[10px] font-mono font-bold text-gray-400' },
+                    { data: 'updated_at', className: 'text-[10px] font-mono text-gray-500' },
                     @if($stoEvent->status === 'OPEN')
                     { 
                         data: null, 
@@ -1056,8 +1056,9 @@
             });
         }
         
-        // Always add one blank row for a new entry
-        createFormRow();
+        if (!data.existing_entries || data.existing_entries.length === 0) {
+            createFormRow();
+        }
     }
 
     function createFormRow(entry = null) {
@@ -1176,7 +1177,7 @@
                 row.classList.replace('border-gray-200', 'border-primary-100');
                 row.classList.add('bg-primary-50/10');
                 
-                if (!row.querySelector('.fa-trash')) {
+                if (!row.querySelector('.fa-trash-can')) {
                     const deleteBtnHtml = `
                         <button type="button" onclick="deleteItem('${data.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
                             <i class="fa-solid fa-trash-can"></i>

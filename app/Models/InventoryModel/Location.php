@@ -12,7 +12,7 @@ class Location extends Model
 
     protected $table = 'inv_m_locations';
     protected $appends = ['hash_id'];
-    protected $hidden = ['id'];
+    protected $hidden = [];
 
     protected $fillable = [
         'name',
