@@ -77,19 +77,6 @@
         
         <div class="flex flex-col xl:flex-row gap-3 xl:items-end">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3 flex-1">
-                <!-- Stock Status -->
-                <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Stock Status</label>
-                    <div class="w-full">
-                        <select id="filter_status" class="select2 w-full">
-                            <option value="">All Status</option>
-                            <option value="safe">Safe Stock</option>
-                            <option value="warning">Warning</option>
-                            <option value="danger">Critical</option>
-                            <option value="over">Over Stock</option>
-                        </select>
-                    </div>
-                </div>
 
                 <!-- Customer -->
                 <div class="space-y-1.5">
@@ -116,7 +103,7 @@
 
                 <!-- Status -->
                 <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Status</label>
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Project Status</label>
                     <div class="w-full">
                         <select id="filter_project_status" class="select2 w-full">
                             <option value="">All Statuses</option>
@@ -126,6 +113,21 @@
                         </select>
                     </div>
                 </div>
+
+                <!-- Stock Status -->
+                <div class="space-y-1.5">
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Stock Status</label>
+                    <div class="w-full">
+                        <select id="filter_status" class="select2 w-full">
+                            <option value="">All Status</option>
+                            <option value="safe">Safe Stock</option>
+                            <option value="warning">Warning</option>
+                            <option value="danger">Critical</option>
+                            <option value="over">Over Stock</option>
+                        </select>
+                    </div>
+                </div>
+
             </div>
 
             <div class="flex gap-2 pt-2 xl:pt-0">
@@ -204,18 +206,19 @@
                     <th rowspan="2" class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
                     <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
                     <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
-                    <th colspan="1" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50 dark:bg-slate-900/50">Current Balance</th>
-                    <th colspan="{{ max(1, $categories->count()) + 1 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-red-50/50 dark:bg-red-900/20">Movement & Issues (Pcs / Unit)</th>
+                    <th colspan="{{ 2 + max(1, $categories->count()) + 2 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">Current Balance & Movement</th>
                     <th rowspan="2" class="w-20 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
                 </tr>
                 <tr>
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Stock Level</th>
+                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Min Stock</th>
+                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Balance</th>
 
                     @foreach($categories as $cat)
                     <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{{ $cat->code }}</th>
                     @endforeach
                     
                     <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-amber-50/30 dark:bg-amber-900/10">STO GAP</th>
+                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount</th>
 
                     @if($categories->count() === 0)
                     <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px]">-</th>
@@ -307,6 +310,11 @@
                 }
             },
             {
+                data: 'min_stock',
+                className: 'text-center font-bold text-slate-500 text-[11px]',
+                render: (data) => data || '0'
+            },
+            {
                 data: 'balance_pcs',
                 className: 'text-center',
                 render: function(data, type, row) {
@@ -346,6 +354,14 @@
                 }
             }
         ];
+
+        const amountColumnDef = {
+            data: 'total_amount',
+            className: 'text-right font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300',
+            render: function(data) {
+                return data ? new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(data) : '0';
+            }
+        };
 
         const stoColumnDef = {
             data: 'sto_gap', // Use raw data for sorting
@@ -403,6 +419,7 @@
         }
         
         columns.push(stoColumnDef);
+        columns.push(amountColumnDef);
 
         if (!(Array.isArray(categories) && categories.length > 0)) {
             columns.splice(columns.length - 1, 0, {

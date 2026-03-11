@@ -127,6 +127,7 @@ class StockMonitoringController extends Controller
                 'inv_t_product_detail.unit_per_car',
                 'inv_t_product_detail.updated_at',
                 'latest_sto.sto_gap',
+                'inv_t_product_detail.material_price',
                 'tx.*' // All transaction sums from subquery
             ]);
 
@@ -227,10 +228,11 @@ class StockMonitoringController extends Controller
             0 => 'inv_t_product_detail.id', // No
             1 => 'part_no',              // Part Information
             2 => 'project_status',        // Status
-            3 => 'balance_pcs',           // Current Balance
+            3 => 'min_stock',             // Min Stock
+            4 => 'balance_pcs',           // Current Balance
         ];
         
-        $currentIdx = 4;
+        $currentIdx = 5;
         foreach ($categories as $cat) {
             $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
             $sortableColumns[$currentIdx++] = $alias;
@@ -317,6 +319,7 @@ class StockMonitoringController extends Controller
                 'current_qty' => $calculatedQty,
                 'total_in' => number_format($inQty * $pcsPerUnit, 0),
                 'total_out' => number_format($outQty * $pcsPerUnit, 0),
+                'min_stock' => number_format((float)$item->min_stock, 0),
                 'sto_gap' => $item->sto_gap,
                 'sto_gap_display' => $this->formatStoGap($item->sto_gap, $pcsPerUnit),
                 'sto_gap_plain' => $item->sto_gap !== null ? ($item->sto_gap > 0 ? '+' : '') . number_format($item->sto_gap * $pcsPerUnit, 0) : '0',
@@ -341,6 +344,7 @@ class StockMonitoringController extends Controller
                     'last_update' => $item->updated_at ? $item->updated_at->format('d M Y, H:i') : '-',
                     'pcs_per_unit' => $pcsPerUnit
                 ],
+                'total_amount' => $calculatedQty * $pcsPerUnit * floatval($item->weight_kg) * floatval($item->material_price),
                 'stock_status' => $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $pcsPerUnit, $item->product_status ?: $item->model_project_status),
                 'project_status' => $item->product_status ?: ($item->model_project_status ?? 'Project')
             ];
@@ -666,11 +670,14 @@ class StockMonitoringController extends Controller
                 'products.part_name',
                 'models.name as model_name',
                 'customers.code as customer_code',
-                'inv_m_unit.code as unit_code',
+                'u.code as unit_code',
+                'u.name as unit_name',
                 'inv_m_material_spec.spec_name',
                 'inv_m_material_spec.coating_type',
-                'inv_m_rank.code as rank_code',
+                'r.code as rank_code',
                 'rev.code as revision',
+                'inv_m_model_status.project_status as model_project_status',
+                'inv_t_product_detail.material_price',
                 'latest_sto.sto_gap',
                 'tx.*'
             ]);

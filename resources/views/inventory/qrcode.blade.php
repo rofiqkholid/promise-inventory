@@ -29,41 +29,43 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: 0.10in;
-    position: relative; /* Add relative for badge positioning */
+    gap: 0.05in;
+    position: relative;
     page-break-after: always;
   }
   .label.last {
     page-break-after: auto;
   }
 
-  .ga-badge-top {
-    position: absolute;
-    top: 0.15in;
-    right: 0.15in;
+  .ga-status-center {
+    text-align: center;
+    margin: 2px 0;
+    z-index: 10;
+  }
+  .ga-status-text {
     background: #000;
     color: #fff;
-    padding: 2px 10px;
+    padding: 3px 20px;
     font-weight: 900;
-    font-size: 20px; /* Adjusted size */
-    border-radius: 4px;
-    line-height: 1;
-    z-index: 10;
+    font-size: 18px;
+    border-radius: 3px;
+    display: inline-block;
+    letter-spacing: 3px;
+    line-height: 1.1;
   }
 
   .qr-wrap {
-    flex: 0 0 45%; /* Reduced flex area */
+    flex: 0 0 35%;
     display: flex;
     justify-content: center;
     align-items: center;
-    /* padding: 0.1in; */
   }
   .qr-wrap svg,
   .qr-wrap img,
   .qr-wrap canvas,
   .qr-wrap div {
-    width: 85% !important; /* Reduced QR size */
-    height: 85% !important; /* Reduced QR size */
+    width: 75% !important;
+    height: 75% !important;
     object-fit: contain;
   }
 
@@ -94,7 +96,7 @@
     margin-top: 5px;
   }
   .details td {
-    padding: 4px 8px;
+    padding: 3px 8px;
     vertical-align: top;
     line-height: 1.3;
   }
@@ -166,15 +168,16 @@
           $gaStatus = $matches[0] ?? null;
       @endphp
       
-      @if($gaStatus)
-      <div class="ga-badge-top">
-        {{ strtoupper($gaStatus) }}
-      </div>
-      @endif
-
       <div class="qr-wrap">
         {!! $product->qrcode !!}
       </div>
+
+      @if($gaStatus)
+      <div class="ga-status-center">
+        <span class="ga-status-text">{{ strtoupper($gaStatus) }}</span>
+      </div>
+      @endif
+
       <div class="details">
         <div class="title">PRODUCT IDENTIFICATION</div>
         <table>

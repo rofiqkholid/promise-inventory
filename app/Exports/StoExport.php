@@ -38,7 +38,7 @@ class StoExport implements FromCollection, WithHeadings, WithMapping, WithTitle,
             ['Status', $this->stoEvent->status],
             ['PIC', $this->stoEvent->pic->name ?? '-'],
             [],
-            ['Part No', 'Part Name', 'Revision', 'System Qty', 'Real Qty', 'Diff', 'Remark', 'Auditor', 'Time'],
+            ['Part No', 'Part Name', 'Revision', 'Location', 'System Qty', 'Real Qty', 'Diff', 'Reason', 'Remark', 'Auditor', 'Time'],
         ];
     }
 
@@ -48,9 +48,11 @@ class StoExport implements FromCollection, WithHeadings, WithMapping, WithTitle,
             $detail->product->product->part_no ?? '-',
             $detail->product->product->part_name ?? '-',
             $detail->product->revision->code ?? '-',
+            $detail->location->name ?? 'No Location',
             $detail->system_qty_snapshot,
             $detail->real_qty_input,
             $detail->diff_qty,
+            $detail->reason->name ?? '-',
             $detail->remark ?? '',
             $detail->auditor->name ?? '-',
             $detail->updated_at->format('d M Y H:i'),
@@ -83,15 +85,17 @@ class StoExport implements FromCollection, WithHeadings, WithMapping, WithTitle,
     public function columnWidths(): array
     {
         return [
-            'A' => 15,
-            'B' => 30,
-            'C' => 12,
-            'D' => 12,
-            'E' => 12,
-            'F' => 10,
-            'G' => 25,
-            'H' => 15,
-            'I' => 18,
+            'A' => 15, // Part No
+            'B' => 30, // Part Name
+            'C' => 10, // Rev
+            'D' => 20, // Location
+            'E' => 12, // System
+            'F' => 12, // Real
+            'G' => 10, // Diff
+            'H' => 15, // Reason
+            'I' => 25, // Remark
+            'J' => 15, // Auditor
+            'K' => 18, // Time
         ];
     }
 }

@@ -250,10 +250,9 @@ class StoController extends Controller
     {
         $stoEvent = StoEvent::findByHashOrFail($id);
         
-        $statsData = $this->getStoStats($stoEvent);
-        $stats = $statsData['stats'];
-        $netAdjustment = $statsData['netAdjustment'];
-        $progress = $statsData['progress'];
+        $stats = $this->getStoStats($stoEvent);
+        $netAdjustment = $stats['net_adjustment'];
+        $progress = $stats['progress'];
 
         $countedIds = StoDetail::where('event_id', $stoEvent->id)->pluck('product_detail_id')->toArray();
 
@@ -328,7 +327,7 @@ class StoController extends Controller
             'location_name' => \App\Models\InventoryModel\Location::select('name')->whereColumn('id', 'inv_t_sto_detail.location_id')->limit(1),
             'reason_name' => \App\Models\InventoryModel\StoReason::select('name')->whereColumn('id', 'inv_t_sto_detail.reason_id')->limit(1),
             // Material Info sort logic
-            'part_no' => \App\Models\InventoryModel\Product::select('part_no')
+            'part_no' => \App\Models\Products::select('part_no')
                 ->join('inv_t_product_detail', 'inv_t_product_detail.product_id', '=', 'products.id')
                 ->whereColumn('inv_t_product_detail.id', 'inv_t_sto_detail.product_detail_id')
                 ->limit(1),
@@ -366,6 +365,21 @@ class StoController extends Controller
         $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline) {
             $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
             $unitCode = $detail->product->unit->code ?? 'PCS';
+            
+            // Get aggregates for this product in this event
+            $productAggregates = DB::table('inv_t_sto_detail')
+                ->where('event_id', $stoEvent->id)
+                ->where('product_detail_id', $detail->product_detail_id)
+                ->select(
+                    DB::raw('SUM(real_qty_input) as total_real'),
+                    DB::raw('SUM(system_qty_snapshot) as total_system')
+                )
+                ->first();
+
+            $totalReal = (float)($productAggregates->total_real ?? 0);
+            $totalSystem = (float)($productAggregates->total_system ?? 0);
+            $totalDiff = $totalReal - $totalSystem;
+
             $diff = $detail->real_qty_input - $detail->system_qty_snapshot;
             
             // Financial Calculation raw values
@@ -375,6 +389,10 @@ class StoController extends Controller
             $systemAmount = $detail->system_qty_snapshot * $weightPerPcs * $pricePerKg;
             $realAmount = $detail->real_qty_input * $weightPerPcs * $pricePerKg;
             $diffAmount = $diff * $weightPerPcs * $pricePerKg;
+
+            $totalDiffAmount = $totalDiff * $weightPerPcs * $pricePerKg;
+            $totalSystemAmount = $totalSystem * $weightPerPcs * $pricePerKg;
+            $totalRealAmount = $totalReal * $weightPerPcs * $pricePerKg;
 
             $currentRow = $rowNumber++;
 
@@ -397,11 +415,18 @@ class StoController extends Controller
                 'location_name' => $detail->location->name ?? null,
                 'reason_id' => $detail->reason_id,
                 'reason_name' => $detail->reason->name ?? null,
-                'category' => $diff < 0 ? 'SHORTAGE' : 'EXCESS',
+                'category' => $totalDiff < 0 ? 'SHORTAGE' : 'EXCESS',
                 'remark' => $detail->remark,
                 'can_edit_inline' => $canEditInline,
                 'status' => $stoEvent->status,
                 'product_hash_id' => $detail->product->hash_id,
+                // Aggregates for grouping
+                'total_real_qty' => $totalReal,
+                'total_system_qty' => $totalSystem,
+                'total_diff_qty' => $totalDiff,
+                'total_real_amount' => $totalRealAmount,
+                'total_system_amount' => $totalSystemAmount,
+                'total_diff_amount' => $totalDiffAmount,
             ];
         });
 
@@ -457,7 +482,7 @@ class StoController extends Controller
         }
 
         // Check all existing entries for this product in this event
-        $existingEntries = StoDetail::with('location')
+        $existingEntries = StoDetail::with(['location', 'auditor'])
             ->where('event_id', $stoEvent->id)
             ->where('product_detail_id', $product->id)
             ->get();
@@ -468,7 +493,8 @@ class StoController extends Controller
                 'location_id' => $entry->location_id,
                 'location_name' => $entry->location->name ?? 'No Location',
                 'real_qty' => $entry->real_qty_input,
-                'remark' => $entry->remark
+                'remark' => $entry->remark,
+                'auditor_name' => $entry->auditor->name ?? 'Unknown'
             ];
         });
 
@@ -494,98 +520,100 @@ class StoController extends Controller
      */
     public function saveCount(Request $request, $id)
     {
-        $stoEvent = StoEvent::findByHashOrFail($id);
-        
-        if ($stoEvent->status !== 'OPEN') {
-            return response()->json(['success' => false, 'message' => 'Event is closed.'], 403);
-        }
-
-        $request->validate([
-            'product_id_hash' => 'required',
-            'detail_id_hash' => 'nullable', // NEW: Specific ID to update
-            'location_id' => 'nullable|exists:inv_m_locations,id',
-            'real_qty' => 'required|numeric|min:0',
-            'remark' => 'nullable|string|max:255',
-            'reason_id' => 'nullable|exists:inv_m_sto_reasons,id'
-        ]);
-
-        $productId = InventoryProduct::decodeHash($request->product_id_hash);
-        $detailId = $request->detail_id_hash ? StoDetail::decodeHash($request->detail_id_hash) : null;
-        
-        $user = auth()->user();
-        $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic');
-        $isAdmin = $user->hasAppRole('admin');
-        
-        // If entry exists, only PIC/Admin can update/override via table or direct save
-        // But for scanner, we might want anyone to scan?
-        // Let's refine: Anyone can SCAN and INITIALIZE, but only PIC can EDIT in table.
-        // If request is from table (checked by referrer or additional flag), we could block here.
-        // For simplicity, we'll follow your request strictly on the table view.
-        
-        $product = InventoryProduct::find($productId);
-        
-        if (!$product) {
-            return response()->json(['success' => false, 'message' => 'Product not found'], 404);
-        }
-
-        // Upsert Detail Logic
-        $detail = null;
-        if ($detailId) {
-            // If explicit detail ID provided, we update THAT specific row
-            $detail = StoDetail::find($detailId);
-        } else {
-            // Find existing by product + location combo to avoid duplicates
-            $detail = StoDetail::where('event_id', $stoEvent->id)
-                ->where('product_detail_id', $productId)
-                ->where(function($q) use ($request) {
-                    if ($request->location_id) $q->where('location_id', $request->location_id);
-                    else $q->whereNull('location_id');
-                })
-                ->first();
-        }
-
-        if (!$detail) {
-            $detail = new StoDetail();
-            $detail->event_id = $stoEvent->id;
-            $detail->product_detail_id = $productId;
-            
-            // Snapshot Logic
-            $alreadyCountedForThisProduct = StoDetail::where('event_id', $stoEvent->id)
-                ->where('product_detail_id', $productId)
-                ->exists();
-                
-            if ($alreadyCountedForThisProduct) {
-                // Secondary location uses 0 snapshot so total diff is correct
-                $detail->system_qty_snapshot = 0;
-            } else {
-                $detail->system_qty_snapshot = $product->current_stock_qty;
+        try {
+            // Sanitize inputs that might be sent as JS strings "undefined" or "null"
+            if ($request->location_id === 'undefined' || $request->location_id === 'null' || $request->location_id === '') {
+                $request->merge(['location_id' => null]);
             }
-        }
+            if ($request->reason_id === 'undefined' || $request->reason_id === 'null' || $request->reason_id === '') {
+                $request->merge(['reason_id' => null]);
+            }
 
-        $detail->location_id = $request->location_id;
-        $detail->real_qty_input = $request->real_qty;
-        $detail->remark = $request->remark;
-        
-        if ($request->has('reason_id')) {
-            $detail->reason_id = $request->reason_id;
-        }
-        
-        // Explicitly calculate diff_qty to avoid non-null constraint errors in SQL Server
-        $detail->diff_qty = (float)$detail->real_qty_input - (float)$detail->system_qty_snapshot;
-        
-        // Attempt to find PIC based on Auth User
-        $user = auth()->user();
-        if ($user) {
-            $detail->auditor_id = $user->id;
-        }
-        
-        $detail->save();
+            $stoEvent = StoEvent::findByHashOrFail($id);
+            
+            if ($stoEvent->status !== 'OPEN') {
+                return response()->json(['success' => false, 'message' => 'Event is closed.'], 403);
+            }
 
-        return response()->json([
-            'success' => true, 
-            'message' => 'Saved',
-            'stats' => $this->getStoStats($stoEvent)
-        ]);
+            $request->validate([
+                'product_id_hash' => 'required',
+                'detail_id_hash' => 'nullable', 
+                'location_id' => 'nullable|exists:inv_m_locations,id',
+                'real_qty' => 'required|numeric|min:0',
+                'remark' => 'nullable|string|max:255',
+                'reason_id' => 'nullable|exists:inv_m_sto_reasons,id'
+            ]);
+
+            $productId = InventoryProduct::decodeHash($request->product_id_hash);
+            $detailId = $request->detail_id_hash ? StoDetail::decodeHash($request->detail_id_hash) : null;
+            
+            $product = InventoryProduct::find($productId);
+            
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+            }
+
+            // Upsert Detail Logic
+            $detail = null;
+
+            if ($detailId) {
+                $detail = StoDetail::find($detailId);
+            } 
+
+            if (!$detail) {
+                // ALWAYS create a NEW record if no specific detail ID is provided
+                // This ensures every click on 'Save' creates a separate row for traceability
+                $detail = new StoDetail();
+                $detail->event_id = $stoEvent->id;
+                $detail->product_detail_id = $productId;
+                $detail->location_id = $request->location_id;
+                
+                // Snapshot Logic: Check if ANY non-zero snapshot exists for this product in this event
+                // Only the VERY FIRST record for this product gets the system stock quantity
+                $hasSnapshot = StoDetail::where('event_id', $stoEvent->id)
+                    ->where('product_detail_id', $productId)
+                    ->where('system_qty_snapshot', '>', 0)
+                    ->exists();
+                    
+                if ($hasSnapshot) {
+                    $detail->system_qty_snapshot = 0;
+                } else {
+                    $detail->system_qty_snapshot = $product->current_stock_qty ?? 0;
+                }
+            }
+
+            // Standard Update Logic (Used for both new and existing)
+            $detail->real_qty_input = $request->real_qty;
+            $detail->location_id = $request->location_id;
+            $detail->remark = $request->remark;
+            
+            if ($request->has('reason_id')) {
+                $detail->reason_id = $request->reason_id;
+            }
+            
+            $detail->diff_qty = (float)$detail->real_qty_input - (float)$detail->system_qty_snapshot;
+            
+            $user = auth()->user();
+            if ($user) {
+                $detail->auditor_id = $user->id;
+            }
+            
+            $detail->save();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'New entry recorded',
+                'detail_id_hash' => $detail->hash_id,
+                'stats' => $this->getStoStats($stoEvent)
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], 500);
+        }
     }
 
     /**
@@ -843,44 +871,82 @@ class StoController extends Controller
 
     private function getStoStats($stoEvent)
     {
-        $baseQuery = StoDetail::where('event_id', $stoEvent->id);
+        // Aggregate totals per product for this event
+        $productStats = DB::table('inv_t_sto_detail')
+            ->where('event_id', $stoEvent->id)
+            ->select('product_detail_id', 
+                DB::raw('SUM(ISNULL(real_qty_input, 0)) as total_real'),
+                DB::raw('SUM(ISNULL(system_qty_snapshot, 0)) as total_system')
+            )
+            ->groupBy('product_detail_id')
+            ->get();
 
-        $pcsStats = StoDetail::leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
-            ->where('inv_t_sto_detail.event_id', $stoEvent->id)
+        $totalItems = $productStats->count();
+        $totalMatched = 0;
+        $totalDiff = 0;
+        $countIncrease = 0;
+        $countDecrease = 0;
+        $totalIncrease = 0;
+        $totalDecrease = 0;
+
+        foreach ($productStats as $p) {
+            $diff = (float)$p->total_real - (float)$p->total_system;
+            if (abs($diff) < 0.00001) {
+                $totalMatched++;
+            } else {
+                $totalDiff++;
+                if ($diff > 0) {
+                    $countIncrease++;
+                    $totalIncrease += $diff;
+                } else {
+                    $countDecrease++;
+                    $totalDecrease += $diff;
+                }
+            }
+        }
+
+        $pcsStats = DB::table('inv_t_sto_detail as sd')
+            ->leftJoin('inv_t_product_detail as pd', 'sd.product_detail_id', '=', 'pd.id')
+            ->where('sd.event_id', $stoEvent->id)
             ->select(
-                DB::raw('SUM(CASE WHEN inv_t_sto_detail.diff_qty > 0 THEN inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit ELSE 0 END) as inc_pcs'),
-                DB::raw('SUM(CASE WHEN inv_t_sto_detail.diff_qty < 0 THEN inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit ELSE 0 END) as dec_pcs'),
-                DB::raw('SUM(inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit) as net_pcs'),
-                DB::raw('SUM(inv_t_sto_detail.real_qty_input * inv_t_product_detail.pcs_per_unit) as total_recorded_pcs')
+                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot > 0 THEN (sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.pcs_per_unit, 1) ELSE 0 END) as inc_pcs'),
+                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot < 0 THEN (sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.pcs_per_unit, 1) ELSE 0 END) as dec_pcs'),
+                DB::raw('SUM((sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.pcs_per_unit, 1)) as net_pcs'),
+                DB::raw('SUM(sd.real_qty_input * ISNULL(pd.pcs_per_unit, 1)) as total_recorded_pcs')
             )
             ->first();
 
+        // Financial Impact
+        $financialStats = DB::table('inv_t_sto_detail as sd')
+            ->leftJoin('inv_t_product_detail as pd', 'sd.product_detail_id', '=', 'pd.id')
+            ->where('sd.event_id', $stoEvent->id)
+            ->select(DB::raw('SUM((sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0)) as impact'))
+            ->first();
+
+        $netAdjustment = StoDetail::where('event_id', $stoEvent->id)->sum(DB::raw('real_qty_input - system_qty_snapshot'));
+        $totalProducts = InventoryProduct::where('is_active', 1)->count();
+
         $stats = [
-            'total_recorded_pcs' => $pcsStats->total_recorded_pcs ?? 0,
-            'total_items' => (clone $baseQuery)->distinct()->count('product_detail_id'),
-            'total_diff' => (clone $baseQuery)->where('diff_qty', '!=', 0)->count(),
-            'total_matched' => (clone $baseQuery)->where('diff_qty', 0)->count(),
-            'total_increase' => (clone $baseQuery)->where('diff_qty', '>', 0)->sum('diff_qty'),
-            'total_decrease' => (clone $baseQuery)->where('diff_qty', '<', 0)->sum('diff_qty'),
-            'count_increase' => (clone $baseQuery)->where('diff_qty', '>', 0)->count(),
-            'count_decrease' => (clone $baseQuery)->where('diff_qty', '<', 0)->count(),
+            'total_recorded_pcs' => (float)($pcsStats->total_recorded_pcs ?? 0),
+            'total_items' => (int)$totalItems,
+            'total_diff' => (int)$totalDiff,
+            'total_matched' => (int)$totalMatched,
+            'count_increase' => (int)$countIncrease,
+            'count_decrease' => (int)$countDecrease,
+            'total_increase' => (float)$totalIncrease,
+            'total_decrease' => (float)$totalDecrease,
             
-            'total_increase_pcs' => $pcsStats->inc_pcs ?? 0,
-            'total_decrease_pcs' => $pcsStats->dec_pcs ?? 0,
-            'net_adjustment_pcs' => $pcsStats->net_pcs ?? 0,
-            'net_amount_impact' => StoDetail::leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
-                ->where('inv_t_sto_detail.event_id', $stoEvent->id)
-                ->sum(DB::raw('inv_t_sto_detail.diff_qty * ISNULL(inv_t_product_detail.weight_kg, 0) * ISNULL(inv_t_product_detail.material_price, 0)')),
+            'total_increase_pcs' => (float)($pcsStats->inc_pcs ?? 0),
+            'total_decrease_pcs' => (float)($pcsStats->dec_pcs ?? 0),
+            'net_adjustment_pcs' => (float)($pcsStats->net_pcs ?? 0),
+            'net_amount_impact' => (float)($financialStats->impact ?? 0),
+            
+            'total_count' => (int)$totalProducts,
+            'total_missing_items' => (int)max(0, $totalProducts - $totalItems),
+            'progress' => (float)($totalProducts > 0 ? round(($totalItems / $totalProducts) * 100, 1) : 0),
+            'net_adjustment' => (float)$netAdjustment
         ];
 
-        $netAdjustment = (clone $baseQuery)->sum('diff_qty');
-        
-        $totalProducts = InventoryProduct::where('is_active', 1)->count();
-        $stats['total_missing_items'] = max(0, $totalProducts - $stats['total_items']);
-        $stats['total_count'] = $totalProducts;
-        
-        $progress = $totalProducts > 0 ? round(($stats['total_items'] / $totalProducts) * 100, 1) : 0;
-
-        return ['stats' => $stats, 'netAdjustment' => $netAdjustment, 'progress' => $progress];
+        return $stats;
     }
 }

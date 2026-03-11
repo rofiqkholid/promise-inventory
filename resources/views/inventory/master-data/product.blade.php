@@ -10,7 +10,11 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Inventory Product</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory product details.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 flex gap-2">
+            <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+                <i class="fa-solid fa-file-excel"></i>
+                Export Excel
+            </button>
             <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i>
                 Add New
@@ -137,7 +141,7 @@
                                 </select>
                                 <p id="error-product_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
-                            <div>
+                            <div class="md:col-span-2">
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Revision <span class="text-red-500">*</span></label>
                                 <select name="revision_id" id="revision_id" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Revision</option>
@@ -145,34 +149,12 @@
                                 <p id="error-revision_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
 
-                            <div>
+                            <div class="md:col-span-2">
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
                                  <select name="material_spec_id" id="material_spec_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Material Spec</option>
                                 </select>
                                 <p id="error-material_spec_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Check Input</p>
-                            </div>
-
-
-
-                            {{-- PRODUCT STATUS --}}
-                            <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Product Status Override</label>
-                                <select name="product_status" id="product_status" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
-                                    <option value="">None (Follow Model)</option>
-                                    <option value="Allsize OK">Allsize OK</option>
-                                    <option value="Allsize NG">Allsize NG</option>
-                                </select>
-                            </div>
-
-                            {{-- PRODUCT STATUS REMARK --}}
-                            <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Status Remark</label>
-                                <select name="product_status_remark" id="product_status_remark" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
-                                    <option value="">No Remark</option>
-                                    <option value="Damage">Damage</option>
-                                    <option value="Other">Other</option>
-                                </select>
                             </div>
                         </div>
                     </div>
@@ -280,6 +262,26 @@
                                 <textarea name="remark" id="remark" rows="1" class="block w-full text-xs font-medium text-gray-900 bg-white rounded-xs border border-slate-200 focus:ring-slate-500 focus:border-slate-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-gray-300 py-3 px-3 min-h-[42px]" placeholder="Optional notes..."></textarea>
                                 <p id="error-remark" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
+
+                            {{-- PRODUCT STATUS OVERRIDE --}}
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Product Status Override</label>
+                                <select name="product_status" id="product_status" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <option value="">None (Follow Model)</option>
+                                    <option value="Allsize OK">Allsize OK</option>
+                                    <option value="Allsize NG">Allsize NG</option>
+                                </select>
+                            </div>
+
+                            {{-- PRODUCT STATUS REMARK --}}
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Status Remark</label>
+                                <select name="product_status_remark" id="product_status_remark" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <option value="">No Remark</option>
+                                    <option value="Damage">Damage</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -316,6 +318,7 @@ $(function() {
                 customers: '{{ route("inventory.master.product.getCustomers") }}',
                 models: '{{ route("inventory.master.product.getModels") }}',
                 products: '{{ route("inventory.master.product.getProducts") }}',
+                export: '{{ route("inventory.master.product.exportExcel") }}',
                 base: '{{ url("inventory/master/product") }}'
             }
         },
@@ -386,8 +389,7 @@ $(function() {
                                 'Allsize OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
                                 'Allsize NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
                             }[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
-                            const override = d ? ' <span class="text-[8px] opacity-50 underline">(O)</span>' : '';
-                            return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border ${colors}">${status}${override}</span>`;
+                            return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border ${colors}">${status}</span>`;
                         }
                     },
                     {
@@ -497,6 +499,7 @@ $(function() {
             });
             this.elements.partNoFilter.on('change', () => this.state.table.ajax.reload());
             $('#btnResetFilter').on('click', () => this.resetFilters());
+            $('#btnExport').on('click', () => this.handleExport());
         },
 
         bindFormEvents: function() {
@@ -536,6 +539,17 @@ $(function() {
                 data.forEach(m => this.elements.modelFilter.append(`<option value="${m.id}">${m.name}</option>`));
                 this.state.table.ajax.reload();
             });
+        },
+
+        handleExport: function() {
+            const params = {
+                customer_id: this.elements.customerFilter.val(),
+                model_id: this.elements.modelFilter.val(),
+                part_no: this.elements.partNoFilter.val(),
+                search: this.state.table.search()
+            };
+            const queryString = $.param(params);
+            window.location.href = `${this.config.routes.export}?${queryString}`;
         },
 
         resetFilters: function() {

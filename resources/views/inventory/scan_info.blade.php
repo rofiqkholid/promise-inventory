@@ -197,7 +197,7 @@
                         </div>
                         <div class="flex flex-col gap-1">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Safety Stock Level</span>
-                            <span class="text-sm font-bold text-red-600">{{ $product->min_stock }} <small class="text-[10px] uppercase ml-0.5">PCS</small></span>
+                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $product->min_stock }} <small class="text-[10px] uppercase ml-0.5">PCS</small></span>
                         </div>
                     </div>
                 </div>

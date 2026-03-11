@@ -392,7 +392,6 @@
                 <thead>
                     <tr>
                         <th rowspan="2" class="text-center">No</th>
-                        <th rowspan="2" class="text-left">Timestamp</th>
                         <th rowspan="2" class="text-left">Material Information</th>
                         <th rowspan="2" class="text-left">Auditor</th>
                         <th colspan="2" class="text-center bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
@@ -401,6 +400,7 @@
                         <th rowspan="2" class="text-left">Location</th>
                         <th rowspan="2" class="text-left">Reason</th>
                         <th rowspan="2" class="text-left">Remark</th>
+                        <th rowspan="2" class="text-left">Timestamp</th>
                         @if($stoEvent->status === 'OPEN')
                         <th rowspan="2" class="w-[60px] text-center">Action</th>
                         @endif
@@ -612,43 +612,46 @@
         const formatNumber = (num, dec = 0) => parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: dec});
         const setVal = (id, val) => {
             const el = document.getElementById(id);
-            if (el) el.innerText = val;
+            if (el) el.innerText = (val !== undefined && val !== null) ? val : '0';
         };
 
-        setVal('stat-total-items', stats.total_items);
+        setVal('stat-total-items', stats.total_items || 0);
         setVal('stat-progress', stats.progress || 0);
         setVal('stat-total-recorded-pcs', formatNumber(stats.total_recorded_pcs));
-        setVal('stat-total-missing-items', stats.total_missing_items);
+        setVal('stat-total-missing-items', stats.total_missing_items || 0);
         setVal('stat-total-increase-pcs', formatNumber(stats.total_increase_pcs) + ' Pcs');
-        setVal('stat-total-increase', '(' + formatNumber(stats.total_increase) + ' Unit / ' + stats.count_increase + ' items)');
+        setVal('stat-total-increase', '(' + formatNumber(stats.total_increase) + ' Unit / ' + (stats.count_increase || 0) + ' items)');
         setVal('stat-total-decrease-pcs', formatNumber(stats.total_decrease_pcs) + ' Pcs');
-        setVal('stat-total-decrease', '(' + formatNumber(stats.total_decrease) + ' Unit / ' + stats.count_decrease + ' items)');
+        setVal('stat-total-decrease', '(' + formatNumber(stats.total_decrease) + ' Unit / ' + (stats.count_decrease || 0) + ' items)');
         
-        const netPcsPrefix = stats.net_adjustment_pcs >= 0 ? '+' : '';
+        const netPcsPrefix = (stats.net_adjustment_pcs || 0) >= 0 ? '+' : '';
         setVal('stat-net-adjustment-pcs', netPcsPrefix + formatNumber(stats.net_adjustment_pcs) + ' Pcs');
         
-        const netUnitPrefix = stats.net_adjustment >= 0 ? '+' : '';
+        const netUnitPrefix = (stats.net_adjustment || 0) >= 0 ? '+' : '';
         setVal('stat-net-adjustment', '(' + netUnitPrefix + formatNumber(stats.net_adjustment) + ' Unit)');
         
-        const amountPrefix = stats.net_amount_impact > 0 ? '+' : (stats.net_amount_impact < 0 ? '-' : '');
-        setVal('stat-net-amount-impact', amountPrefix + formatNumber(Math.abs(stats.net_amount_impact)));
+        const amountImpact = stats.net_amount_impact || 0;
+        const amountPrefix = amountImpact > 0 ? '+' : (amountImpact < 0 ? '-' : '');
+        setVal('stat-net-amount-impact', amountPrefix + formatNumber(Math.abs(amountImpact)));
         
-        setVal('stat-total-matched', stats.total_matched);
-        setVal('table-total-matched', stats.total_matched);
-        setVal('table-total-diff', stats.total_diff);
+        setVal('stat-total-matched', stats.total_matched || 0);
+        setVal('table-total-matched', stats.total_matched || 0);
+        setVal('table-total-diff', stats.total_diff || 0);
 
         // Financial Impact Color
         const amountBg = document.getElementById('stat-net-amount-bg');
         const amountText = document.getElementById('stat-net-amount-impact');
         if (amountBg && amountText) {
-            if (stats.net_amount_impact >= 0) {
-                amountBg.classList.replace('bg-rose-50', 'bg-emerald-50');
-                amountBg.classList.replace('text-rose-600', 'text-emerald-600');
-                amountText.classList.replace('text-rose-700', 'text-emerald-700');
+            if (amountImpact >= 0) {
+                amountBg.classList.add('bg-emerald-50', 'text-emerald-600');
+                amountBg.classList.remove('bg-rose-50', 'text-rose-600');
+                amountText.classList.add('text-emerald-700');
+                amountText.classList.remove('text-rose-700');
             } else {
-                amountBg.classList.replace('bg-emerald-50', 'bg-rose-50');
-                amountBg.classList.replace('text-emerald-600', 'text-rose-600');
-                amountText.classList.replace('text-emerald-700', 'text-rose-700');
+                amountBg.classList.add('bg-rose-50', 'text-rose-600');
+                amountBg.classList.remove('bg-emerald-50', 'text-emerald-600');
+                amountText.classList.add('text-rose-700');
+                amountText.classList.remove('text-emerald-700');
             }
         }
 
@@ -676,14 +679,13 @@
                 },
                 columns: [
                     { data: 'row_number', className: 'text-center font-bold text-gray-500', orderable: false, searchable: false },
-                    { data: 'updated_at', className: 'text-[10px] font-mono font-bold text-gray-500' },
                     { 
                         data: null, 
                         className: 'font-medium',
                         render: function(data) {
                             return `
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">${data.part_no} - ${data.revision}</span>
+                                    <span class="text-sm font-black text-gray-800 dark:text-gray-200">${data.part_no} - ${data.revision}</span>
                                     <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">${data.part_name}</span>
                                 </div>`;
                         }
@@ -691,7 +693,7 @@
                     { data: 'auditor', className: 'text-xs font-semibold text-primary-600 dark:text-primary-400' },
                     { 
                         data: null, 
-                        className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800',
+                        className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
                         render: function(data) {
                             return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code);
                         }
@@ -718,7 +720,7 @@
                                         <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code}</span>
                                     </div>`;
                             }
-                            return `<div class="text-primary-600 dark:text-primary-400">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code)}</div>`;
+                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code)}</div>`;
                         }
                     },
                     { 
@@ -728,11 +730,11 @@
                     },
                     { 
                         data: null, 
-                        className: 'text-center font-bold',
+                        className: 'text-center font-bold bg-slate-50/20',
                         render: function(data) {
                             if (data.diff_qty > 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(data.diff_qty, data.pcs_per_unit, data.unit_code, '+')}</div>`;
                             if (data.diff_qty < 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, '-')}</div>`;
-                            return `<span class="text-sm font-medium text-emerald-600">0</span>`;
+                            return `<span class="text-sm font-bold text-emerald-600">0</span>`;
                         }
                     },
                     { 
@@ -742,14 +744,13 @@
                     },
                     { 
                         data: 'location_name', 
-                        className: 'text-center',
+                        className: 'text-center font-bold text-xs',
                         render: (val) => val || '<span class="text-gray-400 italic">No Location</span>'
                     },
                     { 
                         data: null, 
                         className: 'text-center',
                         render: function(data) {
-                            if (data.diff_qty === 0) return '<span class="text-[10px] text-gray-400 italic">No Diff</span>';
                             if (data.can_edit_inline) {
                                 let category = data.category; // SHORTAGE or EXCESS
                                 let options = stoReasons.filter(r => r.category === category || r.category === 'OTHERS')
@@ -778,6 +779,7 @@
                             return data.remark || '-';
                         }
                     },
+                    { data: 'updated_at', className: 'text-[10px] font-mono font-bold text-gray-400' },
                     @if($stoEvent->status === 'OPEN')
                     { 
                         data: null, 
@@ -788,7 +790,7 @@
                             return `
                                 <div class="flex items-center justify-center">
                                     <button type="button" onclick="deleteItem('${data.hash_id}')" 
-                                            class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Entry">
+                                             class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Entry">
                                         <i class="fa-solid fa-trash-can text-sm"></i>
                                     </button>
                                 </div>`;
@@ -796,17 +798,77 @@
                     }
                     @endif
                 ],
-                order: [[1, 'desc']],
+                order: [[2, 'asc']], // Order by Part No primarily for grouping
                 autoWidth: true,
                 columnDefs: [
                     { targets: '_all', className: 'whitespace-nowrap px-4 py-3' }
-                ]
+                ],
+                drawCallback: function(settings) {
+                    const api = this.api();
+                    const rows = api.rows({ page: 'current' }).nodes();
+                    let lastProduct = null;
+                    let productCounts = {};
+                    let startIdx = settings._iDisplayStart;
+                    
+                    // 1. First pass: Count items per product group on the current page
+                    api.column(1, { page: 'current' }).data().each(function(data, i) {
+                        const productHash = data.product_hash_id;
+                        productCounts[productHash] = (productCounts[productHash] || 0) + 1;
+                    });
+
+                    let groupCounter = 1;
+                    
+                    // 2. Second pass: Apply rowspan and hide redundant cells
+                    api.column(1, { page: 'current' }).data().each(function(data, i) {
+                        const productHash = data.product_hash_id;
+                        const $row = $(rows).eq(i);
+                        
+                        if (lastProduct !== productHash) {
+                            // FIRST ROW of product group
+                            const rowCount = productCounts[productHash];
+                            const diffQty = data.total_diff_qty;
+                            const diffClass = diffQty > 0 ? 'text-rose-600' : (diffQty < 0 ? 'text-rose-600' : 'text-emerald-600');
+                            const diffIcon = diffQty > 0 ? '+' : '';
+
+                            // Apply rowspans (No, Material Info, System Status Qty/Amount, Var Qty/Amount)
+                            const mergeIndices = [0, 1, 3, 4, 7, 8];
+                            mergeIndices.forEach(idx => {
+                                const $td = $row.find(`td:eq(${idx})`);
+                                $td.attr('rowspan', rowCount).css({
+                                    'vertical-align': 'middle',
+                                    'background-color': 'inherit'
+                                });
+                            });
+
+                            // Set Group Data for merged columns
+                            $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
+                            
+                            $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
+                            $row.find('td:eq(4)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
+                            
+                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, diffIcon)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
+                            $row.find('td:eq(8)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
+                            
+                            $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');
+                            lastProduct = productHash;
+                        } else {
+                            // SUBSEQUENT ROWS - hide merged cells
+                            const mergeIndices = [0, 1, 3, 4, 7, 8];
+                            mergeIndices.forEach(idx => {
+                                $row.find(`td:eq(${idx})`).css('display', 'none');
+                            });
+                        }
+                        
+                        $row.addClass('hover:bg-primary-50/5 transition-colors');
+                    });
+                }
             });
 
             // Inline Editing logic (Qty)
             $('#stoDetailsTable').on('blur', '.qty-input', function() {
                 const $input = $(this);
                 const productId = $input.data('product-id');
+                const detailId = $input.data('detail-id');
                 const newQty = $input.val();
                 const originalQty = $input.data('original-value');
 
@@ -821,6 +883,7 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({ 
                         product_id_hash: productId, 
+                        detail_id_hash: detailId,
                         real_qty: newQty, 
                         remark: existingRemark,
                         reason_id: existingReasonId
@@ -847,6 +910,7 @@
                 const $row = $input.closest('tr');
                 const $qtyInput = $row.find('.qty-input');
                 const productId = $qtyInput.data('product-id');
+                const detailId = $qtyInput.data('detail-id');
                 const currentQty = $qtyInput.val();
                 const existingReasonId = $row.find('.reason-input').val();
 
@@ -855,6 +919,7 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({ 
                         product_id_hash: productId, 
+                        detail_id_hash: detailId,
                         real_qty: currentQty, 
                         remark: newRemark,
                         reason_id: existingReasonId
@@ -876,6 +941,7 @@
                 const $row = $select.closest('tr');
                 const $qtyInput = $row.find('.qty-input');
                 const productId = $qtyInput.data('product-id');
+                const detailId = $qtyInput.data('detail-id');
                 const currentQty = $qtyInput.val();
                 const currentRemark = $row.find('.remark-input').val();
 
@@ -884,6 +950,7 @@
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
                     body: JSON.stringify({ 
                         product_id_hash: productId, 
+                        detail_id_hash: detailId,
                         real_qty: currentQty, 
                         remark: currentRemark,
                         reason_id: reasonId
@@ -980,74 +1047,17 @@
         const container = document.getElementById('entriesFormContainer');
         container.innerHTML = ''; // Fresh start
         
+        processShowResult(data);
+        
+        // Show all existing entries for this product
         if (data.existing_entries && data.existing_entries.length > 0) {
-            let entryDetailsHtml = `
-                <div class="mb-4 text-xs text-gray-500">This item has been recorded in ${data.existing_entries.length} locations:</div>
-                <div class="text-left bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-800 overflow-hidden shadow-inner">
-                    <table class="w-full text-[11px] font-bold">
-                        <thead class="bg-gray-100 dark:bg-gray-800 text-gray-400 uppercase tracking-widest text-[9px]">
-                            <tr>
-                                <th class="px-3 py-2 text-left">Location</th>
-                                <th class="px-3 py-2 text-right">Qty Recorded</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">`;
-            
             data.existing_entries.forEach(entry => {
-                const qtyVal = parseFloat(entry.real_qty || 0).toLocaleString();
-                entryDetailsHtml += `
-                    <tr>
-                        <td class="px-3 py-2 text-gray-700 dark:text-gray-300">
-                            <i class="fa-solid fa-location-dot text-primary-500 mr-1.5 opacity-70"></i>
-                            ${entry.location_name || 'No Location'}
-                        </td>
-                        <td class="px-3 py-2 text-right text-primary-600 dark:text-primary-400 font-mono">
-                            ${qtyVal} <span class="text-[9px] text-gray-400 font-normal ml-0.5">${data.unit || 'PCS'}</span>
-                        </td>
-                    </tr>
-                `;
+                createFormRow(entry);
             });
-            
-            entryDetailsHtml += `</tbody></table></div>`;
-
-            Swal.fire({
-                title: 'Count Already Recorded',
-                html: entryDetailsHtml,
-                icon: 'question',
-                showDenyButton: true,
-                showCancelButton: true,
-                confirmButtonText: '<i class="fa-solid fa-pen-to-square mr-1"></i> Edit Existing',
-                denyButtonText: '<i class="fa-solid fa-plus mr-1"></i> Add New',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#3b82f6',
-                denyButtonColor: '#10b981',
-                cancelButtonColor: '#6b7280',
-                customClass: {
-                    htmlContainer: 'swal2-html-container-tight'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    processShowResult(data);
-                    data.existing_entries.forEach(entry => {
-                        createFormRow(entry);
-                    });
-                } else if (result.isDenied) {
-                    processShowResult(data);
-                    data.existing_entries.forEach(entry => {
-                        createFormRow(entry);
-                    });
-                    addNewEntryRow(); // Automatically add the blank row
-                } else {
-                    // Reset selection on cancel
-                    $('#product_detail_id').val('').trigger('change.select2');
-                    document.getElementById('scanResultArea').classList.add('hidden');
-                }
-            });
-        } else {
-            // New item, add one blank row automatically
-            processShowResult(data);
-            createFormRow();
         }
+        
+        // Always add one blank row for a new entry
+        createFormRow();
     }
 
     function createFormRow(entry = null) {
@@ -1062,10 +1072,16 @@
         });
 
         const rowHtml = `
-            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30">
+            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30 relative">
                 <input type="hidden" class="row-detail-hash" value="${entry ? entry.detail_id_hash : ''}">
                 
-                <div class="flex-1 w-full">
+                ${entry ? `
+                    <div class="absolute -top-2 left-3 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-[8px] font-bold text-gray-500 rounded-full border border-gray-200 dark:border-gray-600 uppercase tracking-tighter">
+                        <i class="fa-solid fa-user-check mr-1 opacity-70"></i> Recorded by: ${entry.auditor_name || 'System'}
+                    </div>
+                ` : ''}
+
+                <div class="flex-1 w-full mt-2 sm:mt-0">
                     <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Quantity (${currentProductData.unit || 'PCS'})</div>
                     <input type="number" class="row-qty w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xs h-[40px] text-center font-semibold text-sm focus:border-primary-500 transition-all outline-none" 
                            placeholder="0.00" value="${entry ? entry.real_qty : ''}">
@@ -1235,8 +1251,14 @@
         resPartName.innerText = data.part_name;
         resPartNo.innerText = data.part_no;
         resUnit.innerText = data.unit || 'PCS';
-        resSystemQty.innerText = (data.system_qty || 0) + 0;
+        resSystemQty.innerText = (data.system_qty || 0).toLocaleString();
         
+        // Update entries count display
+        const entriesCountEl = document.getElementById('resEntriesCount');
+        if (entriesCountEl) {
+            entriesCountEl.innerText = data.existing_entries ? data.existing_entries.length : 0;
+        }
+
         currentHashId.value = data.product_id_hash;
     }
 

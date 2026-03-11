@@ -17,6 +17,7 @@ class StoDetail extends Model
     protected $fillable = [
         'event_id',
         'product_detail_id',
+        'location_id',
         'system_qty_snapshot',
         'real_qty_input',
         'diff_qty',

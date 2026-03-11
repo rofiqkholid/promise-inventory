@@ -10,8 +10,10 @@ use App\Models\InventoryModel\Unit;
 use App\Models\Products;
 use App\Services\Inventory\ProductService;
 use App\Traits\DecodesHashInputs;
+use App\Exports\InventoryProductExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class InventoryProductController extends Controller
@@ -53,30 +55,11 @@ class InventoryProductController extends Controller
         $draw = (int) $request->input('draw');
         $start = (int) $request->input('start', 0);
         $length = (int) $request->input('length', 10);
-        $orderObs = $request->input('order', []);
-        
-        $orderColIdx = (int) ($orderObs[0]['column'] ?? 0);
-        $orderDir = $orderObs[0]['dir'] ?? 'desc';
-
-        $columnsMap = [
-            0 => 'p.id',
-            1 => 'prod.part_no',
-            2 => 'cust.code',
-            3 => 'model.name',
-            4 => 'ms_model.project_status',
-            5 => 'ms.spec_name',
-            6 => 'p.thickness',
-            7 => 'p.width',
-            8 => 'u.code',
-            9 => 'r_master.code',
-            12 => 'p.updated_at',
-        ];
-        $orderCol = $columnsMap[$orderColIdx] ?? 'p.id';
 
         $query = $this->buildBaseProductQuery();
         $recordsTotal = (clone $query)->count();
 
-        // Specific Filters from Dashboard
+        // Filters
         if ($request->filled('customer_id')) {
             $query->where('prod.customer_id', $request->customer_id);
         }
@@ -98,9 +81,7 @@ class InventoryProductController extends Controller
                   ->orWhere('prod.part_name', 'like', "%{$searchValue}%")
                   ->orWhere('cust.code', 'like', "%{$searchValue}%")
                   ->orWhere('model.name', 'like', "%{$searchValue}%")
-                  ->orWhere('r_master.code', 'like', "%{$searchValue}%")
                   ->orWhere('ms.spec_name', 'like', "%{$searchValue}%")
-                  ->orWhere('u.code', 'like', "%{$searchValue}%")
                   ->orWhere('r.code', 'like', "%{$searchValue}%")
                   ->orWhereRaw("(prod.part_no + ' - ' + ISNULL(r_master.code, '')) LIKE ?", ['%' . $searchValue . '%']);
             });
@@ -108,8 +89,34 @@ class InventoryProductController extends Controller
 
         $recordsFiltered = $query->count();
 
-        $data = $query->orderByRaw("$orderCol $orderDir")
-            ->skip($start)
+        // Sorting Map
+        $columnsMap = [
+            0 => 'p.id',
+            1 => 'prod.part_no',
+            2 => 'cust.code',
+            3 => 'model.name',
+            4 => 'ms_model.project_status',
+            5 => 'ms.spec_name',
+            6 => 'p.thickness',
+            7 => 'p.pcs_per_unit',
+            8 => 'p.weight_kg',
+            9 => 'p.unit_per_car',
+            10 => 'r.code',
+            11 => 'p.remark',
+            12 => 'p.updated_at',
+        ];
+
+        $colIndex = (int) $request->input('order.0.column', 0);
+        $orderDir = $request->input('order.0.dir', 'desc');
+        $orderCol = $columnsMap[$colIndex] ?? 'p.updated_at';
+
+        if ($orderCol === 'ms_model.project_status') {
+            $query->orderByRaw("COALESCE(p.product_status, ms_model.project_status) {$orderDir}");
+        } else {
+            $query->orderBy($orderCol, $orderDir);
+        }
+
+        $data = $query->skip($start)
             ->take($length)
             ->get()
             ->map(fn($r) => [
@@ -122,7 +129,6 @@ class InventoryProductController extends Controller
                 'model_project_status' => $r->model_project_status,
                 'product_status' => $r->product_status,
                 'revision' => $r->revision_code,
-
                 'material_spec' => $r->material_spec_name,
                 'coating_type' => $r->coating_type,
                 'thickness' => (float)$r->thickness,
@@ -151,6 +157,45 @@ class InventoryProductController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * Export data to Excel.
+     */
+    public function exportExcel(Request $request)
+    {
+        $query = $this->buildBaseProductQuery();
+
+        // Filters (Same as data method)
+        if ($request->filled('customer_id')) {
+            $query->where('prod.customer_id', $request->customer_id);
+        }
+        if ($request->filled('model_id')) {
+            $selectedModel = DB::table('models')->where('id', $request->model_id)->first();
+            if ($selectedModel) {
+                 $query->where('model.name', $selectedModel->name);
+            }
+        }
+        if ($request->filled('part_no')) {
+            $query->where('prod.part_no', 'like', "%{$request->part_no}%");
+        }
+
+        // Global Search
+        $searchValue = $request->input('search');
+        if (!empty($searchValue)) {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('prod.part_no', 'like', "%{$searchValue}%")
+                  ->orWhere('prod.part_name', 'like', "%{$searchValue}%")
+                  ->orWhere('cust.code', 'like', "%{$searchValue}%")
+                  ->orWhere('model.name', 'like', "%{$searchValue}%")
+                  ->orWhere('ms.spec_name', 'like', "%{$searchValue}%")
+                  ->orWhere('r.code', 'like', "%{$searchValue}%");
+            });
+        }
+
+        $data = $query->orderBy('prod.part_no', 'asc')->get();
+
+        return Excel::download(new InventoryProductExport($data), 'Inventory_Product_Master_' . date('YmdHis') . '.xlsx');
     }
 
     /**
