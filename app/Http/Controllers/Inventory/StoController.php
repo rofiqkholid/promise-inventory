@@ -362,7 +362,27 @@ class StoController extends Controller
         $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic'); // PIC role or event creator
         $canEditInline = ($isAdmin || $isPic) && $stoEvent->status === 'OPEN';
 
-        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline) {
+        // 1. Get the list of product IDs on current page
+        $productIds = $data->pluck('product_detail_id')->unique();
+        
+        // 2. Identify the "Primary" record for each product group (oldest ID)
+        $primaryEntries = DB::table('inv_t_sto_detail')
+            ->where('event_id', $stoEvent->id)
+            ->whereIn('product_detail_id', $productIds)
+            ->select('product_detail_id', DB::raw('MIN(id) as min_id'))
+            ->groupBy('product_detail_id')
+            ->pluck('min_id', 'product_detail_id');
+
+        // 3. Check which products already have at least one reason set
+        $reasonsProvided = DB::table('inv_t_sto_detail')
+            ->where('event_id', $stoEvent->id)
+            ->whereIn('product_detail_id', $productIds)
+            ->whereNotNull('reason_id')
+            ->groupBy('product_detail_id')
+            ->pluck('product_detail_id')
+            ->toArray();
+
+        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline, $primaryEntries, $reasonsProvided) {
             $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
             $unitCode = $detail->product->unit->code ?? 'PCS';
             
@@ -420,6 +440,8 @@ class StoController extends Controller
                 'can_edit_inline' => $canEditInline,
                 'status' => $stoEvent->status,
                 'product_hash_id' => $detail->product->hash_id,
+                'is_primary' => $detail->id == ($primaryEntries[$detail->product_detail_id] ?? null),
+                'group_has_reason' => in_array($detail->product_detail_id, $reasonsProvided),
                 // Aggregates for grouping
                 'total_real_qty' => $totalReal,
                 'total_system_qty' => $totalSystem,
@@ -538,10 +560,10 @@ class StoController extends Controller
             $request->validate([
                 'product_id_hash' => 'required',
                 'detail_id_hash' => 'nullable', 
-                'location_id' => 'nullable|exists:inv_m_locations,id',
-                'real_qty' => 'required|numeric|min:0',
-                'remark' => 'nullable|string|max:255',
-                'reason_id' => 'nullable|exists:inv_m_sto_reasons,id'
+                'location_id' => 'sometimes|nullable|exists:inv_m_locations,id',
+                'real_qty' => 'sometimes|required|numeric|min:0',
+                'remark' => 'sometimes|nullable|string|max:255',
+                'reason_id' => 'sometimes|nullable|exists:inv_m_sto_reasons,id'
             ]);
 
             $productId = InventoryProduct::decodeHash($request->product_id_hash);
@@ -583,10 +605,15 @@ class StoController extends Controller
             }
 
             // Standard Update Logic (Used for both new and existing)
-            $detail->real_qty_input = $request->real_qty;
-            $detail->location_id = $request->location_id;
-            $detail->remark = $request->remark;
-            
+            if ($request->has('real_qty')) {
+                $detail->real_qty_input = $request->real_qty;
+            }
+            if ($request->has('location_id')) {
+                $detail->location_id = $request->location_id;
+            }
+            if ($request->has('remark')) {
+                $detail->remark = $request->remark;
+            }
             if ($request->has('reason_id')) {
                 $detail->reason_id = $request->reason_id;
             }
@@ -656,6 +683,30 @@ class StoController extends Controller
 
         if ($stoEvent->status !== 'OPEN') {
             return back()->with('error', 'Status must be OPEN to submit for check.');
+        }
+
+        // Validate that all product-level mismatches have at least one reason
+        // If a Part Number has multiple locations but the total variance is not zero, 
+        // at least one of those locations must have a reason selected.
+        $mismatchedProducts = StoDetail::where('event_id', $stoEvent->id)
+            ->groupBy('product_detail_id')
+            ->havingRaw('SUM(diff_qty) != 0')
+            ->pluck('product_detail_id');
+
+        $missingReasonsCount = 0;
+        foreach ($mismatchedProducts as $productId) {
+            $hasReason = StoDetail::where('event_id', $stoEvent->id)
+                ->where('product_detail_id', $productId)
+                ->whereNotNull('reason_id')
+                ->exists();
+            
+            if (!$hasReason) {
+                $missingReasonsCount++;
+            }
+        }
+        
+        if ($missingReasonsCount > 0) {
+            return back()->with('error', "Cannot submit: {$missingReasonsCount} Part Number(s) with stock mismatch are missing a 'Reason'. Only one reason per Part Number is required to satisfy Pareto analysis requirements.");
         }
 
         $stoEvent->status = 'WAITING CHECK';

@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->integer('destination_id')->nullable();
             $table->string('remark', 100)->nullable();
             $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->nullable();
 
             $table->foreign('product_detail_id')->references('id')->on('inv_t_product_detail')->onDelete('cascade');
             $table->foreign('transaction_category_id')->references('id')->on('inv_m_transaction_category');

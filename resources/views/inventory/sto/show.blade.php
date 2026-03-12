@@ -575,7 +575,24 @@
             confirmButtonColor: '#3b82f6',
             confirmButtonText: 'Yes, Submit'
         }).then((result) => {
-            if (result.isConfirmed) document.getElementById('submitForCheckForm').submit();
+            if (result.isConfirmed) {
+                // Pre-check for missing reasons in the DOM to avoid page reload if possible
+                const missingReasons = document.querySelectorAll('.reason-input.border-red-500');
+                if (missingReasons.length > 0) {
+                    Swal.fire({
+                        title: 'Incomplete Reasons',
+                        text: `There are ${missingReasons.length} mismatch items missing a Reason. Please scroll down to the Journal and fill them first.`,
+                        icon: 'warning',
+                        confirmButtonColor: '#f59e0b'
+                    });
+                    
+                    // Optional: Smooth scroll to the first invalid reason
+                    missingReasons[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+                
+                document.getElementById('submitForCheckForm').submit();
+            }
         });
     }
 
@@ -756,12 +773,33 @@
                                 let options = stoReasons.filter(r => r.category === category || r.category === 'OTHERS')
                                     .map(r => `<option value="${r.id}" ${data.reason_id == r.id ? 'selected' : ''}>${r.name}</option>`)
                                     .join('');
-                                return `<select class="reason-input text-xs pl-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 outline-none focus:border-primary-500" style="width: 180px; min-width: 180px;" data-detail-id="${data.hash_id}">
-                                    <option value="">-- Select Reason --</option>
-                                    ${options}
-                                </select>`;
+                                
+                                let isMismatch = Math.abs(data.total_diff_qty) > 0.0001;
+                                let isInvalid = isMismatch && !data.group_has_reason && data.is_primary;
+                                let borderClass = isInvalid ? 'border-red-500 bg-red-50/30' : 'border-slate-200 dark:border-gray-700';
+
+                                return `
+                                    <div class="flex flex-col items-center gap-1">
+                                        <select class="reason-input text-xs pl-2 py-1 border ${borderClass} rounded-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 outline-none focus:border-primary-500" style="width: 180px; min-width: 180px;" data-detail-id="${data.hash_id}">
+                                            <option value="">-- Select Reason --</option>
+                                            ${options}
+                                        </select>
+                                        ${isInvalid ? '<span class="text-[9px] font-black text-red-500 uppercase tracking-widest animate-pulse">Required reason</span>' : ''}
+                                        ${data.reason_id ? '<span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest"><i class="fa-solid fa-circle-check"></i> Reason set</span>' : ''}
+                                    </div>`;
                             }
-                            return `<span class="text-[10px] text-red-500 font-bold">${data.reason_name || 'Reason Required'}</span>`;
+
+                            // Read-only view
+                            if (data.reason_name) {
+                                return `<span class="text-[10px] text-emerald-600 font-bold uppercase tracking-tight"><i class="fa-solid fa-circle-check"></i> ${data.reason_name}</span>`;
+                            }
+                            
+                            let isMismatch = Math.abs(data.total_diff_qty) > 0.0001;
+                            if (isMismatch && !data.group_has_reason && data.is_primary) {
+                                return `<span class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Reason Required</span>`;
+                            }
+                            
+                            return `<span class="text-gray-400">-</span>`;
                         }
                     },
                     { 
@@ -895,6 +933,8 @@
                         $input.data('original-value', newQty);
                         table.ajax.reload(null, false);
                         if (data.stats && window.updateStatsCard) window.updateStatsCard(data.stats);
+                    } else {
+                        Swal.fire('Error', data.message || 'Update failed', 'error');
                     }
                 });
             });
@@ -959,6 +999,7 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
+                        table.ajax.reload(null, false);
                         if (data.stats && window.updateStatsCard) window.updateStatsCard(data.stats);
                     }
                 });
@@ -1155,7 +1196,7 @@
                 detail_id_hash: detailHash, 
                 real_qty: qty, 
                 remark: remark, 
-                location_id: locId 
+                location_id: locId
             })
         })
         .then(res => res.json())
@@ -1285,6 +1326,17 @@
                 fetchStoInfo(productHash);
             }, 500); 
         }
+
+        // Handle Session Alerts
+        @if(session('error'))
+            if (window.toast) window.toast('error', 'Action Failed', '{{ session('error') }}');
+            else if (window.Swal) Swal.fire('Error', '{{ session('error') }}', 'error');
+            else alert('{{ session('error') }}');
+        @endif
+
+        @if(session('success'))
+            if (window.toast) window.toast('success', 'Success', '{{ session('success') }}');
+        @endif
     });
 </script>
 

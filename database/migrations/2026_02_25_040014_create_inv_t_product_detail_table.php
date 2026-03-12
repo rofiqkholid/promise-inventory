@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->integer('material_spec_id')->nullable();
             $table->integer('unit_id')->nullable();
             $table->integer('rank_id')->nullable();
-            $table->string('revision')->nullable();
+            $table->unsignedBigInteger('revision_id')->nullable();
             $table->float('thickness')->nullable()->default(0);
             $table->float('width')->nullable()->default(0);
             $table->float('length')->nullable()->default(0);
@@ -38,6 +38,7 @@ return new class extends Migration {
             $table->foreign('material_spec_id')->references('id')->on('inv_m_material_spec')->onDelete('no action');
             $table->foreign('unit_id')->references('id')->on('inv_m_unit')->onDelete('no action');
             $table->foreign('rank_id')->references('id')->on('inv_m_rank')->onDelete('no action');
+            $table->foreign('revision_id')->references('id')->on('inv_m_revision')->onDelete('no action');
         });
     }
     public function down(): void { Schema::dropIfExists('inv_t_product_detail'); }
