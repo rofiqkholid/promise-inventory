@@ -9,6 +9,7 @@ use App\Models\InventoryModel\Rank;
 use App\Models\InventoryModel\Supplier;
 use App\Models\InventoryModel\TransactionCategory;
 use App\Models\InventoryModel\Unit;
+use App\Models\InventoryModel\Revision;
 
 class InventoryMasterSeeder extends Seeder
 {
@@ -125,6 +126,22 @@ class InventoryMasterSeeder extends Seeder
         ];
         foreach ($specs as $item) {
             MaterialSpec::updateOrCreate(['spec_name' => $item['spec_name']], $item);
+        }
+
+        // 7. Revisions
+        $revisions = [
+            ['code' => 'R', 'group_name' => 'Standard', 'sort_order' => 10],
+            ['code' => 'R1', 'group_name' => 'Standard', 'sort_order' => 20],
+            ['code' => 'R2', 'group_name' => 'Standard', 'sort_order' => 30],
+            ['code' => 'R3', 'group_name' => 'Standard', 'sort_order' => 40],
+            ['code' => 'R4', 'group_name' => 'Standard', 'sort_order' => 50],
+            ['code' => 'RC', 'group_name' => 'Correction', 'sort_order' => 10],
+            ['code' => 'RC1', 'group_name' => 'Correction', 'sort_order' => 20],
+            ['code' => 'RC2', 'group_name' => 'Correction', 'sort_order' => 30],
+            ['code' => 'RC3', 'group_name' => 'Correction', 'sort_order' => 40],
+        ];
+        foreach ($revisions as $item) {
+            Revision::updateOrCreate(['code' => $item['code']], $item);
         }
     }
 }

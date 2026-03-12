@@ -20,17 +20,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
-
-        // Seed initial data
-        DB::table('inv_m_revision')->insert([
-            ['code' => 'R', 'group_name' => 'Standard', 'sort_order' => 10, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'R1', 'group_name' => 'Standard', 'sort_order' => 20, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'R2', 'group_name' => 'Standard', 'sort_order' => 30, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'R3', 'group_name' => 'Standard', 'sort_order' => 40, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'RC', 'group_name' => 'Correction', 'sort_order' => 10, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'RC1', 'group_name' => 'Correction', 'sort_order' => 20, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-            ['code' => 'RC2', 'group_name' => 'Correction', 'sort_order' => 30, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
-        ]);
     }
 
     /**
