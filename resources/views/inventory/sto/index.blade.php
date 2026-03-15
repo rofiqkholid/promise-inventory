@@ -52,7 +52,7 @@
 <!-- Create Modal -->
 <div id="createEventModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen p-4 text-center">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="document.getElementById('createEventModal').classList.add('hidden')"></div>
+        <div class="fixed inset-0 bg-slate-900/50" aria-hidden="true" onclick="document.getElementById('createEventModal').classList.add('hidden')"></div>
         
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xs text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-10 border border-slate-200 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">
@@ -103,7 +103,7 @@
 <!-- Edit Modal -->
 <div id="editEventModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="flex items-center justify-center min-h-screen p-4 text-center">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="document.getElementById('editEventModal').classList.add('hidden')"></div>
+        <div class="fixed inset-0 bg-slate-900/50" aria-hidden="true" onclick="document.getElementById('editEventModal').classList.add('hidden')"></div>
         
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xs text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-10 border border-slate-200 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">

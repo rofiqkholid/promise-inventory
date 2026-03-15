@@ -113,7 +113,7 @@
 </div>
 
 {{-- Detail Modal --}}
-<div id="detailModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-slate-900/60 backdrop-blur-sm p-4 overflow-y-auto">
+<div id="detailModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-slate-900/50 p-4 overflow-y-auto">
     <div class="relative w-full max-w-2xl">
         <div class="relative bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 overflow-hidden scale-in">
             <div class="px-6 py-5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">

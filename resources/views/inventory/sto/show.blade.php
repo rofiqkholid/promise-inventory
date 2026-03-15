@@ -2,54 +2,6 @@
 
 @section('title', 'STO Event Details')
 @section('page_title', 'Stock Opname')
- 
-@push('styles')
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        height: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 10px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-    .dataTables_scrollBody {
-        border-bottom: 0 !important;
-    }
-    /* Fix Select2 responsive width */
-    .select2-container {
-        width: 100% !important;
-    }
-    .select2-selection {
-        height: 42px !important;    
-        display: flex !important;
-        align-items: center !important;
-        border-color: #d1d5db !important;
-        border-radius: 4px !important;
-    }
-    .dark .select2-selection {
-        background-color: #111827 !important;
-        border-color: #374151 !important;
-    }
-    .select2-selection__rendered {
-        width: 100% !important;
-        padding-right: 30px !important;
-    }
-    .swal2-html-container-tight {
-        margin: 1em 0 0 !important;
-        padding: 0 1.25em !important;
-    }
-    .swal2-popup, .swal2-confirm, .swal2-cancel, .swal2-deny {
-        border-radius: 0.125rem !important;
-    }
-</style>
-@endpush
-
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
@@ -1342,3 +1294,35 @@
 
 @endpush
 @endsection
+
+ 
+@push('styles')
+<style>
+    /* Fix Select2 responsive width */
+    .select2-container {
+        width: 100% !important;
+    }
+    .select2-selection {
+        height: 42px !important;    
+        display: flex !important;
+        align-items: center !important;
+        border-color: #d1d5db !important;
+        border-radius: 4px !important;
+    }
+    .dark .select2-selection {
+        background-color: #111827 !important;
+        border-color: #374151 !important;
+    }
+    .select2-selection__rendered {
+        width: 100% !important;
+        padding-right: 30px !important;
+    }
+    .swal2-html-container-tight {
+        margin: 1em 0 0 !important;
+        padding: 0 1.25em !important;
+    }
+    .swal2-popup, .swal2-confirm, .swal2-cancel, .swal2-deny {
+        border-radius: 0.125rem !important;
+    }
+</style>
+@endpush

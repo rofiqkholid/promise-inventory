@@ -31,7 +31,7 @@
 </div>
 
 {{-- Modals --}}
-<div id="modal-location-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 transition-opacity">
+<div id="modal-location-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
             <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Add Location</h3>
@@ -64,7 +64,7 @@
     </div>
 </div>
 
-<div id="modal-location-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 transition-opacity">
+<div id="modal-location-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
             <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Edit Location</h3>

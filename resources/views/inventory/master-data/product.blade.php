@@ -11,6 +11,10 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
+            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+                <i class="fa-solid fa-file-import"></i>
+                Import Excel
+            </button>
             <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
@@ -95,7 +99,7 @@
 </div>
 
 {{-- Add/Edit Modal --}}
-<div id="formModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-950/60 flex">
+<div id="formModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
     <div class="relative p-4 w-full max-w-4xl max-h-[95vh] h-full md:h-auto">
         <div class="relative bg-white rounded-xs shadow-2xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
             <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
@@ -300,6 +304,53 @@
 </div>
 
 <x-inventory.delete-modal />
+
+{{-- Import Modal --}}
+<div id="importModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
+    <div class="relative p-4 w-full max-w-lg max-h-[95vh]">
+        <div class="relative bg-white rounded-xs shadow-2xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
+                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest">Import Inventory Product</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Upload Excel file to bulk import products.</p>
+            </div>
+            <form id="importForm" method="POST" enctype="multipart/form-data" class="flex flex-col h-full overflow-hidden min-h-0">
+                @csrf
+                <div class="p-6 overflow-y-auto min-h-0 flex-1 space-y-6 custom-scrollbar">
+                    <div class="bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-xs border border-blue-100 dark:border-blue-800/50">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                            <div>
+                                <h4 class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">How to format your Excel</h4>
+                                <ul class="text-[10px] text-blue-600/80 dark:text-blue-400/80 space-y-1 mt-2 font-medium">
+                                    <li>• Columns marked with <span class="font-bold text-red-500 leading-none">(*)</span> are required.</li>
+                                    <li>• IDs are managed automatically based on the text you input. Ensure the `Customer Code`, `Model Name`, `Revision Code`, etc. match exactly what's in the system.</li>
+                                </ul>
+                                <a href="{{ route('inventory.master.product.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest transition-all shadow-sm">
+                                    <i class="fa-solid fa-download"></i> Download Template
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Select Excel File</label>
+                        <input type="file" name="file" id="file" accept=".xlsx, .xls, .csv" required class="block w-full text-xs text-gray-900 border border-slate-200 rounded-xs cursor-pointer bg-white dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 px-3 py-2">
+                    </div>
+                    <div id="importResult" class="hidden text-[10px] font-medium p-4 rounded-xs border"></div>
+                </div>
+                <div class="flex-none flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
+                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all">Cancel</button>
+                    <button type="submit" id="btnSubmitImport" class="text-white bg-primary-600 hover:bg-primary-700 rounded-xs text-[10px] uppercase tracking-widest px-6 py-3 text-center shadow-lg shadow-primary-500/10 transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-upload"></i> Process Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -319,6 +370,7 @@ $(function() {
                 models: '{{ route("inventory.master.product.getModels") }}',
                 products: '{{ route("inventory.master.product.getProducts") }}',
                 export: '{{ route("inventory.master.product.exportExcel") }}',
+                import: '{{ route("inventory.master.product.importExcel") }}',
                 base: '{{ url("inventory/master/product") }}'
             }
         },
@@ -389,7 +441,7 @@ $(function() {
                                 'Allsize OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
                                 'Allsize NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
                             }[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
-                            return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border ${colors}">${status}</span>`;
+                            return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold whitespace-nowrap uppercase tracking-wide border ${colors}">${status}</span>`;
                         }
                     },
                     {
@@ -500,6 +552,14 @@ $(function() {
             this.elements.partNoFilter.on('change', () => this.state.table.ajax.reload());
             $('#btnResetFilter').on('click', () => this.resetFilters());
             $('#btnExport').on('click', () => this.handleExport());
+            
+            $('#btnImport').on('click', () => {
+                $('#importForm')[0].reset();
+                $('#importResult').addClass('hidden').removeClass('bg-red-50 text-red-700 border-red-200 bg-green-50 text-green-700 border-green-200').html('');
+                this.ui.showModal($('#importModal'));
+            });
+
+            $('#importForm').on('submit', (e) => this.handleImportFormSubmit(e));
         },
 
         bindFormEvents: function() {
@@ -726,6 +786,41 @@ $(function() {
                     if (wasDuplicate) this.ui.toggleDuplicateMode(false);
                 },
                 error: (xhr) => this.handleAjaxError(xhr)
+            });
+        },
+
+        handleImportFormSubmit: function(e) {
+            e.preventDefault();
+            const btn = $('#btnSubmitImport');
+            const originalText = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin text-white mr-1.5"></i> Importing...');
+            $('#importResult').addClass('hidden');
+
+            const formData = new FormData($('#importForm')[0]);
+            
+            $.ajax({
+                url: this.config.routes.import,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: (res) => {
+                    this.state.table.ajax.reload();
+                    $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
+                        .addClass('bg-green-50 text-green-700 border-green-200')
+                        .html(`<i class="fa-solid fa-check-circle mr-1 text-base relative top-0.5"></i> ${res.message}`);
+                    window.showToast('Import completed', 'success');
+                },
+                error: (xhr) => {
+                    const msg = xhr.responseJSON?.message || 'Upload failed.';
+                    $('#importResult').removeClass('hidden bg-green-50 text-green-700 border-green-200')
+                        .addClass('bg-red-50 text-red-700 border-red-200')
+                        .html(`<div class="flex items-start gap-2"><i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i> <div>${msg}</div></div>`);
+                    window.showToast('Import failed', 'error');
+                },
+                complete: () => {
+                    btn.prop('disabled', false).html(originalText);
+                }
             });
         },
 

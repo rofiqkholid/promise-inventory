@@ -199,6 +199,44 @@ class InventoryProductController extends Controller
     }
 
     /**
+     * Download Excel template for import.
+     */
+    public function downloadTemplate()
+    {
+        return Excel::download(new \App\Exports\InventoryProductTemplateExport, 'Inventory_Product_Import_Template.xlsx');
+    }
+
+    /**
+     * Import data from Excel.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // 10MB max
+        ]);
+
+        $import = new \App\Imports\InventoryProductImport();
+        Excel::import($import, $request->file('file'));
+
+        if (!empty($import->getErrors())) {
+            $errorMsg = implode('<br>', array_slice($import->getErrors(), 0, 10)); // return top 10 errors
+            if (count($import->getErrors()) > 10) {
+                $errorMsg .= '<br>... and ' . (count($import->getErrors()) - 10) . ' more errors.';
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => "Import processed with errors.<br><br><b>Success:</b> {$import->getSuccessCount()} rows.<br><b>Errors:</b><br>{$errorMsg}"
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Import completed successfully. {$import->getSuccessCount()} rows imported.",
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)

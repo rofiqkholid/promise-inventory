@@ -229,7 +229,7 @@
 @include('components.scanner-modal')
 
 {{-- Edit Transaction Modal --}}
-<div id="editTransactionModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-950/60 transition-all p-4">
+<div id="editTransactionModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/50 transition-all p-4">
     <div class="relative w-full max-w-lg">
         <div class="relative bg-white rounded-xs dark:bg-gray-800 border border-gray-100 dark:border-gray-700 overflow-hidden">
             <button type="button" onclick="closeEditModal()" class="text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">

@@ -458,7 +458,6 @@
             },
             order: [[1, 'asc']], // Default sort by Part Information
             columns: columns,
-            pageLength: 25,
             createdRow: function(row, data, dataIndex) {
                 if (data.stock_status === 'danger') {
                     $(row).addClass('bg-red-50 dark:bg-red-900/10');

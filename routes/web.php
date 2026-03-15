@@ -49,6 +49,8 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/product', [InventoryProductController::class, 'index'])->name('product.index');
                         Route::get('/product/data', [InventoryProductController::class, 'data'])->name('product.data');
             Route::get('/product/export-excel', [InventoryProductController::class, 'exportExcel'])->name('product.exportExcel');
+            Route::get('/product/download-template', [InventoryProductController::class, 'downloadTemplate'])->name('product.downloadTemplate');
+            Route::post('/product/import-excel', [InventoryProductController::class, 'importExcel'])->name('product.importExcel');
             Route::get('/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('product.dropdownData');
             Route::get('/product/get-products', [InventoryProductController::class, 'getProducts'])->name('product.getProducts');
             Route::get('/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('product.getCustomers');

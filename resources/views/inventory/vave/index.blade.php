@@ -58,7 +58,7 @@
 </div>
 
 {{-- RFQ Management Modal --}}
-<div id="rfqModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-950/60 backdrop-blur-sm transition-all duration-300">
+<div id="rfqModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 transition-all duration-300">
     <div class="relative p-4 w-full max-w-4xl max-h-screen">
         <div class="relative bg-white rounded-xs border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
             <button type="button" class="close-modal-button text-slate-400 absolute top-4 right-4 bg-transparent hover:bg-slate-100 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white rounded-xs text-sm w-9 h-9 flex items-center justify-center z-10 transition-all active:scale-95">
@@ -213,7 +213,7 @@
 {{-- Scripts for RFQ History Moved to @push('scripts') --}}
 
 {{-- Comparison Modal --}}
-<div id="comparisonModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-950/60 backdrop-blur-sm p-4 transition-all duration-300">
+<div id="comparisonModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 flex items-center justify-center w-full h-full bg-slate-900/50 p-4 transition-all duration-300">
     <div class="relative w-full max-w-6xl max-h-[90vh]">
         <div class="relative text-left bg-white rounded-xs border border-slate-200 dark:border-gray-700 dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
             <button type="button" class="close-modal-button text-slate-400 absolute top-4 right-4 bg-white dark:bg-slate-700 hover:bg-slate-50 hover:text-slate-900 rounded-xs text-sm w-9 h-9 inline-flex items-center justify-center dark:hover:bg-gray-600 dark:hover:text-white z-20 transition-all border border-slate-200 dark:border-gray-600 active:scale-95">
