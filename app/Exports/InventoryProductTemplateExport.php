@@ -19,8 +19,8 @@ class InventoryProductTemplateExport implements FromArray, WithHeadings, WithSty
             'Model *', 
             'Revision *', 
             'Material Spec', 
+            'Rank',
             'Unit', 
-            'Rank', 
             'Thickness', 
             'Width', 
             'Length', 
@@ -45,8 +45,8 @@ class InventoryProductTemplateExport implements FromArray, WithHeadings, WithSty
                 'MODEL-X',
                 'R',
                 'SPCC',
+                '6-A',
                 'Sheet',
-                'A',
                 '1.2',
                 '1000',
                 '2000',
@@ -65,8 +65,8 @@ class InventoryProductTemplateExport implements FromArray, WithHeadings, WithSty
                 'MODEL-Y',
                 'R1',
                 'SPHC',
+                '4-B',
                 'Coil',
-                'B',
                 '2.0',
                 '1219',
                 '0',
@@ -90,7 +90,7 @@ class InventoryProductTemplateExport implements FromArray, WithHeadings, WithSty
                 'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FF0070C0']],
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
             ],
-            'A:Q' => [
+            'A:R' => [
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT]
             ]
         ];
@@ -101,7 +101,7 @@ class InventoryProductTemplateExport implements FromArray, WithHeadings, WithSty
         return [
             \Maatwebsite\Excel\Events\AfterSheet::class => function(\Maatwebsite\Excel\Events\AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                foreach (range('A', 'Q') as $columnID) {
+                foreach (range('A', 'R') as $columnID) {
                     $sheet->getColumnDimension($columnID)->setAutoSize(true);
                 }
             },

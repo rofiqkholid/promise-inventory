@@ -55,8 +55,8 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
                     continue;
                 }
 
-                // 1. Resolve Customer ID
-                $customer = DB::table('customers')->where('code', $customerCode)->first();
+                // 1. Resolve Customer ID (Case Insensitive)
+                $customer = DB::table('customers')->whereRaw('UPPER(code) = ?', [strtoupper($customerCode)])->first();
                 if (!$customer) {
                     $this->errors[] = "Row {$rowNum}: Customer '{$customerCode}' not found.";
                     continue;
@@ -90,8 +90,8 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
                     }
                 }
 
-                // 4. Resolve Revision ID
-                $revision = Revision::where('code', $revisionCode)->where('is_active', 1)->first();
+                // 4. Resolve Revision ID (Case Insensitive)
+                $revision = Revision::whereRaw('UPPER(code) = ?', [strtoupper($revisionCode)])->where('is_active', 1)->first();
                 if (!$revision) {
                     $this->errors[] = "Row {$rowNum}: Revision '{$revisionCode}' not found.";
                     continue;
@@ -112,8 +112,9 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
 
                 $rankId = null;
                 if (!empty(trim($row['rank'] ?? ''))) {
-                    $rank = Rank::where('code', trim($row['rank']))->first();
-                    $rank ? ($rankId = $rank->id) : ($this->errors[] = "Row {$rowNum}: Rank not found.");
+                    $rankCode = strtoupper(trim($row['rank']));
+                    $rank = Rank::whereRaw('UPPER(code) = ?', [$rankCode])->first();
+                    $rank ? ($rankId = $rank->id) : ($this->errors[] = "Row {$rowNum}: Rank '{$rankCode}' not found.");
                 }
 
                 // Check if existing product detail with exactly same PK exists
@@ -124,12 +125,12 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
                     ->first();
 
                 // Build Data array
-                $thickness = empty($row['thickness']) ? 0 : floatval($row['thickness']);
-                $width = empty($row['width']) ? 0 : floatval($row['width']);
-                $length = empty($row['length']) ? 0 : floatval($row['length']);
-                $length2 = empty($row['length_2']) ? 0 : floatval($row['length_2']);
-                $pitch = empty($row['pitch']) ? 0 : floatval($row['pitch']);
-                $density = empty(trim($row['density'] ?? '')) ? 7.85 : floatval($row['density']);
+                $thickness = $this->parseNumeric($row['thickness'] ?? 0);
+                $width = $this->parseNumeric($row['width'] ?? 0);
+                $length = $this->parseNumeric($row['length'] ?? 0);
+                $length2 = $this->parseNumeric($row['length_2'] ?? 0);
+                $pitch = $this->parseNumeric($row['pitch'] ?? 0);
+                $density = empty(trim($row['density'] ?? '')) ? 7.85 : $this->parseNumeric($row['density']);
 
                 // Calculate Weight (Kg)
                 $weightKg = 0;
@@ -146,6 +147,8 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
                     }
                 }
 
+                $unitPerCar = empty(trim($row['unit_per_car'] ?? '')) ? 1 : intval($row['unit_per_car']);
+
                 $data = [
                     'product_id' => $product->id,
                     'model_id' => $model->id,
@@ -160,11 +163,11 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
                     'pitch' => $pitch,
                     'density' => $density,
                     'weight_kg' => round($weightKg, 3),
-                    'net_weight' => empty(trim($row['net_weight_kg'] ?? '')) ? 0 : floatval($row['net_weight_kg']),
-                    'material_price' => empty(trim($row['material_price'] ?? '')) ? 20000 : floatval($row['material_price']),
+                    'net_weight' => $this->parseNumeric($row['net_weight_kg'] ?? 0),
+                    'material_price' => empty(trim($row['material_price'] ?? '')) ? 20000 : $this->parseNumeric($row['material_price']),
                     'pcs_per_unit' => empty(trim($row['pcs_per_unit'] ?? '')) ? 1 : intval($row['pcs_per_unit']),
-                    'unit_per_car' => empty(trim($row['unit_per_car'] ?? '')) ? 1 : intval($row['unit_per_car']),
-                    'min_stock' => empty(trim($row['min_stock'] ?? '')) ? 0 : intval($row['min_stock']),
+                    'unit_per_car' => $unitPerCar,
+                    'min_stock' => empty(trim($row['min_stock'] ?? '')) ? ($unitPerCar * 90) : intval($row['min_stock']),
                     'remark' => trim($row['remark'] ?? ''),
                 ];
 
@@ -183,10 +186,20 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
             } else {
                 DB::rollBack();
             }
-
         } catch (Exception $e) {
             DB::rollBack();
             $this->errors[] = "Critical Error: " . $e->getMessage();
         }
+    }
+
+    /**
+     * Helper to parse numeric values regardless of decimal separator (. or ,)
+     */
+    private function parseNumeric($value)
+    {
+        if (empty($value)) return 0;
+        // Replace comma with dot for decimal consistency
+        $normalized = str_replace(',', '.', $value);
+        return floatval($normalized);
     }
 }
