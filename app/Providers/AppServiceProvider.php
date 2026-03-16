@@ -103,11 +103,12 @@ class AppServiceProvider extends ServiceProvider
 
             if (auth()->check()) {
                 $user = auth()->user();
-                $invRole = $user->appRole->role ?? null;
-                $userRole = $invRole->code ?? null;
+                $roles = $user->roles;
+                $userRole = $roles->pluck('code')->first(); // Just for compatibility if needed elsewhere
                 
-                // Get menu IDs from role
-                $roleMenuIds = $invRole ? $invRole->menus()->pluck('inv_m_menus.id')->toArray() : [];
+                // Get menu IDs from all roles
+                $roleMenuIds = $roles->pluck('menus')->flatten()->pluck('id')->unique()->toArray();
+                
                 // Get menu IDs from specific user permissions
                 $specificMenuIds = $user->specificMenus()->pluck('inv_m_menus.id')->toArray();
                 

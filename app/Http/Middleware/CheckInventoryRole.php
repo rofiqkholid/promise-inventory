@@ -21,8 +21,8 @@ class CheckInventoryRole
             abort(403, 'Access Denied. Please log in first.');
         }
 
-        // If user has no app role, check if they at least have some specific menu permissions
-        if (!$user->appRole) {
+        // If user has no roles, check if they at least have some specific menu permissions
+        if ($user->roles->isEmpty()) {
             if (!$user->specificMenus()->exists()) {
                 abort(403, 'Access Denied. You do not have permission to access the Inventory System.');
             }
@@ -76,8 +76,8 @@ class CheckInventoryRole
                 }
 
                 // Check role-based menus in database
-                if ($user->appRole && $user->appRole->role) {
-                    $roleMenuRoutes = $user->appRole->role->menus()->pluck('route')->toArray();
+                foreach ($user->roles as $role) {
+                    $roleMenuRoutes = $role->menus()->pluck('route')->toArray();
                     $allowedRoleRoutes = $expandMenuRoutes($roleMenuRoutes);
                     
                     if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $roleMenuRoutes)) {
@@ -91,10 +91,9 @@ class CheckInventoryRole
             }
 
             // Fallback to the hardcoded role check in the middleware parameters
-            $userRoleCode = $user->appRole->role->code ?? null;
-            if (!$userRoleCode || !in_array($userRoleCode, $roles)) {
-                $roleName = $user->appRole->role->name ?? 'Unknown';
-                abort(403, 'Unauthorized. Your role (' . ucfirst($roleName) . ') does not allow this action.');
+            $userRoleCodes = $user->roles->pluck('code')->toArray();
+            if (empty(array_intersect($userRoleCodes, $roles))) {
+                abort(403, 'Unauthorized. Your assigned roles do not allow this action.');
             }
         }
 

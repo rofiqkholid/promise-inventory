@@ -44,12 +44,15 @@
                         <input type="hidden" id="edit_mode_user_id">
                     </div>
                     <div>
-                        <label class="block mb-1.5 text-sm font-medium text-gray-500 tracking-wider">Permission Level</label>
-                        <select name="role_id" id="role_id_select" class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-medium outline-none" required>
+                        <label class="block mb-3 text-sm font-medium text-gray-500 tracking-wider">Permission Levels (Select Multiple)</label>
+                        <div class="grid grid-cols-2 gap-3 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xs border border-gray-100 dark:border-gray-600">
                             @foreach($roles as $role)
-                                <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" name="role_ids[]" value="{{ $role->id }}" class="role-checkbox w-4 h-4 rounded-sm border-gray-300 text-primary-600 focus:ring-0 transition-all cursor-pointer">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-primary-600 transition-colors">{{ $role->name }}</span>
+                                </label>
                             @endforeach
-                        </select>
+                        </div>
                     </div>
                 </div>
                 <div class="mt-6 flex gap-3">
@@ -129,7 +132,11 @@
             dropdownParent: $('#addUserRoleModal'), width: '100%', placeholder: 'Search...',
             ajax: {
                 url: "{{ route('inventory.userAccess.search') }}", dataType: 'json', delay: 250,
-                data: params => ({ term: params.term, exclude_id: $('#edit_mode_user_id').val() }),
+                data: params => ({ 
+                    term: params.term, 
+                    exclude_id: $('#edit_mode_user_id').val(),
+                    include_existing: 1
+                }),
                 processResults: data => ({ results: data.results }), cache: true
             },
             minimumInputLength: 0
@@ -138,12 +145,18 @@
         $('#UserAccessTable').on('click', '.edit-user-role-btn', function() {
             const id = $(this).data('id');
             $.get("{{ url('inventory/user-access') }}/" + id, function(data) {
-                $('#user_allocation_id').val(data.id);
-                $('#role_id_select').val(data.role_id);
+                $('#user_allocation_id').val(data.user_id);
                 $('#edit_mode_user_id').val(data.user_id);
+                
+                // Clear and set checkboxes
+                $('.role-checkbox').prop('checked', false);
+                data.role_ids.forEach(roleId => {
+                    $(`.role-checkbox[value="${roleId}"]`).prop('checked', true);
+                });
+
                 const option = new Option(data.user_name, data.user_id, true, true);
-                $('#user_id_select').append(option).trigger('change');
-                $('#addUserRoleModalTitle').html('<i class="fa-solid fa-pen-to-square text-primary-500"></i> Edit Allocation');
+                $('#user_id_select').append(option).trigger('change').prop('disabled', true);
+                $('#addUserRoleModalTitle').html('<i class="fa-solid fa-user-gear text-primary-500"></i> Configure User Roles');
                 $('#addUserRoleModal').removeClass('hidden').addClass('flex');
             });
         });
@@ -178,8 +191,9 @@
     function openAddUserRoleModal() { 
         $('#addUserRoleForm')[0].reset(); 
         $('#user_allocation_id, #edit_mode_user_id').val(''); 
-        $('#user_id_select').val(null).empty().trigger('change'); 
-        $('#addUserRoleModalTitle').html('<i class="fa-solid fa-user-plus text-primary-600"></i> New Allocation'); 
+        $('.role-checkbox').prop('checked', false);
+        $('#user_id_select').prop('disabled', false).val(null).empty().trigger('change'); 
+        $('#addUserRoleModalTitle').html('<i class="fa-solid fa-user-plus text-primary-600"></i> New Access Assignment'); 
         $('#addUserRoleModal').removeClass('hidden').addClass('flex'); 
     }
 </script>

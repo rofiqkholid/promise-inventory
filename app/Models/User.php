@@ -47,14 +47,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function appRole()
+    public function roles()
     {
-        return $this->hasOne(\App\Models\InventoryModel\UserAppRole::class, 'user_id');
+        return $this->belongsToMany(\App\Models\InventoryModel\InvRole::class, 'inv_user_roles', 'user_id', 'role_id');
     }
 
     public function hasAppRole($roleCode)
     {
-        return $this->appRole && $this->appRole->role && $this->appRole->role->code === $roleCode;
+        return $this->roles->contains('code', $roleCode);
     }
 
     public function specificMenus()

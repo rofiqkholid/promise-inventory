@@ -21,17 +21,15 @@ class UserAccessController extends Controller
         $length = (int) $request->input('length', 10);
         $search = $request->input('search.value');
         
-        $query = \App\Models\InventoryModel\UserAppRole::with(['user', 'role']);
+        $query = \App\Models\User::has('roles')->with('roles');
 
         $recordsTotal = (clone $query)->count();
 
         // Filtering
         if (!empty($search)) {
-            $query->whereHas('user', function($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%");
-            })->orWhereHas('role', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
             });
         }
 
@@ -43,17 +41,9 @@ class UserAccessController extends Controller
             $colIdx = $order['column'];
             $dir = $order['dir'];
             if ($colIdx == 1) {
-                $query->join('users', 'inv_user_roles.user_id', '=', 'users.id')
-                      ->orderBy('users.name', $dir)
-                      ->select('inv_user_roles.*'); 
+                $query->orderBy('name', $dir);
             } elseif ($colIdx == 2) {
-                $query->join('users', 'inv_user_roles.user_id', '=', 'users.id')
-                      ->orderBy('users.email', $dir)
-                      ->select('inv_user_roles.*');
-            } elseif ($colIdx == 3) {
-                $query->join('inv_m_roles', 'inv_user_roles.role_id', '=', 'inv_m_roles.id')
-                      ->orderBy('inv_m_roles.name', $dir)
-                      ->select('inv_user_roles.*');
+                $query->orderBy('email', $dir);
             } else {
                 $query->orderBy('created_at', 'desc');
             }
@@ -64,28 +54,30 @@ class UserAccessController extends Controller
         $data = $query->skip($start)->take($length)->get();
         
         $formattedData = $data->map(function ($row, $index) use ($start) {
-            $roleCode = $row->role->code ?? '';
-            $roleName = $row->role->name ?? '';
+            $badges = $row->roles->map(function($role) {
+                $roleCode = $role->code ?? '';
+                $roleName = $role->name ?? '';
 
-            $colors = [
-                'admin' => 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50',
-                'approver' => 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/50',
-                'checker' => 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
-                'operator' => 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
-                'viewer' => 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/50',
-            ];
-            $colorClass = $colors[$roleCode] ?? 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
-            $badge = '<span class="px-2 py-1 border rounded-xs text-[10px] font-bold uppercase tracking-wide ' . $colorClass . '">' . $roleName . '</span>';
+                $colors = [
+                    'admin' => 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50',
+                    'approver' => 'bg-purple-50 text-purple-700 border-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/50',
+                    'checker' => 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
+                    'operator' => 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
+                    'viewer' => 'bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/50',
+                ];
+                $colorClass = $colors[$roleCode] ?? 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+                return '<span class="px-2 py-1 border rounded-xs text-[10px] font-bold uppercase tracking-wide ' . $colorClass . '">' . $roleName . '</span>';
+            })->implode(' ');
             
             $btn = '
                 <div class="flex items-center justify-center gap-1.5">
-                    <button class="edit-user-role-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
-                        <i class="fa-solid fa-pen-to-square text-sm"></i>
+                    <button class="edit-user-role-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Configure Roles">
+                        <i class="fa-solid fa-user-gear text-sm"></i>
                     </button>
-                    <button class="user-permission-btn h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors" data-id="' . $row->user_id . '" data-name="' . ($row->user->name ?? 'User') . '" title="Permissions">
+                    <button class="user-permission-btn h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30 transition-colors" data-id="' . $row->id . '" data-name="' . ($row->name ?? 'User') . '" title="Specific Menus">
                         <i class="fa-solid fa-key text-xs"></i>
                     </button>
-                    <button class="delete-access-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="' . $row->id . '" title="Revoke">
+                    <button class="delete-access-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="' . $row->id . '" title="Revoke All">
                         <i class="fa-solid fa-trash-can text-sm"></i>
                     </button>
                 </div>
@@ -93,9 +85,9 @@ class UserAccessController extends Controller
 
             return [
                 'DT_RowIndex' => $start + $index + 1,
-                'user_name' => $row->user->name ?? '-',
-                'user_email' => $row->user->email ?? '-',
-                'role_badge' => $badge,
+                'user_name' => $row->name ?? '-',
+                'user_email' => $row->email ?? '-',
+                'role_badge' => '<div class="flex flex-wrap justify-center gap-1">' . $badges . '</div>',
                 'action' => $btn
             ];
         });
@@ -108,14 +100,13 @@ class UserAccessController extends Controller
         ]);
     }
 
-    public function getUserRole($id)
+    public function getUserRole($userId)
     {
-        $allocation = \App\Models\InventoryModel\UserAppRole::with('user')->findOrFail($id);
+        $user = \App\Models\User::with('roles')->findOrFail($userId);
         return response()->json([
-            'id' => $allocation->id,
-            'user_id' => $allocation->user_id,
-            'user_name' => $allocation->user->name ?? 'Unknown',
-            'role_id' => $allocation->role_id
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+            'role_ids' => $user->roles->pluck('id')->toArray()
         ]);
     }
 
@@ -131,11 +122,9 @@ class UserAccessController extends Controller
             });
 
         if (!$request->include_existing) {
-            $existingUserIds = \App\Models\InventoryModel\UserAppRole::pluck('user_id');
-            if ($excludeId) {
-                $existingUserIds = $existingUserIds->reject(fn($id) => $id == $excludeId);
-            }
-            $query->whereNotIn('id', $existingUserIds);
+            // No longer exclude entirely, but maybe exclude users who already have a specific role
+            // if we want to avoid duplicates of the same user-role pair.
+            // But usually a simple search is fine since we removed the unique index.
         }
 
         $users = $query->limit(10)->get(['id', 'name', 'email', 'nik']);
@@ -153,37 +142,36 @@ class UserAccessController extends Controller
 
     public function store(Request $request)
     {
-        $id = $request->id;
+        $userId = $request->user_id ?: $request->id;
+        
+        $request->merge(['user_id' => $userId]); // Ensure it's there for validation if needed
+
         $request->validate([
-            'user_id' => 'required|exists:users,id|unique:inv_user_roles,user_id,' . $id,
-            'role_id' => 'required|exists:inv_m_roles,id',
+            'user_id' => 'required|exists:users,id',
+            'role_ids' => 'required|array',
+            'role_ids.*' => 'exists:inv_m_roles,id',
         ]);
 
-        \App\Models\InventoryModel\UserAppRole::updateOrCreate(
-            ['id' => $id],
-            [
-                'user_id' => $request->user_id,
-                'role_id' => $request->role_id,
-            ]
-        );
+        $user = \App\Models\User::findOrFail($userId);
+        $user->roles()->sync($request->role_ids);
 
-        return response()->json(['success' => true, 'message' => 'User role allocation saved.']);
+        return response()->json(['success' => true, 'message' => 'User roles updated successfully.']);
     }
 
-    public function destroy($id)
+    public function destroy($userId)
     {
-        $role = \App\Models\InventoryModel\UserAppRole::findOrFail($id);
-        $role->delete();
+        $user = \App\Models\User::findOrFail($userId);
+        $user->roles()->detach();
 
-        return response()->json(['success' => true, 'message' => 'User access revoked.']);
+        return response()->json(['success' => true, 'message' => 'All user access revoked.']);
     }
 
     public function userMenuData($userId)
     {
-        $user = \App\Models\User::with(['specificMenus', 'appRole.role.menus'])->findOrFail($userId);
+        $user = \App\Models\User::with(['specificMenus', 'roles.menus'])->findOrFail($userId);
         
         $specificMenuIds = $user->specificMenus->pluck('id')->toArray();
-        $roleMenuIds = optional($user->appRole->role->menus ?? null)->pluck('id')->toArray() ?? [];
+        $roleMenuIds = $user->roles->pluck('menus')->flatten()->pluck('id')->toArray();
         
         $activeMenuIds = array_unique(array_merge($specificMenuIds, $roleMenuIds));
 
@@ -357,8 +345,8 @@ class UserAccessController extends Controller
         
         // Check if user has associated inventory records that would break on deletion
         // For now, only check app role
-        if ($user->appRole()->exists()) {
-             return response()->json(['success' => false, 'message' => 'User has an assigned role. Revoke access first.'], 422);
+        if ($user->roles()->exists()) {
+             return response()->json(['success' => false, 'message' => 'User has assigned roles. Revoke access first.'], 422);
         }
 
         $user->delete();

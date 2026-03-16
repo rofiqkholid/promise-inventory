@@ -16,6 +16,7 @@ use App\Http\Controllers\Inventory\StockMonitoringController;
 use App\Http\Controllers\Inventory\TransactionHistoryController;
 use App\Http\Controllers\Inventory\PurchaseRequisitionController;
 use App\Http\Controllers\Inventory\ModelConfigController;
+use App\Http\Controllers\Inventory\ProfileController;
 use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
@@ -35,6 +36,11 @@ Route::get('/inventory/stock-monitoring/scan-info/{id}', [StockMonitoringControl
 // Inventory System Routes (Role-based)
 Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Profile Routes
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
 
     #Region Inventory Master (Admin, Approver)
     Route::middleware(['inventory.role:admin,approver,checker,operator,viewer'])->group(function () {

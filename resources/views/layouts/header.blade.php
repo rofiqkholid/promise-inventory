@@ -77,7 +77,7 @@
                         <p class="text-xs text-slate-500 dark:text-gray-400">{{ Auth::user()->email }}</p>
                     </div>
 
-                    <a href="#" class="block px-4 py-2 text-sm text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-2">
+                    <a href="{{ route('profile.index') }}" class="block px-4 py-2 text-sm text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700 hover:text-primary-600 dark:hover:text-primary-400 flex items-center gap-2">
                         <i class="fa-regular fa-user w-4"></i> Profile
                     </a>
                     
