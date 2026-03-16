@@ -14,13 +14,13 @@ class InventoryProductTemplateExport implements FromArray, WithHeadings, WithSty
     public function headings(): array
     {
         return [
-            'Part No (*)', 
-            'Customer Code (*)', 
-            'Model Name (*)', 
-            'Revision Code (*)', 
-            'Material Spec Name', 
-            'Unit Name', 
-            'Rank Code', 
+            'Part No *', 
+            'Customer *', 
+            'Model *', 
+            'Revision *', 
+            'Material Spec', 
+            'Unit', 
+            'Rank', 
             'Thickness', 
             'Width', 
             'Length', 

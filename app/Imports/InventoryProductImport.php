@@ -43,15 +43,15 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
                 $rowNum = $index + 2; // +1 for 0-index, +1 for header
 
                 $partNo = trim($row['part_no'] ?? '');
-                $customerCode = trim($row['customer_code'] ?? '');
-                $modelName = trim($row['model_name'] ?? '');
-                $revisionCode = trim($row['revision_code'] ?? '');
+                $customerCode = trim($row['customer'] ?? '');
+                $modelName = trim($row['model'] ?? '');
+                $revisionCode = trim($row['revision'] ?? '');
 
                 if (empty($partNo) || empty($customerCode) || empty($modelName) || empty($revisionCode)) {
                     // Skip empty rows or minimal rows
                     if (empty($partNo) && empty($customerCode) && empty($modelName)) continue;
                     
-                    $this->errors[] = "Row {$rowNum}: Missing required fields (Part No, Customer Code, Model Name, or Revision Code).";
+                    $this->errors[] = "Row {$rowNum}: Missing required fields (Part No, Customer, Model, or Revision).";
                     continue;
                 }
 
@@ -99,20 +99,20 @@ class InventoryProductImport implements ToCollection, WithHeadingRow
 
                 // Optional resolves
                 $materialSpecId = null;
-                if (!empty(trim($row['material_spec_name'] ?? ''))) {
-                    $ms = MaterialSpec::where('spec_name', trim($row['material_spec_name']))->first();
+                if (!empty(trim($row['material_spec'] ?? ''))) {
+                    $ms = MaterialSpec::where('spec_name', trim($row['material_spec']))->first();
                     $ms ? ($materialSpecId = $ms->id) : ($this->errors[] = "Row {$rowNum}: Material Spec not found, but it was skipped.");
                 }
 
                 $unitId = null;
-                if (!empty(trim($row['unit_name'] ?? ''))) {
-                    $unit = Unit::where('name', trim($row['unit_name']))->first();
+                if (!empty(trim($row['unit'] ?? ''))) {
+                    $unit = Unit::where('name', trim($row['unit']))->first();
                     $unit ? ($unitId = $unit->id) : ($this->errors[] = "Row {$rowNum}: Unit not found.");
                 }
 
                 $rankId = null;
-                if (!empty(trim($row['rank_code'] ?? ''))) {
-                    $rank = Rank::where('code', trim($row['rank_code']))->first();
+                if (!empty(trim($row['rank'] ?? ''))) {
+                    $rank = Rank::where('code', trim($row['rank']))->first();
                     $rank ? ($rankId = $rank->id) : ($this->errors[] = "Row {$rowNum}: Rank not found.");
                 }
 

@@ -112,21 +112,21 @@ class InventoryMasterSeeder extends Seeder
         }
 
         // 6. Material Spec
-        // $specs = [
-        //     ['spec_name' => 'MJSC440W-OD', 'coating_type' => 'Non-GA'],
-        //     ['spec_name' => 'MJSC980Y-OD', 'coating_type' => 'Non-GA'],
-        //     ['spec_name' => 'MJAC270C-OD-45/45', 'coating_type' => 'GA'],
-        //     ['spec_name' => 'MJAC270D-OD-45/45', 'coating_type' => 'GA'],
-        //     ['spec_name' => 'MJAC440W-OD-45/45', 'coating_type' => 'GA'],
-        //     ['spec_name' => 'MJSC270C-OD', 'coating_type' => 'Non-GA'],
-        //     ['spec_name' => 'MJSC270D-OD', 'coating_type' => 'Non-GA'],
-        //     ['spec_name' => 'MJSC590R-OD', 'coating_type' => 'Non-GA'],
-        //     ['spec_name' => 'MJSH440W-OP', 'coating_type' => 'Non-GA'],
-        //     ['spec_name' => 'MJSH590R-OP', 'coating_type' => 'Non-GA'],
-        // ];
-        // foreach ($specs as $item) {
-        //     MaterialSpec::updateOrCreate(['spec_name' => $item['spec_name']], $item);
-        // }
+        $specs = [
+            ['spec_name' => 'MJSC440W-OD', 'coating_type' => 'Non-GA'],
+            ['spec_name' => 'MJSC980Y-OD', 'coating_type' => 'Non-GA'],
+            ['spec_name' => 'MJAC270C-OD-45/45', 'coating_type' => 'GA'],
+            ['spec_name' => 'MJAC270D-OD-45/45', 'coating_type' => 'GA'],
+            ['spec_name' => 'MJAC440W-OD-45/45', 'coating_type' => 'GA'],
+            ['spec_name' => 'MJSC270C-OD', 'coating_type' => 'Non-GA'],
+            ['spec_name' => 'MJSC270D-OD', 'coating_type' => 'Non-GA'],
+            ['spec_name' => 'MJSC590R-OD', 'coating_type' => 'Non-GA'],
+            ['spec_name' => 'MJSH440W-OP', 'coating_type' => 'Non-GA'],
+            ['spec_name' => 'MJSH590R-OP', 'coating_type' => 'Non-GA'],
+        ];
+        foreach ($specs as $item) {
+            MaterialSpec::updateOrCreate(['spec_name' => $item['spec_name']], $item);
+        }
 
         // 7. Revisions
         $revisions = [

@@ -84,11 +84,11 @@
                 <th class="text-left">Model</th>
                 <th class="text-center">Status</th>
                 <th class="text-left">Material</th>
-                <th class="text-left">Dimensions</th>
-                <th class="text-center">Pcs/Unit</th>
-                <th class="text-center">Weight (Kg)</th>
-                <th class="text-center">Unit/Car</th>
                 <th class="text-center">Rank</th>
+                <th class="text-left">Dimensions</th>
+                <th class="text-center">Weight (Kg)</th>
+                <th class="text-center">Pcs/Unit</th>
+                <th class="text-center">Unit/Car</th>
                 <th class="text-left">Remark</th>
                 <th class="text-center whitespace-nowrap">Updated At</th>
                 <th class="text-center w-[100px]">Action</th>
@@ -325,8 +325,8 @@
                             <div>
                                 <h4 class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">How to format your Excel</h4>
                                 <ul class="text-[10px] text-blue-600/80 dark:text-blue-400/80 space-y-1 mt-2 font-medium">
-                                    <li>• Columns marked with <span class="font-bold text-red-500 leading-none">(*)</span> are required.</li>
-                                    <li>• IDs are managed automatically based on the text you input. Ensure the `Customer Code`, `Model Name`, `Revision Code`, etc. match exactly what's in the system.</li>
+                                    <li>• Columns marked with <span class="font-bold text-red-500 leading-none">*</span> are required.</li>
+                                    <li>• IDs are managed automatically based on the text you input. Ensure the `Customer`, `Model`, `Revision`, etc. match exactly what's in the system.</li>
                                 </ul>
                                 <a href="{{ route('inventory.master.product.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest transition-all shadow-sm">
                                     <i class="fa-solid fa-download"></i> Download Template
@@ -336,7 +336,7 @@
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Select Excel File</label>
-                        <input type="file" name="file" id="file" accept=".xlsx, .xls, .csv" required class="block w-full text-xs text-gray-900 border border-slate-200 rounded-xs cursor-pointer bg-white dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 px-3 py-2">
+                        <input type="file" name="file" id="file" accept=".xlsx, .xls, .csv" required class="block w-full text-xs text-gray-900 border border-slate-200 rounded-xs cursor-pointer bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 focus:outline-none file:mr-4 file:py-2.5 file:px-4 file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-slate-800 dark:file:text-primary-400 transition-all">
                     </div>
                     <div id="importResult" class="hidden text-[10px] font-medium p-4 rounded-xs border"></div>
                 </div>
@@ -451,15 +451,15 @@ $(function() {
                             <div class="text-[10px] text-gray-400 tracking-tight">${r.coating_type || '-'}</div>
                         </div>`
                     },
+                    { data: 'rank', className: 'text-center' },
                     {
                         data: null,
                         className: 'whitespace-nowrap',
                         render: r => this.logic.renderDimensions(r)
                     },
-                    { data: 'pcs_per_unit', className: 'text-center' },
                     { data: 'weight_kg', className: 'text-center', render: d => d ? parseFloat(d).toFixed(2) : '-' },
+                    { data: 'pcs_per_unit', className: 'text-center' },
                     { data: 'unit_per_car', className: 'text-center' },
-                    { data: 'rank', className: 'text-center' },
                     { data: 'remark', className: 'text-xs text-gray-500', render: d => d || '-' },
                     { data: 'updated_at', className: 'whitespace-nowrap text-[10px] text-gray-400', render: d => d || '-' },
                     {
