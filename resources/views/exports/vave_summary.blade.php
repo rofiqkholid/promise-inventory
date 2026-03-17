@@ -116,24 +116,24 @@
                     <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ number_format($stage['budomari'], 2) }}%</td>
                     
                     @php
-                        $status = '';
+                        $status = '-';
                         $bgColor = '#ffffff';
                         $textColor = '#000000';
+                        $hasBaseline = $p->baseline_weight > 0;
                         
-                        if ($sIndex > 0) {
-                            $prevBud = $p->stages[0]['budomari'];
-                            $diff = $stage['budomari'] - $prevBud;
-                            if (abs($diff) > 0.001) {
-                                $status = $diff > 0 ? 'MERIT' : 'LOSS';
-                                $bgColor = $diff > 0 ? '#dcfce7' : '#fee2e2';
-                                $textColor = $diff > 0 ? '#166534' : '#991b1b';
-                            } else if ($stage['is_baseline']) {
-                                $status = '-';
+                        if (!$stage['is_baseline'] && $hasBaseline && $stage['theoretical_weight'] > 0) {
+                            $savingWeight = $p->baseline_weight - $stage['theoretical_weight'];
+                            if ($savingWeight > 0.0001) {
+                                $status = 'MERIT';
+                                $bgColor = '#dcfce7';
+                                $textColor = '#166534';
+                            } else if ($savingWeight < -0.0001) {
+                                $status = 'LOSS';
+                                $bgColor = '#fee2e2';
+                                $textColor = '#991b1b';
                             } else {
-                                $status = 'OK';
+                                $status = 'NO CHANGE';
                             }
-                        } else {
-                            $status = '-';
                         }
                     @endphp
                     <td style="border: 1px solid #000000; text-align: center; background-color: {{ $bgColor }}; color: {{ $textColor }}; font-weight: bold;">
@@ -145,38 +145,41 @@
                     
                    @php
                         // 1. GAP KG (Selisih Gross Weight)
-                        $gapKg = $p->baseline_weight - $stage['theoretical_weight'];
-                        $roundGapKg = round((float)$gapKg, 3);
-                        
-                        if ($roundGapKg > 0) {
-                            $gapKgColor = '#166534'; $gapKgBg = '#f0fdf4'; // Merit
-                        } elseif ($roundGapKg < 0) {
-                            $gapKgColor = '#991b1b'; $gapKgBg = '#fef2f2'; // Loss
-                        } else {
-                            $gapKgColor = '#000000'; $gapKgBg = '#ffffff'; // Netral
-                        }
+                        $gapKg = 0;
+                        $saving = 0;
+                        $gapKgColor = '#000000'; $gapKgBg = '#ffffff';
+                        $savingColor = '#000000'; $savingBg = '#ffffff';
 
-                        // 2. GAP IDR (Selisih Cost)
-                        $saving = $baselineCost - $stage['cost'];
-                        $roundSaving = round((float)$saving, 2);
-                        
-                        if ($roundSaving > 0) {
-                            $savingColor = '#166534'; $savingBg = '#f0fdf4'; // Merit
-                        } elseif ($roundSaving < 0) {
-                            $savingColor = '#991b1b'; $savingBg = '#fef2f2'; // Loss
-                        } else {
-                            $savingColor = '#000000'; $savingBg = '#ffffff'; // Netral
+                        if (!$stage['is_baseline'] && $hasBaseline && $stage['theoretical_weight'] > 0) {
+                            $gapKg = $p->baseline_weight - $stage['theoretical_weight'];
+                            $roundGapKg = round((float)$gapKg, 3);
+                            
+                            if ($roundGapKg > 0) {
+                                $gapKgColor = '#166534'; $gapKgBg = '#f0fdf4'; // Merit
+                            } elseif ($roundGapKg < 0) {
+                                $gapKgColor = '#991b1b'; $gapKgBg = '#fef2f2'; // Loss
+                            }
+
+                            // 2. GAP IDR (Selisih Cost)
+                            $saving = $baselineCost - $stage['cost'];
+                            $roundSaving = round((float)$saving, 2);
+                            
+                            if ($roundSaving > 0) {
+                                $savingColor = '#166534'; $savingBg = '#f0fdf4'; // Merit
+                            } elseif ($roundSaving < 0) {
+                                $savingColor = '#991b1b'; $savingBg = '#fef2f2'; // Loss
+                            }
                         }
                     @endphp
 
                     {{-- KOLOM GAP (kg) --}}
                     <td style="border: 1px solid #000000; text-align: right; color: {{ $gapKgColor }}; background-color: {{ $gapKgBg }}; font-weight: bold;">
-                        {{ $stage['is_baseline'] ? '-' : number_format($gapKg, 3) }}
+                        {{ (!$stage['is_baseline'] && $hasBaseline && $stage['theoretical_weight'] > 0) ? number_format($gapKg, 3) : '-' }}
                     </td>
 
                     {{-- KOLOM GAP (IDR) --}}
                     <td style="border: 1px solid #000000; text-align: right; color: {{ $savingColor }}; background-color: {{ $savingBg }}; font-weight: bold;">
-                        {{ $stage['is_baseline'] ? '-' : number_format($saving, 2) }}
+                        {{ (!$stage['is_baseline'] && $hasBaseline && $stage['theoretical_weight'] > 0) ? number_format($saving, 2) : '-' }}
                     </td>
                 </tr>
                 @endforeach

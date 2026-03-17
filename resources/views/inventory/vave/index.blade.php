@@ -858,6 +858,7 @@ $(function() {
 
     // Fungsi Render Ulang Tabel
     function renderComparisonTable() {
+        const isHistoryChecked = $('#toggleHistory').is(':checked');
         const id = window.compareState.id;
         const rfqs = window.compareState.rfqs;
         const revisions = window.compareState.revisions;
@@ -903,7 +904,7 @@ $(function() {
 </button>
                              <label class="inline-flex items-center cursor-pointer group px-3 py-1.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors border border-transparent hover:border-slate-100">
                             <div class="relative flex items-center">
-                                <input type="checkbox" id="toggleHistory" class="sr-only peer">
+                                <input type="checkbox" id="toggleHistory" class="sr-only peer" ${isHistoryChecked ? 'checked' : ''}>
                                 <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
                             </div>
                             <span class="ms-3 text-[10px] font-black text-slate-500 group-hover:text-primary-600 transition-colors uppercase tracking-[0.2em] pointer-events-none">View History Tracking</span>
@@ -1085,6 +1086,10 @@ $(function() {
             if(this.checked) $('.history-col').removeClass('hidden');
             else $('.history-col').addClass('hidden');
         });
+
+        if (isHistoryChecked) {
+            $('.history-col').removeClass('hidden');
+        }
     }
 
     function renderDetailItem(label, value) {
