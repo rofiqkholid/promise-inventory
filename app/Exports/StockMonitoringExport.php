@@ -281,7 +281,7 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
 
         if ($currentPCS > $maxStock) return 'Over';
         
-        $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+        $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
         if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
             return 'Safe';
         }

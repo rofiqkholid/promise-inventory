@@ -136,6 +136,7 @@ class InventoryProductController extends Controller
                 'length' => (float)$r->length,
                 'length_2' => (float)$r->length_2,
                 'pitch' => (float)$r->pitch,
+                'pcs_per_pitch' => (int)$r->pcs_per_pitch,
                 'density' => (float)$r->density,
                 'weight_kg' => (float)$r->weight_kg,
                 'net_weight' => (float)$r->net_weight,
@@ -195,7 +196,33 @@ class InventoryProductController extends Controller
 
         $data = $query->orderBy('prod.part_no', 'asc')->get();
 
-        return Excel::download(new InventoryProductExport($data), 'Inventory_Product_Master_' . date('YmdHis') . '.xlsx');
+        $fileNameBase = 'All Inventory Product Master';
+        $customerCode = '';
+        $modelName = '';
+
+        if ($request->filled('customer_id')) {
+            $customer = DB::table('customers')->where('id', $request->customer_id)->first();
+            if ($customer) {
+                $customerCode = $customer->code;
+            }
+        }
+
+        if ($request->filled('model_id')) {
+            $model = DB::table('models')->where('id', $request->model_id)->first();
+            if ($model) {
+                $modelName = $model->name;
+            }
+        }
+
+        if ($customerCode || $modelName) {
+            $parts = array_filter([$customerCode, $modelName]);
+            $fileNameBase = implode(' ', $parts) . ' Inventory Product';
+        }
+
+        $fileNameClean = preg_replace('/[^A-Za-z0-9 _-]/', '_', $fileNameBase);
+        $fileName = $fileNameClean . '_' . date('Ymd') . '.xlsx';
+
+        return Excel::download(new InventoryProductExport($data), $fileName);
     }
 
     /**
@@ -500,6 +527,7 @@ class InventoryProductController extends Controller
             'length' => 'nullable|numeric|min:0',
             'length_2' => 'nullable|numeric|min:0',
             'pitch' => 'nullable|numeric|min:0',
+            'pcs_per_pitch' => 'nullable|integer|min:0',
             'density' => 'nullable|numeric|min:0',
             'weight_kg' => 'nullable|numeric|min:0',
             'net_weight' => 'nullable|numeric|min:0',
@@ -510,8 +538,8 @@ class InventoryProductController extends Controller
             'current_stock_qty' => 'nullable|numeric|min:0',
             'trial_usage_qty' => 'nullable|numeric|min:0',
             'remark' => 'nullable|string',
-            'product_status' => 'nullable|string|in:Allsize OK,Allsize NG',
-            'product_status_remark' => 'nullable|string|in:Damage,Other',
+            'product_status' => 'nullable|string|in:Oldstock OK,Oldstock NG',
+            'product_status_remark' => 'nullable|string|in:Drawing Change,Damage,Under,Other',
         ];
     }
 

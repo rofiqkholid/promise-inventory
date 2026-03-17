@@ -81,7 +81,7 @@ class PurchaseRequisitionController extends Controller
                             ->orWhereNull('ms.project_status');
                   })
                   ->where(function($inner) {
-                      $inner->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                      $inner->whereNotIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG'])
                             ->orWhereNull('inv_t_product_detail.product_status');
                   });
               });
@@ -193,7 +193,7 @@ class PurchaseRequisitionController extends Controller
         if ($min <= 0) return 'safe';
 
         // Exclusion logic: Regular projects or Specific product statuses are always safe if not over
-        $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+        $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
         if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
             return 'safe';
         }

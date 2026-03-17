@@ -34,7 +34,7 @@ class DashboardController extends Controller
                                              ->orWhereNull('ms.project_status');
                                    })
                                    ->where(function($inner) {
-                                       $inner->whereNotIn('p.product_status', ['Allsize OK', 'Allsize NG'])
+                                       $inner->whereNotIn('p.product_status', ['Oldstock OK', 'Oldstock NG'])
                                              ->orWhereNull('p.product_status');
                                    });
                                });
@@ -57,7 +57,7 @@ class DashboardController extends Controller
                                       $override->whereColumn('p.current_stock_qty', '<', 'p.min_stock')
                                                ->where(function($sq) {
                                                    $sq->where('ms.project_status', 'Regular')
-                                                      ->orWhereIn('p.product_status', ['Allsize OK', 'Allsize NG']);
+                                                      ->orWhereIn('p.product_status', ['Oldstock OK', 'Oldstock NG']);
                                                });
                                   })
                                   ->orWhere('p.min_stock', '<=', 0)
@@ -129,7 +129,7 @@ class DashboardController extends Controller
                     $stockDataGrouped[$key]['over']++;
                 } elseif ($current < $min) {
                     // Exclusion logic for KPIs
-                    $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+                    $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
                     $isSafeOverride = in_array($prd->project_status, $safeStatuses) || in_array($prd->product_status, $safeStatuses);
                     
                     if ($isSafeOverride) $stockDataGrouped[$key]['safe']++;

@@ -238,7 +238,7 @@
                             <i class="fa-solid fa-boxes-stacked text-primary-500"></i>
                             Logistics & Control
                         </h4>
-                        <div class="grid gap-6 md:grid-cols-4">
+                        <div class="grid gap-6 md:grid-cols-5">
                             <div>
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Rank</label>
                                 <select name="rank_id" id="rank_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
@@ -246,13 +246,18 @@
                                 </select>
                                 <p id="error-rank_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
+                            <div id="pcsPerPitchContainer">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs / Pitch</label>
+                                <input type="number" name="pcs_per_pitch" id="pcs_per_pitch" step="1" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0">
+                                <p id="error-pcs_per_pitch" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
+                            </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs per Unit</label>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs / Unit</label>
                                 <input type="number" name="pcs_per_unit" id="pcs_per_unit" min="1" value="1" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                 <p id="error-pcs_per_unit" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit per Car</label>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit / Car</label>
                                 <input type="number" name="unit_per_car" id="unit_per_car" min="1" value="1" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                 <p id="error-unit_per_car" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
@@ -272,8 +277,8 @@
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Product Status Override</label>
                                 <select name="product_status" id="product_status" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">None (Follow Model)</option>
-                                    <option value="Allsize OK">Allsize OK</option>
-                                    <option value="Allsize NG">Allsize NG</option>
+                                    <option value="Oldstock OK">Oldstock OK</option>
+                                    <option value="Oldstock NG">Oldstock NG</option>
                                 </select>
                             </div>
 
@@ -282,7 +287,9 @@
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Status Remark</label>
                                 <select name="product_status_remark" id="product_status_remark" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">No Remark</option>
+                                    <option value="Drawing Change">Drawing Change</option>
                                     <option value="Damage">Damage</option>
+                                    <option value="Under">Under</option>
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
@@ -438,8 +445,8 @@ $(function() {
                             const colors = {
                                 'Project': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
                                 'Regular': 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
-                                'Allsize OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
-                                'Allsize NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
+                                'Oldstock OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
+                                'Oldstock NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
                             }[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
                             return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold whitespace-nowrap uppercase tracking-wide border ${colors}">${status}</span>`;
                         }
@@ -670,6 +677,7 @@ $(function() {
                     $('#length').val(parseFloat(data.length || 0));
                     $('#length_2').val(parseFloat(data.length_2 || 0));
                     $('#pitch').val(parseFloat(data.pitch || 0));
+                    $('#pcs_per_pitch').val(parseInt(data.pcs_per_pitch || 0));
                     this.elements.unitSelect.val(data.unit?.hash_id).trigger('change');
                     $('#rank_id').val(data.rank?.hash_id).trigger('change');
                     $('#pcs_per_unit').val(data.pcs_per_unit);
@@ -744,6 +752,7 @@ $(function() {
                     $('#length').val(parseFloat(d.length || 0));
                     $('#length_2').val(parseFloat(d.length_2 || 0));
                     $('#pitch').val(parseFloat(d.pitch || 0));
+                    $('#pcs_per_pitch').val(parseInt(d.pcs_per_pitch || 0));
                     this.elements.unitSelect.val(res.unit_hash).trigger('change');
                     $('#rank_id').val(res.rank_hash).trigger('change');
                     $('#pcs_per_unit').val(d.pcs_per_unit);
@@ -875,7 +884,10 @@ $(function() {
                 const unit = (row.unit_name || '').toLowerCase();
                 const fmt = (l, v) => `<span class="inline-flex items-center gap-x-0.5"><span class="text-gray-500 font-bold">${l}:</span><span class="text-slate-800 font-medium">${v}</span></span>`;
                 let items = [fmt('T', parseFloat(row.thickness) || 0), fmt('W', parseFloat(row.width) || 0)];
-                if (unit.includes('coil')) items.push(fmt('P', parseFloat(row.pitch) || 0));
+                if (unit.includes('coil')) {
+                    items.push(fmt('P', parseFloat(row.pitch) || 0));
+                    if (row.pcs_per_pitch) items.push(fmt('Pcs/P', parseInt(row.pcs_per_pitch)));
+                }
                 else if (unit.includes('trapezoid')) { items.push(fmt('L', parseFloat(row.length) || 0)); items.push(fmt('L2', parseFloat(row.length_2) || 0)); }
                 else items.push(fmt('L', parseFloat(row.length) || 0));
                 return `<div class="flex items-center gap-x-3 font-mono text-xs tracking-tight">${items.join('')}</div>`;
@@ -922,11 +934,19 @@ $(function() {
                 const unitId = ProductApp.elements.unitSelect.val();
                 const unit = ProductApp.state.dropdownData.units?.find(u => u.hash_id === unitId);
                 const name = (unit?.name || '').toLowerCase();
-                $('#lengthContainer, #length2Container, #pitchContainer').hide();
-                if (name.includes('sheet')) $('#lengthContainer').show();
-                else if (name.includes('trapezoid')) $('#lengthContainer, #length2Container').show();
-                else if (name.includes('coil')) $('#pitchContainer').show();
-                else $('#lengthContainer').show();
+                $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer').hide();
+                if (name.includes('sheet')) {
+                    $('#lengthContainer, #pitchContainer, #pcsPerPitchContainer').show();
+                }
+                else if (name.includes('trapezoid')) {
+                    $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer').show();
+                }
+                else if (name.includes('coil')) {
+                    $('#pitchContainer, #pcsPerPitchContainer').show();
+                }
+                else {
+                    $('#lengthContainer').show();
+                }
                 ProductApp.logic.calculateWeight();
             }
         }

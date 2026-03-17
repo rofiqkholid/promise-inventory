@@ -161,7 +161,7 @@ class StockMonitoringController extends Controller
                       ->where($minSql, '>', 0)
                       ->where(function($sq) {
                           $sq->where('inv_m_model_status.project_status', '!=', 'Regular')
-                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG'])
                             ->orWhereNull('inv_m_model_status.project_status');
                       });
                 } elseif ($status === 'warning') {
@@ -170,7 +170,7 @@ class StockMonitoringController extends Controller
                       ->where($minSql, '>', 0)
                       ->where(function($sq) {
                           $sq->where('inv_m_model_status.project_status', '!=', 'Regular')
-                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG'])
                             ->orWhereNull('inv_m_model_status.project_status');
                       });
                 } elseif ($status === 'safe') {
@@ -185,7 +185,7 @@ class StockMonitoringController extends Controller
                         ->orWhere(function($regular) use ($currentPcsSql, $minSql) {
                             $regular->where(function($sq) {
                                 $sq->where('inv_m_model_status.project_status', 'Regular')
-                                   ->orWhereIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG']);
+                                   ->orWhereIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG']);
                             })
                             ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
                             ->where($minSql, '>', 0);
@@ -426,8 +426,8 @@ class StockMonitoringController extends Controller
 
         if ($currentPCS > $maxStock) return 'over'; // Blue
         
-        // Skip Warning/Critical for Regular projects or Allsize OK/NG overrides
-        $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
+        // Skip Warning/Critical for Regular projects or Oldstock OK/NG overrides
+        $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
         if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
             return 'safe';
         }
@@ -693,7 +693,7 @@ class StockMonitoringController extends Controller
                 $query->whereRaw("{$currentPcsSql} < ({$minSql} - 30)")->where($minSql, '>', 0)
                       ->where(function($q) {
                           $q->where('inv_m_model_status.project_status', '!=', 'Regular')
-                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG'])
                             ->orWhereNull('inv_m_model_status.project_status');
                       });
             }
@@ -701,7 +701,7 @@ class StockMonitoringController extends Controller
                 $query->whereRaw("{$currentPcsSql} >= ({$minSql} - 30)")->whereRaw("{$currentPcsSql} < {$minSql}")->where($minSql, '>', 0)
                       ->where(function($q) {
                           $q->where('inv_m_model_status.project_status', '!=', 'Regular')
-                            ->whereNotIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG'])
+                            ->whereNotIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG'])
                             ->orWhereNull('inv_m_model_status.project_status');
                       });
             }
@@ -711,7 +711,7 @@ class StockMonitoringController extends Controller
                        ->orWhere(function($regular) use ($currentPcsSql, $minSql) {
                            $regular->where(function($sq2) {
                                $sq2->where('inv_m_model_status.project_status', 'Regular')
-                                   ->orWhereIn('inv_t_product_detail.product_status', ['Allsize OK', 'Allsize NG']);
+                                   ->orWhereIn('inv_t_product_detail.product_status', ['Oldstock OK', 'Oldstock NG']);
                            })
                            ->whereRaw("{$currentPcsSql} <= ({$minSql} * 3)")
                            ->where($minSql, '>', 0);
@@ -748,6 +748,32 @@ class StockMonitoringController extends Controller
 
         $data = $query->orderBy('products.part_no', 'asc')->get();
 
-        return Excel::download(new StockMonitoringExport($data, $categories), 'Stock_Monitoring_' . date('Ymd_His') . '.xlsx');
+        $fileNameBase = 'All Stock Monitoring';
+        $customerCode = '';
+        $modelName = '';
+
+        if ($request->customer_id) {
+            $customer = DB::table('customers')->where('id', $request->customer_id)->first();
+            if ($customer) {
+                $customerCode = $customer->code;
+            }
+        }
+
+        if ($request->model_id) {
+            $model = DB::table('models')->where('id', $request->model_id)->first();
+            if ($model) {
+                $modelName = $model->name;
+            }
+        }
+
+        if ($customerCode || $modelName) {
+            $parts = array_filter([$customerCode, $modelName]);
+            $fileNameBase = implode(' ', $parts) . ' Stock Monitoring';
+        }
+
+        $fileNameClean = preg_replace('/[^A-Za-z0-9 _-]/', '_', $fileNameBase);
+        $fileName = $fileNameClean . '_' . date('Ymd') . '.xlsx';
+
+        return Excel::download(new StockMonitoringExport($data, $categories), $fileName);
     }
 }
