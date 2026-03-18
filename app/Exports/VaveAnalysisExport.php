@@ -23,16 +23,27 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
         $rfqs = $data['rfqs'];
         $revisions = $data['revisions'];
         $product = $data['product'];
+        $selectedBaseId = $data['selected_base_id'] ?? null;
+        $selectedActualId = $data['selected_actual_id'] ?? null;
 
-        // Find active RFQ as base, fallback to first
-        $baseRfq = $rfqs->where('is_active', 1)->first() ?? $rfqs->first();
+        // Find active RFQ as base, fallback to first, or use selected
+        if ($selectedBaseId) {
+            $baseRfq = $rfqs->firstWhere('hash_id', $selectedBaseId) ?? $rfqs->first();
+        } else {
+            $baseRfq = $rfqs->where('is_active', 1)->first() ?? $rfqs->first();
+        }
         
-        // Filter out the base RFQ from history list to avoid duplication
-        $rfqHistory = $rfqs->filter(function($r) use ($baseRfq) {
-            return $r->getKey() !== $baseRfq->getKey();
-        });
+        // The user requested to only show the chosen baseline and omit baseline history in exports.
+        $rfqHistory = collect();
 
-        $latestRev = $revisions->first();
+        if ($selectedActualId) {
+            // Revisions uses 'inv_t_product_detail' joined with 'inv_m_revision', 'revision' relation has the code
+            $latestRev = $revisions->first(function($rev) use ($selectedActualId) {
+                return $rev->revision && $rev->revision->code == $selectedActualId;
+            }) ?? $revisions->first();
+        } else {
+            $latestRev = $revisions->first();
+        }
         
         $baseW = (float)($baseRfq->weight_kg ?? 0);
         $actW = (float)($latestRev->weight_kg ?? 0);

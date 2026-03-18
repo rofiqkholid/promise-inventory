@@ -326,7 +326,7 @@ class VaveAnalysisController extends Controller
     /**
      * Export VAVE Analysis to Excel.
      */
-    public function exportExcel($id)
+    public function exportExcel(Request $request, $id)
     {
         $product = Products::findByHashOrFail($id);
         
@@ -351,7 +351,9 @@ class VaveAnalysisController extends Controller
         return Excel::download(new VaveAnalysisExport([
             'product' => $product,
             'rfqs' => $rfqs,
-            'revisions' => $revisions
+            'revisions' => $revisions,
+            'selected_base_id' => $request->base_id,
+            'selected_actual_id' => $request->actual_id,
         ]), $fileName);
     }
 

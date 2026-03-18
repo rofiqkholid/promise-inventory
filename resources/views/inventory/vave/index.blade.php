@@ -897,7 +897,7 @@ $(function() {
                     <div class="flex items-center gap-4">
                        <button type="button" 
         id="btnExportAnalysis" 
-        data-url="{{ url('inventory/vave/comparison') }}/${id}/export" 
+        data-url="{{ url('inventory/vave/comparison') }}/${id}/export?base_id=${selectedBaseHash}&actual_id=${selectedRevId}" 
         class="h-9 px-4 inline-flex items-center gap-2 text-white rounded-xs bg-primary-600 hover:bg-primary-700 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-[0.98]">
     <i class="fa-solid fa-file-excel text-sm btn-icon"></i> 
     <span class="btn-text">Export Excel</span>
