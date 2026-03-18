@@ -254,7 +254,7 @@
                     <option value="">Pick Product via Search or Scanning...</option>
                     @foreach($allProducts as $product)
                         @php $is_counted = in_array($product->id, $countedIds); @endphp
-                        <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
+                        <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
                              {{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}
                         </option>
                     @endforeach
@@ -462,18 +462,28 @@
     const stoReasons = @json(\App\Models\InventoryModel\StoReason::where('is_active', true)->get());
 
     // JS Formatter Helpers
-    function formatQtyHtml(qty, pcsPerUnit, unitCode, prefix = '') {
+    function formatQtyHtml(qty, pcsPerUnit, unitCode, weightKg, prefix = '') {
         qty = parseFloat(qty || 0);
-        let pcs = qty * pcsPerUnit;
+        pcsPerUnit = parseFloat(pcsPerUnit || 1);
+        weightKg = parseFloat(weightKg || 0);
+        unitCode = (unitCode || '').toLowerCase();
+        
+        let pcs = 0;
+        if (unitCode.includes('coil') && weightKg > 0) {
+            pcs = Math.floor(qty / weightKg) * pcsPerUnit;
+        } else {
+            pcs = qty * pcsPerUnit;
+        }
+
         let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
         
-        if (pcsPerUnit == 1) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
+        if (pcsPerUnit == 1 && !unitCode.includes('coil')) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
         
         let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
         return `
             <div class='flex flex-col items-center justify-center'>
                 <span class='font-bold'>${prefix}${pcsDisplay}</span>
-                <span class='text-[10px] text-gray-400 leading-none mt-0.5'>(${unitDisplay} ${unitCode})</span>
+                <span class='text-[10px] text-gray-400 leading-none mt-0.5'>(${unitDisplay} ${unitCode.toUpperCase()})</span>
             </div>`;
     }
 
@@ -664,7 +674,7 @@
                         data: null, 
                         className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
                         render: function(data) {
-                            return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code);
+                            return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg);
                         }
                     },
                     { 
@@ -689,7 +699,7 @@
                                         <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code}</span>
                                     </div>`;
                             }
-                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code)}</div>`;
+                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg)}</div>`;
                         }
                     },
                     { 
@@ -701,8 +711,8 @@
                         data: null, 
                         className: 'text-center font-bold bg-slate-50/20',
                         render: function(data) {
-                            if (data.diff_qty > 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(data.diff_qty, data.pcs_per_unit, data.unit_code, '+')}</div>`;
-                            if (data.diff_qty < 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, '-')}</div>`;
+                            if (data.diff_qty > 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(data.diff_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '+')}</div>`;
+                            if (data.diff_qty < 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, '-')}</div>`;
                             return `<span class="text-sm font-bold text-emerald-600">0</span>`;
                         }
                     },
@@ -833,10 +843,10 @@
                             // Set Group Data for merged columns
                             $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
                             
-                            $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
+                             $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
                             $row.find('td:eq(4)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
                             
-                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, diffIcon)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
+                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
                             $row.find('td:eq(8)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
                             
                             $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');

@@ -14,7 +14,8 @@ class PurchaseRequisitionController extends Controller
         // Get totals for quick dashboard at the top
         $products = InventoryProduct::where('inv_t_product_detail.is_active', 1)
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'inv_t_product_detail.model_id')
-            ->select('inv_t_product_detail.*', 'ms.project_status')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
+            ->select('inv_t_product_detail.*', 'ms.project_status', 'u.code as unit_code')
             ->get();
         $stats = [
             'critical' => 0,
@@ -22,7 +23,8 @@ class PurchaseRequisitionController extends Controller
         ];
 
         foreach ($products as $p) {
-            $status = $this->calculateStockStatus($p->current_stock_qty, $p->min_stock, $p->pcs_per_unit, $p->product_status ?: $p->project_status);
+            $currentPCS = InventoryProduct::calculatePcs($p->current_stock_qty, $p->weight_kg, $p->pcs_per_unit, $p->unit_code);
+            $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status);
             if (isset($stats[$status])) {
                 $stats[$status]++;
             }
@@ -62,13 +64,15 @@ class PurchaseRequisitionController extends Controller
                 'inv_t_product_detail.min_stock',
                 'inv_t_product_detail.unit_per_car',
                 'inv_t_product_detail.updated_at',
-                'ms.project_status'
+                'ms.project_status',
+                'inv_t_product_detail.weight_kg'
             ])
             ->where('inv_t_product_detail.is_active', 1);
 
+        $currentPcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('inv_t_product_detail.current_stock_qty', 'inv_t_product_detail', 'inv_m_unit.name');
+
         // Filter for "Auto PR" (Only Warning and Danger)
-        $query->where(function($q) {
-            $currentPcsSql = "inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1)";
+        $query->where(function($q) use ($currentPcsSql) {
             $minSql = "inv_t_product_detail.min_stock";
             
             // Danger: < Min - 30
@@ -111,7 +115,6 @@ class PurchaseRequisitionController extends Controller
         // Status Filter
         if ($request->has('status') && !empty($request->status)) {
             $status = $request->status;
-            $currentPcsSql = "(inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1))";
             $minSql = "inv_t_product_detail.min_stock";
 
             if ($status === 'critical') {
@@ -122,10 +125,10 @@ class PurchaseRequisitionController extends Controller
             }
         }
 
-        $recordsFiltered = $query->count();
         $recordsTotal = InventoryProduct::where('is_active', 1)->count();
+        $recordsFiltered = $query->count();
 
-        // Ordering - Align with Blade: 0:No, 1:Part, 2:Spec, 3:Model/Cust, 4:Stock, 5:Min, 6:Shortage, 7:Status, 8:Action
+        // Ordering
         if ($request->has('order')) {
             $sortableColumns = [
                 1 => 'products.part_no',
@@ -141,13 +144,12 @@ class PurchaseRequisitionController extends Controller
             $colName = $sortableColumns[$colIndex] ?? 'shortage';
 
             if ($colName === 'shortage') {
-                $query->orderByRaw("(inv_t_product_detail.min_stock - (inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1))) {$dir}");
+                $query->orderByRaw("(inv_t_product_detail.min_stock - ({$currentPcsSql})) {$dir}");
             } else {
                 $query->orderBy($colName, $dir);
             }
         } else {
-            // Default sort: Shortage DESC (highest shortage first)
-            $query->orderByRaw("(inv_t_product_detail.min_stock - (inv_t_product_detail.current_stock_qty * COALESCE(inv_t_product_detail.pcs_per_unit, 1))) desc");
+            $query->orderByRaw("(inv_t_product_detail.min_stock - ({$currentPcsSql})) desc");
         }
 
         $data = $query->skip($request->input('start', 0))
@@ -155,7 +157,7 @@ class PurchaseRequisitionController extends Controller
             ->get();
 
         $formattedData = $data->map(function($item) {
-            $currentPCS = $item->current_stock_qty * ($item->pcs_per_unit ?? 1);
+            $currentPCS = InventoryProduct::calculatePcs($item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_code);
             $shortage = $item->min_stock - $currentPCS;
             
             return [
@@ -166,10 +168,11 @@ class PurchaseRequisitionController extends Controller
                 'model' => $item->model_name,
                 'material' => $item->spec_name . ' (' . (float)$item->thickness . 'x' . (float)$item->width . 'x' . (float)$item->length . ')',
                 'min_stock' => number_format($item->min_stock, 0),
+                'min_stock_val' => $item->min_stock,
                 'current_stock' => number_format($currentPCS, 0),
                 'shortage' => number_format($shortage, 0),
                 'shortage_raw' => $shortage,
-                'status' => $this->calculateStockStatus($item->current_stock_qty, $item->min_stock, $item->pcs_per_unit ?? 1, $item->product_status ?: $item->project_status),
+                'status' => InventoryProduct::calculateStockStatus($currentPCS, $item->min_stock, $item->product_status ?: $item->project_status),
                 'unit_name' => $item->unit_code,
                 'pcs_per_unit' => $item->pcs_per_unit ?? 1,
                 'unit_per_car' => $item->unit_per_car ?? 1,
@@ -183,24 +186,5 @@ class PurchaseRequisitionController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $formattedData
         ]);
-    }
-
-    private function calculateStockStatus($current, $min, $pcsPerUnit, $projectStatus = null)
-    {
-        $min = floatval($min);
-        $currentPCS = floatval($current) * $pcsPerUnit;
-
-        if ($min <= 0) return 'safe';
-
-        // Exclusion logic: Regular projects or Specific product statuses are always safe if not over
-        $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
-        if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
-            return 'safe';
-        }
-
-        if ($currentPCS < ($min - 30)) return 'critical';
-        if ($currentPCS < $min) return 'warning';
-
-        return 'safe';
     }
 }

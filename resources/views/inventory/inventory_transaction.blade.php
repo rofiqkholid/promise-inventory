@@ -35,7 +35,12 @@
                             <select name="product_detail_id" id="product_detail_id" class="premium-input select2" data-placeholder="Select Part via Search or Scanner..." required>
                                 <option value="">Select Part via Search or Scanner...</option>
                                 @foreach($products as $product)
-                                    <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}" data-pcs="{{ $product->pcs_per_unit ?? 1 }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                                    <option value="{{ $product->hash_id }}" 
+                                        data-partno="{{ $product->part_no }}" 
+                                        data-pcs="{{ $product->pcs_per_unit ?? 1 }}"
+                                        data-weight="{{ $product->weight_kg ?? 0 }}"
+                                        data-unit="{{ $product->unit_name ?? '' }}"
+                                    >{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -89,8 +94,8 @@
                         {{-- Qty & Date Row --}}
                         <div class="grid grid-cols-2 gap-5 mb-6">
                             <div>
-                                <label for="qty" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Qty (Unit) <span class="text-red-500">*</span></label>
-                                <input type="number" name="qty" id="qty" step="1" min="1" class="premium-input w-full" required placeholder="0">
+                                <label id="qtyLabel" for="qty" class="block mb-2 text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Qty (Unit) <span class="text-red-500">*</span></label>
+                                <input type="number" name="qty" id="qty" step="any" min="0.01" class="premium-input w-full" required placeholder="0">
                                 
                                 {{-- Calculator Preview --}}
                                 <div id="qtyPreview" class="mt-2 opacity-0 transition-opacity flex items-center gap-2 text-[10px]">
@@ -255,7 +260,12 @@
                         <select id="edit_product_detail_id" class="select2-modal" disabled>
                             <option value="">Select Material...</option>
                             @foreach($products as $product)
-                            <option value="{{ $product->hash_id }}">{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                            <option value="{{ $product->hash_id }}"
+                                data-partno="{{ $product->part_no }}" 
+                                data-pcs="{{ $product->pcs_per_unit ?? 1 }}"
+                                data-weight="{{ $product->weight_kg ?? 0 }}"
+                                data-unit="{{ $product->unit_name ?? '' }}"
+                            >{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                             @endforeach
                         </select>
                         <input type="hidden" name="product_detail_id" id="hidden_edit_product_detail_id">
@@ -564,6 +574,11 @@
                 return;
             }
 
+            if (!$('#qty').val() || $('#qty').val() <= 0) {
+                Swal.fire('Error', 'Quantity must be greater than 0', 'error');
+                return;
+            }
+
             let formData = $(this).serialize();
             
             $.ajax({
@@ -603,17 +618,39 @@
 
         // Live Qty Preview
         function updateQtyPreview() {
-            const qty = parseFloat($('#qty').val()) || 0;
+            const inputVal = parseFloat($('#qty').val()) || 0;
             const selectedProduct = $('#product_detail_id').find(':selected');
             const pcsPerUnit = parseFloat(selectedProduct.data('pcs')) || 0;
-            
-            if (qty > 0 && pcsPerUnit > 0) {
-                const totalPcs = qty * pcsPerUnit;
-                $('#calcResult').text(new Intl.NumberFormat().format(totalPcs));
-                $('#pcsInfo').text(pcsPerUnit);
-                $('#qtyPreview').removeClass('opacity-0');
+            const weightKg = parseFloat(selectedProduct.data('weight')) || 0;
+            const unitType = (selectedProduct.data('unit') || '').toLowerCase();
+            const isCoil = unitType.includes('coil');
+
+            if (isCoil) {
+                $('#qtyLabel').html('Qty (Kg) <span class="text-red-500">*</span>');
+                $('#qty').attr('step', '0.01').attr('min', '0.01');
+                
+                if (inputVal > 0 && weightKg > 0 && pcsPerUnit > 0) {
+                    const totalUnits = Math.floor(inputVal / weightKg);
+                    const totalPcs = totalUnits * pcsPerUnit;
+                    
+                    $('#calcResult').text(new Intl.NumberFormat().format(totalPcs));
+                    $('#pcsInfo').text(`${totalUnits} Stroke x ${pcsPerUnit}`);
+                    $('#qtyPreview').removeClass('opacity-0');
+                } else {
+                    $('#qtyPreview').addClass('opacity-0');
+                }
             } else {
-                $('#qtyPreview').addClass('opacity-0');
+                $('#qtyLabel').html('Qty (Unit) <span class="text-red-500">*</span>');
+                $('#qty').attr('step', '1').attr('min', '1');
+                
+                if (inputVal > 0 && pcsPerUnit > 0) {
+                    const totalPcs = inputVal * pcsPerUnit;
+                    $('#calcResult').text(new Intl.NumberFormat().format(totalPcs));
+                    $('#pcsInfo').text(pcsPerUnit);
+                    $('#qtyPreview').removeClass('opacity-0');
+                } else {
+                    $('#qtyPreview').addClass('opacity-0');
+                }
             }
         }
 

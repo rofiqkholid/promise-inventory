@@ -122,7 +122,7 @@
                             <option value="">All Status</option>
                             <option value="safe">Safe Stock</option>
                             <option value="warning">Warning</option>
-                            <option value="danger">Critical</option>
+                            <option value="critical">Critical</option>
                             <option value="over">Over Stock</option>
                         </select>
                     </div>
@@ -180,7 +180,7 @@
             </div>
             <div>
                 <div class="text-[9px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest mb-1">Critical</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['danger'] ?? 0) }}</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['critical'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -331,7 +331,7 @@
                         } else if (status === 'warning') {
                             indicatorClass = 'bg-amber-500';
                             textColorClass = 'text-amber-700 dark:text-amber-400';
-                        } else if (status === 'danger') {
+                        } else if (status === 'critical') {
                             indicatorClass = 'bg-red-500 animate-pulse';
                             textColorClass = 'text-red-700 dark:text-red-400';
                         } else if (status === 'over') {
@@ -402,7 +402,7 @@
                         render: function(data, type, row) {
                             if (type === 'display' && row.trial_status) {
                                 let badgeClass = '';
-                                if (row.trial_status === 'danger') badgeClass = 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50';
+                                if (row.trial_status === 'critical') badgeClass = 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50';
                                 else if (row.trial_status === 'warning') badgeClass = 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50';
 
                                 if (badgeClass) return `<span class="px-3 py-1.5 rounded-xs border ${badgeClass} text-[10px] font-bold uppercase tracking-widest inline-block">${data}</span>`;
@@ -461,7 +461,7 @@
             order: [[1, 'asc']], // Default sort by Part Information
             columns: columns,
             createdRow: function(row, data, dataIndex) {
-                if (data.stock_status === 'danger') {
+                if (data.stock_status === 'critical') {
                     $(row).addClass('bg-red-50 dark:bg-red-900/10');
                 } else if (data.stock_status === 'warning') {
                     $(row).addClass('bg-amber-50 dark:bg-amber-900/10');

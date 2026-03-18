@@ -92,4 +92,84 @@ class InventoryProduct extends Model
     {
         return $this->belongsTo(Revision::class, 'revision_id');
     }
+
+    /**
+     * Get the universal Raw SQL to convert stock / qty column to accurate total Pcs.
+     * Takes account of 'Coil' unit type which records stock in Kg.
+     */
+    public static function getPcsCalculationSql($qtyColumn = 'inv_t_product_detail.current_stock_qty', $tableAlias = 'inv_t_product_detail', $unitNameColumn = null)
+    {
+        $alias = $tableAlias ? $tableAlias . '.' : '';
+        $unitCheck = $unitNameColumn ?: "(SELECT name FROM inv_m_unit WHERE id = {$alias}unit_id)";
+        
+        return "
+            CASE 
+                WHEN LOWER({$unitCheck}) LIKE '%coil%' 
+                     AND ISNULL({$alias}weight_kg, 0) > 0 
+                THEN FLOOR({$qtyColumn} / {$alias}weight_kg) * COALESCE({$alias}pcs_per_unit, 1) 
+                ELSE ({$qtyColumn}) * COALESCE({$alias}pcs_per_unit, 1) 
+            END
+        ";
+    }
+
+    /**
+     * PHP implementation of the PCS calculation logic.
+     */
+    public static function calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName)
+    {
+        $qty = (float)$qty;
+        $weightKg = (float)$weightKg;
+        $pcsPerUnit = (float)($pcsPerUnit ?: 1);
+        $unitName = strtolower($unitName ?? '');
+
+        if (str_contains($unitName, 'coil') && $weightKg > 0) {
+            return floor($qty / $weightKg) * $pcsPerUnit;
+        }
+
+        return $qty * $pcsPerUnit;
+    }
+
+    /**
+     * Consolidated logic to determine stock status color/label.
+     */
+    public static function calculateStockStatus($currentPcs, $minStock, $projectStatus = null)
+    {
+        $minStock = (float)$minStock;
+        $currentPcs = (float)$currentPcs;
+
+        if ($minStock <= 0) return 'safe';
+
+        $maxStock = $minStock * 3;
+
+        if ($currentPcs > $maxStock) return 'over'; // Blue
+        
+        // Skip Warning/Critical for Regular projects or specific Oldstock overrides
+        $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
+        if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
+            return 'safe';
+        }
+
+        if ($currentPcs < ($minStock - 30)) return 'critical'; // Red
+        if ($currentPcs < $minStock) return 'warning'; // Yellow
+
+        return 'safe'; // Normal
+    }
+
+    /**
+     * Consolidated logic for trial items.
+     */
+    public static function calculateTrialStatus($usage, $limit, $pcsPerUnit)
+    {
+        $limit = (float)$limit;
+        $usage = (float)$usage;
+
+        if ($limit <= 0) return 'safe';
+
+        $usagePCS = $usage * (float)$pcsPerUnit;
+
+        if ($usagePCS > $limit) return 'critical';
+        if ($usagePCS > ($limit - 50)) return 'warning';
+
+        return 'safe';
+    }
 }

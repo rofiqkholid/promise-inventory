@@ -72,8 +72,9 @@ class StoController extends Controller
             // Calculate Variance Totals in Query
             $query->select('inv_t_sto_event.*')
                 ->addSelect([
-                    'net_pcs' => StoDetail::selectRaw('SUM(inv_t_sto_detail.diff_qty * inv_t_product_detail.pcs_per_unit)')
+                    'net_pcs' => StoDetail::selectRaw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('inv_t_sto_detail.diff_qty', 'inv_t_product_detail', 'u.name') . ")")
                         ->leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
+                        ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
                         ->whereColumn('inv_t_sto_detail.event_id', 'inv_t_sto_event.id'),
                     'net_amount' => StoDetail::selectRaw('SUM(inv_t_sto_detail.diff_qty * ISNULL(inv_t_product_detail.weight_kg, 0) * ISNULL(inv_t_product_detail.material_price, 0))')
                         ->leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
@@ -431,6 +432,7 @@ class StoController extends Controller
                 'diff_qty' => (float)$diff,
                 'diff_amount' => (float)$diffAmount,
                 'pcs_per_unit' => (float)$pcsPerUnit,
+                'weight_kg' => (float)$weightPerPcs,
                 'unit_code' => $unitCode,
                 'location_name' => $detail->location_name,
                 'reason_id' => $detail->reason_id,
@@ -527,7 +529,7 @@ class StoController extends Controller
             'success' => true,
             'data' => [
                 'product_id_hash' => $product->hash_id,
-                'part_no' => ($product->product->part_no ?? '-') . ' - ' . ($product->revision->code ?? ''),
+                'part_no' => ($product->product->part_no ?? '-') . ($product->revision ? ' - ' . $product->revision->code : ''),
                 'part_name' => $product->product->part_name ?? '-',
                 'unit' => $product->unit->code ?? 'PCS',
                 'system_qty' => $systemQty,
@@ -958,12 +960,13 @@ class StoController extends Controller
 
         $pcsStats = DB::table('inv_t_sto_detail as sd')
             ->leftJoin('inv_t_product_detail as pd', 'sd.product_detail_id', '=', 'pd.id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'pd.unit_id')
             ->where('sd.event_id', $stoEvent->id)
             ->select(
-                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot > 0 THEN (sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.pcs_per_unit, 1) ELSE 0 END) as inc_pcs'),
-                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot < 0 THEN (sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.pcs_per_unit, 1) ELSE 0 END) as dec_pcs'),
-                DB::raw('SUM((sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.pcs_per_unit, 1)) as net_pcs'),
-                DB::raw('SUM(sd.real_qty_input * ISNULL(pd.pcs_per_unit, 1)) as total_recorded_pcs')
+                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot > 0 THEN ' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('(sd.real_qty_input - sd.system_qty_snapshot)', 'pd', 'u.name') . ' ELSE 0 END) as inc_pcs'),
+                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot < 0 THEN ' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('(sd.system_qty_snapshot - sd.real_qty_input)', 'pd', 'u.name') . ' ELSE 0 END) as dec_pcs'),
+                DB::raw('SUM(' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('(sd.real_qty_input - sd.system_qty_snapshot)', 'pd', 'u.name') . ') as net_pcs'),
+                DB::raw('SUM(' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('sd.real_qty_input', 'pd', 'u.name') . ') as total_recorded_pcs')
             )
             ->first();
 

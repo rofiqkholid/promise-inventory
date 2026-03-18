@@ -22,7 +22,16 @@ class InventoryTransactionController extends Controller
         
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
-            ->select('inv_t_product_detail.id', 'products.part_no', 'products.part_name', 'r.code as revision', 'inv_t_product_detail.pcs_per_unit')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
+            ->select(
+                'inv_t_product_detail.id', 
+                'products.part_no', 
+                'products.part_name', 
+                'r.code as revision', 
+                'inv_t_product_detail.pcs_per_unit',
+                'inv_t_product_detail.weight_kg',
+                'u.name as unit_name'
+            )
             ->where('inv_t_product_detail.is_active', 1)
             ->orderBy('products.part_no')
             ->get();
@@ -198,7 +207,7 @@ class InventoryTransactionController extends Controller
         $request->validate([
             'product_detail_id' => 'required|exists:inv_t_product_detail,id',
             'transaction_date' => 'required|date',
-            'qty' => 'required|integer|min:1',
+            'qty' => 'required|numeric|min:0.01',
             'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
             'user_id' => 'required',
             'remark' => 'nullable|string',
@@ -303,7 +312,7 @@ class InventoryTransactionController extends Controller
         $request->validate([
             'product_detail_id' => 'required|exists:inv_t_product_detail,id',
             'transaction_date' => 'required|date',
-            'qty' => 'required|integer|min:1',
+            'qty' => 'required|numeric|min:0.01',
             'transaction_category_id' => 'required|exists:inv_m_transaction_category,id',
             'remark' => 'nullable|string',
         ]);

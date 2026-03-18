@@ -270,7 +270,7 @@ $(function() {
                         'safe': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50'
                     };
                     const colorClass = config[data] || 'bg-gray-50 text-gray-600 border-gray-100';
-                    const label = data.toUpperCase();
+                    const label = (data || '').toUpperCase();
                     
                     return `<span class="px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-widest border ${colorClass}">${label}</span>`;
                 }
@@ -328,9 +328,9 @@ $(function() {
         
         let statusHtml = '';
         if (data.status === 'critical') {
-            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-black rounded border-2 bg-red-50 text-red-700 border-red-200 uppercase tracking-widest italic">CRITICAL</span>`;
+            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-black rounded border-2 bg-red-50 text-red-700 border-red-200 uppercase tracking-widest italic">${data.status.toUpperCase()}</span>`;
         } else {
-            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-black rounded border-2 bg-amber-50 text-amber-700 border-amber-200 uppercase tracking-widest italic">WARNING</span>`;
+            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-black rounded border-2 bg-amber-50 text-amber-700 border-amber-200 uppercase tracking-widest italic">${data.status.toUpperCase()}</span>`;
         }
         $('#det_status_badge').html(statusHtml);
 
