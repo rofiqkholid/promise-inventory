@@ -64,7 +64,7 @@
     </div>
 </div>
 
-<div id="permissionModal" tabindex="-1" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+<div id="permissionModal" tabindex="-1" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-xl">
         <div class="bg-white dark:bg-gray-800 rounded-xs overflow-hidden border border-slate-200 dark:border-gray-600">
             <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-slate-200 dark:border-gray-600 flex justify-between items-center">

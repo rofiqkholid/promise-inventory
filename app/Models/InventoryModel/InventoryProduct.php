@@ -172,4 +172,36 @@ class InventoryProduct extends Model
 
         return 'safe';
     }
+
+    /**
+     * Logic to calculate weight in Kg.
+     */
+    public static function calculateWeight($unitName, $thickness, $width, $length, $length2, $pitch, $density)
+    {
+        $unitNameLower = strtolower($unitName ?? '');
+        $thickness = (float)$thickness;
+        $width = (float)$width;
+        $length = (float)$length;
+        $length2 = (float)$length2;
+        $pitch = (float)$pitch;
+        $density = (float)($density ?: 7.85);
+
+        if (str_contains($unitNameLower, 'sheet')) {
+            return ($thickness * $width * $length * $density) / 1000000;
+        } elseif (str_contains($unitNameLower, 'coil')) {
+            return ($thickness * $width * $pitch * $density) / 1000000;
+        } elseif (str_contains($unitNameLower, 'trapezoid')) {
+            return ($thickness * $width * (($length + $length2) / 2) * $density) / 1000000;
+        }
+
+        return ($thickness * $width * $length * $density) / 1000000;
+    }
+
+    /**
+     * Logic to calculate default minimum stock.
+     */
+    public static function calculateMinStock($unitPerCar, $days = 90)
+    {
+        return (int)($unitPerCar * $days);
+    }
 }

@@ -374,7 +374,7 @@
 <!-- Finalize Modal & Reject Modal UI logic remains the same, but styled consistently -->
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm transition-all">
+<div id="rejectModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 transition-all">
     <div class="bg-white dark:bg-gray-800 rounded-xs shadow-xl w-full max-w-md overflow-hidden border border-slate-200 dark:border-gray-700">
         <div class="px-6 py-4 bg-rose-50 dark:bg-rose-900/20 border-b border-rose-100 dark:border-rose-800 flex justify-between items-center">
             <h3 class="font-bold text-rose-900 dark:text-rose-400 flex items-center gap-3 text-sm uppercase tracking-widest">
@@ -1076,7 +1076,7 @@
         });
 
         const rowHtml = `
-            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700 shadow-sm'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30 relative">
+            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30 relative">
                 <input type="hidden" class="row-detail-hash" value="${entry ? entry.detail_id_hash : ''}">
                 
                 ${entry ? `

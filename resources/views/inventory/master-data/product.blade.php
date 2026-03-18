@@ -342,8 +342,40 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Select Excel File</label>
-                        <input type="file" name="file" id="file" accept=".xlsx, .xls, .csv" required class="block w-full text-xs text-gray-900 border border-slate-200 rounded-xs cursor-pointer bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 focus:outline-none file:mr-4 file:py-2.5 file:px-4 file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-slate-800 dark:file:text-primary-400 transition-all">
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">1. Select Excel File <span class="text-red-500">*</span></label>
+                        <input type="file" name="file" id="import_file" accept=".xlsx, .xls, .csv" required class="block w-full text-xs text-gray-900 border border-slate-200 rounded-xs cursor-pointer bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400 focus:outline-none file:mr-4 file:py-2.5 file:px-4 file:border-0 file:text-[10px] file:font-bold file:uppercase file:tracking-widest file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-slate-800 dark:file:text-primary-400 transition-all">
+                        <div id="file_loading" class="hidden mt-2 text-[10px] text-primary-600 font-bold animate-pulse"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Detecting worksheets...</div>
+                    </div>
+
+                    <div id="import_next_steps" class="hidden space-y-6 animate-fadeIn">
+                        {{-- SHEET NAME --}}
+                        <div>
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">2. Select Worksheet <span class="text-red-500">*</span></label>
+                            <select name="sheet_name" id="sheet_name" required class="select2-import w-full">
+                                <option value="">Select Worksheet...</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{-- CUSTOMER --}}
+                            <div>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">3. Target Customer <span class="text-red-500">*</span></label>
+                                <select name="customer_id" id="import_customer_id" required class="select2-import w-full">
+                                    <option value="">Select Customer...</option>
+                                    @foreach($customers as $c)
+                                        <option value="{{ $c->id }}">{{ $c->code }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- MODEL --}}
+                            <div>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">4. Target Model <span class="text-red-500">*</span></label>
+                                <select name="model_id" id="import_model_id" required class="select2-import w-full" disabled>
+                                    <option value="">Select Model...</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div id="importResult" class="hidden text-[10px] font-medium p-4 rounded-xs border"></div>
                 </div>
@@ -359,6 +391,20 @@
 </div>
 
 @endsection
+
+@push('styles')
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    #importResult {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -378,6 +424,7 @@ $(function() {
                 products: '{{ route("inventory.master.product.getProducts") }}',
                 export: '{{ route("inventory.master.product.exportExcel") }}',
                 import: '{{ route("inventory.master.product.importExcel") }}',
+                sheetNames: '{{ route("inventory.master.product.getSheetNames") }}',
                 base: '{{ url("inventory/master/product") }}'
             }
         },
@@ -414,6 +461,15 @@ $(function() {
             this.bindFilterEvents();
             this.bindFormEvents();
             this.bindTableEvents();
+            this.initImportSelect2();
+        },
+
+        initImportSelect2: function() {
+            $('.select2-import').select2({
+                dropdownParent: $('#importModal'),
+                width: '100%',
+                placeholder: 'Select...'
+            });
         },
 
         /**
@@ -562,8 +618,56 @@ $(function() {
             
             $('#btnImport').on('click', () => {
                 $('#importForm')[0].reset();
+                $('#import_customer_id, #import_model_id, #sheet_name').val(null).trigger('change');
+                $('#import_model_id').prop('disabled', true);
+                $('#import_next_steps').addClass('hidden');
                 $('#importResult').addClass('hidden').removeClass('bg-red-50 text-red-700 border-red-200 bg-green-50 text-green-700 border-green-200').html('');
                 this.ui.showModal($('#importModal'));
+            });
+
+            $('#import_file').on('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('_token', ProductApp.config.csrfToken);
+
+                $('#file_loading').removeClass('hidden');
+                $('#import_next_steps').addClass('hidden');
+
+                $.ajax({
+                    url: ProductApp.config.routes.sheetNames,
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: (res) => {
+                        const $sheet = $('#sheet_name');
+                        $sheet.empty().append('<option value="">Select Worksheet...</option>');
+                        res.sheets.forEach(s => $sheet.append(new Option(s, s)));
+                        $sheet.trigger('change');
+                        $('#import_next_steps').removeClass('hidden');
+                    },
+                    error: (xhr) => {
+                        window.showToast(xhr.responseJSON?.message || 'Failed to read file sheets', 'error');
+                    },
+                    complete: () => {
+                        $('#file_loading').addClass('hidden');
+                    }
+                });
+            });
+
+            $('#import_customer_id').on('change', function() {
+                const cid = $(this).val();
+                const $model = $('#import_model_id');
+                $model.prop('disabled', true).empty().append('<option value="">Select Model...</option>').trigger('change');
+                if(!cid) return;
+                
+                $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: cid }, function(models) {
+                    models.forEach(m => $model.append(new Option(m.name, m.id)));
+                    $model.prop('disabled', false).trigger('change');
+                });
             });
 
             $('#importForm').on('submit', (e) => this.handleImportFormSubmit(e));
@@ -816,16 +920,16 @@ $(function() {
                 success: (res) => {
                     this.state.table.ajax.reload();
                     $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
-                        .addClass('bg-green-50 text-green-700 border-green-200')
-                        .html(`<i class="fa-solid fa-check-circle mr-1 text-base relative top-0.5"></i> ${res.message}`);
-                    window.showToast('Import completed', 'success');
+                        .addClass('bg-emerald-50 text-emerald-900 border-emerald-100 p-5 rounded-sm')
+                        .html(res.message);
+                    window.showToast('Import completed successfully', 'success');
                 },
                 error: (xhr) => {
                     const msg = xhr.responseJSON?.message || 'Upload failed.';
-                    $('#importResult').removeClass('hidden bg-green-50 text-green-700 border-green-200')
-                        .addClass('bg-red-50 text-red-700 border-red-200')
-                        .html(`<div class="flex items-start gap-2"><i class="fa-solid fa-triangle-exclamation text-base mt-0.5"></i> <div>${msg}</div></div>`);
-                    window.showToast('Import failed', 'error');
+                    $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
+                        .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
+                        .html(msg);
+                    window.showToast('Import failed - please check errors', 'error');
                 },
                 complete: () => {
                     btn.prop('disabled', false).html(originalText);

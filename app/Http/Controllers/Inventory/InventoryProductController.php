@@ -24,25 +24,10 @@ class InventoryProductController extends Controller
      */
     public function index()
     {
-        // Only show customers that have products in the master data
-        $customers = DB::table('customers as c')
-            ->join('products as p', 'p.customer_id', '=', 'c.id')
-            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
-            ->select('c.id', 'c.code')
-            ->where('p.is_delete', 0)
-            ->where('pd.is_active', 1)
-            ->distinct()
-            ->orderBy('c.code')
-            ->get();
-
-        // Only show models that have products in the master data
-        $models = DB::table('models as m')
-            ->join('inv_t_product_detail as pd', 'pd.model_id', '=', 'm.id')
-            ->select(DB::raw('MIN(m.id) as id'), 'm.name')
-            ->where('pd.is_active', 1)
-            ->groupBy('m.name')
-            ->orderBy('m.name')
-            ->get();
+        // For filters (Keep existing logic or show all)
+        // User asked for target selection, so they need all customers/models
+        $customers = DB::table('customers')->orderBy('code')->get();
+        $models = DB::table('models')->orderBy('name')->get();
 
         return view('inventory.master-data.product', compact('customers', 'models'));
     }
@@ -230,7 +215,15 @@ class InventoryProductController extends Controller
      */
     public function downloadTemplate()
     {
-        return Excel::download(new \App\Exports\InventoryProductTemplateExport, 'Inventory_Product_Import_Template.xlsx');
+        $path = storage_path('app/templates/Inventory_Product_Import_Template.xlsx');
+        
+        // If user has uploaded their manual file, prioritize it
+        if (file_exists($path)) {
+            return response()->download($path, 'Inventory_Product_Import_Template.xlsx');
+        }
+
+        // Fallback to auto-generated one if static file not found
+        return Excel::download(new \App\Exports\InventoryProductTemplateExport, 'Inventory_Product_Template_Standard.xlsx');
     }
 
     /**
@@ -240,27 +233,88 @@ class InventoryProductController extends Controller
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:10240', // 10MB max
+            'customer_id' => 'required',
+            'model_id' => 'required',
+            'sheet_name' => 'required|string|max:50',
         ]);
 
-        $import = new \App\Imports\InventoryProductImport();
+        $import = new \App\Imports\InventoryProductImport(
+            $request->customer_id, 
+            $request->model_id, 
+            $request->sheet_name
+        );
         Excel::import($import, $request->file('file'));
 
         if (!empty($import->getErrors())) {
-            $errorMsg = implode('<br>', array_slice($import->getErrors(), 0, 10)); // return top 10 errors
-            if (count($import->getErrors()) > 10) {
-                $errorMsg .= '<br>... and ' . (count($import->getErrors()) - 10) . ' more errors.';
+            $errorCount = count($import->getErrors());
+            $errorMsg = "<div class='text-rose-600 font-bold mb-2 uppercase text-[9px]'><i class='fa-solid fa-triangle-exclamation mr-1'></i> Import blocked by {$errorCount} errors:</div>";
+            $errorMsg .= "<ul class='list-inside space-y-1 text-gray-600 font-medium'>";
+            foreach (array_slice($import->getErrors(), 0, 15) as $err) {
+                $errorMsg .= "<li>• {$err}</li>";
+            }
+            $errorMsg .= "</ul>";
+            if ($errorCount > 15) {
+                $errorMsg .= "<div class='mt-2 font-bold text-gray-400 italic'>... and " . ($errorCount - 15) . " more errors.</div>";
             }
             
             return response()->json([
                 'success' => false,
-                'message' => "Import processed with errors.<br><br><b>Success:</b> {$import->getSuccessCount()} rows.<br><b>Errors:</b><br>{$errorMsg}"
+                'message' => $errorMsg
             ], 422);
+        }
+
+        $log = $import->getSuccessLog();
+        $totalCreated = count($log['created']);
+        $totalUpdated = count($log['updated']);
+        $unchanged = $log['unchangedCount'];
+        $totalProcessed = $totalCreated + $totalUpdated + $unchanged;
+        
+        $successMsg = "<div class='mb-3 font-bold text-emerald-700 uppercase drop-shadow-sm'><i class='fa-solid fa-circle-check mr-1.5'></i> Processed {$totalProcessed} revisions!</div>";
+        
+        if ($totalCreated > 0) {
+            $successMsg .= "<div class='mb-3'><span class='inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-px text-[9px] font-bold mr-2 uppercase'>New Data ({$totalCreated})</span>";
+            $successMsg .= "<div class='mt-1 text-gray-600 font-medium pl-2 leading-relaxed'>" . implode(', ', array_slice($log['created'], 0, 30)) . ($totalCreated > 30 ? '...' : '') . "</div></div>";
+        }
+        
+        if ($totalUpdated > 0) {
+            $successMsg .= "<div class='mb-3'><span class='inline-block px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-px text-[9px] font-bold mr-2 uppercase'>Updated ({$totalUpdated})</span>";
+            $successMsg .= "<ul class='mt-1 text-gray-600 font-medium pl-4 list-disc list-outside space-y-0.5 max-h-48 overflow-y-auto custom-scrollbar'>";
+            foreach ($log['updated'] as $item) {
+                $successMsg .= "<li>{$item}</li>";
+            }
+            $successMsg .= "</ul></div>";
+        }
+
+        if ($unchanged > 0) {
+            $successMsg .= "<div class='text-[10px] text-gray-400 font-bold italic'><i class='fa-solid fa-info-circle mr-1'></i> {$unchanged} other revisions already up-to-date (no changes needed).</div>";
         }
 
         return response()->json([
             'success' => true,
-            'message' => "Import completed successfully. {$import->getSuccessCount()} rows imported.",
+            'message' => $successMsg,
         ]);
+    }
+
+    /**
+     * Get sheet names from uploaded file.
+     */
+    public function getSheetNames(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        try {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($request->file('file')->getRealPath());
+            $sheetNames = $spreadsheet->getSheetNames();
+
+            return response()->json([
+                'success' => true,
+                'sheets' => $sheetNames
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
     }
 
     /**

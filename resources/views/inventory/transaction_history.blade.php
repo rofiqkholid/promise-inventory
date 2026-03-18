@@ -80,7 +80,7 @@
     </div>
 
     {{-- History Table Panel --}}
-    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden flex flex-col shadow-sm">
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden flex flex-col">
         <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
             <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
                 <i class="fa-solid fa-table-list mr-3 text-primary-600"></i> History Data
