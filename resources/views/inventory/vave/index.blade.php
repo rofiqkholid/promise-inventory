@@ -1042,6 +1042,9 @@ $(function() {
         html += buildComputedRow('Price/kg (IDR)', i => parseFloat(i.material_price || 0), '', 0, false);
         html += buildComputedRow('Cost (IDR)', i => (parseFloat(i.weight_kg||0) * parseFloat(i.material_price || 0)), '', 0, false); 
 
+        html += buildSectionRow('Other Information');
+        html += buildRow('Remark', item => item.remark ? item.remark : '-');
+
         let statusRow = `<tr class="bg-gray-50/50 hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs border-t-2 border-gray-200 dark:border-gray-600 group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Status</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-gray-50 dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;
         let rateRow = `<tr class="bg-white hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Rate</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;
 
