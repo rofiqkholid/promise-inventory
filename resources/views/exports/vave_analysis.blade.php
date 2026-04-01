@@ -218,6 +218,19 @@
             @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->weight_kg * $rev->material_price, 0) }}</td> @endif @endforeach
         </tr>
 
+        {{-- Section: Additional Info --}}
+        <tr>
+            <td colspan="{{ $totalCols }}" style="font-weight: bold; background-color: #f3f4f6; border: 1px solid #000000; padding: 5px;">4. ADDITIONAL INFO</td>
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000000;">Remark</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ $baseRfq->remark ?? '-' }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ $latestRev->remark ?? '-' }}</td>
+            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">-</td>
+            @foreach($rfqHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ $r->remark ?? '-' }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ $rev->remark ?? '-' }}</td> @endif @endforeach
+        </tr>
+
         {{-- Impact Summary --}}
         <tr>
             <td colspan="{{ $totalCols }}"></td>

@@ -38,9 +38,17 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
 
         if ($selectedActualId) {
             // Revisions uses 'inv_t_product_detail' joined with 'inv_m_revision', 'revision' relation has the code
-            $latestRev = $revisions->first(function($rev) use ($selectedActualId) {
+            $latestRevIndex = $revisions->search(function($rev) use ($selectedActualId) {
                 return $rev->revision && $rev->revision->code == $selectedActualId;
-            }) ?? $revisions->first();
+            });
+
+            if ($latestRevIndex !== false) {
+                $latestRev = $revisions->pull($latestRevIndex);
+                $revisions->prepend($latestRev);
+                $revisions = $revisions->values();
+            } else {
+                $latestRev = $revisions->first();
+            }
         } else {
             $latestRev = $revisions->first();
         }
