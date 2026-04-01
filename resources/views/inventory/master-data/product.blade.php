@@ -330,12 +330,9 @@
                         <div class="flex items-start gap-3">
                             <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
                             <div>
-                                <h4 class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">How to format your Excel</h4>
-                                <ul class="text-[10px] text-blue-600/80 dark:text-blue-400/80 space-y-1 mt-2 font-medium">
-                                    <li>• Columns marked with <span class="font-bold text-red-500 leading-none">*</span> are required.</li>
-                                    <li>• IDs are managed automatically based on the text you input. Ensure the `Customer`, `Model`, `Revision`, etc. match exactly what's in the system.</li>
-                                </ul>
-                                <a href="{{ route('inventory.master.product.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest transition-all shadow-sm">
+                                <h4 class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">Standard Template</h4>
+                                <p class="text-[10px] text-blue-600/80 dark:text-blue-400/80 font-medium leading-relaxed">Please use the official excel template to ensure all data is correctly mapped. Download the latest version below:</p>
+                                <a href="{{ route('inventory.master.product.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest transition-all shadow-sm active:scale-95">
                                     <i class="fa-solid fa-download"></i> Download Template
                                 </a>
                             </div>

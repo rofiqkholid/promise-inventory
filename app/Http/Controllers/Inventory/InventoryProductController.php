@@ -24,10 +24,23 @@ class InventoryProductController extends Controller
      */
     public function index()
     {
-        // For filters (Keep existing logic or show all)
-        // User asked for target selection, so they need all customers/models
-        $customers = DB::table('customers')->orderBy('code')->get();
-        $models = DB::table('models')->orderBy('name')->get();
+        // For filters: Only show customers and models that are actually in inv_t_product_detail
+        $customers = DB::table('customers as c')
+            ->join('products as p', 'p.customer_id', '=', 'c.id')
+            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+            ->where('pd.is_active', 1)
+            ->select('c.id', 'c.code')
+            ->distinct()
+            ->orderBy('c.code')
+            ->get();
+
+        $models = DB::table('models as m')
+            ->join('inv_t_product_detail as pd', 'pd.model_id', '=', 'm.id')
+            ->where('pd.is_active', 1)
+            ->select(DB::raw('MIN(m.id) as id'), 'm.name')
+            ->groupBy('m.name')
+            ->orderBy('m.name')
+            ->get();
 
         return view('inventory.master-data.product', compact('customers', 'models'));
     }
@@ -196,6 +209,14 @@ class InventoryProductController extends Controller
             $model = DB::table('models')->where('id', $request->model_id)->first();
             if ($model) {
                 $modelName = $model->name;
+
+                // If customer is not filtered, fetch it from model association
+                if (!$customerCode) {
+                    $customer = DB::table('customers')->where('id', $model->customer_id)->first();
+                    if ($customer) {
+                        $customerCode = $customer->code;
+                    }
+                }
             }
         }
 
@@ -215,7 +236,7 @@ class InventoryProductController extends Controller
      */
     public function downloadTemplate()
     {
-        $path = storage_path('app/templates/Inventory_Product_Import_Template.xlsx');
+        $path = base_path('app/templates/Inventory_Product_Import_Template.xlsx');
         
         // If user has uploaded their manual file, prioritize it
         if (file_exists($path)) {
@@ -409,7 +430,7 @@ class InventoryProductController extends Controller
     public function getDropdownData()
     {
         return response()->json([
-            'customers' => DB::table('customers')->select('id', 'code')->orderBy('code')->get(),
+            'customers' => $this->getCustomers(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::select('id', 'code', 'name')->get(),
             'ranks' => Rank::select('id', 'code', 'description')->get(),
@@ -419,9 +440,13 @@ class InventoryProductController extends Controller
 
     public function getCustomers()
     {
-        return DB::table('customers')
-            ->select('id', 'code')
-            ->orderBy('code')
+        return DB::table('customers as c')
+            ->join('products as p', 'p.customer_id', '=', 'c.id')
+            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+            ->where('pd.is_active', 1)
+            ->select('c.id', 'c.code')
+            ->distinct()
+            ->orderBy('c.code')
             ->get();
     }
 

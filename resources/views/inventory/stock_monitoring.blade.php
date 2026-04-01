@@ -575,7 +575,10 @@
 
             $.ajax({
                 url: "{{ route('inventory.master.product.getModels') }}",
-                data: { customer_id: customerId },
+                data: { 
+                    customer_id: customerId,
+                    for_filter: 1 
+                },
                 success: function(data) {
                     modelSelect.empty().append('<option value="">All Models</option>');
                     data.forEach(function(model) {

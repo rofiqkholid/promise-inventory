@@ -42,14 +42,24 @@ class StockMonitoringController extends Controller
             }
         }
 
-        // Get Customers for Filter
-        $customers = DB::table('customers')->select('id', 'code', 'name')->orderBy('code')->get();
-
-        // Get Project Statuses for Filter
-        $project_statuses = DB::table('inv_m_model_status')
-            ->whereNotNull('project_status')
+        // Get Customers for Filter (Only those in product master)
+        $customers = DB::table('customers as c')
+            ->join('products as p', 'p.customer_id', '=', 'c.id')
+            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+            ->where('pd.is_active', 1)
+            ->select('c.id', 'c.code', 'c.name')
             ->distinct()
-            ->pluck('project_status');
+            ->orderBy('c.code')
+            ->get();
+
+        // Get Project Statuses for Filter (Only for models in master)
+        $project_statuses = DB::table('inv_m_model_status as ms')
+            ->join('inv_t_product_detail as pd', 'pd.model_id', '=', 'ms.model_id')
+            ->where('pd.is_active', 1)
+            ->whereNotNull('ms.project_status')
+            ->distinct()
+            ->orderBy('ms.project_status')
+            ->pluck('ms.project_status');
 
         return view('inventory.stock_monitoring', compact('categories', 'stats', 'customers', 'project_statuses'));
     }
@@ -730,6 +740,14 @@ class StockMonitoringController extends Controller
             $model = DB::table('models')->where('id', $request->model_id)->first();
             if ($model) {
                 $modelName = $model->name;
+                
+                // If customer is not filtered, fetch it from model association
+                if (!$customerCode) {
+                    $customer = DB::table('customers')->where('id', $model->customer_id)->first();
+                    if ($customer) {
+                        $customerCode = $customer->code;
+                    }
+                }
             }
         }
 
