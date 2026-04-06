@@ -36,7 +36,8 @@
                 <div class="max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-50/50 dark:bg-gray-900/50 p-4">
                     @php
                         $criticalItems = $stockAlerts->where('status', 'Critical');
-                        $warningItems = $stockAlerts->where('status', 'Warning');
+                        $lowStockItems = $stockAlerts->where('status', 'Warning');
+                        $overstockItems = $stockAlerts->where('status', 'Over');
                     @endphp
 
                     <div class="space-y-4">
@@ -93,14 +94,14 @@
                                 </div>
                             @endif
 
-                            @if(count($warningItems) > 0)
+                            @if(count($lowStockItems) > 0)
                                 <div class="mt-6">
                                     <div class="flex items-center gap-3 mb-3">
-                                        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-xs border border-amber-200 dark:border-amber-800">Overstock</span>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-1 rounded-xs border border-amber-200 dark:border-amber-800">Low Stock</span>
                                         <div class="h-px flex-1 bg-amber-200 dark:bg-amber-900/30"></div>
                                     </div>
                                     <div class="space-y-2">
-                                        @foreach($warningItems as $item)
+                                        @foreach($lowStockItems as $item)
                                         <a href="{{ route('inventory.stockMonitoring') }}?search={{ urlencode($item->part_no) }}"
                                            class="block p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-amber-300 dark:hover:border-amber-700 transition-colors group"
                                            title="Click to view in Stock Monitoring">
@@ -121,6 +122,48 @@
                                                     <div class="text-right">
                                                         <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Stock</div>
                                                         <div class="text-sm font-bold text-amber-600 dark:text-amber-400 tabular-nums leading-none">{{ number_format($item->current_stock_qty) }}</div>
+                                                    </div>
+                                                    <div class="w-px h-6 bg-slate-200 dark:bg-gray-600"></div>
+                                                    <div class="text-right">
+                                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Min</div>
+                                                        <div class="text-sm font-bold text-slate-700 dark:text-gray-300 tabular-nums leading-none">{{ number_format($item->min_stock) }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if(count($overstockItems) > 0)
+                                <div class="mt-6">
+                                    <div class="flex items-center gap-3 mb-3">
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400 bg-primary-100 dark:bg-primary-900/30 px-2 py-1 rounded-xs border border-primary-200 dark:border-primary-800">Overstock</span>
+                                        <div class="h-px flex-1 bg-primary-200 dark:bg-primary-900/30"></div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        @foreach($overstockItems as $item)
+                                        <a href="{{ route('inventory.stockMonitoring') }}?search={{ urlencode($item->part_no) }}"
+                                           class="block p-3 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group"
+                                           title="Click to view in Stock Monitoring">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="text-xs font-bold text-slate-900 dark:text-white tracking-tight truncate group-hover:text-primary-600 transition-colors">
+                                                            {{ $item->part_no }}{{ $item->revision ? ' - ' . $item->revision : '' }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 dark:text-gray-400">
+                                                        <span class="font-semibold uppercase tracking-wide">{{ $item->customer_code }}</span>
+                                                        <span class="text-slate-300 dark:text-gray-600">|</span>
+                                                        <span class="font-medium">{{ $item->model_name }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-3 bg-slate-50 dark:bg-gray-700/50 px-3 py-1.5 rounded border border-slate-100 dark:border-gray-700">
+                                                    <div class="text-right">
+                                                        <div class="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Stock</div>
+                                                        <div class="text-sm font-bold text-primary-600 dark:text-primary-400 tabular-nums leading-none">{{ number_format($item->current_stock_qty) }}</div>
                                                     </div>
                                                     <div class="w-px h-6 bg-slate-200 dark:bg-gray-600"></div>
                                                     <div class="text-right">

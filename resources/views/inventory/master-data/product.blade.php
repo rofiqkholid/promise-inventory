@@ -289,7 +289,7 @@
                                     <option value="">No Remark</option>
                                     <option value="Drawing Change">Drawing Change</option>
                                     <option value="Damage">Damage</option>
-                                    <option value="Under">Under</option>
+                                    <!-- <option value="Under">Under</option> -->
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
@@ -685,8 +685,20 @@ $(function() {
         },
 
         bindTableEvents: function() {
-            $(document).on('click', '.edit-button', e => this.showEditModal($(e.currentTarget).data('id')));
-            $(document).on('click', '.duplicate-button', e => this.showDuplicateModal($(e.currentTarget).data('id')));
+            $(document).on('click', '.edit-button', e => {
+                const btn = $(e.currentTarget);
+                const originalIcon = btn.html();
+                this.ui.setBtnLoading(btn);
+                this.showEditModal(btn.data('id'), btn, originalIcon);
+            });
+
+            $(document).on('click', '.duplicate-button', e => {
+                const btn = $(e.currentTarget);
+                const originalIcon = btn.html();
+                this.ui.setBtnLoading(btn);
+                this.showDuplicateModal(btn.data('id'), btn, originalIcon);
+            });
+
             $(document).on('click', '.print-button', e => window.open(`${this.config.routes.base}/${$(e.currentTarget).data('id')}/print`, '_blank'));
             $(document).on('click', '.delete-button', e => {
                 this.state.deleteId = $(e.currentTarget).data('id');
@@ -741,23 +753,24 @@ $(function() {
             this.ui.showModal(this.elements.formModal);
         },
 
-        showEditModal: function(id) {
+        showEditModal: function(id, btn, originalIcon) {
             this.state.isEditMode = true;
             this.state.isDuplicateMode = false;
             this.ui.resetForm('Edit Inventory Product', 'PUT', `${this.config.routes.base}/${id}`);
-            this.loadProductData(id);
+            this.loadProductData(id, false, btn, originalIcon);
         },
 
-        showDuplicateModal: function(id) {
+        showDuplicateModal: function(id, btn, originalIcon) {
             this.state.isEditMode = false;
             this.state.isDuplicateMode = true;
             this.ui.resetForm('Duplicate Inventory Product', 'POST', this.config.routes.store);
             this.ui.toggleDuplicateMode(true);
-            this.loadProductData(id, true);
+            this.loadProductData(id, true, btn, originalIcon);
         },
 
-        loadProductData: function(id, isDuplicate = false) {
-            $.get(`${this.config.routes.base}/${id}`, (data) => {
+        loadProductData: function(id, isDuplicate = false, btn = null, originalIcon = null) {
+            $.get(`${this.config.routes.base}/${id}`)
+              .done((data) => {
                 this.elements.customerSelect.val(data.product.customer_id).trigger('change');
                 
                 this.state.modelLoadPromise.then(() => {
@@ -795,7 +808,11 @@ $(function() {
                     this.ui.showModal(this.elements.formModal);
                     if (isDuplicate) window.showToast('Please select a NEW model to finish duplication.', 'info');
                 });
-            });
+              })
+              .fail((xhr) => this.handleAjaxError(xhr))
+              .always(() => {
+                  if (btn) this.ui.unsetBtnLoading(btn, originalIcon);
+              });
         },
 
         handleFormCustomerChange: function(cid) {
@@ -1010,6 +1027,8 @@ $(function() {
          * UI UTILITIES
          */
         ui: {
+            setBtnLoading: b => b.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i>'),
+            unsetBtnLoading: (b, i) => b.prop('disabled', false).html(i),
             showModal: m => m.removeClass('hidden').addClass('flex'),
             hideModal: m => m.addClass('hidden').removeClass('flex'),
             clearErrors: () => $('[id^="error-"]').addClass('hidden').text(''),
