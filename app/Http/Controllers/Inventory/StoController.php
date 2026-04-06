@@ -650,6 +650,12 @@ class StoController extends Controller
      */
     public function deleteDetail($id, $detailId)
     {
+        \Illuminate\Support\Facades\Log::info('[StoController] deleteDetail called', [
+            'event_hash' => $id,
+            'detail_hash' => $detailId,
+            'user_id' => auth()->id()
+        ]);
+
         $stoEvent = StoEvent::findByHashOrFail($id);
         
         if ($stoEvent->status !== 'OPEN') {
