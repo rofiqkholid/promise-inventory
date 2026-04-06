@@ -54,7 +54,9 @@ class User extends Authenticatable
 
     public function hasAppRole($roleCode)
     {
-        return $this->roles->contains('code', $roleCode);
+        return $this->roles->contains(function ($role) use ($roleCode) {
+            return strtolower($role->code) === strtolower($roleCode);
+        });
     }
 
     public function specificMenus()

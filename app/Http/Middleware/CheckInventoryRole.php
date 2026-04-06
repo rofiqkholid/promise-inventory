@@ -62,7 +62,7 @@ class CheckInventoryRole
                 $specificMenuRoutes = $user->specificMenus()->pluck('route')->toArray();
                 $allowedSpecificRoutes = $expandMenuRoutes($specificMenuRoutes);
                 
-                if (in_array($routeName, $allowedSpecificRoutes) || array_intersect($possibleRoutes, $specificMenuRoutes)) {
+                if (in_array($routeName, $allowedSpecificRoutes) || array_intersect($possibleRoutes, $allowedSpecificRoutes)) {
                     return $next($request);
                 }
 
@@ -80,7 +80,7 @@ class CheckInventoryRole
                     $roleMenuRoutes = $role->menus()->pluck('route')->toArray();
                     $allowedRoleRoutes = $expandMenuRoutes($roleMenuRoutes);
                     
-                    if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $roleMenuRoutes)) {
+                    if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $allowedRoleRoutes)) {
                         return $next($request);
                     }
 
@@ -91,8 +91,9 @@ class CheckInventoryRole
             }
 
             // Fallback to the hardcoded role check in the middleware parameters
-            $userRoleCodes = $user->roles->pluck('code')->toArray();
-            if (empty(array_intersect($userRoleCodes, $roles))) {
+            $userRoleCodes = array_map('strtolower', $user->roles->pluck('code')->toArray());
+            $requiredRoles = array_map('strtolower', $roles);
+            if (empty(array_intersect($userRoleCodes, $requiredRoles))) {
                 abort(403, 'Unauthorized. Your assigned roles do not allow this action.');
             }
         }
