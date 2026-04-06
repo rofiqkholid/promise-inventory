@@ -231,6 +231,6 @@ class InventoryProduct extends Model
     public function isCoil()
     {
         $unitName = strtolower($this->unit->name ?? '');
-        return ($this->gross_coil > 0) || ($this->weight_kg > 0) || str_contains($unitName, 'coil');
+        return str_contains($unitName, 'coil');
     }
 }
