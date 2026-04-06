@@ -43,7 +43,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
 
     #Region Inventory Master (Admin, Approver)
-    Route::middleware(['inventory.role:admin,approver,checker,operator,viewer'])->group(function () {
+    Route::middleware(['inventory.role:admin,approver,checker,operator,viewer,pic'])->group(function () {
         // Master Data Grouped Routes
         Route::prefix('inventory/master')->name('inventory.master.')->group(function () {
             // Monolithic /inventory/master redirected to first child (Product)
@@ -175,7 +175,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 
     // Stock Opname (STO) (Admin, Approver, Checker, Operator)
-    Route::middleware(['inventory.role:admin,approver,checker,operator'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
+    Route::middleware(['inventory.role:admin,approver,checker,operator,pic'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Inventory\StoController::class, 'index'])->name('index');
         Route::get('/get-preview-code', [\App\Http\Controllers\Inventory\StoController::class, 'previewCode'])->name('previewCode');
         Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
