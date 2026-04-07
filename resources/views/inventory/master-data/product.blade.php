@@ -1028,8 +1028,11 @@ $(function() {
             if (!this.state.deleteId) return;
             $.ajax({
                 url: `${this.config.routes.base}/${this.state.deleteId}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
+                method: 'POST',
+                data: {
+                    _token: this.config.csrfToken,
+                    _method: 'DELETE'
+                },
                 success: (res) => {
                     this.state.table.ajax.reload();
                     this.ui.hideModal(this.elements.deleteModal);

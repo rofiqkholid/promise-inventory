@@ -756,8 +756,11 @@ $(function() {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `{{ url('inventory/vave/rfq') }}/${id}`,
-                    type: 'DELETE',
-                    data: { _token: '{{ csrf_token() }}' },
+                    type: 'POST',
+                    data: { 
+                        _token: '{{ csrf_token() }}',
+                        _method: 'DELETE'
+                    },
                     success: function(res) {
                         if (res.success) {
                             table.ajax.reload();

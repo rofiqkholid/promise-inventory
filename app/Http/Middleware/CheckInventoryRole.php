@@ -29,10 +29,9 @@ class CheckInventoryRole
         }
 
         // If roles are specified in middleware, they act as a base restriction.
+        // But we now allow overrides via User-Specific Menus and Role-Menu assignments in the database.
         if (!empty($roles)) {
             $routeName = $request->route()->getName();
-            $userRoleCodes = array_map('strtolower', $user->roles->pluck('code')->toArray());
-            $requiredRoles = array_map('strtolower', $roles);
             
             if ($routeName) {
                 // Check if user has specific menu access OR their role has menu access in the database
@@ -44,10 +43,12 @@ class CheckInventoryRole
                     $possibleRoutes[] = $temp;
                 }
 
+                // Function to get all related routes for a set of menu routes
                 $expandMenuRoutes = function($menuRoutes) {
                     $expanded = [];
                     foreach ($menuRoutes as $route) {
                         $expanded[] = $route;
+                        // If route is 'a.b.c', also add 'a.b' and 'a'
                         $parts = explode('.', $route);
                         while (count($parts) > 1) {
                             array_pop($parts);
@@ -57,42 +58,42 @@ class CheckInventoryRole
                     return array_unique($expanded);
                 };
 
-                // 1. Check user-specific menus
+                // Check user-specific menus
                 $specificMenuRoutes = $user->specificMenus()->pluck('route')->toArray();
                 $allowedSpecificRoutes = $expandMenuRoutes($specificMenuRoutes);
                 
-                if (in_array($routeName, $allowedSpecificRoutes) || array_intersect($possibleRoutes, $allowedSpecificRoutes)) {
+                if (in_array($routeName, $allowedSpecificRoutes) || array_intersect($possibleRoutes, $specificMenuRoutes)) {
                     return $next($request);
                 }
 
-                // 2. Check role-based menus in database
+                // Special case for Master Data: if you have 'inventory.master.master.index', you get its sub-routes
+                $isMasterSubRoute = str_starts_with($routeName, 'inventory.master.');
+                
+                if ($isMasterSubRoute) {
+                    if (in_array('inventory.master.master.index', $specificMenuRoutes)) {
+                        return $next($request);
+                    }
+                }
+
+                // Check role-based menus in database
                 foreach ($user->roles as $role) {
                     $roleMenuRoutes = $role->menus()->pluck('route')->toArray();
                     $allowedRoleRoutes = $expandMenuRoutes($roleMenuRoutes);
                     
-                    if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $allowedRoleRoutes)) {
+                    if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $roleMenuRoutes)) {
+                        return $next($request);
+                    }
+
+                    if ($isMasterSubRoute && in_array('inventory.master.master.index', $roleMenuRoutes)) {
                         return $next($request);
                     }
                 }
             }
 
-            // 3. Fallback to the hardcoded role check
-            if (empty(array_intersect($userRoleCodes, $requiredRoles))) {
-                $msg = 'Unauthorized. Required: ' . implode(',', $requiredRoles) . '. User has: ' . implode(',', $userRoleCodes);
-                \Illuminate\Support\Facades\Log::warning('[InventoryRole] Access Denied', [
-                    'user_id' => $user->id,
-                    'user_name' => $user->name,
-                    'roles_found' => $userRoleCodes,
-                    'roles_required' => $requiredRoles,
-                    'route_name' => $routeName,
-                    'url' => $request->fullUrl(),
-                    'method' => $request->method()
-                ]);
-
-                if ($request->expectsJson() || $request->ajax()) {
-                    return response()->json(['success' => false, 'message' => $msg], 403);
-                }
-                abort(403, $msg);
+            // Fallback to the hardcoded role check in the middleware parameters
+            $userRoleCodes = $user->roles->pluck('code')->toArray();
+            if (empty(array_intersect($userRoleCodes, $roles))) {
+                abort(403, 'Unauthorized. Your assigned roles do not allow this action.');
             }
         }
 
