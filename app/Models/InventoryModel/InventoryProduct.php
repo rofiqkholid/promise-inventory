@@ -35,6 +35,10 @@ class InventoryProduct extends Model
         'is_active',
         'remark',
         'density',
+        'gross_coil',
+        'top_coil',
+        'end_coil',
+        'net_coil',
         'weight_kg',
         'net_weight',
         'material_price',
@@ -58,6 +62,10 @@ class InventoryProduct extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'density' => 'float',
+        'gross_coil' => 'float',
+        'top_coil' => 'float',
+        'end_coil' => 'float',
+        'net_coil' => 'float',
         'weight_kg' => 'float',
         'net_weight' => 'float',
         'material_price' => 'float',
@@ -95,7 +103,7 @@ class InventoryProduct extends Model
 
     /**
      * Get the universal Raw SQL to convert stock / qty column to accurate total Pcs.
-     * Takes account of 'Coil' unit type which records stock in Kg.
+     * Takes account of 'Coil' unit type which records stock in Kg and subtracts scrap mm.
      */
     public static function getPcsCalculationSql($qtyColumn = 'inv_t_product_detail.current_stock_qty', $tableAlias = 'inv_t_product_detail', $unitNameColumn = null)
     {
@@ -105,28 +113,41 @@ class InventoryProduct extends Model
         return "
             CASE 
                 WHEN LOWER({$unitCheck}) LIKE '%coil%' 
-                     AND ISNULL({$alias}weight_kg, 0) > 0 
-                THEN FLOOR({$qtyColumn} / {$alias}weight_kg) * COALESCE({$alias}pcs_per_unit, 1) 
+                     AND ISNULL({$alias}gross_coil, 0) > 0 
+                THEN ({$qtyColumn} / {$alias}gross_coil) * COALESCE({$alias}pcs_per_unit, 1) 
                 ELSE ({$qtyColumn}) * COALESCE({$alias}pcs_per_unit, 1) 
             END
         ";
     }
 
-    /**
-     * PHP implementation of the PCS calculation logic.
-     */
-    public static function calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName)
+    public static function calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName, $topMm = 0, $endMm = 0, $pitch = 0, $pcsPerPitch = 1, $grossCoil = 0)
     {
         $qty = (float)$qty;
+        $grossCoil = (float)$grossCoil;
+        $pitch = (float)$pitch;
         $weightKg = (float)$weightKg;
-        $pcsPerUnit = (float)($pcsPerUnit ?: 1);
         $unitName = strtolower($unitName ?? '');
 
-        if (str_contains($unitName, 'coil') && $weightKg > 0) {
-            return floor($qty / $weightKg) * $pcsPerUnit;
+        // Standard logic for non-coil or missing data
+        if (!str_contains($unitName, 'coil') || $grossCoil <= 0 || $pitch <= 0 || $weightKg <= 0) {
+            return (int) floor($qty * (float)($pcsPerUnit ?: 1));
         }
 
-        return $qty * $pcsPerUnit;
+        // UNIFIED COIL LOGIC (Static)
+        // 1. Calculate weight of 1mm: weigh_kg / pitch
+        $weightPerMm = $weightKg / $pitch;
+        
+        // 2. Calculate scrap weight
+        $scrapKg = ((float)$topMm + (float)$endMm) * $weightPerMm;
+        
+        // 3. Yield Ratio based on Master Data
+        $yieldRatio = max(0, ($grossCoil - $scrapKg) / $grossCoil);
+        
+        // 4. Net Qty
+        $netQty = $qty * $yieldRatio;
+        
+        // 6. Final PCS = floor(Net Qty / Weight per Pitch) * Pcs per Pitch
+        return (int) (floor($netQty / $weightKg) * (float)($pcsPerPitch ?: 1));
     }
 
     /**
@@ -203,5 +224,13 @@ class InventoryProduct extends Model
     public static function calculateMinStock($unitPerCar, $days = 90)
     {
         return (int)($unitPerCar * $days);
+    }
+    /**
+     * Helper to check if this product is a coil based on its unit.
+     */
+    public function isCoil()
+    {
+        $unitName = strtolower($this->unit->name ?? '');
+        return str_contains($unitName, 'coil');
     }
 }

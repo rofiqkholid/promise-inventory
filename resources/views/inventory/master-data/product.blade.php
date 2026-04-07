@@ -65,6 +65,15 @@
                     </select>
                 </div>
 
+                {{-- DATA STATUS FILTER --}}
+                <div class="w-full">
+                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data Status</label>
+                    <select id="filterDataStatus" class="select2-filter w-full">
+                        <option value="">All Data</option>
+                        <option value="incomplete">Incomplete Coil Data</option>
+                    </select>
+                </div>
+
                 {{-- ACTIONS --}}
                 <div class="flex items-center w-full">
                     <button type="button" id="btnResetFilter" class="w-full h-10 px-4 text-[10px] font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-100 dark:border-gray-700 transition-all uppercase tracking-widest active:scale-95">
@@ -216,18 +225,48 @@
                             </div>
                             <div class="lg:col-span-1">
                                 <label class="block mb-2 text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider">Weight (Kg)</label>
-                                <input type="number" name="weight_kg" id="weight_kg" step="0.001" min="0" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-bold rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed" placeholder="0.000">
+                                <input type="number" name="weight_kg" id="weight_kg" step="0.01" min="0" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-bold rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed" placeholder="0.00">
                                 <p id="error-weight_kg" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
                                 <label class="block mb-2 text-[10px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wider">Net Weight (Kg)</label>
-                                <input type="number" name="net_weight" id="net_weight" step="0.001" min="0" class="bg-purple-50/50 border border-purple-200 text-purple-700 text-xs font-bold rounded-xs focus:ring-purple-500 focus:border-purple-500 block w-full h-10 px-3 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300 transition-all" placeholder="0.000">
+                                <input type="number" name="net_weight" id="net_weight" step="0.01" min="0" class="bg-purple-50/50 border border-purple-200 text-purple-700 text-xs font-bold rounded-xs focus:ring-purple-500 focus:border-purple-500 block w-full h-10 px-3 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300 transition-all" placeholder="0.00">
                                 <p id="error-net_weight" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
                             </div>
                             <div class="lg:col-span-1">
                                 <label class="block mb-2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Material Price</label>
                                 <input type="number" name="material_price" id="material_price" step="0.01" min="0" value="20000" class="bg-emerald-50/50 border border-emerald-200 text-emerald-700 text-xs font-bold rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300 transition-all" placeholder="0.00">
                                 <p id="error-material_price" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
+                            </div>
+                        </div>
+                        
+                        {{-- Coil Specific Weight Details --}}
+                        <div id="coilWeightSection" class="hidden">
+                            <div class="mt-4 grid gap-4 grid-cols-5 bg-amber-50/50 dark:bg-amber-900/10 p-4 rounded-xs border border-amber-100 dark:border-amber-900/30">
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Gross Coil (Kg)</label>
+                                    <input type="number" name="gross_coil" id="gross_coil" step="0.01" min="0" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.00">
+                                    <p id="error-gross_coil" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Top Coil (mm)</label>
+                                    <input type="number" name="top_coil" id="top_coil" step="0.01" min="0" value="500" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="500">
+                                    <p id="error-top_coil" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">End Coil (mm)</label>
+                                    <input type="number" name="end_coil" id="end_coil" step="0.01" min="0" value="2500" class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="2500">
+                                    <p id="error-end_coil" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Net Coil (Kg)</label>
+                                    <input type="number" name="net_coil" id="net_coil" step="0.01" min="0" readonly class="bg-amber-100 border border-amber-200 text-amber-700 text-xs font-bold rounded-xs block w-full h-10 px-3 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-300 cursor-not-allowed" placeholder="0.00">
+                                    <p id="error-net_coil" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"></p>
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wider">Est. Total Pcs</label>
+                                    <input type="number" id="est_pcs" readonly class="bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold rounded-xs block w-full h-10 px-3 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 cursor-not-allowed" placeholder="0">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -289,7 +328,7 @@
                                     <option value="">No Remark</option>
                                     <option value="Drawing Change">Drawing Change</option>
                                     <option value="Damage">Damage</option>
-                                    <option value="Under">Under</option>
+                                    <!-- <option value="Under">Under</option> -->
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
@@ -483,11 +522,27 @@ $(function() {
                         d.customer_id = this.elements.customerFilter.val();
                         d.model_id = this.elements.modelFilter.val();
                         d.part_no = this.elements.partNoFilter.val();
+                        d.incomplete_only = $('#filterDataStatus').val() === 'incomplete' ? 1 : null;
                     }
                 },
                 columns: [
                     { data: null, className: 'text-center', render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 },
-                    { data: 'part_no', className: 'whitespace-nowrap font-medium text-slate-700 dark:text-gray-200' },
+                    { 
+                        data: 'part_no', 
+                        className: 'whitespace-nowrap font-medium text-slate-700 dark:text-gray-200',
+                        render: (d, t, r) => {
+                            if (r.is_incomplete_coil) {
+                                return `<div>
+                                    <div class="flex items-center gap-1.5">
+                                        ${d}
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-600 animate-pulse" title="Incomplete Coil Data"></i>
+                                    </div>
+                                    <span class="text-[8px] font-bold text-rose-600 uppercase bg-rose-50 px-1 py-0.5 rounded-xs border border-rose-100 mt-0.5 inline-block">Data Incomplete</span>
+                                </div>`;
+                            }
+                            return d;
+                        }
+                    },
                     { data: 'customer', className: 'text-center' },
                     { data: 'model', className: 'text-center' },
                     {
@@ -610,6 +665,7 @@ $(function() {
                 this.state.table.ajax.reload();
             });
             this.elements.partNoFilter.on('change', () => this.state.table.ajax.reload());
+            $('#filterDataStatus').on('change', () => this.state.table.ajax.reload());
             $('#btnResetFilter').on('click', () => this.resetFilters());
             $('#btnExport').on('click', () => this.handleExport());
             
@@ -682,11 +738,24 @@ $(function() {
             // Calculations
             $('#unit_per_car').on('input change', () => this.logic.calculateMinStock());
             $('#thickness, #width, #length, #length_2, #pitch, #density').on('input change', () => this.logic.calculateWeight());
+            $('#thickness, #width, #density, #pitch, #pcs_per_pitch, #gross_coil, #top_coil, #end_coil').on('input change', () => this.logic.calculateNetCoil());
         },
 
         bindTableEvents: function() {
-            $(document).on('click', '.edit-button', e => this.showEditModal($(e.currentTarget).data('id')));
-            $(document).on('click', '.duplicate-button', e => this.showDuplicateModal($(e.currentTarget).data('id')));
+            $(document).on('click', '.edit-button', e => {
+                const btn = $(e.currentTarget);
+                const originalIcon = btn.html();
+                this.ui.setBtnLoading(btn);
+                this.showEditModal(btn.data('id'), btn, originalIcon);
+            });
+
+            $(document).on('click', '.duplicate-button', e => {
+                const btn = $(e.currentTarget);
+                const originalIcon = btn.html();
+                this.ui.setBtnLoading(btn);
+                this.showDuplicateModal(btn.data('id'), btn, originalIcon);
+            });
+
             $(document).on('click', '.print-button', e => window.open(`${this.config.routes.base}/${$(e.currentTarget).data('id')}/print`, '_blank'));
             $(document).on('click', '.delete-button', e => {
                 this.state.deleteId = $(e.currentTarget).data('id');
@@ -724,6 +793,7 @@ $(function() {
             this.elements.customerFilter.val(null).trigger('change.select2');
             this.elements.modelFilter.val(null).trigger('change.select2');
             this.elements.partNoFilter.val(null).trigger('change.select2');
+            $('#filterDataStatus').val(null).trigger('change.select2');
             
             $.get(this.config.routes.models, { for_filter: 1 }, (data) => {
                 this.elements.modelFilter.empty().append('<option value="">All Models</option>');
@@ -741,23 +811,24 @@ $(function() {
             this.ui.showModal(this.elements.formModal);
         },
 
-        showEditModal: function(id) {
+        showEditModal: function(id, btn, originalIcon) {
             this.state.isEditMode = true;
             this.state.isDuplicateMode = false;
             this.ui.resetForm('Edit Inventory Product', 'PUT', `${this.config.routes.base}/${id}`);
-            this.loadProductData(id);
+            this.loadProductData(id, false, btn, originalIcon);
         },
 
-        showDuplicateModal: function(id) {
+        showDuplicateModal: function(id, btn, originalIcon) {
             this.state.isEditMode = false;
             this.state.isDuplicateMode = true;
             this.ui.resetForm('Duplicate Inventory Product', 'POST', this.config.routes.store);
             this.ui.toggleDuplicateMode(true);
-            this.loadProductData(id, true);
+            this.loadProductData(id, true, btn, originalIcon);
         },
 
-        loadProductData: function(id, isDuplicate = false) {
-            $.get(`${this.config.routes.base}/${id}`, (data) => {
+        loadProductData: function(id, isDuplicate = false, btn = null, originalIcon = null) {
+            $.get(`${this.config.routes.base}/${id}`)
+              .done((data) => {
                 this.elements.customerSelect.val(data.product.customer_id).trigger('change');
                 
                 this.state.modelLoadPromise.then(() => {
@@ -785,6 +856,10 @@ $(function() {
                     $('#unit_per_car').val(data.unit_per_car);
                     $('#min_stock').val(data.min_stock);
                     $('#density').val(parseFloat(data.density || 7.85));
+                    $('#gross_coil').val(parseFloat(data.gross_coil || 0));
+                    $('#top_coil').val(parseFloat(data.top_coil || 0));
+                    $('#end_coil').val(parseFloat(data.end_coil || 0));
+                    $('#net_coil').val(parseFloat(data.net_coil || 0));
                     $('#net_weight').val(parseFloat(data.net_weight || 0));
                     $('#material_price').val(parseFloat(data.material_price || 20000));
                     $('#remark').val(data.remark);
@@ -795,7 +870,11 @@ $(function() {
                     this.ui.showModal(this.elements.formModal);
                     if (isDuplicate) window.showToast('Please select a NEW model to finish duplication.', 'info');
                 });
-            });
+              })
+              .fail((xhr) => this.handleAjaxError(xhr))
+              .always(() => {
+                  if (btn) this.ui.unsetBtnLoading(btn, originalIcon);
+              });
         },
 
         handleFormCustomerChange: function(cid) {
@@ -892,7 +971,18 @@ $(function() {
                 success: (res) => {
                     this.state.table.ajax.reload();
                     this.ui.hideModal(this.elements.formModal);
-                    window.showToast(res.message, 'success');
+                    
+                    if (res.warning) {
+                        Swal.fire({
+                            title: 'Incomplete Coil Data',
+                            text: res.warning,
+                            icon: 'warning',
+                            confirmButtonColor: '#3085d6'
+                        });
+                    } else {
+                        window.showToast(res.message, 'success');
+                    }
+                    
                     if (wasDuplicate) this.ui.toggleDuplicateMode(false);
                 },
                 error: (xhr) => this.handleAjaxError(xhr)
@@ -938,8 +1028,11 @@ $(function() {
             if (!this.state.deleteId) return;
             $.ajax({
                 url: `${this.config.routes.base}/${this.state.deleteId}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
+                method: 'POST',
+                data: {
+                    _token: this.config.csrfToken,
+                    _method: 'DELETE'
+                },
                 success: (res) => {
                     this.state.table.ajax.reload();
                     this.ui.hideModal(this.elements.deleteModal);
@@ -974,11 +1067,49 @@ $(function() {
                 else if (name.includes('trapezoid')) weight = (t * w * (((parseFloat($('#length').val()) || 0) + (parseFloat($('#length_2').val()) || 0)) / 2) * d) / 1000000;
                 else weight = (t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000;
 
-                $('#weight_kg').val(weight > 0 ? weight.toFixed(3) : '');
+                $('#weight_kg').val(weight > 0 ? weight.toFixed(2) : '');
             },
 
             calculateMinStock: function() {
                 $('#min_stock').val((parseInt($('#unit_per_car').val()) || 0) * 90);
+            },
+
+            calculateNetCoil: function() {
+                const t = parseFloat($('#thickness').val()) || 0;
+                const w = parseFloat($('#width').val()) || 0;
+                const d = parseFloat($('#density').val()) || 7.85;
+                const pitch = parseFloat($('#pitch').val()) || 0;
+                const pcsPerPitch = parseInt($('#pcs_per_pitch').val()) || 1;
+
+                const grossKg = parseFloat($('#gross_coil').val()) || 0;
+                const topMm = parseFloat($('#top_coil').val()) || 0;
+                const endMm = parseFloat($('#end_coil').val()) || 0;
+
+                // Formula Kg per 1 mm: (T * W * 1 * D) / 1000000
+                const weightPerMm = (t * w * 1 * d) / 1000000;
+                
+                const topKg = topMm * weightPerMm;
+                const endKg = endMm * weightPerMm;
+
+                const net = Math.max(0, grossKg - (topKg + endKg));
+                $('#net_coil').val(net > 0 ? net.toFixed(2) : '');
+
+                // Total Pcs calculation: (Net weight / Weight per pitch) * pcs per pitch
+                const weightPerPitch = (t * w * pitch * d) / 1000000;
+                if (net > 0 && weightPerPitch > 0) {
+                    const estPcs = Math.floor(net / weightPerPitch) * pcsPerPitch;
+                    $('#est_pcs').val(estPcs);
+                    
+                    // Autofill Pcs/Unit with Est. Pcs if it's a coil
+                    const unitId = ProductApp.elements.unitSelect.val();
+                    const unit = ProductApp.state.dropdownData.units?.find(u => u.hash_id === unitId);
+                    const name = (unit?.name || '').toLowerCase();
+                    if (name.includes('coil')) {
+                        $('#pcs_per_unit').val(estPcs);
+                    }
+                } else {
+                    $('#est_pcs').val('');
+                }
             },
 
             renderDimensions: function(row) {
@@ -1010,6 +1141,8 @@ $(function() {
          * UI UTILITIES
          */
         ui: {
+            setBtnLoading: b => b.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i>'),
+            unsetBtnLoading: (b, i) => b.prop('disabled', false).html(i),
             showModal: m => m.removeClass('hidden').addClass('flex'),
             hideModal: m => m.addClass('hidden').removeClass('flex'),
             clearErrors: () => $('[id^="error-"]').addClass('hidden').text(''),
@@ -1021,9 +1154,12 @@ $(function() {
                 $('#min_stock').val(90);
                 $('#density').val('7.85');
                 $('#material_price').val('20000');
-                $('#weight_kg, #net_weight').val('');
+                $('#top_coil').val(500);
+                $('#end_coil').val(2500);
+                $('#weight_kg, #net_weight, #gross_coil, #net_coil').val('');
                 $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id, #revision_id, #product_status, #product_status_remark').val('').trigger('change');
                 ProductApp.ui.clearErrors();
+                ProductApp.ui.toggleUnitFields();
             },
             toggleDuplicateMode: function(isDup) {
                 ProductApp.state.isDuplicateMode = isDup;
@@ -1035,20 +1171,27 @@ $(function() {
                 const unitId = ProductApp.elements.unitSelect.val();
                 const unit = ProductApp.state.dropdownData.units?.find(u => u.hash_id === unitId);
                 const name = (unit?.name || '').toLowerCase();
-                $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer').hide();
+                const isCoil = name.includes('coil');
+                $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer, #coilWeightSection').hide();
+                $('#pcs_per_unit').prop('readonly', isCoil).toggleClass('bg-gray-100 cursor-not-allowed', isCoil);
+
                 if (name.includes('sheet')) {
                     $('#lengthContainer, #pitchContainer, #pcsPerPitchContainer').show();
+                    if (!ProductApp.state.isEditMode && !ProductApp.state.isDuplicateMode) $('#pcs_per_unit').val(1);
                 }
                 else if (name.includes('trapezoid')) {
                     $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer').show();
+                    if (!ProductApp.state.isEditMode && !ProductApp.state.isDuplicateMode) $('#pcs_per_unit').val(1);
                 }
-                else if (name.includes('coil')) {
-                    $('#pitchContainer, #pcsPerPitchContainer').show();
+                else if (isCoil) {
+                    $('#pitchContainer, #pcsPerPitchContainer, #coilWeightSection').show();
                 }
                 else {
                     $('#lengthContainer').show();
+                    if (!ProductApp.state.isEditMode && !ProductApp.state.isDuplicateMode) $('#pcs_per_unit').val(1);
                 }
                 ProductApp.logic.calculateWeight();
+                ProductApp.logic.calculateNetCoil();
             }
         }
     };

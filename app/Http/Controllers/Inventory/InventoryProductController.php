@@ -68,7 +68,18 @@ class InventoryProductController extends Controller
             }
         }
         if ($request->filled('part_no')) {
-            $query->where('prod.part_no', 'like', "%{$request->part_no}%");
+            $query->where('part_no', 'like', "%{$request->part_no}%");
+        }
+        if ($request->filled('incomplete_only')) {
+            $query->where(function($q) {
+                $q->whereRaw("LOWER(COALESCE(u.name, '')) LIKE '%coil%'")
+                  ->where(function($qq) {
+                      $qq->whereRaw("ISNULL(p.gross_coil, 0) <= 0")
+                         ->orWhereRaw("ISNULL(p.top_coil, 0) <= 0")
+                         ->orWhereRaw("ISNULL(p.end_coil, 0) <= 0")
+                         ->orWhereRaw("ISNULL(p.pitch, 0) <= 0");
+                  });
+            });
         }
 
         // Global Search
@@ -148,6 +159,7 @@ class InventoryProductController extends Controller
                 'unit_per_car' => $r->unit_per_car,
                 'remark' => $r->remark,
                 'updated_at' => $r->updated_at ? \Carbon\Carbon::parse($r->updated_at)->format('d M y, H:i') : '-',
+                'is_incomplete_coil' => str_contains(strtolower($r->unit_name), 'coil') && ($r->gross_coil <= 0 || $r->top_coil <= 0 || $r->end_coil <= 0 || $r->pitch <= 0),
             ]);
 
         return response()->json([
@@ -354,9 +366,16 @@ class InventoryProductController extends Controller
         $request->merge($data);
         $validated = $request->validate($this->getValidationRules());
 
-        InventoryProduct::create($validated);
+        $product = InventoryProduct::create($validated);
 
-        return response()->json(['success' => true, 'message' => 'Inventory Product created successfully.']);
+        $warning = null;
+        if ($product->isCoil()) {
+            if ($product->gross_coil <= 0 || $product->top_coil <= 0 || $product->end_coil <= 0 || $product->pitch <= 0) {
+                $warning = 'Important: This is a Coil product, but parameters like Gross Coil, Top/End Coil, or Pitch are incomplete. Please complete this data to avoid transaction errors.';
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Inventory Product created successfully.', 'warning' => $warning]);
     }
 
     /**
@@ -398,7 +417,14 @@ class InventoryProductController extends Controller
 
         $inventoryProduct->update($validated);
 
-        return response()->json(['success' => true, 'message' => 'Inventory Product updated successfully.']);
+        $warning = null;
+        if ($inventoryProduct->isCoil()) {
+            if ($inventoryProduct->gross_coil <= 0 || $inventoryProduct->top_coil <= 0 || $inventoryProduct->end_coil <= 0 || $inventoryProduct->pitch <= 0) {
+                $warning = 'Important: This is a Coil product, but parameters like Gross Coil, Top/End Coil, or Pitch are incomplete. Please complete this data to avoid transaction errors.';
+            }
+        }
+
+        return response()->json(['success' => true, 'message' => 'Inventory Product updated successfully.', 'warning' => $warning]);
     }
 
     /**
@@ -608,6 +634,10 @@ class InventoryProductController extends Controller
             'pitch' => 'nullable|numeric|min:0',
             'pcs_per_pitch' => 'nullable|integer|min:0',
             'density' => 'nullable|numeric|min:0',
+            'gross_coil' => 'nullable|numeric|min:0',
+            'top_coil' => 'nullable|numeric|min:0',
+            'end_coil' => 'nullable|numeric|min:0',
+            'net_coil' => 'nullable|numeric|min:0',
             'weight_kg' => 'nullable|numeric|min:0',
             'net_weight' => 'nullable|numeric|min:0',
             'material_price' => 'nullable|numeric|min:0',

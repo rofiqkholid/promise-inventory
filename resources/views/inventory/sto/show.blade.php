@@ -1215,11 +1215,15 @@
                 const url = `{{ route('inventory.sto.deleteDetail', [$stoEvent->hash_id, ':detailHash']) }}`.replace(':detailHash', detailHash);
                 
                 fetch(url, {
-                    method: 'DELETE',
+                    method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
                         'Accept': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({
+                        _method: 'DELETE'
+                    })
                 })
                 .then(res => res.json())
                 .then(data => {

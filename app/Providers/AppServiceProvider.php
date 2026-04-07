@@ -39,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
                 ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
                 ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
                 ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
+                ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
                 ->select([
                     'prod.part_no', 
                     'r.code as revision', 
@@ -48,38 +49,34 @@ class AppServiceProvider extends ServiceProvider
                     'p.min_stock', 
                     'p.pcs_per_unit',
                     'p.product_status',
-                    'ms.project_status'
+                    'ms.project_status',
+                    'p.weight_kg',
+                    'u.name as unit_name'
                 ])
+                ->where('p.is_active', 1)
                 ->get()
                 ->map(function ($item) {
-                    $pcsPerUnit = intval($item->pcs_per_unit);
-                    if ($pcsPerUnit <= 0) $pcsPerUnit = 1;
+                    $currentPCS = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+                        $item->current_stock_qty, 
+                        $item->weight_kg, 
+                        $item->pcs_per_unit, 
+                        $item->unit_name
+                    );
 
-                    $currentPCS = floatval($item->current_stock_qty) * $pcsPerUnit;
-                    $minPCS = floatval($item->min_stock);
+                    $item->status = ucfirst(\App\Models\InventoryModel\InventoryProduct::calculateStockStatus(
+                        $currentPCS, 
+                        $item->min_stock, 
+                        $item->product_status ?: $item->project_status
+                    ));
 
+                    // Update values for display in the modal
                     $item->current_stock_qty = $currentPCS;
-                    $item->min_stock = $minPCS;
+                    $item->min_stock = floatval($item->min_stock);
 
-                    if ($minPCS > 0) {
-                        if ($currentPCS > $minPCS * 3) {
-                            $item->status = 'Warning';
-                        } elseif ($currentPCS < $minPCS) {
-                            // Suppress Critical for Regular or Allsize status
-                            $safeStatuses = ['Regular', 'Allsize OK', 'Allsize NG'];
-                            $isSafeOverride = in_array($item->project_status, $safeStatuses) || in_array($item->product_status, $safeStatuses);
-                            
-                            $item->status = $isSafeOverride ? 'Safe' : 'Critical';
-                        } else {
-                            $item->status = 'Safe';
-                        }
-                    } else {
-                        $item->status = 'Safe';
-                    }
                     return $item;
                 })
                 ->filter(function ($item) {
-                    return $item->status === 'Warning' || $item->status === 'Critical';
+                    return $item->status === 'Warning' || $item->status === 'Critical' || $item->status === 'Over';
                 })
                 ->values();
 

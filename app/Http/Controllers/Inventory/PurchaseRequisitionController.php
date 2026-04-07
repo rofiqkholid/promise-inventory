@@ -23,7 +23,7 @@ class PurchaseRequisitionController extends Controller
         ];
 
         foreach ($products as $p) {
-            $currentPCS = InventoryProduct::calculatePcs($p->current_stock_qty, $p->weight_kg, $p->pcs_per_unit, $p->unit_code);
+            $currentPCS = InventoryProduct::calculatePcs($p->current_stock_qty, $p->weight_kg, $p->pcs_per_unit, $p->unit_code, $p->top_coil, $p->end_coil, $p->pitch, $p->pcs_per_pitch, $p->gross_coil);
             $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status);
             if (isset($stats[$status])) {
                 $stats[$status]++;
@@ -64,6 +64,11 @@ class PurchaseRequisitionController extends Controller
                 'inv_t_product_detail.min_stock',
                 'inv_t_product_detail.unit_per_car',
                 'inv_t_product_detail.updated_at',
+                'inv_t_product_detail.top_coil',
+                'inv_t_product_detail.end_coil',
+                'inv_t_product_detail.gross_coil',
+                'inv_t_product_detail.pitch',
+                'inv_t_product_detail.pcs_per_pitch',
                 'ms.project_status',
                 'inv_t_product_detail.weight_kg'
             ])
@@ -157,7 +162,7 @@ class PurchaseRequisitionController extends Controller
             ->get();
 
         $formattedData = $data->map(function($item) {
-            $currentPCS = InventoryProduct::calculatePcs($item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_code);
+            $currentPCS = InventoryProduct::calculatePcs($item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
             $shortage = $item->min_stock - $currentPCS;
             
             return [

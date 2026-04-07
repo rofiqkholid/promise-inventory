@@ -30,6 +30,11 @@ class InventoryTransactionController extends Controller
                 'r.code as revision', 
                 'inv_t_product_detail.pcs_per_unit',
                 'inv_t_product_detail.weight_kg',
+                'inv_t_product_detail.gross_coil',
+                'inv_t_product_detail.top_coil',
+                'inv_t_product_detail.end_coil',
+                'inv_t_product_detail.pitch',
+                'inv_t_product_detail.pcs_per_pitch',
                 'u.name as unit_name'
             )
             ->where('inv_t_product_detail.is_active', 1)
@@ -215,6 +220,17 @@ class InventoryTransactionController extends Controller
             'supplier_id' => 'nullable|exists:inv_m_supplier,id',
             'destination_id' => 'nullable|exists:inv_m_supplier,id',
         ]);
+
+        // 1. Strict Parameter Check for Coil Products
+        $product = InventoryProduct::with('unit')->findOrFail($request->product_detail_id);
+        if ($product->isCoil()) {
+            if ($product->gross_coil <= 0 || $product->top_coil <= 0 || $product->end_coil <= 0 || $product->pitch <= 0) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Transaction Blocked: This Coil product has incomplete Master Data (Gross Coil, Top/End Coil, or Pitch). Please update the Master Data before performing transactions.'
+                ], 422);
+            }
+        }
 
         DB::beginTransaction();
         try {

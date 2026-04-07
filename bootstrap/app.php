@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->redirectGuestsTo(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'inventory.role' => \App\Http\Middleware\CheckInventoryRole::class,
         ]);

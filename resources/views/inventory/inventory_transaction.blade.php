@@ -39,6 +39,11 @@
                                         data-partno="{{ $product->part_no }}" 
                                         data-pcs="{{ $product->pcs_per_unit ?? 1 }}"
                                         data-weight="{{ $product->weight_kg ?? 0 }}"
+                                        data-gross="{{ $product->gross_coil ?? 0 }}"
+                                        data-top="{{ $product->top_coil ?? 0 }}"
+                                        data-end="{{ $product->end_coil ?? 0 }}"
+                                        data-pitch="{{ $product->pitch ?? 0 }}"
+                                        data-ppp="{{ $product->pcs_per_pitch ?? 1 }}"
                                         data-unit="{{ $product->unit_name ?? '' }}"
                                     >{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                 @endforeach
@@ -103,7 +108,7 @@
                                     <div class="flex items-center gap-1 font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
                                         <span id="calcResult">0</span> <span>PCS</span>
                                     </div>
-                                    <span class="text-gray-400 text-[9px] font-normal uppercase tracking-tight">(@<span id="pcsInfo">0</span>/Unit)</span>
+                                    <span class="text-gray-400 text-[9px] font-normal uppercase tracking-tight">(@<span id="pcsInfo">0</span>)</span>
                                 </div>
                             </div>
                             <div>
@@ -629,17 +634,42 @@
                 $('#qtyLabel').html('Qty (Kg) <span class="text-red-500">*</span>');
                 $('#qty').attr('step', '0.01').attr('min', '0.01');
                 
-                if (inputVal > 0 && weightKg > 0 && pcsPerUnit > 0) {
-                    const totalUnits = Math.floor(inputVal / weightKg);
-                    const totalPcs = totalUnits * pcsPerUnit;
+                const grossCoil = parseFloat(selectedProduct.data('gross')) || 0;
+                const topMm = parseFloat(selectedProduct.data('top')) || 0;
+                const endMm = parseFloat(selectedProduct.data('end')) || 0;
+                const pitch = parseFloat(selectedProduct.data('pitch')) || 0;
+                const ppp = parseFloat(selectedProduct.data('ppp')) || 1;
+                
+                if (grossCoil <= 0 || topMm <= 0 || endMm <= 0 || pitch <= 0) {
+                    $('#calcResult').text('0');
+                    $('#pcsInfo').html(`<span class="text-rose-500 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> COIL DATA INCOMPLETE</span>`);
+                    $('#btnSubmit').prop('disabled', true).addClass('opacity-50 cursor-not-allowed');
+                    $('#qtyPreview').removeClass('opacity-0');
+                    return;
+                }
+
+                if (inputVal > 0) {
+                    const weightPerMm = weightKg / pitch;
+                    const scrapKg = (topMm + endMm) * weightPerMm;
+                    const weightPerPitch = weightKg; // data-weight is already weight per pitch
+                    
+                    const yieldRatio = Math.max(0, (grossCoil - scrapKg) / grossCoil);
+                    const netVal = inputVal * yieldRatio;
+                    // Match Master Data Rounding: floor(Strokes) * Pcs/Pitch
+                    const strokes = Math.floor(netVal / weightPerPitch);
+                    const totalPcs = strokes * ppp;
                     
                     $('#calcResult').text(new Intl.NumberFormat().format(totalPcs));
-                    $('#pcsInfo').text(`${totalUnits} Stroke x ${pcsPerUnit}`);
+                    $('#pcsInfo').text(`${netVal.toFixed(2)} Kg Net (${(yieldRatio * 100).toFixed(1)}%) @ ${strokes} Strokes x ${ppp}`);
                     $('#qtyPreview').removeClass('opacity-0');
+                    $('#btnSubmit').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
                 } else {
                     $('#qtyPreview').addClass('opacity-0');
+                    $('#btnSubmit').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
                 }
             } else {
+                // Non-Coil
+                $('#btnSubmit').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
                 $('#qtyLabel').html('Qty (Unit) <span class="text-red-500">*</span>');
                 $('#qty').attr('step', '1').attr('min', '1');
                 

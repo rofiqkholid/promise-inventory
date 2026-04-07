@@ -19,16 +19,24 @@ use App\Http\Controllers\Inventory\ModelConfigController;
 use App\Http\Controllers\Inventory\ProfileController;
 use App\Http\Controllers\DashboardController;
 
+// Route for redirecting to Central SSO Portal
+Route::get('/login', function () {
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+})->name('login');
+
 Route::get('/', function () {
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
-    return app(AuthController::class)->showLoginForm();
-})->name('login');
+    return redirect()->route('login');
+});
 
-Route::post('/login', [AuthController::class, 'login'])->name('login_post');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/forget', [AuthController::class, 'forgetPassword'])->name('forget_password');
+Route::post('/login', function () { return redirect()->route('login'); })->name('login_post');
+Route::post('/logout', function () { 
+    Auth::logout();
+    session()->invalidate();
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+})->name('logout');
 
 // Public Scan Info (No Login Required)
 Route::get('/inventory/stock-monitoring/scan-info/{id}', [StockMonitoringController::class, 'scanInfo'])->name('inventory.scanInfo');
@@ -43,7 +51,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::post('/profile/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
 
     #Region Inventory Master (Admin, Approver)
-    Route::middleware(['inventory.role:admin,approver,checker,operator,viewer'])->group(function () {
+    Route::middleware(['inventory.role:admin,approver,checker,operator,viewer,pic'])->group(function () {
         // Master Data Grouped Routes
         Route::prefix('inventory/master')->name('inventory.master.')->group(function () {
             // Monolithic /inventory/master redirected to first child (Product)
@@ -175,7 +183,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 
     // Stock Opname (STO) (Admin, Approver, Checker, Operator)
-    Route::middleware(['inventory.role:admin,approver,checker,operator'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
+    Route::middleware(['inventory.role:admin,approver,checker,operator,pic'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Inventory\StoController::class, 'index'])->name('index');
         Route::get('/get-preview-code', [\App\Http\Controllers\Inventory\StoController::class, 'previewCode'])->name('previewCode');
         Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
