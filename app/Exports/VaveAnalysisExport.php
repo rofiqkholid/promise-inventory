@@ -26,15 +26,15 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
         $selectedBaseId = $data['selected_base_id'] ?? null;
         $selectedActualId = $data['selected_actual_id'] ?? null;
 
-        // Find active RFQ as base, fallback to first, or use selected
+        // Find active Base, fallback to first, or use selected
         if ($selectedBaseId) {
-            $baseRfq = $rfqs->firstWhere('hash_id', $selectedBaseId) ?? $rfqs->first();
+            $vaveBase = $rfqs->firstWhere('hash_id', $selectedBaseId) ?? $rfqs->first();
         } else {
-            $baseRfq = $rfqs->where('is_active', 1)->first() ?? $rfqs->first();
+            $vaveBase = $rfqs->where('is_active', 1)->first() ?? $rfqs->first();
         }
         
-        // The user requested to only show the chosen baseline and omit baseline history in exports.
-        $rfqHistory = collect();
+        // The user requested to only show the chosen baseline and omit base history in exports.
+        $baseHistory = collect();
 
         if ($selectedActualId) {
             // Revisions uses 'inv_t_product_detail' joined with 'inv_m_revision', 'revision' relation has the code
@@ -53,20 +53,20 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
             $latestRev = $revisions->first();
         }
         
-        $baseW = (float)($baseRfq->weight_kg ?? 0);
+        $baseW = (float)($vaveBase->weight_kg ?? 0);
         $actW = (float)($latestRev->weight_kg ?? 0);
         $deltaW = $actW - $baseW;
         $isSaving = $deltaW <= 0;
 
-        $deltaT = (float)($latestRev->thickness ?? 0) - (float)($baseRfq->thickness ?? 0);
-        $deltaWi = (float)($latestRev->width ?? 0) - (float)($baseRfq->width ?? 0);
-        $deltaL = (float)($latestRev->length ?? 0) - (float)($baseRfq->length ?? 0);
-        $deltaL2 = (float)($latestRev->length_2 ?? 0) - (float)($baseRfq->length_2 ?? 0);
-        $deltaP = (float)($latestRev->pitch ?? 0) - (float)($baseRfq->pitch ?? 0);
-        $deltaD = (float)($latestRev->density ?? 0) - (float)($baseRfq->density ?? 0);
-        $deltaNW = (float)($latestRev->net_weight ?? 0) - (float)($baseRfq->net_weight ?? 0);
+        $deltaT = (float)($latestRev->thickness ?? 0) - (float)($vaveBase->thickness ?? 0);
+        $deltaWi = (float)($latestRev->width ?? 0) - (float)($vaveBase->width ?? 0);
+        $deltaL = (float)($latestRev->length ?? 0) - (float)($vaveBase->length ?? 0);
+        $deltaL2 = (float)($latestRev->length_2 ?? 0) - (float)($vaveBase->length_2 ?? 0);
+        $deltaP = (float)($latestRev->pitch ?? 0) - (float)($vaveBase->pitch ?? 0);
+        $deltaD = (float)($latestRev->density ?? 0) - (float)($vaveBase->density ?? 0);
+        $deltaNW = (float)($latestRev->net_weight ?? 0) - (float)($vaveBase->net_weight ?? 0);
         
-        $baseScrap = $baseW - (float)($baseRfq->net_weight ?? 0);
+        $baseScrap = $baseW - (float)($vaveBase->net_weight ?? 0);
         $actScrap = $actW - (float)($latestRev->net_weight ?? 0);
         $deltaScrap = $actScrap - $baseScrap;
 
@@ -82,13 +82,13 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
             return ($g > 0 && $n > 0) ? ($n / $g) * 100 : 0;
         };
 
-        $baseBud = $calcBud($baseRfq);
+        $baseBud = $calcBud($vaveBase);
         $actBud = $calcBud($latestRev);
         $deltaBud = $actBud - $baseBud;
 
-        $historyRfqCount = $rfqHistory->count();
+        $historyBaseCount = $baseHistory->count();
         $historyRevCount = max(0, $revisions->count() - 1);
-        $totalCols = 4 + $historyRfqCount + $historyRevCount;
+        $totalCols = 4 + $historyBaseCount + $historyRevCount;
 
         // Helper to format dimension string
         $fmtDim = function($i) {
@@ -111,8 +111,8 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
         };
 
         // Attach formatted dimensions
-        $baseRfq->fmt_dimension = $fmtDim($baseRfq);
-        foreach($rfqHistory as $r) {
+        $vaveBase->fmt_dimension = $fmtDim($vaveBase);
+        foreach($baseHistory as $r) {
             $r->fmt_dimension = $fmtDim($r);
         }
         foreach($revisions as $rev) {
@@ -121,8 +121,8 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
 
         return [
             'product' => $product,
-            'baseRfq' => $baseRfq,
-            'rfqHistory' => $rfqHistory,
+            'vaveBase' => $vaveBase,
+            'baseHistory' => $baseHistory,
             'revisions' => $revisions,
             'latestRev' => $latestRev,
             'baseW' => $baseW,

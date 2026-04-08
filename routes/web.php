@@ -123,6 +123,11 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/revision', [\App\Http\Controllers\Inventory\RevisionController::class, 'index'])->name('revision.index');
             Route::get('/revision/data', [\App\Http\Controllers\Inventory\RevisionController::class, 'data'])->name('revision.data');
             Route::resource('revision', \App\Http\Controllers\Inventory\RevisionController::class)->names('revision')->except(['create', 'edit', 'index']);
+
+            // Vave Base Suffix (Master Data)
+            Route::get('/vave-base-suffix', [\App\Http\Controllers\Inventory\VaveBaseSuffixController::class, 'index'])->name('vave-base-suffix.index');
+            Route::get('/vave-base-suffix/data', [\App\Http\Controllers\Inventory\VaveBaseSuffixController::class, 'data'])->name('vave-base-suffix.data');
+            Route::resource('vave-base-suffix', \App\Http\Controllers\Inventory\VaveBaseSuffixController::class)->names('vave-base-suffix')->except(['create', 'edit', 'index']);
         });
 
 
@@ -207,12 +212,13 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::middleware(['inventory.role:admin,approver,checker,viewer'])->prefix('inventory/vave')->name('inventory.vave.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'index'])->name('index');
         Route::get('/data', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'data'])->name('data');
-        Route::get('/rfq/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'showRfq'])->name('showRfq');
-        Route::post('/rfq', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'storeRfq'])->name('storeRfq');
+        Route::get('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'showBase'])->name('showBase');
+        Route::post('/base', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'storeBase'])->name('storeBase');
         Route::get('/comparison/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getComparison'])->name('getComparison');
         Route::get('/comparison/{id}/export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportExcel'])->name('export');
         Route::get('/summary-export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
-        Route::delete('/rfq/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyRfq'])->name('destroyRfq');
+        Route::get('/get-bases', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getBases'])->name('getBases');
+        Route::delete('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
     });
 
     // Purchase Requisition (Admin, Approver, Checker)

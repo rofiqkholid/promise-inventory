@@ -467,11 +467,7 @@ class InventoryProductController extends Controller
     public function getCustomers()
     {
         return DB::table('customers as c')
-            ->join('products as p', 'p.customer_id', '=', 'c.id')
-            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
-            ->where('pd.is_active', 1)
             ->select('c.id', 'c.code')
-            ->distinct()
             ->orderBy('c.code')
             ->get();
     }

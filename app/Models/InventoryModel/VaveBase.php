@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\HasHashId;
 
-class ProductRfq extends Model
+class VaveBase extends Model
 {
     use HasFactory, HasHashId;
 
@@ -15,7 +15,7 @@ class ProductRfq extends Model
      *
      * @var string
      */
-    protected $table = 'inv_m_product_rfq';
+    protected $table = 'inv_m_vave_base';
     protected $appends = ['hash_id'];
     protected $hidden = ['id'];
 
@@ -26,7 +26,7 @@ class ProductRfq extends Model
      */
     protected $fillable = [
         'product_id',
-        'rfq_name',
+        'base_name',
         'is_active',
         'material_spec_id',
         'unit_id',
@@ -39,6 +39,7 @@ class ProductRfq extends Model
         'weight_kg',
         'net_weight',
         'material_price',
+        'vave_base_suffix_id',
         'remark',
     ];
 
@@ -63,7 +64,7 @@ class ProductRfq extends Model
     ];
 
     /**
-     * Get the product that owns the RFQ data.
+     * Get the product that owns the VAVE base data.
      */
     public function product()
     {
@@ -71,7 +72,7 @@ class ProductRfq extends Model
     }
 
     /**
-     * Get the material spec that owns the RFQ data.
+     * Get the material spec that owns the VAVE base data.
      */
     public function materialSpec()
     {
@@ -79,10 +80,18 @@ class ProductRfq extends Model
     }
 
     /**
-     * Get the unit that owns the RFQ data.
+     * Get the unit that owns the VAVE base data.
      */
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    /**
+     * Get the suffix associated with the VAVE base data.
+     */
+    public function suffix()
+    {
+        return $this->belongsTo(VaveBaseSuffix::class, 'vave_base_suffix_id');
     }
 }

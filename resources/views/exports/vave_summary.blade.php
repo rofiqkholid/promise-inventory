@@ -18,14 +18,14 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Model</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part No</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part Name</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Baseline</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Weight Baseline</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">EBD Reference</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Change Status (EBD)</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Wt EBD</th>
                 
-                {{-- HEADER BARU --}}
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Latest Revision</th>
                 
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Spec</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Stage</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Stage (Revision)</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">t</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">W</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">L1</th>
@@ -35,11 +35,9 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Net Wt</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Scrap (kg)</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Yield Ratio (%)</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Status</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Status (vs EBD)</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Price</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Cost</th>
-                
-                {{-- HEADER BARU --}}
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gap (kg)</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gap (IDR)</th>
             </tr>
@@ -89,6 +87,17 @@
                         
                        {{-- New Columns --}}
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb;">{{ $p->baseline_name }}</td>
+                        
+                        {{-- CHANGE STATUS (Product Level) --}}
+                        @php
+                            $pChange = $p->change_status ?? '-';
+                            $pChangeBg = '#ffffff';
+                            if ($pChange === 'CHANGE') $pChangeBg = '#fef3c7';
+                            elseif ($pChange === 'NO CHANGE') $pChangeBg = '#f3f4f6';
+                            elseif ($pChange === 'NEW') $pChangeBg = '#ecfdf5';
+                        @endphp
+                        <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: {{ $pChangeBg }}; font-weight: bold;">{{ $pChange }}</td>
+
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb; font-weight: bold;">{{ number_format($p->baseline_weight, 3) }}</td>
                     @endif
                     
@@ -100,11 +109,9 @@
                     <td style="border: 1px solid #000000; text-align: center; background-color: {{ $revBg }}; font-weight: bold;">
                         {{ $isLatest }}
                     </td>
-                    
+
                     <td style="border: 1px solid #000000;">{{ $stage['spec'] }}</td>
-                    <td style="border: 1px solid #000000; font-weight: bold;">
-                        {{ $stage['is_baseline'] ? '' : strtoupper($stage['name']) }}
-                    </td>
+                    <td style="border: 1px solid #000000; font-weight: bold;">{{ strtoupper($stage['name']) }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['t'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['w'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['l1'], 2, '.', '') }}</td>
@@ -114,7 +121,7 @@
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['net_weight'], 3, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center; font-style: italic; color: #64748b;">{{ number_format($stage['theoretical_weight'] - $stage['net_weight'], 3) }}</td>
                     <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ number_format($stage['budomari'], 2) }}%</td>
-                    
+
                     @php
                         $status = '-';
                         $bgColor = '#ffffff';

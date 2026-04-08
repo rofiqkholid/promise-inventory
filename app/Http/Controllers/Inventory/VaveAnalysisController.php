@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Inventory;
 
 use App\Http\Controllers\Controller;
-use App\Models\InventoryModel\ProductRfq;
+use App\Models\InventoryModel\VaveBase;
 use App\Models\InventoryModel\InventoryProduct;
 use App\Models\InventoryModel\MaterialSpec;
 use App\Models\InventoryModel\Unit;
+use App\Models\InventoryModel\VaveBaseSuffix;
 use App\Models\Products;
 use App\Exports\VaveAnalysisExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -31,10 +32,10 @@ class VaveAnalysisController extends Controller
         $query = DB::table('products as p')
             ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
-            // Get Baseline (Active RFQ)
-            ->leftJoin('inv_m_product_rfq as rfq', function($join) {
-                $join->on('rfq.product_id', '=', 'p.id')
-                     ->where('rfq.is_active', '=', 1);
+            // Get Baseline
+            ->leftJoin('inv_m_vave_base as base', function($join) {
+                $join->on('base.product_id', '=', 'p.id')
+                     ->where('base.is_active', '=', 1);
             })
             // Get Latest Revision Weight (Highest sort_order in master)
             ->leftJoin(DB::raw('(
@@ -61,8 +62,8 @@ class VaveAnalysisController extends Controller
                 'p.part_name',
                 'c.code as customer_code',
                 'm.name as model_name',
-                'rfq.id as rfq_id',
-                'rfq.weight_kg as baseline_weight',
+                'base.id as base_id',
+                'base.weight_kg as baseline_weight',
                 'latest_rev.weight_kg as latest_weight'
             ]);
 
@@ -96,7 +97,7 @@ class VaveAnalysisController extends Controller
                 2 => 'p.part_name',
                 3 => 'c.code',
                 4 => 'm.name',
-                5 => 'rfq.weight_kg',
+                5 => 'base.weight_kg',
                 6 => 'latest_weight',
                 7 => 'weight_diff', 
             ];
@@ -106,7 +107,7 @@ class VaveAnalysisController extends Controller
             $colName = $sortableColumns[$colIndex] ?? 'p.part_no';
 
             if ($colName === 'weight_diff') {
-                $query->orderByRaw("(rfq.weight_kg - latest_rev.weight_kg) {$dir}");
+                $query->orderByRaw("(base.weight_kg - latest_rev.weight_kg) {$dir}");
             } elseif ($colName === 'latest_weight') {
                 $query->orderBy('latest_rev.weight_kg', $dir);
             } else {
@@ -121,7 +122,7 @@ class VaveAnalysisController extends Controller
         
         $data = $query->skip($start)->take($length)->get()->map(function($item) {
             $item->hash_id = Products::encodeHash($item->id);
-            $item->has_rfq = $item->rfq_id ? 1 : 0;
+            $item->has_base = $item->base_id ? 1 : 0;
             
             // Calculate Status
             $baseW = (float)($item->baseline_weight ?? 0);
@@ -158,26 +159,27 @@ class VaveAnalysisController extends Controller
     /**
      * Get RFQ detail for a product.
      */
-    public function showRfq($id)
+    public function showBase($id)
     {
         $product = Products::findByHashOrFail($id);
         
-        // Get Latest RFQ by default (user request)
-        $rfq = ProductRfq::with(['unit', 'materialSpec'])
+        // Get Latest Base by default
+        $base = VaveBase::with(['unit', 'materialSpec', 'suffix'])
             ->where('product_id', $product->id)
             ->orderBy('created_at', 'desc')
             ->first();
 
         // Get History
-        $rfqHistory = ProductRfq::with(['unit', 'materialSpec'])
+        $baseHistory = VaveBase::with(['unit', 'materialSpec', 'suffix'])
             ->where('product_id', $product->id)
             ->orderBy('created_at', 'desc')
             ->get();
         
         return response()->json([
             'product' => $product,
-            'rfq' => $rfq,
-            'rfqHistory' => $rfqHistory,
+            'base' => $base,
+            'baseHistory' => $baseHistory,
+            'baseSuffixes' => VaveBaseSuffix::where('customer_id', $product->customer_id)->where('is_active', 1)->get(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::all(),
             'revisions' => InventoryProduct::with(['materialSpec', 'unit', 'revision'])
@@ -192,14 +194,14 @@ class VaveAnalysisController extends Controller
     /**
      * Store or Update RFQ data.
      */
-    public function storeRfq(Request $request)
+    public function storeBase(Request $request)
     {
         $productId = Products::decodeHash($request->product_id);
-        $rfqId = $request->rfq_id ? ProductRfq::decodeHash($request->rfq_id) : null;
+        $baseId = $request->base_id ? VaveBase::decodeHash($request->base_id) : null;
 
         // Clean up empty/undefined values
-        $data = $request->except(['rfq_id', 'product_id']);
-        $nullableFields = ['material_spec_id', 'unit_id', 'length', 'length_2', 'pitch', 'remark', 'rfq_name', 'material_price'];
+        $data = $request->except(['base_id', 'product_id']);
+        $nullableFields = ['material_spec_id', 'unit_id', 'vave_base_suffix_id', 'length', 'length_2', 'pitch', 'remark', 'base_name', 'material_price'];
         foreach ($nullableFields as $field) {
             if (isset($data[$field]) && (empty($data[$field]) || $data[$field] === 'undefined' || $data[$field] === '')) {
                 $data[$field] = null;
@@ -213,12 +215,16 @@ class VaveAnalysisController extends Controller
         if (!empty($data['material_spec_id'])) {
             try { $data['material_spec_id'] = MaterialSpec::decodeHash($data['material_spec_id']); } catch (\Exception $e) {}
         }
+        if (!empty($data['vave_base_suffix_id'])) {
+            try { $data['vave_base_suffix_id'] = VaveBaseSuffix::decodeHash($data['vave_base_suffix_id']); } catch (\Exception $e) {}
+        }
 
         $validated = validator($data, [
-            'rfq_name' => 'nullable|string|max:100',
+            'base_name' => 'nullable|string|max:100',
             'is_active' => 'boolean',
             'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
             'unit_id' => 'nullable|integer|exists:inv_m_unit,id',
+            'vave_base_suffix_id' => 'nullable|integer|exists:inv_m_vave_base_suffix,id',
             'thickness' => 'required|numeric|min:0',
             'width' => 'required|numeric|min:0',
             'length' => 'nullable|numeric|min:0',
@@ -236,21 +242,21 @@ class VaveAnalysisController extends Controller
         DB::beginTransaction();
         try {
             // Automatic Active Logic: The latest saved/updated baseline always becomes active
-            ProductRfq::where('product_id', $productId)->update(['is_active' => 0]);
+            VaveBase::where('product_id', $productId)->update(['is_active' => 0]);
             $validated['is_active'] = 1;
 
-            if ($rfqId) {
+            if ($baseId) {
                 // Update Existing
-                $rfq = ProductRfq::findOrFail($rfqId);
-                $rfq->update($validated);
-                $message = 'Baseline updated successfully.';
+                $base = VaveBase::findOrFail($baseId);
+                $base->update($validated);
+                $message = 'Base updated successfully.';
             } else {
                 // Create New
-                if (empty($validated['rfq_name'])) {
-                    $validated['rfq_name'] = 'Baseline ' . (ProductRfq::where('product_id', $productId)->count() + 1);
+                if (empty($validated['base_name'])) {
+                    $validated['base_name'] = 'Base ' . (VaveBase::where('product_id', $productId)->count() + 1);
                 }
-                ProductRfq::create($validated);
-                $message = 'New Baseline created successfully.';
+                VaveBase::create($validated);
+                $message = 'New Base created successfully.';
             }
 
             DB::commit();
@@ -269,8 +275,8 @@ class VaveAnalysisController extends Controller
     {
         $product = Products::findByHashOrFail($id);
         
-        // Get All Baselines (RFQ History)
-        $rfqs = ProductRfq::with(['materialSpec', 'unit'])
+        // Get All Baselines
+        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
             ->where('product_id', $product->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -282,10 +288,10 @@ class VaveAnalysisController extends Controller
             ->orderBy('r.sort_order', 'desc')
             ->select('inv_t_product_detail.*')
             ->get();
-
+ 
         return response()->json([
             'product' => $product,
-            'rfqs' => $rfqs,
+            'bases' => $bases,
             'revisions' => $revisions
         ]);
     }
@@ -293,19 +299,19 @@ class VaveAnalysisController extends Controller
     /**
      * Delete an RFQ baseline.
      */
-    public function destroyRfq($id)
+    public function destroyBase($id)
     {
-        $rfq = ProductRfq::findByHashOrFail($id);
-        $productId = $rfq->product_id;
-        $wasActive = $rfq->is_active;
+        $base = VaveBase::findByHashOrFail($id);
+        $productId = $base->product_id;
+        $wasActive = $base->is_active;
 
         DB::beginTransaction();
         try {
-            $rfq->delete();
+            $base->delete();
 
             // If we deleted the active one, make the next most recent one active
             if ($wasActive) {
-                $next = ProductRfq::where('product_id', $productId)
+                $next = VaveBase::where('product_id', $productId)
                     ->orderBy('created_at', 'desc')
                     ->first();
                 
@@ -315,7 +321,7 @@ class VaveAnalysisController extends Controller
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Baseline deleted successfully.']);
+            return response()->json(['success' => true, 'message' => 'Base deleted successfully.']);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -330,7 +336,7 @@ class VaveAnalysisController extends Controller
     {
         $product = Products::findByHashOrFail($id);
         
-        $rfqs = ProductRfq::with(['materialSpec', 'unit'])
+        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
             ->where('product_id', $product->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -341,16 +347,16 @@ class VaveAnalysisController extends Controller
             ->orderBy('r.sort_order', 'desc')
             ->select('inv_t_product_detail.*')
             ->get();
-
-        if ($rfqs->isEmpty() || $revisions->isEmpty()) {
+ 
+        if ($bases->isEmpty() || $revisions->isEmpty()) {
             return back()->with('error', 'Incomplete data for export.');
         }
-
+ 
         $fileName = 'VAVE_Analysis_' . $product->part_no . '_' . date('Ymd_His') . '.xlsx';
         
         return Excel::download(new VaveAnalysisExport([
             'product' => $product,
-            'rfqs' => $rfqs,
+            'rfqs' => $bases,
             'revisions' => $revisions,
             'selected_base_id' => $request->base_id,
             'selected_actual_id' => $request->actual_id,
@@ -377,15 +383,25 @@ class VaveAnalysisController extends Controller
         $products = $query->get();
         $data = [];
 
+        // If target base names are selected
+        $targetBaseNames = [];
+        if ($request->has('base_names')) {
+            $targetBaseNames = $request->input('base_names', []);
+        }
+
         foreach ($products as $p) {
-            // Get RFQs
-            $rfqs = DB::table('inv_m_product_rfq as rfq')
-                ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'rfq.material_spec_id')
-                ->leftJoin('inv_m_unit as u', 'u.id', '=', 'rfq.unit_id')
-                ->where('rfq.product_id', $p->id)
-                ->select('rfq.*', 'ms.spec_name as spec_name', 'u.name as unit_name')
-                ->orderBy('rfq.created_at', 'asc')
+            // Get All Available Baselines for this product, ordered by name or creation
+            $allProductBases = DB::table('inv_m_vave_base as base')
+                ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'base.material_spec_id')
+                ->leftJoin('inv_m_unit as u', 'u.id', '=', 'base.unit_id')
+                ->leftJoin('inv_m_vave_base_suffix as sfx', 'sfx.id', '=', 'base.vave_base_suffix_id')
+                ->where('base.product_id', $p->id)
+                ->select('base.*', 'ms.spec_name as spec_name', 'u.name as unit_name', 'sfx.name as suffix_name')
+                ->orderBy('base.base_name', 'asc') // This serves as versioning order
                 ->get();
+            
+            // Get the list of all unique base names for this specific product (to handle fallback)
+            $productBaseNamesList = $allProductBases->pluck('base_name')->unique()->values()->toArray();
 
             // Get Revisions
             $revisions = DB::table('inv_t_product_detail as rev_table')
@@ -398,36 +414,93 @@ class VaveAnalysisController extends Controller
                 ->get();
 
             $p->stages = [];
-            
-            // Identify Baseline (Active RFQ)
-            $activeRfq = $rfqs->where('is_active', 1)->first() ?? $rfqs->last();
-            $p->baseline_name = $activeRfq ? ($activeRfq->rfq_name ?? 'Baseline') : '-';
-            $p->baseline_weight = $activeRfq ? (float)$activeRfq->weight_kg : 0;
-            $p->baseline_cost = $activeRfq ? ((float)$activeRfq->weight_kg * (float)($activeRfq->material_price ?? 0)) : 0;
+            $filteredBases = [];
 
-            // Map RFQs to stages (excluding the active baseline from "Stages" if preferred, 
-            // but let's keep all for now and handle "Baseline" visibility in blade as requested)
-            foreach($rfqs as $rfq) {
-                $p->stages[] = [
-                    'source' => 'RFQ',
-                    'name' => $rfq->rfq_name ?? 'Baseline',
-                    'spec' => $rfq->spec_name,
-                    'unit' => $rfq->unit_name,
-                    't' => $rfq->thickness,
-                    'w' => $rfq->width,
-                    'l1' => $rfq->length,
-                    'l2' => $rfq->length_2,
-                    'pitch' => $rfq->pitch,
-                    'theoretical_weight' => $rfq->weight_kg,
-                    'net_weight' => $rfq->net_weight,
-                    'material_price' => $rfq->material_price,
-                    'cost' => $rfq->weight_kg * ($rfq->material_price ?? 0),
-                    'budomari' => $rfq->weight_kg > 0 ? ($rfq->net_weight / $rfq->weight_kg) * 100 : 0,
-                    'is_baseline' => ($activeRfq && $rfq->id == $activeRfq->id)
-                ];
+            if (!empty($targetBaseNames)) {
+                // FILTERED EXPORT
+                foreach ($targetBaseNames as $targetName) {
+                    $selectedBase = $allProductBases->where('base_name', $targetName)->first();
+                    if (!$selectedBase) {
+                        $selectedBase = $allProductBases->where('base_name', '<', $targetName)->sortByDesc('base_name')->first();
+                    }
+                    if ($selectedBase && !in_array($selectedBase->id, array_column($filteredBases, 'id'))) {
+                        $filteredBases[] = $selectedBase;
+                    }
+                }
+
+                // If filter is used, the FIRST BASE in the resulting stages becomes the Baseline Reference
+                if (count($filteredBases) > 0) {
+                    $refBase = $filteredBases[0];
+                    $sfxStr = ($refBase->suffix_name) ? ' - ' . $refBase->suffix_name : '';
+                    $p->baseline_name = $refBase->base_name . $sfxStr;
+                    $p->baseline_weight = (float)$refBase->weight_kg;
+                    $p->baseline_cost = (float)$refBase->weight_kg * (float)($refBase->material_price ?? 0);
+                    
+                    // Store EBD Details for header
+                    $p->ebd_spec = $refBase->spec_name;
+                    $p->ebd_t = $refBase->thickness;
+                    $p->ebd_w = $refBase->width;
+                    $p->ebd_l1 = $refBase->length;
+                    $p->ebd_l2 = $refBase->length_2;
+                    $p->ebd_pitch = $refBase->pitch;
+
+                    // Calculate Change Status for the SELECTED EBD vs its previous
+                    $predecessor = $allProductBases->where('base_name', '<', $refBase->base_name)
+                        ->sortByDesc('base_name')
+                        ->first();
+                    
+                    $p->change_status = 'NEW';
+                    if ($predecessor) {
+                        $hasDiff = round((float)$refBase->weight_kg, 4) != round((float)$predecessor->weight_kg, 4)
+                            || $refBase->material_spec_id != $predecessor->material_spec_id
+                            || (float)$refBase->thickness != (float)$predecessor->thickness
+                            || (float)$refBase->width != (float)$predecessor->width
+                            || (float)$refBase->length != (float)$predecessor->length
+                            || (float)$refBase->length_2 != (float)$predecessor->length_2
+                            || (float)$refBase->pitch != (float)$predecessor->pitch;
+                        
+                        $p->change_status = $hasDiff ? 'CHANGE' : 'NO CHANGE';
+                    }
+                } else {
+                    $p->baseline_name = '-';
+                    $p->baseline_weight = 0;
+                    $p->baseline_cost = 0;
+                    $p->change_status = '-';
+                }
+            } else {
+                // Determine Global Active Baseline
+                $activeBase = $allProductBases->where('is_active', 1)->first() ?? $allProductBases->last();
+                $sfxStr = ($activeBase && $activeBase->suffix_name) ? ' - ' . $activeBase->suffix_name : '';
+                $p->baseline_name = $activeBase ? ($activeBase->base_name . $sfxStr) : '-';
+                $p->baseline_weight = $activeBase ? (float)$activeBase->weight_kg : 0;
+                $p->baseline_cost = $activeBase ? ((float)$activeBase->weight_kg * (float)($activeBase->material_price ?? 0)) : 0;
+
+                // EBD Details
+                $p->ebd_spec = $activeBase->spec_name ?? '-';
+                $p->ebd_t = $activeBase->thickness ?? 0;
+                $p->ebd_w = $activeBase->width ?? 0;
+                $p->ebd_l1 = $activeBase->length ?? 0;
+                $p->ebd_l2 = $activeBase->length_2 ?? 0;
+                $p->ebd_pitch = $activeBase->pitch ?? 0;
+
+                // Change status for active vs its predecessor
+                if ($activeBase) {
+                    $pIdx = $allProductBases->search(fn($b) => $b->id == $activeBase->id);
+                    $predecessor = $pIdx > 0 ? $allProductBases[$pIdx - 1] : null;
+                    if ($predecessor) {
+                        $hasDiff = round((float)$activeBase->weight_kg, 4) != round((float)$predecessor->weight_kg, 4)
+                            || $activeBase->material_spec_id != $predecessor->material_spec_id
+                            || (float)$activeBase->thickness != (float)$predecessor->thickness;
+                        $p->change_status = $hasDiff ? 'CHANGE' : 'NO CHANGE';
+                    } else {
+                        $p->change_status = 'NEW';
+                    }
+                } else {
+                    $p->change_status = '-';
+                }
             }
 
-            // Map Revisions to stages
+            // Map ONLY Revisions to stages
             foreach($revisions as $rev) {
                 $p->stages[] = [
                     'source' => 'ACTUAL',
@@ -453,7 +526,37 @@ class VaveAnalysisController extends Controller
             }
         }
 
-        $fileName = 'VAVE_Summary_' . date('Ymd_His') . '.xlsx';
+        $fileName = 'VAVE_Summary';
+        if ($request->customer_id) {
+            $customer = DB::table('customers')->find($request->customer_id);
+            if ($customer) $fileName .= '_' . str_replace(' ', '_', $customer->code);
+        }
+        if ($request->model_id) {
+            $model = DB::table('models')->find($request->model_id);
+            if ($model) $fileName .= '_' . str_replace(' ', '_', $model->name);
+        }
+        $fileName .= '_' . date('Ymd_His') . '.xlsx';
+
         return Excel::download(new \App\Exports\VaveSummaryExport($data), $fileName);
+    }
+
+    /**
+     * Get unique Base Names for a customer.
+     */
+    public function getBases(Request $request)
+    {
+        $query = DB::table('inv_m_vave_base as vbase')
+            ->join('products as p', 'p.id', '=', 'vbase.product_id')
+            ->where('p.is_delete', 0);
+            
+        if ($request->customer_id) {
+            $query->where('p.customer_id', $request->customer_id);
+        }
+        
+        $bases = $query->distinct()
+            ->orderBy('vbase.base_name', 'asc')
+            ->pluck('vbase.base_name');
+            
+        return response()->json($bases);
     }
 }
