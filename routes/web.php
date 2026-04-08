@@ -20,11 +20,28 @@ use App\Http\Controllers\Inventory\ProfileController;
 use App\Http\Controllers\DashboardController;
 
 // Route for redirecting to Central SSO Portal
+Route::get('/debug-sso', function () {
+    return [
+        'app' => 'inventory',
+        'session_id' => session()->getId(),
+        'cookie_val' => request()->cookie('promise_auth_session'),
+        'auth_check' => Auth::check(),
+        'user_id' => Auth::id(),
+        'sessions_in_db' => DB::table('sessions')->where('id', session()->getId())->first(),
+    ];
+});
+
 Route::get('/login', function () {
-    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('login');
 
 Route::get('/', function () {
+    \Log::info('Inventory SSO Check', [
+        'session_id' => session()->getId(),
+        'cookie_val' => request()->cookie('promise_auth_session'),
+        'auth_check' => Auth::check(),
+        'user_id' => Auth::id(),
+    ]);
     if (Auth::check()) {
         return redirect()->route('dashboard');
     }
