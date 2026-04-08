@@ -8,7 +8,7 @@
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">VA/VE Analysis</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Compare baseline RFQ data with production revisions to analyze material efficiency.</p>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Compare EBD (Engineering Breakdown) data with production revisions to analyze material efficiency.</p>
         </div>
     </div>
 
@@ -23,8 +23,14 @@
             </div>
             <div class="w-full md:w-64">
                 <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Model</label>
-                <select id="filterModel" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <select id="filterModel" disabled class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Models</option>
+                </select>
+            </div>
+            <div class="w-full md:w-64">
+                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">EBD Bases (Export Only)</label>
+                <select id="filterEbdBase" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">All Bases</option>
                 </select>
             </div>
             <div class="flex items-center gap-3 ml-auto w-full md:w-auto mt-4 md:mt-0">
@@ -47,7 +53,7 @@
                 <th class="text-left">Part Name</th>
                 <th class="text-center">Customer</th>
                 <th class="text-center">Model</th>
-                <th class="text-center">Baseline (Kg)</th>
+                <th class="text-center">EBD (Kg)</th>
                 <th class="text-center">Latest (Kg)</th>
                 <th class="text-center">Analysis Status</th>
                 <th class="text-center w-[180px]">Action</th>
@@ -66,44 +72,69 @@
             </button>
             
             <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-slate-50/80 dark:bg-slate-900/50">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest" id="rfqModalTitle">Manage Baseline (RFQ)</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Define baseline parameters for VA/VE analysis</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest" id="rfqModalTitle">Manage EBD (Engineering Breakdown)</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Define EBD parameters for VA/VE analysis</p>
             </div>
 
             <form id="rfqForm" method="POST" class="flex flex-col flex-1 overflow-hidden">
                 @csrf
                 <input type="hidden" name="product_id" id="rfq_product_id">
-                <input type="hidden" name="rfq_id" id="rfq_id">
+                <input type="hidden" name="base_id" id="base_id">
                 
                 <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <div class="p-8">
                         {{-- Version Management Toolbar --}}
-                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 p-1 bg-white dark:bg-gray-700/50 rounded-xs border border-slate-200 dark:border-gray-700">
-                            <div class="flex-[2] p-3">
-                                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">
-                                    Baseline Version
-                                </label>
-                                <div class="flex gap-2">
-                                    <select id="rfq_history_select" class="select2-rfq flex-1 bg-slate-50 border border-slate-200 text-slate-900 text-[11px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 h-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
-                                        <option value="">-- Load/Select Version --</option>
+                        {{-- Clean Two-Row Version Management Toolbar --}}
+                        <div class="mb-10 p-1 bg-slate-50 dark:bg-gray-800/40 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+                            {{-- Row 1: Actions & Inputs --}}
+                            <div class="p-5 flex flex-col md:flex-row md:items-end gap-6 bg-white dark:bg-gray-800 rounded-xs border-b border-slate-100 dark:border-gray-700">
+                                {{-- Version Selection --}}
+                                <div class="flex-1">
+                                    <label class="block mb-2 text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Select Version</label>
+                                    <select id="rfq_history_select" class="select2-rfq w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all h-11">
+                                        <option value="">-- Select EBD History --</option>
                                     </select>
-                                    <button type="button" id="btn_new_baseline" class="py-2 px-4 text-[10px] font-black text-primary-600 bg-primary-50 border border-primary-200 rounded-xs hover:bg-primary-100 focus:outline-none dark:bg-gray-900 dark:text-primary-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-widest active:scale-95" title="Create New Draft">
-                                        <i class="fa-solid fa-plus mr-1"></i> New
-                                    </button>
-                                    <button type="button" id="btn_delete_baseline" class="py-2 px-4 text-[10px] font-black text-red-600 bg-red-50 border border-red-200 rounded-xs hover:bg-red-100 focus:outline-none dark:bg-gray-900 dark:text-red-400 dark:border-gray-600 dark:hover:bg-gray-700 hidden transition-all uppercase tracking-widest active:scale-95" title="Delete This Baseline">
-                                        <i class="fa-solid fa-trash-can mr-1"></i> Delete
-                                    </button>
+                                </div>
+
+                                {{-- Version Action Group --}}
+                                <div class="flex-[1.5] flex flex-col md:flex-row items-end gap-3">
+                                    <div class="flex-1 w-full">
+                                        <label class="block mb-2 text-[10px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">EBD Suffix</label>
+                                        <select name="vave_base_suffix_id" id="rfq_vave_base_suffix_id" class="select2-rfq w-full bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all h-11">
+                                            <option value="">No Suffix</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex gap-2 h-11 w-full md:w-auto">
+                                        <button type="button" id="btn_new_baseline" class="flex-1 md:flex-none px-6 text-[10px] font-black text-white bg-primary-600 border border-primary-600 rounded-xs hover:bg-primary-700 transition-all uppercase tracking-widest active:scale-95 shadow-sm flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-plus"></i> NEW VERSION
+                                        </button>
+                                        <button type="button" id="btn_delete_baseline" class="px-4 text-[12px] font-black text-rose-600 bg-rose-50 border border-rose-200 rounded-xs hover:bg-rose-100 transition-all hidden uppercase tracking-widest active:scale-95 shadow-sm">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="hidden md:block w-px bg-gray-200 h-16 mx-2"></div>
-                            <div class="flex-1 p-2 flex flex-col md:items-end justify-center">
-                                <span class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5">Active Baseline Status</span>
-                                <div class="flex flex-col gap-1 w-full md:w-auto min-w-[220px]">
-                                    <div id="active_baseline_display" class="text-[10px] font-bold text-slate-700 dark:text-gray-200 px-3 py-1 bg-amber-50 dark:bg-amber-900/10 rounded-xs border border-amber-100 dark:border-amber-800/50 text-center uppercase tracking-widest">
-                                        -
+
+                            {{-- Row 2: Information Display --}}
+                            <div class="px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-8 bg-slate-50 dark:bg-gray-800/80">
+                                {{-- Currently Editing Info --}}
+                                <div class="flex items-center gap-3">
+                                    <div id="editing_status_badge" class="flex items-center gap-2.5 px-3 py-1 rounded-xs bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800">
+                                        <i class="fa-solid fa-pen-to-square text-[10px] text-amber-500"></i>
+                                        <span id="editing_status_text" class="text-[9px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">Editing</span>
                                     </div>
-                                    <div id="active_weight_display" class="text-[10px] font-bold text-primary-600 dark:text-primary-400 px-3 py-1 bg-primary-50/30 dark:bg-primary-900/10 rounded-xs border border-primary-100/50 dark:border-primary-800/50 text-center uppercase tracking-widest">
-                                        -
+                                    <span id="display_base_name" class="text-xs font-black text-slate-800 dark:text-gray-200 uppercase tracking-widest">EBD 1</span>
+                                </div>
+
+                                {{-- Latest Version Info (Consolidated) --}}
+                                <div class="flex items-center gap-3 bg-white dark:bg-gray-900 px-4 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 min-w-[200px]">
+                                    <div class="flex items-center gap-2 pr-3 border-r border-slate-100 dark:border-gray-800">
+                                        <i class="fa-solid fa-circle-check text-[10px] text-primary-500"></i>
+                                        <span class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">Latest Version</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 pl-1">
+                                        <span id="active_baseline_display" class="text-[10px] font-black text-slate-700 dark:text-gray-300">-</span>
+                                        <span id="active_weight_display" class="text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/40 px-2 py-0.5 rounded-xs">0.000 Kg</span>
                                     </div>
                                 </div>
                             </div>
@@ -115,8 +146,8 @@
                             {{-- Identity & Context --}}
                             <div class="space-y-6">
                                 <div class="hidden">
-                                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Baseline Name</label>
-                                    <input type="text" name="rfq_name" id="rfq_name" readonly class="bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold rounded-xs block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all uppercase tracking-widest">
+                                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">EBD Name</label>
+                                    <input type="text" name="base_name" id="base_name" readonly class="bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold rounded-xs block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all uppercase tracking-widest">
                                     <input type="hidden" name="is_active" value="1">
                                 </div>
 
@@ -201,7 +232,7 @@
                         Cancel
                     </button>
                     <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-bold rounded-xs text-[10px] uppercase tracking-widest px-8 py-3 text-center transition-all active:scale-95">
-                        <i class="fa-solid fa-save mr-2"></i> Save Baseline
+                        <i class="fa-solid fa-save mr-2"></i> Save EBD
                     </button>
                 </div>
             </form>
@@ -233,7 +264,7 @@
                 <div class="flex items-center gap-6">
                     <div class="flex items-center gap-3">
                         <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-bullseye text-primary-500"></i> Plan (Base):
+                            <i class="fa-solid fa-bullseye text-primary-500"></i> Plan (EBD):
                         </label>
                         <select id="selectCompareBase" class="bg-white border border-primary-200 text-primary-800 text-[10px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block px-3 py-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none w-56 cursor-pointer hover:bg-primary-50 transition-all uppercase tracking-widest"></select>
                     </div>
@@ -329,10 +360,10 @@ $(function() {
                 orderable: false,
                 render: row => `
                     <div class="flex items-center justify-center gap-1.5">
-                        <button class="rfq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage Baseline (RFQ)">
-                            <i class="fa-solid fa-pen-to-square btn-icon"></i> <span class="btn-text">RFQ</span>
+                        <button class="rfq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage EBD (Engineering Breakdown)">
+                            <i class="fa-solid fa-pen-to-square btn-icon"></i> <span class="btn-text">EBD</span>
                         </button>
-                        <button class="compare-button h-8 px-4 inline-flex items-center justify-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[100px] ${!row.has_rfq ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_rfq ? 'disabled' : ''} title="VAVE Analysis Comparison">
+                        <button class="compare-button h-8 px-4 inline-flex items-center justify-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[100px] ${!row.has_base ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_base ? 'disabled' : ''} title="VAVE Analysis Comparison">
                             <i class="fa-solid fa-chart-line btn-icon"></i> <span class="btn-text">Analysis</span>
                         </button>
                     </div>`
@@ -348,16 +379,33 @@ $(function() {
             });
         });
 
+        // Initialize EBD Bases on load (independent of customer)
+        function refreshEbdBases(customerId = null) {
+            $.get('{{ route("inventory.vave.getBases") }}', { customer_id: customerId }, function(data) {
+                const baseSelect = $('#filterEbdBase').empty().append('<option value="">All Bases</option>');
+                data.forEach(name => {
+                    baseSelect.append(`<option value="${name}">${name}</option>`);
+                });
+            });
+        }
+        refreshEbdBases();
+
         $('#filterCustomer').on('change', function() {
             const customerId = $(this).val();
             $('#filterModel').empty().append('<option value="">All Models</option>');
             
-            $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: customerId }, function(data) {
-                data.forEach(m => {
-                    $('#filterModel').append(`<option value="${m.id}">${m.name}</option>`);
+            if (customerId) {
+                $('#filterModel').prop('disabled', false);
+                $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: customerId }, function(data) {
+                    data.forEach(m => {
+                        $('#filterModel').append(`<option value="${m.id}">${m.name}</option>`);
+                    });
+                    table.ajax.reload();
                 });
+            } else {
+                $('#filterModel').prop('disabled', true);
                 table.ajax.reload();
-            });
+            }
         });
 
         $('#filterModel').on('change', function() {
@@ -366,7 +414,9 @@ $(function() {
 
         $('#btnResetFilter').on('click', function() {
             $('#filterCustomer').val('').trigger('change');
-            $('#filterModel').val('').trigger('change');
+            $('#filterModel').val('').trigger('change').prop('disabled', true);
+            $('#filterEbdBase').val('').trigger('change');
+            refreshEbdBases(); // Reset to global bases
             table.ajax.reload();
         });
         
@@ -374,6 +424,13 @@ $(function() {
             width: '100%',
             placeholder: 'Select...',
             allowClear: true
+        });
+
+        $('.select2-multiple').select2({
+            width: '100%',
+            placeholder: 'All Versions',
+            allowClear: true,
+            closeOnSelect: false
         });
 
         $('.select2-rfq').select2({
@@ -439,10 +496,15 @@ $(function() {
     $('#btnExportSummary').on('click', function() {
         const customerId = $('#filterCustomer').val();
         const modelId = $('#filterModel').val();
+        const baseName = $('#filterEbdBase').val();
+
         let url = '{{ route("inventory.vave.exportSummary") }}';
         let params = [];
         if (customerId) params.push(`customer_id=${customerId}`);
         if (modelId) params.push(`model_id=${modelId}`);
+        if (baseName) {
+            params.push(`base_names[]=${encodeURIComponent(baseName)}`);
+        }
         if (params.length > 0) url += '?' + params.join('&');
         
         handleAjaxDownload($(this), url, 'VAVE_Summary_' + new Date().getTime() + '.xlsx');
@@ -481,17 +543,17 @@ $(function() {
 
         // Logic Visibility
         if (unitName.includes('sheet')) {
-            // Sheet: Show Length, Hide L2 & Pitch
+            // Sheet: Show Length & Pitch
             $('#label_rfq_length').text('Length (mm)');
             $('#rfq_length_container').show();
             $('#rfq_length2_container').hide();
-            $('#rfq_pitch_container').hide();
+            $('#rfq_pitch_container').show(); // Added Pitch for Sheet
         } else if (unitName.includes('trapezoid')) {
-            // Trapezoid: Show Length, Length 2. Hide Pitch.
+            // Trapezoid: Show Length, Length 2 & Pitch
             $('#label_rfq_length').text('Length 1 (L1)');
             $('#rfq_length_container').show();
             $('#rfq_length2_container').show();
-            $('#rfq_pitch_container').hide();
+            $('#rfq_pitch_container').show(); // Added Pitch for Trapezoid
         } else if (unitName.includes('coil')) {
             // Coil: Show Pitch. Hide Length, Length 2.
             $('#rfq_length_container').hide();
@@ -501,6 +563,7 @@ $(function() {
             // Default if unknown or empty: Show Length.
             $('#label_rfq_length').text('Length (mm)');
             $('#rfq_length_container').show();
+            $('#rfq_pitch_container').hide();
         }
 
         // Trigger calculation when unit changes
@@ -545,14 +608,14 @@ $(function() {
 
 
     // Variables
-    window.rfqHistory = [];
-    window.rfqRevisions = [];
+    window.baseHistory = [];
+    window.baseRevisions = [];
     window.latestRevision = null;
 
     // Helper to auto-fill specs from latest revision
     function resetAndAutoFillRfqForm() {
         // 1. Clear all inputs first
-        $('#rfq_id').val('');
+        $('#base_id').val('');
         $('#rfq_thickness').val('');
         $('#rfq_width').val('');
         $('#rfq_length').val('');
@@ -579,10 +642,10 @@ $(function() {
         calculateRfqWeight(); // Should result in 0
     }
 
-    // Helper to load RFQ data to form
+    // Helper to load Base data to form
     function loadRfqToForm(data) {
-        $('#rfq_id').val(data.hash_id); // Set ID for update
-        $('#rfq_name').val(data.rfq_name);
+        $('#base_id').val(data.hash_id); // Set ID for update
+        $('#base_name').val(data.base_name);
         
         // Fix: Use hash_id from relation instead of integer ID which won't match dropdown values
         let specId = (data.material_spec ? data.material_spec.hash_id : '');
@@ -598,6 +661,13 @@ $(function() {
             unitId = window.latestRevision.unit.hash_id;
         }
         $('#rfq_unit_id').val(unitId).trigger('change');
+
+        let vaveBaseSuffixId = '';
+        if (data.suffix) {
+            vaveBaseSuffixId = data.suffix.hash_id;
+        } else if (data.vave_base_suffix_id) {
+        }
+        $('#rfq_vave_base_suffix_id').val(vaveBaseSuffixId).trigger('change');
         
         $('#rfq_thickness').val(parseFloat(data.thickness || 0));
         $('#rfq_width').val(parseFloat(data.width || 0));
@@ -626,15 +696,15 @@ $(function() {
 
         $('#rfqForm')[0].reset();
         $('#rfq_product_id').val(id);
-        $('#rfq_id').val(''); 
+        $('#base_id').val(''); 
         $('#btn_new_baseline').addClass('hidden');
         $('#btn_delete_baseline').addClass('hidden');
         
-        $.get(`{{ url('inventory/vave/rfq') }}/${id}`, function(res) {
-            $('#rfqModalTitle').text(`Manage Baseline (RFQ) - ${res.product.part_no}`);
+        $.get(`{{ url('inventory/vave/base') }}/${id}`, function(res) {
+            $('#rfqModalTitle').text(`Manage EBD - ${res.product.part_no}`);
             
             // Store Revisions
-            window.rfqRevisions = res.revisions;
+            window.baseRevisions = res.revisions;
             
             // Determines Latest Revision
             if (res.revisions && res.revisions.length > 0) {
@@ -643,35 +713,47 @@ $(function() {
                  window.latestRevision = null;
             }
 
-            // Populate History Dropdown
-            const histSelect = $('#rfq_history_select').empty().append('<option value="">-- Load Existing Baseline --</option>');
-            if(res.rfqHistory && res.rfqHistory.length > 0) {
-                 res.rfqHistory.forEach((h, index) => {
-                    const activeLabel = h.is_active ? ' (Active)' : '';
-                    const isSelected = index === 0 ? 'selected' : '';
-                    histSelect.append(`<option value="${h.hash_id}" ${isSelected}>${h.rfq_name || 'Baseline'} - ${parseFloat(h.weight_kg).toFixed(3)}kg${activeLabel}</option>`);
+            // Populate Suffixes
+            const suffixSelect = $('#rfq_vave_base_suffix_id').empty().append('<option value="">No Suffix</option>');
+            if(res.baseSuffixes && res.baseSuffixes.length > 0) {
+                res.baseSuffixes.forEach(s => {
+                    suffixSelect.append(`<option value="${s.hash_id}">${s.name}</option>`);
                 });
             }
-            window.rfqHistory = res.rfqHistory;
+
+            // Populate History Dropdown
+            const histSelect = $('#rfq_history_select').empty().append('<option value="">-- Load Existing EBD --</option>');
+            if(res.baseHistory && res.baseHistory.length > 0) {
+                 res.baseHistory.forEach((h, index) => {
+                    const activeLabel = h.is_active ? ' (Active)' : '';
+                    const isSelected = index === 0 ? 'selected' : '';
+                    const suffix = h.suffix ? ` - ${h.suffix.name}` : '';
+                    histSelect.append(`<option value="${h.hash_id}" ${isSelected}>${h.base_name || 'EBD'}${suffix} - ${parseFloat(h.weight_kg).toFixed(3)}kg${activeLabel}</option>`);
+                });
+            }
+            window.baseHistory = res.baseHistory;
 
             // Load logic
-            if (res.rfq) {
-                loadRfqToForm(res.rfq);
+            if (res.base) {
+                loadRfqToForm(res.base);
+                $('#display_base_name').text(res.base.base_name);
                 $('#btn_new_baseline').removeClass('hidden'); 
                 $('#btn_delete_baseline').removeClass('hidden');
             } else {
-                // New Baseline
-                $('#rfq_name').val('Baseline 1');
+                // New EBD
+                $('#base_name').val('EBD 1');
+                $('#display_base_name').text('EBD 1');
                 resetAndAutoFillRfqForm();
                 $('#btn_delete_baseline').addClass('hidden');
             }
 
             // Update Active Display (The 'Previous' reference)
-            if (res.rfq) {
-                $('#active_baseline_display').text(`${res.rfq.rfq_name || 'Active'}`);
-                $('#active_weight_display').text(`${parseFloat(res.rfq.weight_kg || 0).toFixed(3)} Kg`);
+            if (res.base) {
+                const suffix = res.base.suffix ? ` - ${res.base.suffix.name}` : '';
+                $('#active_baseline_display').text(`${res.base.base_name}${suffix}`);
+                $('#active_weight_display').text(`${parseFloat(res.base.weight_kg || 0).toFixed(3)} Kg`);
             } else {
-                $('#active_baseline_display').text('No Baseline Set');
+                $('#active_baseline_display').text('No EBD Set');
                 $('#active_weight_display').text('-');
             }
             
@@ -691,12 +773,22 @@ $(function() {
     // Handle History Selection
     $('#rfq_history_select').on('change', function() {
         const id = $(this).val();
-        if(!id) return;
-        const selected = window.rfqHistory ? window.rfqHistory.find(h => h.hash_id == id) : null;
+        if(!id || id === 'NEW_CREATE') return;
+        const selected = window.baseHistory ? window.baseHistory.find(h => h.hash_id == id) : null;
         if (selected) {
              loadRfqToForm(selected);
+             $('#display_base_name').text(selected.base_name);
+             
+             // Update Badge to Editing
+             $('#editing_status_badge').removeClass('bg-primary-100 border-primary-200 dark:bg-primary-900/30 dark:border-primary-800').addClass('bg-amber-100 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800');
+             $('#editing_status_badge i').removeClass('fa-plus-circle text-primary-500').addClass('fa-pen-to-square text-amber-500');
+             $('#editing_status_text').text('Editing').removeClass('text-primary-700 dark:text-primary-400').addClass('text-amber-700 dark:text-amber-400');
+
              $('#btn_new_baseline').removeClass('hidden');
              $('#btn_delete_baseline').removeClass('hidden');
+             
+             // Remove temporary new draft option if exists
+             $('#rfq_history_select option[value="NEW_CREATE"]').remove();
         }
     });
     
@@ -706,6 +798,7 @@ $(function() {
         // Capture current form state to use as base for new baseline
         currentData.rfq_material_spec_id = $('#rfq_material_spec_id').val();
         currentData.rfq_unit_id = $('#rfq_unit_id').val();
+        currentData.rfq_vave_base_suffix_id = $('#rfq_vave_base_suffix_id').val();
         currentData.thickness = $('#rfq_thickness').val();
         currentData.width = $('#rfq_width').val();
         currentData.length = $('#rfq_length').val();
@@ -717,15 +810,33 @@ $(function() {
 
         $('#btn_new_baseline').addClass('hidden');
         $('#btn_delete_baseline').addClass('hidden');
-        $('#rfq_history_select').val('').trigger('change.select2');
         
-        const count = (window.rfqHistory ? window.rfqHistory.length : 0) + 1;
-        $('#rfq_name').val(`Baseline ${count}`);
-        $('#rfq_id').val('');
+        const count = (window.baseHistory ? window.baseHistory.length : 0) + 1;
+        const newName = `EBD ${count}`;
+
+        // Add temporary indicator to dropdown
+        const histSelect = $('#rfq_history_select');
+        if (histSelect.find('option[value="NEW_CREATE"]').length === 0) {
+            histSelect.prepend(`<option value="NEW_CREATE">${newName} (New)</option>`);
+        }
+        histSelect.val('NEW_CREATE').trigger('change.select2');
+        
+        $('#base_name').val(newName);
+        $('#display_base_name').text(newName);
+        $('#base_id').val('');
+
+        // Update Badge to NEW Mode
+        $('#editing_status_badge').removeClass('bg-amber-100 border-amber-200 dark:bg-amber-900/30 dark:border-amber-800').addClass('bg-primary-100 border-primary-200 dark:bg-primary-900/30 dark:border-primary-800');
+        $('#editing_status_badge i').removeClass('fa-pen-to-square text-amber-500').addClass('fa-plus-circle text-primary-500');
+        $('#editing_status_text').text('New Create').removeClass('text-amber-700 dark:text-amber-400').addClass('text-primary-700 dark:text-primary-400');
 
         // Apply captured data
         $('#rfq_material_spec_id').val(currentData.rfq_material_spec_id).trigger('change');
         $('#rfq_unit_id').val(currentData.rfq_unit_id).trigger('change');
+        
+        // Fix: Don't select old suffix for new create, set to empty/No Suffix
+        $('#rfq_vave_base_suffix_id').val('').trigger('change');
+        
         $('#rfq_thickness').val(currentData.thickness);
         $('#rfq_width').val(currentData.width);
         $('#rfq_length').val(currentData.length);
@@ -740,7 +851,7 @@ $(function() {
 
     // Handle Delete Baseline
     $('#btn_delete_baseline').on('click', function() {
-        const id = $('#rfq_id').val();
+        const id = $('#base_id').val();
         if (!id) return;
 
         Swal.fire({
@@ -755,7 +866,7 @@ $(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `{{ url('inventory/vave/rfq') }}/${id}`,
+                    url: `{{ url('inventory/vave/base') }}/${id}`,
                     type: 'POST',
                     data: { 
                         _token: '{{ csrf_token() }}',
@@ -779,7 +890,7 @@ $(function() {
     // Save RFQ Baseline
     $('#rfqForm').on('submit', function(e) {
         e.preventDefault();
-        $.post('{{ route("inventory.vave.storeRfq") }}', $(this).serialize(), function(res) {
+        $.post('{{ route("inventory.vave.storeBase") }}', $(this).serialize(), function(res) {
             if (res.success) {
                 table.ajax.reload();
                 $('#rfqModal').addClass('hidden').removeClass('flex');
@@ -789,7 +900,7 @@ $(function() {
     });
 
     // Global State untuk Comparison Data
-    window.compareState = { id: null, rfqs: [], revisions: [] };
+    window.compareState = { id: null, bases: [], revisions: [] };
 
     // Handle VA/VE Comparison (Fetch Data & Isi Dropdown) dengan Loading State
     $(document).on('click', '.compare-button', function() {
@@ -811,10 +922,10 @@ $(function() {
             const customer = res.product.customer ? res.product.customer.customer_name : (res.product.customer_code || '-');
             $('#comparisonSubtitle').text(`${res.product.part_no} - ${res.product.part_name} (${customer})`);
             
-            window.compareState.rfqs = res.rfqs || [];
+            window.compareState.bases = res.bases || [];
             window.compareState.revisions = res.revisions || [];
             
-            if (window.compareState.rfqs.length === 0) {
+            if (window.compareState.bases.length === 0) {
                 $('#comparisonContainer').html('<div class="p-12 text-center text-gray-400"><i class="fa-solid fa-file-circle-exclamation text-4xl mb-4"></i><p>No baseline data found for this product.</p></div>');
                 $('#comparisonModal').removeClass('hidden').addClass('flex');
                 return;
@@ -824,11 +935,12 @@ $(function() {
             const baseSelect = $('#selectCompareBase').empty();
             const actualSelect = $('#selectCompareActual').empty();
 
-            const defaultBase = window.compareState.rfqs.find(r => r.is_active) || window.compareState.rfqs[0];
-            window.compareState.rfqs.forEach(r => {
-                const isActive = r.is_active ? ' (Active)' : '';
-                baseSelect.append(`<option value="${r.hash_id}" ${r.hash_id === defaultBase.hash_id ? 'selected' : ''}>${r.rfq_name}${isActive}</option>`);
+            let html = '';
+            res.bases.forEach(r => {
+                const suffix = r.suffix ? ` - ${r.suffix.name}` : '';
+                html += `<option value="${r.hash_id}" ${r.is_active ? 'selected' : ''}>${r.base_name}${suffix} (${parseFloat(r.weight_kg).toFixed(3)}kg)</option>`;
             });
+            $('#selectCompareBase').html(html);
 
             if (window.compareState.revisions.length > 0) {
                 const defaultRev = window.compareState.revisions[0];
@@ -863,20 +975,20 @@ $(function() {
     function renderComparisonTable() {
         const isHistoryChecked = $('#toggleHistory').is(':checked');
         const id = window.compareState.id;
-        const rfqs = window.compareState.rfqs;
+        const bases = window.compareState.bases;
         const revisions = window.compareState.revisions;
 
         const selectedBaseHash = $('#selectCompareBase').val();
         const selectedRevId = $('#selectCompareActual').val();
 
         // Gunakan data berdasarkan pilihan dropdown
-        const benchmarkRfq = rfqs.find(r => r.hash_id == selectedBaseHash) || rfqs[0];
+        const benchmarkBase = bases.find(r => r.hash_id == selectedBaseHash) || bases[0];
         const latestRevision = revisions.find(r => r.revision && r.revision.code == selectedRevId) || null;
 
         let summaryBar = '';
-        if (benchmarkRfq && latestRevision) {
-            const saving = benchmarkRfq.weight_kg - latestRevision.weight_kg;
-            const savingPct = (saving / benchmarkRfq.weight_kg) * 100;
+        if (benchmarkBase && latestRevision) {
+            const saving = benchmarkBase.weight_kg - latestRevision.weight_kg;
+            const savingPct = (saving / benchmarkBase.weight_kg) * 100;
             
             let statusBadge = 'NO CHANGE';
             let colorClass = 'text-gray-700 bg-gray-50 border-gray-200';
@@ -927,8 +1039,8 @@ $(function() {
         
         html += `<th class="w-[200px] min-w-[200px] max-w-[200px] px-5 py-4 text-center border-b border-r border-primary-200 dark:border-gray-700 bg-primary-50/50 dark:bg-primary-900/20 sticky top-0 z-40" style="left: 160px;">
                 <div class="flex flex-col items-center">
-                    <span class="text-[9px] text-primary-600 dark:text-primary-400 font-black tracking-[0.2em] mb-1">PLAN (BASE)</span>
-                    <span class="font-black text-slate-800 dark:text-white truncate max-w-[180px] uppercase tracking-tighter" title="${benchmarkRfq.rfq_name}">${benchmarkRfq.rfq_name}</span>
+                    <span class="text-[9px] text-primary-600 dark:text-primary-400 font-black tracking-[0.2em] mb-1">PLAN (EBD)</span>
+                    <span class="font-black text-slate-800 dark:text-white truncate max-w-[180px] uppercase tracking-tighter" title="${benchmarkBase.base_name}">${benchmarkBase.base_name}</span>
                 </div>
             </th>`;
 
@@ -965,7 +1077,7 @@ $(function() {
         const buildRow = (label, valueFormatter) => {
             let row = `<tr class="hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-150 text-xs text-gray-700 dark:text-gray-300">`;
             row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 font-semibold sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 transition-colors group-hover:bg-primary-50">${label}</td>`;
-            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${valueFormatter(benchmarkRfq)}</td>`;
+            row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${valueFormatter(benchmarkBase)}</td>`;
             row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-medium sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 320px;">${latestRevision ? valueFormatter(latestRevision) : '-'}</td>`;
             row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-700 font-bold variance-cell sticky z-30 bg-gray-50 transition-colors group-hover:bg-primary-100" style="left: 480px;">-</td>`;
             revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) row += `<td class="w-[120px] min-w-[120px] px-4 py-2 text-center border-r border-gray-200 dark:border-gray-200 text-gray-400 history-col hidden border-dashed">${valueFormatter(rev)}</td>`; });
@@ -974,7 +1086,7 @@ $(function() {
 
         const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false) => {
             const getVal = (item) => typeof valueGetter === 'function' ? valueGetter(item) : parseFloat(item[valueGetter] || 0);
-            const baseVal = getVal(benchmarkRfq);
+            const baseVal = getVal(benchmarkBase);
             let row = `<tr class="hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-150 text-xs group">
                 <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 transition-colors group-hover:bg-primary-50">${label}</td>
                 <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${baseVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
@@ -1021,7 +1133,7 @@ $(function() {
         html += buildComputedRow('Thickness (mm)', 'thickness', '', 2, false); 
         html += buildComputedRow('Width (mm)', 'width', '', 2, false);
 
-        const untCompare = (benchmarkRfq.unit ? benchmarkRfq.unit.name : '').toLowerCase();
+        const untCompare = (benchmarkBase.unit ? benchmarkBase.unit.name : '').toLowerCase();
         if (untCompare.includes('trapezoid')) {
             html += buildComputedRow('Length 1 (L1)', 'length', 'mm', 2, false);
             html += buildComputedRow('Length 2 (L2)', 'length_2', 'mm', 2, false);
@@ -1049,11 +1161,9 @@ $(function() {
         html += buildRow('Remark', item => item.remark ? item.remark : '-');
 
         let statusRow = `<tr class="bg-gray-50/50 hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs border-t-2 border-gray-200 dark:border-gray-600 group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Status</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-gray-50 dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;
-        let rateRow = `<tr class="bg-white hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Rate</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;
-
-        if (latestRevision) {
-            const saving = benchmarkRfq.weight_kg - latestRevision.weight_kg;
-            const savingPct = (saving / benchmarkRfq.weight_kg) * 100;
+        let rateRow = `<tr class="bg-white hover:bg-primary-100 dark:bg-gray-800 dark:hover:bg-primary-900/40 text-xs group"><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-300 z-10 font-bold uppercase group-hover:bg-primary-100">Rate</td><td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-3 text-center border-r border-gray-300 bg-white dark:bg-gray-800 sticky z-30 group-hover:bg-primary-100" style="left: 160px;">-</td>`;        if (latestRevision) {
+            const saving = benchmarkBase.weight_kg - latestRevision.weight_kg;
+            const savingPct = (saving / benchmarkBase.weight_kg) * 100;
             let sText = 'NO CHANGE', sColor = 'text-gray-700 font-bold bg-gray-100', rColor = 'text-gray-700'; 
             if (saving > 0.0001) { sText = 'MERIT'; sColor = 'text-green-700 bg-green-50'; rColor = 'text-green-700'; }
             else if (saving < -0.0001) { sText = 'LOSS'; sColor = 'text-red-700 bg-red-50'; rColor = 'text-red-700'; }
@@ -1064,9 +1174,9 @@ $(function() {
             statusRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 bg-gray-50 border-r border-gray-300 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-3 bg-gray-100 sticky z-30" style="left: 480px;">-</td>`;
             rateRow += `<td class="w-[160px] min-w-[160px] px-4 py-3 bg-white border-r border-gray-300 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-3 bg-gray-100 sticky z-30" style="left: 480px;">-</td>`;
         }
-
+ 
         const buildHistStatus = (item) => {
-            const baseW = parseFloat(benchmarkRfq.weight_kg) || 0;
+            const baseW = parseFloat(benchmarkBase.weight_kg) || 0;
             const itemW = parseFloat(item.weight_kg) || 0;
             if (baseW <= 0 || itemW <= 0) {
                 statusRow += `<td class="w-[120px] min-w-[120px] px-4 py-3 text-center bg-gray-50 history-col hidden border-dashed text-gray-400">-</td>`;

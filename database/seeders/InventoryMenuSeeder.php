@@ -98,6 +98,13 @@ class InventoryMenuSeeder extends Seeder
                         'order' => 10,
                         'roles' => ['admin', 'approver'],
                     ],
+                    [
+                        'title' => 'EBD Suffix',
+                        'route' => 'inventory.master.vave-base-suffix.index',
+                        'icon' => 'fa-solid fa-tags',
+                        'order' => 11,
+                        'roles' => ['admin', 'approver'],
+                    ],
                 ]
             ],
             [

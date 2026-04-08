@@ -155,6 +155,14 @@
                                 <p id="error-product_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
                             <div class="md:col-span-2">
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit <span class="text-red-500">*</span></label>
+                                <select name="unit_id" id="unit_id" required class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <option value="">Select Unit</option>
+                                </select>
+                                <p id="error-unit_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
+                            </div>
+
+                            <div class="md:col-span-2">
                                 <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Revision <span class="text-red-500">*</span></label>
                                 <select name="revision_id" id="revision_id" required class="bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                     <option value="">Select Revision</option>
@@ -178,15 +186,6 @@
                             <i class="fa-solid fa-ruler-combined text-primary-500"></i>
                             Unit & Dimensions
                         </h4>
-
-                        {{-- Unit Selection (First as requested) --}}
-                        <div class="mb-4 max-w-sm">
-                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit <span class="text-[9px] text-gray-300 font-normal normal-case tracking-normal ml-1">(Determines visible dimensions)</span></label>
-                            <select name="unit_id" id="unit_id" class="select2 bg-white border border-slate-200 text-gray-900 text-xs font-semibold rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
-                                <option value="">Select Unit</option>
-                            </select>
-                            <p id="error-unit_id" class="text-red-500 text-[10px] mt-1 hidden font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Check Input</p>
-                        </div>
 
                         {{-- Dimensions Grid --}}
                         <div class="grid gap-4 md:grid-cols-3 lg:grid-cols-6 bg-primary-50/50 dark:bg-gray-700/30 p-4 rounded-xs border border-slate-100 dark:border-gray-700">
@@ -923,6 +922,7 @@ $(function() {
             }
 
             $.get(`${this.config.routes.base}/latest-revision/${data.id}`, (res) => {
+                this.state.isAutoFilling = true;
                 if (res.exists) {
                     const d = res.data;
                     $('#revision_id').val(res.next_revision_id).trigger('change');
@@ -948,6 +948,7 @@ $(function() {
                     $('#revision_id').val(res.next_revision_id).trigger('change');
                 }
                 this.ui.toggleUnitFields();
+                this.state.isAutoFilling = false;
             });
         },
 
@@ -1133,8 +1134,7 @@ $(function() {
             data.materialSpecs?.forEach(ms => $('#material_spec_id').append(`<option value="${ms.hash_id}">${ms.spec_name}</option>`));
             data.units?.forEach(u => this.elements.unitSelect.append(`<option value="${u.hash_id}">${u.code} - ${u.name}</option>`));
             data.ranks?.forEach(r => $('#rank_id').append(`<option value="${r.hash_id}">${r.code}</option>`));
-            $('#revision_id').empty().append('<option value="">Select Revision</option>');
-            data.revisions?.forEach(rev => $('#revision_id').append(`<option value="${rev.hash_id}">${rev.code}</option>`));
+            this.ui.updateRevisionOptions();
         },
 
         /**
@@ -1172,6 +1172,12 @@ $(function() {
                 const unit = ProductApp.state.dropdownData.units?.find(u => u.hash_id === unitId);
                 const name = (unit?.name || '').toLowerCase();
                 const isCoil = name.includes('coil');
+                
+                // NEW: Update Revision Options based on Unit
+                if (!ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
+                    ProductApp.ui.updateRevisionOptions(name);
+                }
+
                 $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer, #coilWeightSection').hide();
                 $('#pcs_per_unit').prop('readonly', isCoil).toggleClass('bg-gray-100 cursor-not-allowed', isCoil);
 
@@ -1192,6 +1198,33 @@ $(function() {
                 }
                 ProductApp.logic.calculateWeight();
                 ProductApp.logic.calculateNetCoil();
+            },
+            updateRevisionOptions: function(unitName = '') {
+                const $rev = $('#revision_id');
+                const currentVal = $rev.val();
+                const revisions = ProductApp.state.dropdownData.revisions || [];
+                
+                let targetGroup = '';
+                if (unitName.includes('coil')) targetGroup = 'RC';
+                else if (unitName.includes('sheet') || unitName.includes('trapezoid')) targetGroup = 'R';
+
+                $rev.empty().append('<option value="">Select Revision</option>');
+                
+                revisions.forEach(rev => {
+                    // If no group targeted, show all. If group targeted, filter.
+                    if (!targetGroup || rev.group_name === targetGroup) {
+                        $rev.append(`<option value="${rev.hash_id}">${rev.code}</option>`);
+                    }
+                });
+
+                // Restore previous selection if it still exists in the list
+                if (currentVal) $rev.val(currentVal);
+                
+                // Auto-select first option if empty and group is known
+                if (!$rev.val() && targetGroup && !ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
+                   const firstInGroup = revisions.find(r => r.group_name === targetGroup);
+                   if (firstInGroup) $rev.val(firstInGroup.hash_id);
+                }
             }
         }
     };

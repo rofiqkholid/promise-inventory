@@ -68,8 +68,8 @@
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Group Name <span class="text-red-500">*</span></label>
                     <select name="group_name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
-                        <option value="Standard">Standard</option>
-                        <option value="Correction">Correction</option>
+                        <option value="R">R (Sheet / Trapezoid)</option>
+                        <option value="RC">RC (Coil)</option>
                     </select>
                     <p class="error-msg hidden text-red-500 text-[10px] mt-1 font-bold"></p>
                 </div>
@@ -117,8 +117,8 @@
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Group Name <span class="text-red-500">*</span></label>
                     <select name="group_name" id="edit_group_name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
-                        <option value="Standard">Standard</option>
-                        <option value="Correction">Correction</option>
+                        <option value="R">R (Sheet / Trapezoid)</option>
+                        <option value="RC">RC (Coil)</option>
                     </select>
                     <p class="error-msg hidden text-red-500 text-[10px] mt-1 font-bold"></p>
                 </div>
