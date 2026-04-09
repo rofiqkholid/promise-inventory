@@ -527,7 +527,7 @@ $(function() {
         $('#import_sheet_name').empty().append('<option value="">Loading sheets...</option>').trigger('change').prop('disabled', true);
 
         $.ajax({
-            url: window.location.origin + '{{ route("inventory.master.product.getSheetNames", [], false) }}',
+            url: '{{ route("inventory.master.product.getSheetNames") }}',
             method: 'POST',
             data: formData,
             processData: false,
@@ -573,7 +573,7 @@ $(function() {
         $('#importLogs').empty();
 
         $.ajax({
-            url: window.location.origin + '{{ route("inventory.vave.importExcel", [], false) }}',
+            url: '{{ route("inventory.vave.importExcel") }}',
             method: 'POST',
             data: formData,
             processData: false,
