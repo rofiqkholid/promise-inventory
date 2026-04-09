@@ -92,6 +92,22 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                     $netWeight = $this->parseNumeric($row[$col + 11] ?? 0);
                     $price = $this->parseNumeric($row[$col + 12] ?? 0);
                     $remark = trim($row[$col + 13] ?? '');
+                    $weight = $weightKg;
+
+                    // Automatic Weight Calculation if zero or not provided (Mirroring JS logic in index.blade.php)
+                    if ($weight <= 0) {
+                        $unitLower = strtolower($unitName);
+                        if (str_contains($unitLower, 'sheet')) {
+                            $weight = ($thickness * $width * $length * $density) / 1000000;
+                        } elseif (str_contains($unitLower, 'coil')) {
+                            $weight = ($thickness * $width * $pitch * $density) / 1000000;
+                        } elseif (str_contains($unitLower, 'trapezoid')) {
+                            $avgL = ($length + $length2) / 2;
+                            $weight = ($thickness * $width * $avgL * $density) / 1000000;
+                        } else {
+                            $weight = ($thickness * $width * $length * $density) / 1000000;
+                        }
+                    }
 
                     // Resolve Relationships
                     $suffix = !empty($suffixName) ? VaveBaseSuffix::where('name', $suffixName)->where('customer_id', $product->customer_id)->first() : null;
@@ -120,16 +136,20 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                         'length' => $length,
                         'length_2' => $length2,
                         'pitch' => $pitch,
-                        'weight_kg' => $weightKg,
+                        'weight_kg' => $weight,
                         'net_weight' => $netWeight,
                         'material_price' => $price,
                         'remark' => $remark,
+                        'is_active' => 1, // Set recently imported as active
                     ];
 
                     $existing = VaveBase::where([
                         'product_id' => $product->id,
                         'base_name' => $baseName
                     ])->first();
+
+                    // Deactivate others for this product before creating/updating this one
+                    VaveBase::where('product_id', $product->id)->update(['is_active' => 0]);
 
                     if ($existing) {
                         $changes = [];
@@ -143,14 +163,11 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                             $existing->update($data);
                             $this->successLog['updated'][] = "{$partNo} [{$baseName}] (Updated: " . implode(', ', $changes) . ")";
                         } else {
+                            // Even if no data changes, ensure it's active if desired
+                            $existing->update(['is_active' => 1]);
                             $this->successLog['unchangedCount']++;
                         }
                     } else {
-                        // If creating new, we check if it should be active. 
-                        // Typically, the last one imported per product becomes active in this logic
-                        VaveBase::where('product_id', $product->id)->update(['is_active' => 0]);
-                        $data['is_active'] = 1;
-                        
                         VaveBase::create($data);
                         $this->successLog['created'][] = "{$partNo} [{$baseName}]";
                     }

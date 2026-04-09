@@ -320,7 +320,8 @@
                 <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest">Import EBD Data</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Bulk import Engineering Breakdown data from Excel</p>
             </div>
-            <form id="importEbdForm" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+            <div class="flex-1 overflow-y-auto custom-scrollbar">
+                <form id="importEbdForm" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
                 @csrf
                 <div class="space-y-6">
                     <div class="p-4 bg-primary-50/50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-800 rounded-xs flex items-start gap-4">
@@ -359,10 +360,11 @@
                         <button type="submit" id="btnSubmitImport" class="px-8 py-2.5 text-[10px] font-bold text-white bg-primary-600 rounded-xs uppercase tracking-widest hover:bg-primary-700 disabled:opacity-50">Start Import</button>
                     </div>
                 </div>
-            </form>
-            <div id="importResult" class="hidden px-8 pb-8 flex-1 overflow-y-auto">
-                <div class="p-4 rounded-xs border mb-4" id="importStatusBox"></div>
-                <div id="importLogs" class="space-y-1 font-mono text-[10px] max-h-48 overflow-y-auto p-3 bg-slate-50 dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700"></div>
+                <div id="importResult" class="hidden px-8 pb-10">
+                    <div class="p-5 rounded-xs border mb-4 shadow-sm" id="importStatusBox"></div>
+                    <div class="mb-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Process Logs & Details</div>
+                    <div id="importLogs" class="space-y-1 font-mono text-[10px] min-h-[150px] p-5 bg-slate-50 dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -434,6 +436,16 @@ $(function() {
         ]
     });
 
+    // Initialize EBD Bases on load (independent of customer)
+    function refreshEbdBases(customerId = null) {
+        $.get('{{ route("inventory.vave.getBases") }}', { customer_id: customerId }, function(data) {
+            const baseSelect = $('#filterEbdBase').empty().append('<option value="">All Bases</option>');
+            data.forEach(name => {
+                baseSelect.append(`<option value="${name}">${name}</option>`);
+            });
+        });
+    }
+
     // Populate Master Filters
     function loadMainFilters() {
         $.get('{{ route("inventory.master.product.getCustomers") }}', function(data) {
@@ -442,15 +454,6 @@ $(function() {
             });
         });
 
-        // Initialize EBD Bases on load (independent of customer)
-        function refreshEbdBases(customerId = null) {
-            $.get('{{ route("inventory.vave.getBases") }}', { customer_id: customerId }, function(data) {
-                const baseSelect = $('#filterEbdBase').empty().append('<option value="">All Bases</option>');
-                data.forEach(name => {
-                    baseSelect.append(`<option value="${name}">${name}</option>`);
-                });
-            });
-        }
         refreshEbdBases();
 
         $('#filterCustomer').on('change', function() {
@@ -1048,6 +1051,9 @@ $(function() {
                     },
                     error: function(xhr) {
                         Swal.fire('Error', xhr.responseJSON.message || 'Error deleting baseline', 'error');
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).html(originalHtml);
                     }
                 });
             }
