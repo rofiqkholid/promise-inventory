@@ -138,7 +138,7 @@
                 @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($r->length, 2) }}</td> @endforeach
                 @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->length, 2) }}</td> @endif @endforeach
             </tr>
-        @endiff
+        @endif
 
         {{-- Section: Yield & Weight --}}
         <tr>
@@ -191,7 +191,7 @@
             <td style="border: 1px solid #000000; text-align: center;">{{ number_format($baseBud, 1) }}%</td>
             <td style="border: 1px solid #000000; text-align: center;">{{ number_format($actBud, 1) }}%</td>
             <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb; font-weight: bold; color: {{ $deltaBud >= 0 ? '#16a34a' : '#dc2626' }};">{{ ($deltaBud > 0 ? '+' : '') . number_format($deltaBud, 1) }}%</td>
-            @foreach($rfqHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($calcBud($r), 1) }}%</td> @endforeach
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($calcBud($r), 1) }}%</td> @endforeach
             @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($calcBud($rev), 1) }}%</td> @endif @endforeach
         </tr>
 
@@ -233,7 +233,7 @@
             <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">-</td>
             @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ $r->remark ?? '-' }}</td> @endforeach
             @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ $rev->remark ?? '-' }}</td> @endif @endforeach
-        </tr>>
+        </tr>
 
         {{-- Impact Summary --}}
         <tr>

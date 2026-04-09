@@ -235,6 +235,8 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/comparison/{id}/export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportExcel'])->name('export');
         Route::get('/summary-export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
         Route::get('/get-bases', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getBases'])->name('getBases');
+        Route::get('/download-template', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::post('/import-excel', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'importExcel'])->name('importExcel');
         Route::delete('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
     });
 

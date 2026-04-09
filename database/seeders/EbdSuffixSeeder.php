@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\InventoryModel\EbdStatus;
+use App\Models\InventoryModel\VaveBaseSuffix;
 use Illuminate\Support\Facades\DB;
 
 class EbdSuffixSeeder extends Seeder
@@ -14,19 +14,19 @@ class EbdSuffixSeeder extends Seeder
     public function run(): void
     {
         // Sample for MMKI (1)
-        EbdStatus::updateOrCreate(
+        VaveBaseSuffix::updateOrCreate(
             ['customer_id' => 1, 'name' => 'SQ'],
             ['remark' => 'Status Quo']
         );
-        EbdStatus::updateOrCreate(
+        VaveBaseSuffix::updateOrCreate(
             ['customer_id' => 1, 'name' => 'Tech Review'],
             ['remark' => 'Technical Review by Engineering']
         );
-        EbdStatus::updateOrCreate(
+        VaveBaseSuffix::updateOrCreate(
             ['customer_id' => 1, 'name' => 'Go Mfg'],
             ['remark' => '']
         );
-        EbdStatus::updateOrCreate(
+        VaveBaseSuffix::updateOrCreate(
             ['customer_id' => 1, 'name' => 'Ichigenka'],
             ['remark' => '']
         );

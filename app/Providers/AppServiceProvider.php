@@ -33,62 +33,82 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         View::composer(['layouts.header', 'components.stock-alert-modal'], function ($view) {
-            $stockAlerts = DB::table('inv_t_product_detail as p')
-                ->join('products as prod', 'prod.id', '=', 'p.product_id')
-                ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
-                ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
-                ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
-                ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
-                ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
-                ->select([
-                    'prod.part_no', 
-                    'r.code as revision', 
-                    'c.code as customer_code', 
-                    'm.name as model_name', 
-                    'p.current_stock_qty', 
-                    'p.min_stock', 
-                    'p.pcs_per_unit',
-                    'p.product_status',
-                    'ms.project_status',
-                    'p.weight_kg',
-                    'u.name as unit_name'
-                ])
-                ->where('p.is_active', 1)
-                ->get()
-                ->map(function ($item) {
-                    $currentPCS = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
-                        $item->current_stock_qty, 
-                        $item->weight_kg, 
-                        $item->pcs_per_unit, 
-                        $item->unit_name
-                    );
+            if (!auth()->check()) {
+                $view->with('stockAlerts', collect());
+                if (str_contains($view->getName(), 'stock-alert-modal')) {
+                    $view->with('stockAlertAutoOpen', false);
+                }
+                return;
+            }
 
-                    $item->status = ucfirst(\App\Models\InventoryModel\InventoryProduct::calculateStockStatus(
-                        $currentPCS, 
-                        $item->min_stock, 
-                        $item->product_status ?: $item->project_status
-                    ));
+            // Use request-level caching to avoid duplicate queries within the same request
+            static $cachedStockAlerts = null;
 
-                    // Update values for display in the modal
-                    $item->current_stock_qty = $currentPCS;
-                    $item->min_stock = floatval($item->min_stock);
+            if ($cachedStockAlerts === null) {
+                $cachedStockAlerts = DB::table('inv_t_product_detail as p')
+                    ->join('products as prod', 'prod.id', '=', 'p.product_id')
+                    ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
+                    ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
+                    ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
+                    ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
+                    ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+                    ->select([
+                        'prod.part_no', 
+                        'r.code as revision', 
+                        'c.code as customer_code', 
+                        'm.name as model_name', 
+                        'p.current_stock_qty', 
+                        'p.min_stock', 
+                        'p.pcs_per_unit',
+                        'p.product_status',
+                        'ms.project_status',
+                        'p.weight_kg',
+                        'u.name as unit_name'
+                    ])
+                    ->where('p.is_active', 1)
+                    ->get()
+                    ->map(function ($item) {
+                        $currentPCS = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+                            $item->current_stock_qty, 
+                            $item->weight_kg, 
+                            $item->pcs_per_unit, 
+                            $item->unit_name
+                        );
 
-                    return $item;
-                })
-                ->filter(function ($item) {
-                    return $item->status === 'Warning' || $item->status === 'Critical' || $item->status === 'Over';
-                })
-                ->values();
+                        $item->status = ucfirst(\App\Models\InventoryModel\InventoryProduct::calculateStockStatus(
+                            $currentPCS, 
+                            $item->min_stock, 
+                            $item->product_status ?: $item->project_status
+                        ));
 
-            $view->with('stockAlerts', $stockAlerts);
+                        // Update values for display in the modal
+                        $item->current_stock_qty = $currentPCS;
+                        $item->min_stock = floatval($item->min_stock);
 
-            // Only handle auto-open for the modal component to avoid session flag being set by header
+                        return $item;
+                    })
+                    ->filter(function ($item) {
+                        return in_array($item->status, ['Warning', 'Critical', 'Over']);
+                    })
+                    ->values();
+            }
+
+            $view->with('stockAlerts', $cachedStockAlerts);
+
+            // Only handle auto-open logic for the modal component
             if (str_contains($view->getName(), 'stock-alert-modal')) {
                 $stockAlertAutoOpen = false;
-                if (count($stockAlerts) > 0 && !Session::has('stock_alert_auto_shown')) {
+                
+                // Only auto-open if alerts exist AND the flag isn't set in the session yet
+                if (count($cachedStockAlerts) > 0 && !Session::has('stock_alert_auto_shown')) {
                     $stockAlertAutoOpen = true;
                     Session::put('stock_alert_auto_shown', true);
+                    
+                    // Explicitly save session because View::composers can run late in the request lifecycle
+                    // where auto-saving might not reliably pick up changes for the next request.
+                    Session::save();
                 }
+                
                 $view->with('stockAlertAutoOpen', $stockAlertAutoOpen);
             }
         });

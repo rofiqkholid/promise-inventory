@@ -10,6 +10,7 @@ use App\Models\InventoryModel\Unit;
 use App\Models\InventoryModel\VaveBaseSuffix;
 use App\Models\Products;
 use App\Exports\VaveAnalysisExport;
+use App\Imports\VaveBaseImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -559,4 +560,56 @@ class VaveAnalysisController extends Controller
             
         return response()->json($bases);
     }
+    /**
+     * Download Import Template
+     */
+    public function downloadTemplate()
+    {
+        $path = app_path('templates/VAVE_Analysis_Import_Template.xlsx');
+        if (!file_exists($path)) {
+            return back()->with('error', 'Template file not found.');
+        }
+        return response()->download($path);
+    }
+
+    /**
+     * Import EBD Data from Excel.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+            'sheet_name' => 'required|string'
+        ]);
+
+        try {
+            $import = new VaveBaseImport($request->sheet_name);
+            Excel::import($import, $request->file('file'));
+
+            $errors = $import->getErrors();
+            $log = $import->getSuccessLog();
+
+            if (!empty($errors)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import completed with errors.',
+                    'errors' => $errors,
+                    'log' => $log
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Import successful.',
+                'log' => $log
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Critical Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

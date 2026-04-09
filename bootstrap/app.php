@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo('/login');
         $middleware->trustProxies(at: '*');
+        $middleware->validateCsrfTokens(except: [
+            'logout',
+        ]);
         $middleware->encryptCookies(except: [
             'promise_auth_session'
         ]);
