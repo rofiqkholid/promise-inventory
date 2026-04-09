@@ -130,17 +130,16 @@ class VaveAnalysisController extends Controller
             $actW = (float)($item->latest_weight ?? 0);
             
             if ($baseW > 0 && $actW > 0) {
-    $diff = $baseW - $actW;
-    
-    // Hitung status dengan 3 kondisi
-    if ($diff > 0) {
-        $item->status = 'MERIT';
-    } elseif ($diff < 0) {
-        $item->status = 'LOSS';
-    } else {
-        // Kondisi ketika selisihnya tepat 0 (0%)
-        $item->status = 'NO CHANGE'; // Silakan ganti teks ini sesuai keinginan Anda
-    }
+                $diff = $baseW - $actW;
+                
+                // Use a small epsilon (0.0001) to handle floating point precision
+                if ($diff > 0.0001) {
+                    $item->status = 'MERIT';
+                } elseif ($diff < -0.0001) {
+                    $item->status = 'LOSS';
+                } else {
+                    $item->status = 'NO CHANGE';
+                }
     
     $item->diff_kg = abs($diff);
     $item->diff_pct = (abs($diff) / $baseW) * 100;
