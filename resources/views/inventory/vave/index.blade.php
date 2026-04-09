@@ -415,6 +415,11 @@ $(function() {
                             <span class="px-3 py-1 text-[9px] font-black rounded-xs bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 uppercase tracking-[0.1em]">LOSS</span>
                             <span class="text-[9px] text-red-600 dark:text-red-500 font-bold tracking-tight italic">${r.diff_pct.toFixed(1)}% Loss</span>
                         </div>`;
+                    } else if (d === 'NO CHANGE') {
+                        return `<div class="flex flex-col items-center gap-1">
+                            <span class="px-3 py-1 text-[9px] font-black rounded-xs bg-slate-50 text-slate-500 dark:bg-gray-800 dark:text-gray-400 border border-slate-200 dark:border-gray-700 uppercase tracking-[0.1em]">NO CHANGE</span>
+                            <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold tracking-tight italic">Same Weight</span>
+                        </div>`;
                     } else {
                         return `<span class="px-3 py-1 text-[9px] font-black rounded-xs bg-slate-50 text-slate-500 dark:bg-gray-800 dark:text-gray-400 border border-slate-200 dark:border-gray-700 uppercase tracking-[0.1em]">NO DATA</span>`;
                     }
@@ -1165,9 +1170,9 @@ $(function() {
             
             let statusBadge = 'NO CHANGE';
             let colorClass = 'text-gray-700 bg-gray-50 border-gray-200';
-            if (saving > 0.0001) {
+            if (saving > 0.001) {
                 statusBadge = 'MERIT'; colorClass = 'text-green-700 bg-green-50 border-green-200';
-            } else if (saving < -0.0001) {
+            } else if (saving < -0.001) {
                 statusBadge = 'LOSS'; colorClass = 'text-red-700 bg-red-50 border-red-200';
             }
             

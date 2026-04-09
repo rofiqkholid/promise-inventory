@@ -132,10 +132,10 @@ class VaveAnalysisController extends Controller
             if ($baseW > 0 && $actW > 0) {
                 $diff = $baseW - $actW;
                 
-                // Use a small epsilon (0.0001) to handle floating point precision
-                if ($diff > 0.0001) {
+                // Use a larger epsilon (0.001 kg / 1 gram) to handle precision and UI alignment
+                if ($diff > 0.001) {
                     $item->status = 'MERIT';
-                } elseif ($diff < -0.0001) {
+                } elseif ($diff < -0.001) {
                     $item->status = 'LOSS';
                 } else {
                     $item->status = 'NO CHANGE';
