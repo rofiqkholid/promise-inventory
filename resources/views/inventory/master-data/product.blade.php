@@ -11,13 +11,13 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
-                <i class="fa-solid fa-file-excel"></i>
-                Export Excel
-            </button>
             <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-file-import"></i>
                 Import Excel
+            </button>
+            <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+                <i class="fa-solid fa-file-excel"></i>
+                Export Excel
             </button>
             <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i>
@@ -694,9 +694,6 @@ $(function() {
                     data: formData,
                     processData: false,
                     contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': ProductApp.config.csrfToken
-                    },
                     success: (res) => {
                         const $sheet = $('#sheet_name');
                         $sheet.empty().append('<option value="">Select Worksheet...</option>');
@@ -1008,9 +1005,6 @@ $(function() {
                 data: formData,
                 processData: false,
                 contentType: false,
-                headers: {
-                    'X-CSRF-TOKEN': this.config.csrfToken
-                },
                 success: (res) => {
                     this.state.table.ajax.reload();
                     $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
@@ -1180,9 +1174,8 @@ $(function() {
                 const isCoil = name.includes('coil');
                 
                 // NEW: Update Revision Options based on Unit
-                if (!ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
-                    ProductApp.ui.updateRevisionOptions(name);
-                }
+                const currentRevId = $('#revision_id').val();
+                ProductApp.ui.updateRevisionOptions(name, currentRevId);
 
                 $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer, #coilWeightSection').hide();
                 $('#pcs_per_unit').prop('readonly', isCoil).toggleClass('bg-gray-100 cursor-not-allowed', isCoil);
@@ -1205,9 +1198,8 @@ $(function() {
                 ProductApp.logic.calculateWeight();
                 ProductApp.logic.calculateNetCoil();
             },
-            updateRevisionOptions: function(unitName = '') {
+            updateRevisionOptions: function(unitName = '', currentSelectedId = null) {
                 const $rev = $('#revision_id');
-                const currentVal = $rev.val();
                 const revisions = ProductApp.state.dropdownData.revisions || [];
                 
                 let targetGroup = '';
@@ -1217,16 +1209,16 @@ $(function() {
                 $rev.empty().append('<option value="">Select Revision</option>');
                 
                 revisions.forEach(rev => {
-                    // If no group targeted, show all. If group targeted, filter.
-                    if (!targetGroup || rev.group_name === targetGroup) {
+                    // Show if: 1. No target group, 2. Matches target group, OR 3. Is currently selected (preserves data in Edit mode)
+                    if (!targetGroup || rev.group_name === targetGroup || rev.hash_id === currentSelectedId) {
                         $rev.append(`<option value="${rev.hash_id}">${rev.code}</option>`);
                     }
                 });
 
-                // Restore previous selection if it still exists in the list
-                if (currentVal) $rev.val(currentVal);
+                // Restore previous selection
+                if (currentSelectedId) $rev.val(currentSelectedId);
                 
-                // Auto-select first option if empty and group is known
+                // Auto-select first matching option ONLY in Add mode if nothing is selected
                 if (!$rev.val() && targetGroup && !ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
                    const firstInGroup = revisions.find(r => r.group_name === targetGroup);
                    if (firstInGroup) $rev.val(firstInGroup.hash_id);
