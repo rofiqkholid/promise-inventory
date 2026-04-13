@@ -34,12 +34,16 @@ Route::get('/debug-sso', function () {
 // Temporary debug route - REMOVE after debugging
 Route::get('/debug-version', function () {
     $user = Auth::user();
+    $middlewareFile = app_path('Http/Middleware/CheckInventoryRole.php');
     return response()->json([
-        'code_version'   => '2026-04-13-v3', // bump this to confirm prod has latest code
-        'auth_check'     => Auth::check(),
-        'user_id'        => Auth::id(),
-        'user_roles'     => $user ? $user->roles->pluck('code') : [],
-        'php_version'    => PHP_VERSION,
+        'code_version'      => '2026-04-13-v4', // bump this to confirm prod has latest code
+        'auth_check'        => Auth::check(),
+        'user_id'           => Auth::id(),
+        'user_roles'        => $user ? $user->roles->pluck('code') : [],
+        'php_version'       => PHP_VERSION,
+        'middleware_mtime'  => file_exists($middlewareFile) ? date('Y-m-d H:i:s', filemtime($middlewareFile)) : 'not found',
+        'opcache_enabled'   => function_exists('opcache_get_status') ? (opcache_get_status(false)['opcache_enabled'] ?? false) : 'function not available',
+        'opcache_cached_scripts' => function_exists('opcache_get_status') ? (opcache_get_status(false)['opcache_statistics']['num_cached_scripts'] ?? 'n/a') : 'n/a',
     ]);
 });
 
