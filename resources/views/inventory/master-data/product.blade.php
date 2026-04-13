@@ -11,13 +11,13 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
-                <i class="fa-solid fa-file-import"></i>
-                Import Excel
-            </button>
             <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
+            </button>
+            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+                <i class="fa-solid fa-file-import"></i>
+                Import Excel
             </button>
             <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i>

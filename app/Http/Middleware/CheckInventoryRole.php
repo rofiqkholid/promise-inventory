@@ -62,8 +62,19 @@ class CheckInventoryRole
                 $specificMenuRoutes = $user->specificMenus()->pluck('route')->toArray();
                 $allowedSpecificRoutes = $expandMenuRoutes($specificMenuRoutes);
                 
+                // NEW: Also allow siblings if index is allowed
                 if (in_array($routeName, $allowedSpecificRoutes) || array_intersect($possibleRoutes, $specificMenuRoutes)) {
                     return $next($request);
+                }
+
+                // Generic sibling check: if user has 'some.route.index', allow 'some.route.*'
+                foreach ($specificMenuRoutes as $allowedRoute) {
+                    if (str_ends_with($allowedRoute, '.index')) {
+                        $baseRoute = substr($allowedRoute, 0, -6); // remove '.index'
+                        if (str_starts_with($routeName, $baseRoute . '.')) {
+                            return $next($request);
+                        }
+                    }
                 }
 
                 // Special case for Master Data: if you have 'inventory.master.master.index', you get its sub-routes
@@ -82,6 +93,16 @@ class CheckInventoryRole
                     
                     if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $roleMenuRoutes)) {
                         return $next($request);
+                    }
+
+                    // Sibling check for roles
+                    foreach ($roleMenuRoutes as $allowedRoute) {
+                        if (str_ends_with($allowedRoute, '.index')) {
+                            $baseRoute = substr($allowedRoute, 0, -6);
+                            if (str_starts_with($routeName, $baseRoute . '.')) {
+                                return $next($request);
+                            }
+                        }
                     }
 
                     if ($isMasterSubRoute && in_array('inventory.master.master.index', $roleMenuRoutes)) {
