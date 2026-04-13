@@ -694,6 +694,9 @@ $(function() {
                     data: formData,
                     processData: false,
                     contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': ProductApp.config.csrfToken
+                    },
                     success: (res) => {
                         const $sheet = $('#sheet_name');
                         $sheet.empty().append('<option value="">Select Worksheet...</option>');
@@ -1005,6 +1008,9 @@ $(function() {
                 data: formData,
                 processData: false,
                 contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': this.config.csrfToken
+                },
                 success: (res) => {
                     this.state.table.ajax.reload();
                     $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')

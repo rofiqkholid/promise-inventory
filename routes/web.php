@@ -81,8 +81,8 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                         Route::get('/product/data', [InventoryProductController::class, 'data'])->name('product.data');
             Route::get('/product/export-excel', [InventoryProductController::class, 'exportExcel'])->name('product.exportExcel');
             Route::get('/product/download-template', [InventoryProductController::class, 'downloadTemplate'])->name('product.downloadTemplate');
-            Route::post('/product/import-excel', [InventoryProductController::class, 'importExcel'])->name('product.importExcel');
-            Route::post('/product/get-sheet-names', [InventoryProductController::class, 'getSheetNames'])->name('product.getSheetNames');
+            Route::post('/product/upload-handler', [InventoryProductController::class, 'importExcel'])->name('product.importExcel');
+            Route::post('/product/verify-sheets', [InventoryProductController::class, 'getSheetNames'])->name('product.getSheetNames');
             Route::get('/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('product.dropdownData');
             Route::get('/product/get-products', [InventoryProductController::class, 'getProducts'])->name('product.getProducts');
             Route::get('/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('product.getCustomers');
@@ -236,7 +236,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/summary-export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
         Route::get('/get-bases', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getBases'])->name('getBases');
         Route::get('/download-template', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
-        Route::post('/import-excel', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'importExcel'])->name('importExcel');
+        Route::post('/upload-handler', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'importExcel'])->name('importExcel');
         Route::delete('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
     });
 
