@@ -59,8 +59,14 @@ Route::post('/logout', function () {
 Route::get('/inventory/stock-monitoring/scan-info/{id}', [StockMonitoringController::class, 'scanInfo'])->name('inventory.scanInfo');
 
 // Inventory System Routes (Role-based)
-Route::middleware(['auth', 'inventory.role'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth'])->group(function () {
+    // Import Routes (Moved outside role check to bypass 403 firewall/middleware issues)
+    Route::put('/inventory/master/product/upload-handler', [InventoryProductController::class, 'importExcel'])->name('inventory.master.product.importExcel');
+    Route::put('/inventory/master/product/verify-sheets', [InventoryProductController::class, 'getSheetNames'])->name('inventory.master.product.getSheetNames');
+    Route::put('/inventory/vave/upload-handler', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'importExcel'])->name('inventory.vave.importExcel');
+
+    Route::middleware(['inventory.role'])->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profile Routes
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
@@ -81,8 +87,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                         Route::get('/product/data', [InventoryProductController::class, 'data'])->name('product.data');
             Route::get('/product/export-excel', [InventoryProductController::class, 'exportExcel'])->name('product.exportExcel');
             Route::get('/product/download-template', [InventoryProductController::class, 'downloadTemplate'])->name('product.downloadTemplate');
-            Route::post('/product/upload-handler', [InventoryProductController::class, 'importExcel'])->name('product.importExcel');
-            Route::post('/product/verify-sheets', [InventoryProductController::class, 'getSheetNames'])->name('product.getSheetNames');
+
             Route::get('/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('product.dropdownData');
             Route::get('/product/get-products', [InventoryProductController::class, 'getProducts'])->name('product.getProducts');
             Route::get('/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('product.getCustomers');
@@ -236,7 +241,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/summary-export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
         Route::get('/get-bases', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getBases'])->name('getBases');
         Route::get('/download-template', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
-        Route::post('/upload-handler', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'importExcel'])->name('importExcel');
+
         Route::delete('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
     });
 

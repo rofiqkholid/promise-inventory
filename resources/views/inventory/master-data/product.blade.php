@@ -684,6 +684,7 @@ $(function() {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('_token', ProductApp.config.csrfToken);
+                formData.append('_method', 'PUT');
 
                 $('#file_loading').removeClass('hidden');
                 $('#import_next_steps').addClass('hidden');
@@ -1001,6 +1002,7 @@ $(function() {
             $('#importResult').addClass('hidden');
 
             const formData = new FormData($('#importForm')[0]);
+            formData.append('_method', 'PUT');
             
             $.ajax({
                 url: this.config.routes.import,
