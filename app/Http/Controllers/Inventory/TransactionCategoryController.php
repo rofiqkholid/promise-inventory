@@ -119,6 +119,16 @@ class TransactionCategoryController extends Controller
     public function destroy($id)
     {
         $transactionCategory = TransactionCategory::findByHashOrFail($id);
+
+        // Check if category is used in transactions
+        $isUsed = \App\Models\InventoryModel\InventoryTransaction::where('transaction_category_id', $transactionCategory->id)->exists();
+        if ($isUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete this category. It is already used in transaction history records.'
+            ], 422);
+        }
+
         $transactionCategory->delete();
         return response()->json(['success' => true, 'message' => 'Category deleted successfully.']);
     }

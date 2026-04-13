@@ -116,6 +116,16 @@ class MaterialSpecController extends Controller
     public function destroy($id)
     {
         $materialSpec = MaterialSpec::findByHashOrFail($id);
+
+        // Check if material spec is used in product details
+        $isUsed = \App\Models\InventoryModel\InventoryProduct::where('material_spec_id', $materialSpec->id)->exists();
+        if ($isUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete material spec. It is already used in product records.'
+            ], 422);
+        }
+
         $materialSpec->delete();
         return response()->json(['success' => true, 'message' => 'Material Spec deleted successfully.']);
     }

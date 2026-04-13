@@ -352,8 +352,11 @@
                 if (result.isConfirmed) {
                     $.ajax({
                         url: "{{ url('inventory/sto') }}/" + hash_id,
-                        method: 'DELETE',
-                        data: { _token: "{{ csrf_token() }}" },
+                        method: 'POST',
+                        data: { 
+                            _token: "{{ csrf_token() }}",
+                            _method: 'DELETE'
+                        },
                         success: function(data) {
                             if (data.success) {
                                 window.showToast(data.message, 'success');

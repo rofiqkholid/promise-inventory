@@ -211,6 +211,19 @@ class SupplierController extends Controller
     public function destroy($id)
     {
         $supplier = Supplier::findByHashOrFail($id);
+
+        // Check if supplier is used in transactions (as source or destination)
+        $isUsed = \App\Models\InventoryModel\InventoryTransaction::where('supplier_id', $supplier->id)
+            ->orWhere('destination_id', $supplier->id)
+            ->exists();
+            
+        if ($isUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete supplier. It is already used in transaction history records.'
+            ], 422);
+        }
+
         $supplier->delete();
 
         return response()->json(['success' => true, 'message' => 'Supplier deleted successfully.']);

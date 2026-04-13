@@ -433,6 +433,25 @@ class InventoryProductController extends Controller
     public function destroy($id)
     {
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
+
+        // Check for transactions
+        $hasTransactions = \App\Models\InventoryModel\InventoryTransaction::where('product_detail_id', $inventoryProduct->id)->exists();
+        if ($hasTransactions) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete this product revision. It has transaction history records.'
+            ], 422);
+        }
+
+        // Check for STO records
+        $hasSto = \App\Models\InventoryModel\StoDetail::where('product_detail_id', $inventoryProduct->id)->exists();
+        if ($hasSto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete this product revision. It is linked to Stock Opname records.'
+            ], 422);
+        }
+
         $inventoryProduct->delete();
         return response()->json(['success' => true, 'message' => 'Inventory Product deleted successfully.']);
     }

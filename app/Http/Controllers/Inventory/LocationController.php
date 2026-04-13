@@ -118,13 +118,13 @@ class LocationController extends Controller
     {
         $location = Location::findByHashOrFail($id);
         
-        // Check if location is used in STO details or other transactions
+        // Check if location is used in STO details
         $isUsed = \App\Models\InventoryModel\StoDetail::where('location_id', $location->id)->exists();
         
         if ($isUsed) {
             return response()->json([
                 'success' => false, 
-                'message' => 'Cannot delete location. it is already used in transaction records. Try deactivating it instead.'
+                'message' => 'Cannot delete location. It is already used in Stock Opname records.'
             ], 422);
         }
 

@@ -206,7 +206,10 @@
 
         $('#confirmDelete').on('click', function() {
             $.ajax({
-                url: deleteUrl, method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf },
+                url: deleteUrl, 
+                method: 'POST', 
+                data: { _method: 'DELETE' },
+                headers: { 'X-CSRF-TOKEN': csrf },
                 success: (data) => {
                     if (data.success) { masterTable.ajax.reload(); hideMdl('modal-delete'); toast('success', 'Success', data.message); }
                 },

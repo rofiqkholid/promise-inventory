@@ -766,8 +766,11 @@
                 if (result.isConfirmed) {
                     $.ajax({
                         url: `{{ url('inventory/transaction') }}/${id}`,
-                        type: 'DELETE',
-                        data: { _token: '{{ csrf_token() }}' },
+                        type: 'POST',
+                        data: { 
+                            _token: '{{ csrf_token() }}',
+                            _method: 'DELETE'
+                        },
                         success: function(response) {
                             if (response.success) {
                                 Swal.fire({ title: 'Deleted!', text: response.message, icon: 'success', timer: 1500, showConfirmButton: false });

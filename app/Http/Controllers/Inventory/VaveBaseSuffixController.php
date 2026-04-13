@@ -129,6 +129,16 @@ class VaveBaseSuffixController extends Controller
     public function destroy($id)
     {
         $suffix = VaveBaseSuffix::findByHashOrFail($id);
+
+        // Check for usage in VAVE analysis baseline
+        $isUsed = \App\Models\InventoryModel\VaveBase::where('vave_base_suffix_id', $suffix->id)->exists();
+        if ($isUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete this suffix. It is already used in VAVE Analysis baseline data.'
+            ], 422);
+        }
+
         $suffix->delete();
         return response()->json(['success' => true, 'message' => 'EBD Suffix deleted successfully.']);
     }

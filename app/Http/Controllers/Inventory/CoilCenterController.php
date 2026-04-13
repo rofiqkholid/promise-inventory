@@ -125,6 +125,16 @@ class CoilCenterController extends Controller
     public function destroy($id)
     {
         $coilCenter = CoilCenter::findByHashOrFail($id);
+
+        // Check if coil center is used in transactions
+        $isUsed = \App\Models\InventoryModel\InventoryTransaction::where('coil_center_id', $coilCenter->id)->exists();
+        if ($isUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete coil center. It is already used in transaction history.'
+            ], 422);
+        }
+
         $coilCenter->delete();
         return response()->json(['success' => true, 'message' => 'Coil Center deleted successfully.']);
     }

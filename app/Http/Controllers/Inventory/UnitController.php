@@ -116,6 +116,16 @@ class UnitController extends Controller
     public function destroy($id)
     {
         $unit = Unit::findByHashOrFail($id);
+
+        // Check usage in product detail
+        $isUsed = \App\Models\InventoryModel\InventoryProduct::where('unit_id', $unit->id)->exists();
+        if ($isUsed) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete unit. It is already used in product specifications.'
+            ], 422);
+        }
+
         $unit->delete();
         return response()->json(['success' => true, 'message' => 'Unit deleted successfully.']);
     }
