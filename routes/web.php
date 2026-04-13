@@ -31,6 +31,23 @@ Route::get('/debug-sso', function () {
     ];
 });
 
+// Temporary debug route - REMOVE after debugging
+Route::get('/debug-version', function () {
+    $user = Auth::user();
+    return response()->json([
+        'code_version'   => '2026-04-13-v3', // bump this to confirm prod has latest code
+        'auth_check'     => Auth::check(),
+        'user_id'        => Auth::id(),
+        'user_roles'     => $user ? $user->roles->pluck('code') : [],
+        'php_version'    => PHP_VERSION,
+    ]);
+});
+
+// Temporary test POST - REMOVE after debugging
+Route::post('/debug-post-test', function () {
+    return response()->json(['ok' => true, 'msg' => 'POST reached Laravel successfully']);
+});
+
 Route::get('/login', function () {
     return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('login');
