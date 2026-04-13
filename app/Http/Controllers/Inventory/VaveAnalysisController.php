@@ -577,7 +577,7 @@ class VaveAnalysisController extends Controller
     public function importExcel(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
+            'file' => 'required|mimes:xlsx,xls,csv|max:51200', // 50MB max
             'sheet_name' => 'required|string'
         ]);
 

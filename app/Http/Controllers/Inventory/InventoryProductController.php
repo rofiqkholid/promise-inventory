@@ -265,7 +265,7 @@ class InventoryProductController extends Controller
     public function importExcel(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // 10MB max
+            'file' => 'required|mimes:xlsx,xls,csv|max:51200', // 50MB max
             'customer_id' => 'required',
             'model_id' => 'required',
             'sheet_name' => 'required|string|max:50',
@@ -334,7 +334,7 @@ class InventoryProductController extends Controller
     public function getSheetNames(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv'
+            'file' => 'required|mimes:xlsx,xls,csv|max:51200' // 50MB max
         ]);
 
         try {
