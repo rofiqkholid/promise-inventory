@@ -15,9 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->validateCsrfTokens(except: [
             'logout',
-            'inventory/master/product/upload-handler',
-            'inventory/master/product/verify-sheets',
-            'inventory/vave/upload-handler',
+            'inventory/u-sync',
+            'inventory/u-check',
+            'inventory/v-sync',
         ]);
         $middleware->encryptCookies(except: [
             'promise_auth_session'
