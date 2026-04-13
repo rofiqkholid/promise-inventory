@@ -259,6 +259,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('transaction-history/{id}', [TransactionHistoryController::class, 'update'])->name('transactionHistory.update');
     });
 
+    });
 });
 # endregion
 
