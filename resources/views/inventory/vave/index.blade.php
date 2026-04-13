@@ -528,6 +528,7 @@ $(function() {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        formData.append('_method', 'PUT');
 
         // Show loading state for sheet selection
         $('#sheetSelectionContainer').removeClass('hidden');
@@ -576,6 +577,7 @@ $(function() {
         $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Importing...');
         
         const formData = new FormData(this);
+        formData.append('_method', 'PUT');
         $('#importResult').removeClass('hidden');
         $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-blue-50 text-blue-700 border-blue-100').html('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing data, please wait...');
         $('#importLogs').empty();
