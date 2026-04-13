@@ -1180,8 +1180,9 @@ $(function() {
                 const isCoil = name.includes('coil');
                 
                 // NEW: Update Revision Options based on Unit
-                const currentRevId = $('#revision_id').val();
-                ProductApp.ui.updateRevisionOptions(name, currentRevId);
+                if (!ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
+                    ProductApp.ui.updateRevisionOptions(name);
+                }
 
                 $('#lengthContainer, #length2Container, #pitchContainer, #pcsPerPitchContainer, #coilWeightSection').hide();
                 $('#pcs_per_unit').prop('readonly', isCoil).toggleClass('bg-gray-100 cursor-not-allowed', isCoil);
@@ -1204,8 +1205,9 @@ $(function() {
                 ProductApp.logic.calculateWeight();
                 ProductApp.logic.calculateNetCoil();
             },
-            updateRevisionOptions: function(unitName = '', currentSelectedId = null) {
+            updateRevisionOptions: function(unitName = '') {
                 const $rev = $('#revision_id');
+                const currentVal = $rev.val();
                 const revisions = ProductApp.state.dropdownData.revisions || [];
                 
                 let targetGroup = '';
@@ -1215,16 +1217,16 @@ $(function() {
                 $rev.empty().append('<option value="">Select Revision</option>');
                 
                 revisions.forEach(rev => {
-                    // Show if: 1. No target group, 2. Matches target group, OR 3. Is currently selected (preserves data in Edit mode)
-                    if (!targetGroup || rev.group_name === targetGroup || rev.hash_id === currentSelectedId) {
+                    // If no group targeted, show all. If group targeted, filter.
+                    if (!targetGroup || rev.group_name === targetGroup) {
                         $rev.append(`<option value="${rev.hash_id}">${rev.code}</option>`);
                     }
                 });
 
-                // Restore previous selection
-                if (currentSelectedId) $rev.val(currentSelectedId);
+                // Restore previous selection if it still exists in the list
+                if (currentVal) $rev.val(currentVal);
                 
-                // Auto-select first matching option ONLY in Add mode if nothing is selected
+                // Auto-select first option if empty and group is known
                 if (!$rev.val() && targetGroup && !ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
                    const firstInGroup = revisions.find(r => r.group_name === targetGroup);
                    if (firstInGroup) $rev.val(firstInGroup.hash_id);

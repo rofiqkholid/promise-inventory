@@ -338,9 +338,8 @@ class InventoryProductController extends Controller
         ]);
 
         try {
-            $filePath = $request->file('file')->getRealPath();
-            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
-            $sheetNames = $reader->listWorksheetNames($filePath);
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($request->file('file')->getRealPath());
+            $sheetNames = $spreadsheet->getSheetNames();
 
             return response()->json([
                 'success' => true,
