@@ -31,27 +31,6 @@ Route::get('/debug-sso', function () {
     ];
 });
 
-// Temporary debug route - REMOVE after debugging
-Route::get('/debug-version', function () {
-    $user = Auth::user();
-    $middlewareFile = app_path('Http/Middleware/CheckInventoryRole.php');
-    return response()->json([
-        'code_version'      => '2026-04-13-v4', // bump this to confirm prod has latest code
-        'auth_check'        => Auth::check(),
-        'user_id'           => Auth::id(),
-        'user_roles'        => $user ? $user->roles->pluck('code') : [],
-        'php_version'       => PHP_VERSION,
-        'middleware_mtime'  => file_exists($middlewareFile) ? date('Y-m-d H:i:s', filemtime($middlewareFile)) : 'not found',
-        'opcache_enabled'   => function_exists('opcache_get_status') ? (opcache_get_status(false)['opcache_enabled'] ?? false) : 'function not available',
-        'opcache_cached_scripts' => function_exists('opcache_get_status') ? (opcache_get_status(false)['opcache_statistics']['num_cached_scripts'] ?? 'n/a') : 'n/a',
-    ]);
-});
-
-// Temporary test POST - REMOVE after debugging
-Route::post('/debug-post-test', function () {
-    return response()->json(['ok' => true, 'msg' => 'POST reached Laravel successfully']);
-});
-
 Route::get('/login', function () {
     return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('login');
@@ -102,7 +81,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                         Route::get('/product/data', [InventoryProductController::class, 'data'])->name('product.data');
             Route::get('/product/export-excel', [InventoryProductController::class, 'exportExcel'])->name('product.exportExcel');
             Route::get('/product/download-template', [InventoryProductController::class, 'downloadTemplate'])->name('product.downloadTemplate');
-            Route::post('/product/import-excel', [InventoryProductController::class, 'importExcel'])->name('product.importExcel');
+            Route::match(['post', 'put'], '/product/import-excel', [InventoryProductController::class, 'importExcel'])->name('product.importExcel');
             Route::post('/product/get-sheet-names', [InventoryProductController::class, 'getSheetNames'])->name('product.getSheetNames');
             Route::get('/product/dropdown-data', [InventoryProductController::class, 'getDropdownData'])->name('product.dropdownData');
             Route::get('/product/get-products', [InventoryProductController::class, 'getProducts'])->name('product.getProducts');

@@ -194,8 +194,8 @@ class InventoryTransactionController extends Controller
             $data['transaction_category_id'] = \App\Models\InventoryModel\TransactionCategory::decodeHash($data['transaction_category_id']);
         }
         
-        // user_id is now handled automatically via Auth::id()
-        $data['user_id'] = Auth::id();
+        // user_id is now handled automatically via Auth::user()->id to get the integer ID, rather than Auth::id() which returns NIK
+        $data['user_id'] = Auth::user()->id;
         if (isset($data['coil_center_id']) && !is_numeric($data['coil_center_id'])) {
             $data['coil_center_id'] = \App\Models\InventoryModel\CoilCenter::decodeHash($data['coil_center_id']);
         }

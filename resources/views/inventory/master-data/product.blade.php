@@ -998,10 +998,12 @@ $(function() {
             $('#importResult').addClass('hidden');
 
             const formData = new FormData($('#importForm')[0]);
+            formData.append('_method', 'PUT'); // Spoof PUT to bypass WAF for large multi-sheet excel payloads
             
             $.ajax({
                 url: this.config.routes.import,
-                method: 'POST',
+                method: 'POST', // The actual request method is POST, but Laravel treats it as PUT
+                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
                 data: formData,
                 processData: false,
                 contentType: false,

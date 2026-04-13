@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'logout',
             'inventory/master/product/get-sheet-names',
+            'inventory/master/product/import-excel',
             'inventory/vave/import-excel',
         ]);
         $middleware->encryptCookies(except: [
