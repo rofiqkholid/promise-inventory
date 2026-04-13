@@ -43,6 +43,9 @@ class CheckInventoryRole
                     $possibleRoutes[] = $temp;
                 }
 
+                // Check if any parent route with '.index' is in the allowed menus
+                $indexedPossibleRoutes = array_map(fn($r) => $r . '.index', $possibleRoutes);
+
                 // Function to get all related routes for a set of menu routes
                 $expandMenuRoutes = function($menuRoutes) {
                     $expanded = [];
@@ -62,7 +65,9 @@ class CheckInventoryRole
                 $specificMenuRoutes = $user->specificMenus()->pluck('route')->toArray();
                 $allowedSpecificRoutes = $expandMenuRoutes($specificMenuRoutes);
                 
-                if (in_array($routeName, $allowedSpecificRoutes) || array_intersect($possibleRoutes, $specificMenuRoutes)) {
+                if (in_array($routeName, $allowedSpecificRoutes) || 
+                    array_intersect($possibleRoutes, $specificMenuRoutes) ||
+                    array_intersect($indexedPossibleRoutes, $specificMenuRoutes)) {
                     return $next($request);
                 }
 
@@ -80,7 +85,9 @@ class CheckInventoryRole
                     $roleMenuRoutes = $role->menus()->pluck('route')->toArray();
                     $allowedRoleRoutes = $expandMenuRoutes($roleMenuRoutes);
                     
-                    if (in_array($routeName, $allowedRoleRoutes) || array_intersect($possibleRoutes, $roleMenuRoutes)) {
+                    if (in_array($routeName, $allowedRoleRoutes) || 
+                        array_intersect($possibleRoutes, $roleMenuRoutes) ||
+                        array_intersect($indexedPossibleRoutes, $roleMenuRoutes)) {
                         return $next($request);
                     }
 

@@ -1143,8 +1143,8 @@ $(function() {
         ui: {
             setBtnLoading: b => b.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin"></i>'),
             unsetBtnLoading: (b, i) => b.prop('disabled', false).html(i),
-            showModal: m => m.removeClass('hidden').addClass('flex'),
-            hideModal: m => m.addClass('hidden').removeClass('flex'),
+            showModal: m => m.removeClass('hidden').addClass('flex').attr('aria-hidden', 'false'),
+            hideModal: m => m.addClass('hidden').removeClass('flex').attr('aria-hidden', 'true'),
             clearErrors: () => $('[id^="error-"]').addClass('hidden').text(''),
             resetForm: (title, method, action) => {
                 $('#modalTitle').text(title);
