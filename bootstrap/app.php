@@ -15,9 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->validateCsrfTokens(except: [
             'logout',
-            'inventory/master/product/get-sheet-names',
-            'inventory/master/product/import-excel',
-            'inventory/vave/import-excel',
+            '*/product/read-sheets',
+            '*/product/upload-handler',
+            '*/vave/upload-handler',
         ]);
         $middleware->encryptCookies(except: [
             'promise_auth_session'
