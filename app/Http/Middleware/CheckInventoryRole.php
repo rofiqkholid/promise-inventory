@@ -29,12 +29,20 @@ class CheckInventoryRole
         }
 
         // If roles are specified in middleware, they act as a base restriction.
-        // But we now allow overrides via User-Specific Menus and Role-Menu assignments in the database.
         if (!empty($roles)) {
-            $routeName = $request->route()->getName();
-            
+            $routeName = $request->route()->getName() ?? '';
+
+            // STEP 1: Fast-pass — if user's hardcoded role code is in the middleware role list,
+            // allow immediately. This covers ALL routes in the group, including AJAX helpers
+            // like getSheetNames, importExcel, etc., without needing DB menu entries.
+            $userRoleCodes = $user->roles->pluck('code')->toArray();
+            if (!empty(array_intersect($userRoleCodes, $roles))) {
+                return $next($request);
+            }
+
+            // STEP 2: DB Menu check — for users who may not have a matching hardcoded role
+            // but have been granted specific menu access via User-Specific Menus or Role Menus.
             if ($routeName) {
-                // Check if user has specific menu access OR their role has menu access in the database
                 $segments = explode('.', $routeName);
                 $possibleRoutes = [];
                 $temp = '';
@@ -43,15 +51,14 @@ class CheckInventoryRole
                     $possibleRoutes[] = $temp;
                 }
 
-                // Check if any parent route with '.index' is in the allowed menus
+                // Also check parent routes with '.index' suffix
                 $indexedPossibleRoutes = array_map(fn($r) => $r . '.index', $possibleRoutes);
 
-                // Function to get all related routes for a set of menu routes
-                $expandMenuRoutes = function($menuRoutes) {
+                // Helper to expand menu routes to include their parents
+                $expandMenuRoutes = function ($menuRoutes) {
                     $expanded = [];
                     foreach ($menuRoutes as $route) {
                         $expanded[] = $route;
-                        // If route is 'a.b.c', also add 'a.b' and 'a'
                         $parts = explode('.', $route);
                         while (count($parts) > 1) {
                             array_pop($parts);
@@ -64,28 +71,25 @@ class CheckInventoryRole
                 // Check user-specific menus
                 $specificMenuRoutes = $user->specificMenus()->pluck('route')->toArray();
                 $allowedSpecificRoutes = $expandMenuRoutes($specificMenuRoutes);
-                
-                if (in_array($routeName, $allowedSpecificRoutes) || 
+
+                if (in_array($routeName, $allowedSpecificRoutes) ||
                     array_intersect($possibleRoutes, $specificMenuRoutes) ||
                     array_intersect($indexedPossibleRoutes, $specificMenuRoutes)) {
                     return $next($request);
                 }
 
-                // Special case for Master Data: if you have 'inventory.master.master.index', you get its sub-routes
+                // Special case for Master Data
                 $isMasterSubRoute = str_starts_with($routeName, 'inventory.master.');
-                
-                if ($isMasterSubRoute) {
-                    if (in_array('inventory.master.master.index', $specificMenuRoutes)) {
-                        return $next($request);
-                    }
+                if ($isMasterSubRoute && in_array('inventory.master.master.index', $specificMenuRoutes)) {
+                    return $next($request);
                 }
 
                 // Check role-based menus in database
                 foreach ($user->roles as $role) {
                     $roleMenuRoutes = $role->menus()->pluck('route')->toArray();
                     $allowedRoleRoutes = $expandMenuRoutes($roleMenuRoutes);
-                    
-                    if (in_array($routeName, $allowedRoleRoutes) || 
+
+                    if (in_array($routeName, $allowedRoleRoutes) ||
                         array_intersect($possibleRoutes, $roleMenuRoutes) ||
                         array_intersect($indexedPossibleRoutes, $roleMenuRoutes)) {
                         return $next($request);
@@ -97,11 +101,15 @@ class CheckInventoryRole
                 }
             }
 
-            // Fallback to the hardcoded role check in the middleware parameters
-            $userRoleCodes = $user->roles->pluck('code')->toArray();
-            if (empty(array_intersect($userRoleCodes, $roles))) {
-                abort(403, 'Unauthorized. Your assigned roles do not allow this action.');
-            }
+            // Log for debugging production issues
+            \Log::warning('CheckInventoryRole: 403 Access Denied', [
+                'user_id'        => $user->id,
+                'route'          => $routeName,
+                'user_roles'     => $userRoleCodes,
+                'required_roles' => $roles,
+            ]);
+
+            abort(403, 'Unauthorized. Your assigned roles do not allow this action.');
         }
 
         return $next($request);
