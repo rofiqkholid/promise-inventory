@@ -535,6 +535,12 @@ class VaveAnalysisController extends Controller
             $model = DB::table('models')->find($request->model_id);
             if ($model) $fileName .= '_' . str_replace(' ', '_', $model->name);
         }
+        if ($request->has('base_names')) {
+            $baseNames = $request->input('base_names', []);
+            if (!empty($baseNames)) {
+                $fileName .= '_' . str_replace(' ', '_', implode('_', $baseNames));
+            }
+        }
         $fileName .= '_' . date('Ymd_His') . '.xlsx';
 
         return Excel::download(new \App\Exports\VaveSummaryExport($data), $fileName);

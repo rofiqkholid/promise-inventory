@@ -372,6 +372,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function() {
@@ -521,51 +522,40 @@ $(function() {
         $('#importEbdModal').removeClass('hidden').addClass('flex');
     });
 
-    $('#import_file').on('change', function() {
-        const file = this.files[0];
+    $('#import_file').on('change', function(e) {
+        const file = e.target.files[0];
         if (!file) return;
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
 
         // Show loading state for sheet selection
         $('#sheetSelectionContainer').removeClass('hidden');
         $('#sheetLoadingSpinner').removeClass('hidden');
         $('#import_sheet_name').empty().append('<option value="">Loading sheets...</option>').trigger('change').prop('disabled', true);
 
-        $.ajax({
-            url: '{{ route("inventory.master.product.getSheetNames") }}',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(res) {
-                if (res.success && res.sheets) {
-                    const sheetSelect = $('#import_sheet_name').empty().append('<option value="">-- Select Worksheet --</option>');
-                    res.sheets.forEach(name => {
-                        sheetSelect.append(`<option value="${name}">${name}</option>`);
-                    });
-                    sheetSelect.prop('disabled', false).trigger('change');
-                } else {
-                    window.showToast(res.message || 'Error identifying sheets', 'error');
-                }
-            },
-            error: function(xhr) {
-                if (xhr.status === 419) {
-                    window.showToast('Session expired. Please refresh the page.', 'error');
-                } else {
-                    window.showToast('Error reading Excel file', 'error');
-                }
-                $('#import_sheet_name').empty().append('<option value="">Error loading sheets</option>').trigger('change');
-            },
-            complete: function() {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', bookSheets: true });
+                const sheetNames = workbook.SheetNames;
+                
+                const $sheet = $('#import_sheet_name');
+                $sheet.empty().append('<option value="">-- Select Worksheet --</option>');
+                sheetNames.forEach(s => $sheet.append(new Option(s, s)));
+                $sheet.prop('disabled', false).trigger('change');
+            } catch (err) {
+                console.error(err);
+                window.showToast('Failed to read excel sheets from browser.', 'error');
+            } finally {
                 $('#sheetLoadingSpinner').addClass('hidden');
             }
-        });
+        };
+        
+        reader.onerror = function() {
+            window.showToast('Error reading file.', 'error');
+            $('#sheetLoadingSpinner').addClass('hidden');
+        };
+
+        reader.readAsArrayBuffer(file);
     });
 
     $('#importEbdForm').on('submit', function(e) {

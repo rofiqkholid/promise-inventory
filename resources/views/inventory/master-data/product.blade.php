@@ -11,13 +11,13 @@
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
-                <i class="fa-solid fa-file-import"></i>
-                Import Excel
-            </button>
             <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
+            </button>
+            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+                <i class="fa-solid fa-file-import"></i>
+                Import Excel
             </button>
             <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i>
@@ -442,6 +442,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 $(function() {
     /**
@@ -677,38 +678,41 @@ $(function() {
                 this.ui.showModal($('#importModal'));
             });
 
-            $('#import_file').on('change', function() {
-                const file = this.files[0];
+            $('#import_file').on('change', function(e) {
+                const file = e.target.files[0];
                 if (!file) return;
-
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('_token', ProductApp.config.csrfToken);
 
                 $('#file_loading').removeClass('hidden');
                 $('#import_next_steps').addClass('hidden');
 
-                $.ajax({
-                    url: ProductApp.config.routes.sheetNames,
-                    method: 'POST', // Spoofed to PUT
-                    headers: { 'X-CSRF-TOKEN': ProductApp.config.csrfToken },
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: (res) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', bookSheets: true });
+                        const sheetNames = workbook.SheetNames;
+                        
                         const $sheet = $('#sheet_name');
                         $sheet.empty().append('<option value="">Select Worksheet...</option>');
-                        res.sheets.forEach(s => $sheet.append(new Option(s, s)));
+                        sheetNames.forEach(s => $sheet.append(new Option(s, s)));
                         $sheet.trigger('change');
+                        
                         $('#import_next_steps').removeClass('hidden');
-                    },
-                    error: (xhr) => {
-                        window.showToast(xhr.responseJSON?.message || 'Failed to read file sheets', 'error');
-                    },
-                    complete: () => {
+                    } catch (err) {
+                        console.error(err);
+                        window.showToast('Failed to read excel sheets from browser.', 'error');
+                    } finally {
                         $('#file_loading').addClass('hidden');
                     }
-                });
+                };
+                
+                reader.onerror = function() {
+                    window.showToast('Error reading file.', 'error');
+                    $('#file_loading').addClass('hidden');
+                };
+
+                // Use readAsArrayBuffer for better performance with large files
+                reader.readAsArrayBuffer(file);
             });
 
             $('#import_customer_id').on('change', function() {
