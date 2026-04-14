@@ -5,7 +5,7 @@
      style="display: none;">
     
     <!-- Modern Backdrop -->
-    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" id="stockAlertBackdrop"></div>
+    <div class="absolute inset-0 bg-slate-900/50" id="stockAlertBackdrop"></div>
     
     <!-- Modal Container -->
     <div class="flex items-center justify-center min-h-screen p-4">

@@ -598,12 +598,12 @@
         loadModels(null);
 
         $('#reset_filters').on('click', function() {
-            $('#filter_customer').val('').trigger('change');
+            $('#filter_customer').val('').trigger('change.select2');
+            $('#filter_model').val('').trigger('change.select2');
+            $('#filter_project_status').val('').trigger('change.select2');
+            $('#filter_status').val('').trigger('change.select2');
             
-            $('#filter_model').val(null).trigger('change.select2');
-            $('#filter_project_status').val('').trigger('change');
-            
-            table.search('').draw();
+            table.search('').columns().search('').draw();
         });
 
         // Dynamic Model Loading

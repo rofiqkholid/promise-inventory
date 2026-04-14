@@ -810,6 +810,7 @@ $(function() {
             this.state.isEditMode = false;
             this.state.isDuplicateMode = false;
             this.ui.resetForm('Add Inventory Product', 'POST', this.config.routes.store);
+            this.ui.toggleDuplicateMode(false);
             this.elements.productSelect.prop('disabled', false);
             this.initProductSelect2();
             this.ui.showModal(this.elements.formModal);
@@ -1165,6 +1166,7 @@ $(function() {
                 $('#weight_kg, #net_weight, #gross_coil, #net_coil').val('');
                 $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id, #revision_id, #product_status, #product_status_remark').val('').trigger('change');
                 ProductApp.ui.clearErrors();
+                ProductApp.ui.toggleDuplicateMode(false);
                 ProductApp.ui.toggleUnitFields();
             },
             toggleDuplicateMode: function(isDup) {
@@ -1212,23 +1214,46 @@ $(function() {
                 if (unitName.includes('coil')) targetGroup = 'RC';
                 else if (unitName.includes('sheet') || unitName.includes('trapezoid')) targetGroup = 'R';
 
+                // Find the currently selected revision's basic code (e.g., "1" from "R1" or "RC1")
+                let currentCodeBase = '';
+                if (currentSelectedId) {
+                    const currentRev = revisions.find(r => r.hash_id === currentSelectedId);
+                    if (currentRev) {
+                        currentCodeBase = currentRev.code.replace(/^(RC|R|C)/, ''); // Extract number/letter after prefix
+                    }
+                }
+
                 $rev.empty().append('<option value="">Select Revision</option>');
                 
                 revisions.forEach(rev => {
-                    // Show if: 1. No target group, 2. Matches target group, OR 3. Is currently selected (preserves data in Edit mode)
-                    if (!targetGroup || rev.group_name === targetGroup || rev.hash_id === currentSelectedId) {
+                    // Filter: Only show if it matches the target group
+                    // Exception: Keep current if we are in Edit mode and it was already там (prevents data loss)
+                    if (!targetGroup || rev.group_name === targetGroup || (ProductApp.state.isEditMode && rev.hash_id === currentSelectedId)) {
                         $rev.append(`<option value="${rev.hash_id}">${rev.code}</option>`);
                     }
                 });
 
-                // Restore previous selection
-                if (currentSelectedId) $rev.val(currentSelectedId);
-                
-                // Auto-select first matching option ONLY in Add mode if nothing is selected
-                if (!$rev.val() && targetGroup && !ProductApp.state.isEditMode && !ProductApp.state.isAutoFilling) {
-                   const firstInGroup = revisions.find(r => r.group_name === targetGroup);
-                   if (firstInGroup) $rev.val(firstInGroup.hash_id);
+                // Logic to CHANGE revision if it doesn't match the new group
+                if (targetGroup) {
+                    const currentRevObj = revisions.find(r => r.hash_id === currentSelectedId);
+                    
+                    // If current revision doesn't belong to the new target group
+                    if (!currentRevObj || currentRevObj.group_name !== targetGroup) {
+                        // Try to find matching code base in the new group (e.g., R1 -> RC1)
+                        let matchedRev = revisions.find(r => r.group_name === targetGroup && r.code.endsWith(currentCodeBase));
+                        
+                        // If no perfect match, just take the first one in the new group
+                        if (!matchedRev) matchedRev = revisions.find(r => r.group_name === targetGroup);
+                        
+                        if (matchedRev) {
+                            $rev.val(matchedRev.hash_id).trigger('change.select2');
+                            return;
+                        }
+                    }
                 }
+
+                // Default fallback: Restore previous selection if it's still valid
+                if (currentSelectedId) $rev.val(currentSelectedId).trigger('change.select2');
             }
         }
     };

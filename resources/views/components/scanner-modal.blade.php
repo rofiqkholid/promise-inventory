@@ -1,6 +1,6 @@
 {{-- Scanner Modal Partial --}}
 
-<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-slate-900/60 backdrop-blur-sm flex p-4 transition-all duration-300">
+<div id="scannerModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-[60] justify-center items-center w-full h-full bg-slate-900/50 flex p-4 transition-all duration-300">
     <div class="relative w-full max-w-lg h-auto">
         <div class="relative bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-xl overflow-hidden">
             <!-- Header -->
