@@ -462,28 +462,34 @@
     const stoReasons = @json(\App\Models\InventoryModel\StoReason::where('is_active', true)->get());
 
     // JS Formatter Helpers
-    function formatQtyHtml(qty, pcsPerUnit, unitCode, weightKg, prefix = '') {
+    function formatQtyHtml(qty, pcsPerUnit, unitCode, weightKg, prefix = '', grossCoil = 0) {
         qty = parseFloat(qty || 0);
         pcsPerUnit = parseFloat(pcsPerUnit || 1);
         weightKg = parseFloat(weightKg || 0);
+        grossCoil = parseFloat(grossCoil || 0);
         unitCode = (unitCode || '').toLowerCase();
         
         let pcs = 0;
-        if (unitCode.includes('coil') && weightKg > 0) {
-            pcs = Math.floor(qty / weightKg) * pcsPerUnit;
+        // Logic should match InventoryProduct::calculatePcs
+        if (unitCode.includes('coil') && grossCoil > 0) {
+            pcs = (qty / grossCoil) * pcsPerUnit;
         } else {
             pcs = qty * pcsPerUnit;
         }
 
         let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
+        let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
+        
+        // Change COIL label to KG as per user request
+        let unitLabel = unitCode.toUpperCase();
+        if (unitLabel.includes('COIL')) unitLabel = 'KG';
         
         if (pcsPerUnit == 1 && !unitCode.includes('coil')) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
         
-        let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
         return `
             <div class='flex flex-col items-center justify-center'>
-                <span class='font-bold'>${prefix}${pcsDisplay}</span>
-                <span class='text-[10px] text-gray-400 leading-none mt-0.5'>(${unitDisplay} ${unitCode.toUpperCase()})</span>
+                <span class='font-bold text-gray-900 dark:text-white'>${prefix}${unitDisplay} ${unitLabel}</span>
+                <span class='text-[10px] text-gray-400 leading-none mt-1 uppercase font-bold tracking-tighter'>${pcsDisplay} PCS</span>
             </div>`;
     }
 
@@ -674,7 +680,7 @@
                         data: null, 
                         className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
                         render: function(data) {
-                            return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg);
+                            return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil);
                         }
                     },
                     { 
@@ -688,18 +694,23 @@
                         render: function(data) {
                             if (data.can_edit_inline) {
                                 return `
-                                    <div class="flex items-center justify-center gap-1">
-                                        <input type="number" step="any" 
-                                            class="qty-input text-center font-medium text-sm px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100" 
-                                            style="width: 80px; min-width: 80px;"
-                                            data-detail-id="${data.hash_id}" 
-                                            data-product-id="${data.product_hash_id}"
-                                            value="${data.real_qty_input}" 
-                                            placeholder="Qty" />
-                                        <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code}</span>
+                                    <div class="flex flex-col items-center justify-center gap-1">
+                                        <div class="flex items-center gap-1">
+                                            <input type="number" step="any" 
+                                                class="qty-input text-center font-bold text-sm px-2 py-1 border border-primary-200 dark:border-primary-800 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-300" 
+                                                style="width: 80px; min-width: 80px;"
+                                                data-detail-id="${data.hash_id}" 
+                                                data-product-id="${data.product_hash_id}"
+                                                value="${data.real_qty_input}" 
+                                                placeholder="Qty" />
+                                            <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.includes('coil') ? 'KG' : data.unit_code.toUpperCase()}</span>
+                                        </div>
+                                        <div class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
+                                            ${Math.abs(data.unit_code.includes('coil') ? (data.real_qty_input / data.gross_coil * data.pcs_per_unit) : (data.real_qty_input * data.pcs_per_unit)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
+                                        </div>
                                     </div>`;
                             }
-                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg)}</div>`;
+                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)}</div>`;
                         }
                     },
                     { 
@@ -711,9 +722,9 @@
                         data: null, 
                         className: 'text-center font-bold bg-slate-50/20',
                         render: function(data) {
-                            if (data.diff_qty > 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(data.diff_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '+')}</div>`;
-                            if (data.diff_qty < 0) return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, '-')}</div>`;
-                            return `<span class="text-sm font-bold text-emerald-600">0</span>`;
+                            if (Math.abs(data.diff_qty) < 0.0001) return `<span class="text-sm font-bold text-emerald-600">0</span>`;
+                            const prefix = data.diff_qty > 0 ? '+' : '-';
+                            return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, prefix, data.gross_coil)}</div>`;
                         }
                     },
                     { 
@@ -936,6 +947,25 @@
                 });
             });
 
+            // Real-time PCS preview update
+            $('#stoDetailsTable').on('input', '.qty-input', function() {
+                const $input = $(this);
+                const $preview = $input.closest('div').parent().find('.pcs-preview');
+                const val = parseFloat($input.val() || 0);
+                const pcsPerUnit = parseFloat($preview.data('pcs-per-unit') || 1);
+                const grossCoil = parseFloat($preview.data('gross-coil') || 0);
+                const unit = ($preview.data('unit') || '').toLowerCase();
+
+                let pcs = 0;
+                if (unit.includes('coil') && grossCoil > 0) {
+                    pcs = (val / grossCoil) * pcsPerUnit;
+                } else {
+                    pcs = val * pcsPerUnit;
+                }
+                
+                $preview.text(`${Math.abs(pcs).toLocaleString(undefined, {maximumFractionDigits:0})} PCS`);
+            });
+
             // Inline Editing logic (Reason)
             $('#stoDetailsTable').on('change', '.reason-input', function() {
                 const $select = $(this);
@@ -1085,9 +1115,9 @@
                     </div>
                 ` : ''}
 
-                <div class="flex-1 w-full mt-2 sm:mt-0">
-                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Quantity (${currentProductData.unit || 'PCS'})</div>
-                    <input type="number" class="row-qty w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xs h-[40px] text-center font-semibold text-sm focus:border-primary-500 transition-all outline-none" 
+                <div class="flex-1 w-full mt-2 sm:mt-0 font-bold">
+                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Qty (${currentProductData.unit?.toUpperCase().includes('COIL') ? 'KG' : (currentProductData.unit || 'PCS')})</div>
+                    <input type="number" step="any" class="row-qty w-full bg-white dark:bg-gray-900 border-2 border-primary-100 dark:border-primary-900/30 rounded-xs h-[40px] text-center font-bold text-sm focus:border-primary-500 transition-all outline-none text-primary-700 dark:text-primary-300" 
                            placeholder="0.00" value="${entry ? entry.real_qty : ''}">
                 </div>
 
@@ -1258,8 +1288,14 @@
         errorArea.classList.add('hidden');
         resPartName.innerText = data.part_name;
         resPartNo.innerText = data.part_no;
-        resUnit.innerText = data.unit || 'PCS';
-        resSystemQty.innerText = (data.system_qty || 0).toLocaleString();
+        // Rename COIL label to KG for system info display
+        let displayUnit = data.unit || 'PCS';
+        if (displayUnit.toUpperCase().includes('COIL')) displayUnit = 'KG';
+        resUnit.innerText = displayUnit;
+        
+        // System Qty Display (Follow new format)
+        const sysQtyHtml = formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit, 0, '', data.gross_coil);
+        resSystemQty.innerHTML = sysQtyHtml;
         
         // Update entries count display
         const entriesCountEl = document.getElementById('resEntriesCount');

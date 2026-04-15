@@ -433,6 +433,7 @@ class StoController extends Controller
                 'diff_amount' => (float)$diffAmount,
                 'pcs_per_unit' => (float)$pcsPerUnit,
                 'weight_kg' => (float)$weightPerPcs,
+                'gross_coil' => (float)($detail->product->gross_coil ?? 0),
                 'unit_code' => $unitCode,
                 'location_name' => $detail->location_name,
                 'reason_id' => $detail->reason_id,
@@ -533,6 +534,8 @@ class StoController extends Controller
                 'part_name' => $product->product->part_name ?? '-',
                 'unit' => $product->unit->code ?? 'PCS',
                 'system_qty' => $systemQty,
+                'gross_coil' => (float)($product->gross_coil ?? 0),
+                'pcs_per_unit' => (float)($product->pcs_per_unit ?? 1),
                 'existing_entries' => $existingData,
                 'is_new_snapshot' => $existingEntries->isEmpty()
             ]

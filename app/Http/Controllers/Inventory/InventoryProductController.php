@@ -546,15 +546,8 @@ class InventoryProductController extends Controller
             }
         } else {
             // Jika dipanggil dari Form Add/Edit (bukan filter)
-            $query->leftJoin('models as m', 'm.id', '=', 'p.model_id')
-                  ->addSelect('m.name as model_name', 'p.model_id');
-                  
-            if ($request->filled('customer_id')) {
-                $query->where('p.customer_id', $request->customer_id);
-            }
-            if ($request->filled('model_id')) {
-                $query->where('p.model_id', $request->model_id);
-            }
+            // Hilangkan join paksa ke p.model_id karena satu part bisa di banyak model inventory
+            $query->addSelect('p.model_id'); 
         }
 
         if ($q !== '') {

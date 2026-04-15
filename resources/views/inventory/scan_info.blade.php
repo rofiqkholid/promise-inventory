@@ -39,11 +39,12 @@
              </a>
              @endauth
 
-             <div class="flex items-center gap-3">
-                <span class="w-2 h-2 rounded-full {{ Auth::check() ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
+             <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-user text-slate-400 text-sm"></i>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     {{ Auth::check() ? Auth::user()->name : 'Guest' }}
                 </span>
+                <span class="w-1.5 h-1.5 rounded-full {{ Auth::check() ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
              </div>
         </div>
 
@@ -73,10 +74,10 @@
             
             <!-- Status Badge Area -->
             <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
-                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                     {{ $product->part_no }}
                     @if($product->revision)
-                    <span class="text-primary-600 dark:text-primary-400 font-mono text-xl">/ {{ $product->revision }}</span>
+                    <span class="text-slate-400 font-light"> - {{ $product->revision }}</span>
                     @endif
                 </h1>
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{{ $product->part_name }}</p>
@@ -101,7 +102,7 @@
                                 'label' => 'Warning Stock Level',
                                 'icon' => 'fa-triangle-exclamation'
                             ],
-                            'danger' => [
+                'critical' => [
                                 'bg' => 'bg-red-600', 
                                 'gradient' => 'from-red-600 to-red-500',
                                 'text' => 'text-white', 

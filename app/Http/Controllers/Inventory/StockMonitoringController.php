@@ -487,6 +487,12 @@ class StockMonitoringController extends Controller
                 'ms.spec_name as material_spec',
                 'ms.coating_type',
                 'r.code as rank_code',
+                'p.weight_kg',
+                'p.top_coil',
+                'p.end_coil',
+                'p.pitch',
+                'p.pcs_per_pitch',
+                'p.gross_coil',
                 'p.current_stock_qty',
                 'p.pcs_per_unit',
                 'u.code as unit_code'
@@ -495,7 +501,17 @@ class StockMonitoringController extends Controller
 
         if (!$data) abort(404);
         
-        $balancePcs = (str_contains(strtolower($data->unit_code ?? ''), 'coil') && floatval($data->weight_kg ?? 0) > 0) ? floor((float)$data->current_stock_qty / (float)$data->weight_kg) * (int)($data->pcs_per_unit ?? 1) : (float)$data->current_stock_qty * (int)($data->pcs_per_unit ?? 1);
+        $balancePcs = InventoryProduct::calculatePcs(
+            $data->current_stock_qty,
+            $data->weight_kg,
+            $data->pcs_per_unit,
+            $data->unit_code,
+            $data->top_coil,
+            $data->end_coil,
+            $data->pitch,
+            $data->pcs_per_pitch,
+            $data->gross_coil
+        );
 
         $dimVal = [];
         $dimLbl = [];
@@ -546,6 +562,11 @@ class StockMonitoringController extends Controller
                 'p.pitch',
                 'ms.spec_name as material_spec',
                 'ms.coating_type',
+                'p.weight_kg',
+                'p.top_coil',
+                'p.end_coil',
+                'p.pcs_per_pitch',
+                'p.gross_coil',
                 'p.current_stock_qty',
                 'p.pcs_per_unit',
                 'u.code as unit_code',
@@ -559,13 +580,21 @@ class StockMonitoringController extends Controller
 
         if (!$data) abort(404);
 
-        $pcsPerUnit = $data->pcs_per_unit ?? 1;
-        $balancePcs = (str_contains(strtolower($data->unit_code ?? ''), 'coil') && floatval($data->weight_kg ?? 0) > 0) ? floor((float)$data->current_stock_qty / (float)$data->weight_kg) * $pcsPerUnit : (float)$data->current_stock_qty * $pcsPerUnit;
+        $balancePcs = InventoryProduct::calculatePcs(
+            $data->current_stock_qty,
+            $data->weight_kg,
+            $data->pcs_per_unit,
+            $data->unit_code,
+            $data->top_coil,
+            $data->end_coil,
+            $data->pitch,
+            $data->pcs_per_pitch,
+            $data->gross_coil
+        );
 
-        $status = $this->calculateStockStatus(
-            $data->current_stock_qty, 
+        $status = InventoryProduct::calculateStockStatus(
+            $balancePcs, 
             $data->min_stock, 
-            $pcsPerUnit, 
             $data->product_status ?: ($data->model_project_status ?? 'Project')
         );
 
