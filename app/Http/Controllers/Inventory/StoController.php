@@ -976,8 +976,8 @@ class StoController extends Controller
             $diffPcs = 0;
             $recordedPcs = 0;
             
-            if (strpos($unitLower, 'coil') !== false && $grossCoil > 0) {
-                // If it's a coil, calculate PCS based on ratio of qty to gross weight
+            // If gross_coil is specified (> 0), use the coil-weight formula
+            if ($grossCoil > 0 && (strpos($unitLower, 'coil') !== false || strpos($unitLower, 'kg') !== false)) {
                 $diffPcs = ($diff / $grossCoil) * $pcsPerUnit;
                 $recordedPcs = ((float)$p->total_real / $grossCoil) * $pcsPerUnit;
             } else {

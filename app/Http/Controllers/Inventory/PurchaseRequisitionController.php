@@ -15,7 +15,7 @@ class PurchaseRequisitionController extends Controller
         $products = InventoryProduct::where('inv_t_product_detail.is_active', 1)
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'inv_t_product_detail.model_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
-            ->select('inv_t_product_detail.*', 'ms.project_status', 'u.code as unit_code')
+            ->select('inv_t_product_detail.*', 'ms.project_status', 'u.code as unit_code', 'u.name as unit_name')
             ->get();
         $stats = [
             'critical' => 0,
@@ -23,7 +23,7 @@ class PurchaseRequisitionController extends Controller
         ];
 
         foreach ($products as $p) {
-            $currentPCS = InventoryProduct::calculatePcs($p->current_stock_qty, $p->weight_kg, $p->pcs_per_unit, $p->unit_code, $p->top_coil, $p->end_coil, $p->pitch, $p->pcs_per_pitch, $p->gross_coil);
+            $currentPCS = InventoryProduct::calculatePcs($p->current_stock_qty, $p->weight_kg, $p->pcs_per_unit, $p->unit_name, $p->top_coil, $p->end_coil, $p->pitch, $p->pcs_per_pitch, $p->gross_coil);
             $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status);
             if (isset($stats[$status])) {
                 $stats[$status]++;
@@ -55,6 +55,7 @@ class PurchaseRequisitionController extends Controller
                 'r.code as revision',
                 'inv_t_product_detail.product_status',
                 'inv_m_unit.code as unit_code',
+                'inv_m_unit.name as unit_name',
                 'inv_m_material_spec.spec_name',
                 'inv_t_product_detail.thickness',
                 'inv_t_product_detail.width',
@@ -162,7 +163,7 @@ class PurchaseRequisitionController extends Controller
             ->get();
 
         $formattedData = $data->map(function($item) {
-            $currentPCS = InventoryProduct::calculatePcs($item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $currentPCS = InventoryProduct::calculatePcs($item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
             $shortage = $item->min_stock - $currentPCS;
             
             return [

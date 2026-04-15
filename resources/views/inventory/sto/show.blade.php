@@ -477,7 +477,8 @@
 
         let pcs = 0;
         // Logic should match InventoryProduct::calculatePcs
-        if (unitCode.includes('coil') && grossCoil > 0) {
+        // If gross_coil is set (> 0), it's a coil material regardless of unit name casing
+        if (grossCoil > 0 && (unitCode.includes('coil') || unitCode.includes('kg'))) {
             pcs = (qty / grossCoil) * pcsPerUnit;
         } else {
             pcs = qty * pcsPerUnit;
@@ -718,7 +719,7 @@
                                             <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.toLowerCase().includes('coil') ? 'KG' : (data.unit_display || data.unit_code).toUpperCase()}</span>
                                         </div>
                                         <div class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
-                                            ${Math.abs(data.unit_code.toLowerCase().includes('coil') ? (data.real_qty_input / data.gross_coil * data.pcs_per_unit) : (data.real_qty_input * data.pcs_per_unit)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
+                                            ${Math.abs(data.gross_coil > 0 ? (data.real_qty_input / data.gross_coil * data.pcs_per_unit) : (data.real_qty_input * data.pcs_per_unit)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
                                         </div>
                                     </div>`;
                             }

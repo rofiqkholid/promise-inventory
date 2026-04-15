@@ -23,7 +23,7 @@ class StockMonitoringController extends Controller
         $products = InventoryProduct::where('inv_t_product_detail.is_active', 1)
             ->leftJoin('inv_m_model_status', 'inv_m_model_status.model_id', '=', 'inv_t_product_detail.model_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
-            ->select('inv_t_product_detail.*', 'inv_m_model_status.project_status', 'u.code as unit_code')
+            ->select('inv_t_product_detail.*', 'inv_m_model_status.project_status', 'u.code as unit_code', 'u.name as unit_name')
             ->get();
         
         $stats = [
@@ -39,7 +39,7 @@ class StockMonitoringController extends Controller
                 $p->current_stock_qty, 
                 $p->weight_kg, 
                 $p->pcs_per_unit, 
-                $p->unit_code,
+                $p->unit_name,  // Use unit_name (e.g., 'COIL') NOT unit_code (e.g., 'KG')
                 $p->top_coil,
                 $p->end_coil,
                 $p->pitch,
@@ -333,11 +333,11 @@ class StockMonitoringController extends Controller
             $inQty = (float)($item->total_in_sum ?? 0);
             $outQty = (float)($item->total_out_sum ?? 0);
 
-            $balancePcsVal = InventoryProduct::calculatePcs($calculatedQty, $item->weight_kg, $pcsPerUnit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
-            $inQtyPcsVal = InventoryProduct::calculatePcs($inQty, $item->weight_kg, $pcsPerUnit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
-            $outQtyPcsVal = InventoryProduct::calculatePcs($outQty, $item->weight_kg, $pcsPerUnit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $balancePcsVal = InventoryProduct::calculatePcs($calculatedQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $inQtyPcsVal = InventoryProduct::calculatePcs($inQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $outQtyPcsVal = InventoryProduct::calculatePcs($outQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
 
-            $isCoil = str_contains(strtolower($item->unit_code ?? ''), 'coil') && floatval($item->weight_kg ?? 0) > 0;
+            $isCoil = str_contains(strtolower($item->unit_name ?? ''), 'coil') && floatval($item->weight_kg ?? 0) > 0;
             $weight = floatval($item->weight_kg ?? 0);
 
             $row = [
@@ -355,7 +355,7 @@ class StockMonitoringController extends Controller
                 'min_stock' => number_format((float)$item->min_stock, 0),
                 'sto_gap' => $item->sto_gap,
                 'sto_gap_display' => $this->formatStoGap($item->sto_gap, $item, $pcsPerUnit, $isCoil, $weight),
-                'sto_gap_plain' => $item->sto_gap !== null ? ($item->sto_gap > 0 ? '+' : '') . number_format(InventoryProduct::calculatePcs($item->sto_gap, $item->weight_kg, $pcsPerUnit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil), 0) : '0',
+                'sto_gap_plain' => $item->sto_gap !== null ? ($item->sto_gap > 0 ? '+' : '') . number_format(InventoryProduct::calculatePcs($item->sto_gap, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil), 0) : '0',
                 // Detailed Info for Hover/Popover
                 'details' => [
                     'model' => $item->model_name ?? '-',
@@ -394,7 +394,7 @@ class StockMonitoringController extends Controller
                         $catQty, 
                         $item->weight_kg, 
                         $pcsPerUnit, 
-                        $item->unit_code, 
+                        $item->unit_name,  // Use unit_name (e.g., 'COIL') NOT unit_code (e.g., 'KG') 
                         $item->top_coil, 
                         $item->end_coil, 
                         $item->pitch, 
@@ -433,7 +433,7 @@ class StockMonitoringController extends Controller
         if ($gap == 0) return '0';
 
         $sign = $gap > 0 ? '+' : '';
-        $pcs = InventoryProduct::calculatePcs($gap, $weightKg, $pcsPerUnit, $item->unit_code, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+        $pcs = InventoryProduct::calculatePcs($gap, $weightKg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
         $pcsDisplay = $sign . number_format($pcs, 0);
 
         if ($pcsPerUnit == 1 && !$isCoil) {
@@ -505,7 +505,7 @@ class StockMonitoringController extends Controller
             $data->current_stock_qty,
             $data->weight_kg,
             $data->pcs_per_unit,
-            $data->unit_code,
+            $data->unit_name, // Use unit_name (e.g., 'COIL') NOT unit_code (e.g., 'KG')
             $data->top_coil,
             $data->end_coil,
             $data->pitch,
@@ -584,7 +584,7 @@ class StockMonitoringController extends Controller
             $data->current_stock_qty,
             $data->weight_kg,
             $data->pcs_per_unit,
-            $data->unit_code,
+            $data->unit_name, // Use unit_name (e.g., 'COIL') NOT unit_code (e.g., 'KG')
             $data->top_coil,
             $data->end_coil,
             $data->pitch,
