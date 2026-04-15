@@ -27,9 +27,9 @@
                     {{ str_replace('_', ' ', $stoEvent->status) }}
                 </span>
             </div>
-            
+
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">{{ $stoEvent->name }}</h2>
-            
+
             <div class="mt-3 flex flex-wrap items-center gap-4 text-[11px] font-bold">
                 <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-xs border border-gray-100 dark:border-gray-700">
                     <span class="text-[9px] uppercase tracking-wider opacity-60">Code:</span>
@@ -45,7 +45,7 @@
 
         <div class="flex flex-wrap items-center gap-2.5">
             <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                <i class="fa-solid fa-file-excel text-sm"></i> 
+                <i class="fa-solid fa-file-excel text-sm"></i>
                 Export Result
             </a>
 
@@ -60,7 +60,7 @@
                 <form action="{{ route('inventory.sto.submitForCheck', $stoEvent->hash_id) }}" method="POST" id="submitForCheckForm" class="inline">
                     @csrf
                     <button type="button" onclick="confirmSubmitForCheck()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                        <i class="fa-solid fa-paper-plane text-sm"></i> 
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
                         Submit for Check
                     </button>
                 </form>
@@ -70,12 +70,12 @@
                 <form action="{{ route('inventory.sto.verify', $stoEvent->hash_id) }}" method="POST" id="verifyForm" class="inline">
                     @csrf
                     <button type="button" onclick="confirmVerify()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                        <i class="fa-solid fa-check-double text-sm"></i> 
+                        <i class="fa-solid fa-check-double text-sm"></i>
                         Verify Data
                     </button>
                 </form>
                 <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                    <i class="fa-solid fa-xmark text-sm"></i> 
+                    <i class="fa-solid fa-xmark text-sm"></i>
                     Reject
                 </button>
             @endif
@@ -84,12 +84,12 @@
                 <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="inline">
                     @csrf
                     <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold rounded-xs hover:bg-slate-800 transition-all uppercase tracking-widest active:scale-[0.98]">
-                        <i class="fa-solid fa-lock text-sm"></i> 
+                        <i class="fa-solid fa-lock text-sm"></i>
                         Finalize & Adjust
                     </button>
                 </form>
                 <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                    <i class="fa-solid fa-xmark text-sm"></i> 
+                    <i class="fa-solid fa-xmark text-sm"></i>
                     Reject
                 </button>
             @endif
@@ -98,7 +98,7 @@
                 <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="inline">
                     @csrf
                     <button type="button" onclick="confirmReopen()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                        <i class="fa-solid fa-rotate-left text-sm"></i> 
+                        <i class="fa-solid fa-rotate-left text-sm"></i>
                         Reopen
                     </button>
                 </form>
@@ -128,7 +128,7 @@
                 </div>
                 <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Qty Counted</span>
                 <span id="stat-total-recorded-pcs" class="text-xl font-bold text-primary-700 dark:text-primary-400 leading-none">
-                    {{ number_format($stats['total_recorded_pcs'] ?? 0, 0) }} 
+                    {{ number_format($stats['total_recorded_pcs'] ?? 0, 0) }}
                 </span>
                 <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">PCS Recorded</span>
             </div>
@@ -247,7 +247,7 @@
                 <i class="fa-solid fa-barcode text-primary-600"></i> Count Entry
             </h3>
         </div>
-        
+
         <div class="flex flex-col sm:flex-row gap-3">
             <div class="flex-1 min-w-0">
                 <select id="product_detail_id" class="select2 w-full" data-placeholder="Pick Product via Search or Scanning...">
@@ -268,13 +268,13 @@
 
         <div class="mt-4 hidden" id="scanResultArea">
              <div class="flex flex-col md:flex-row items-stretch gap-6 p-4 md:p-5 rounded-xs border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
-                 
+
                  <!-- Product Info Section -->
                  <div class="flex-1 flex flex-col justify-center min-w-0">
                      <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 opacity-70">Selected Product</span>
                      <div class="text-xl font-semibold text-gray-900 dark:text-white tracking-tighter leading-none mb-1 break-all" id="resPartNo">-</div>
                      <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate" id="resPartName">-</div>
-                    
+
                     <div class="grid grid-cols-3 gap-2">
                         <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
                             <span class="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Unit</span>
@@ -290,7 +290,7 @@
                         </div>
                     </div>
                  </div>
-                 
+
                  <div class="hidden md:block w-px bg-gray-200 dark:bg-gray-700 my-2"></div>
 
                  <!-- Entry Form Section -->
@@ -300,7 +300,7 @@
                </div>
                <div class="mt-4 flex justify-center">
                   <button type="button" onclick="addNewEntryRow()" class="flex items-center justify-center gap-2 px-6 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]">
-                      <i class="fa-solid fa-plus text-sm"></i> 
+                      <i class="fa-solid fa-plus text-sm"></i>
                       Add New
                   </button>
                </div>
@@ -311,7 +311,7 @@
         </div>
     </div>
     @endif
-    
+
     @include('components.scanner-modal')
 
     <!-- RESULTS TABLE -->
@@ -326,7 +326,7 @@
                    <p class="text-xs text-gray-400 font-medium tracking-tighter">Real-time log of recorded quantities.</p>
                 </div>
             </div>
-            
+
             <div class="flex items-center gap-3">
                 <div class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xs flex items-center gap-3">
                     <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Matched</span>
@@ -338,7 +338,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="overflow-x-auto w-full custom-scrollbar">
             <x-table id="stoDetailsTable" class="w-full">
                 <thead>
@@ -388,7 +388,7 @@
             @csrf
             <div class="mb-5">
                 <label for="rejection_note" class="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">Feedback for the PIC</label>
-                <textarea name="rejection_note" id="rejection_note" rows="4" required 
+                <textarea name="rejection_note" id="rejection_note" rows="4" required
                     class="w-full bg-slate-50 dark:bg-gray-900 border-2 border-slate-100 dark:border-gray-700 rounded-xs p-4 text-sm font-bold focus:ring-0 focus:border-rose-500 transition-all dark:text-gray-200 placeholder-slate-300 outline-none"
                     placeholder="Provide clear reasons for rejection..."></textarea>
             </div>
@@ -432,7 +432,7 @@
                         </td>
                         <td class="px-6 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $p->part_name }}</td>
                         <td class="px-6 py-3 text-center">
-                            <button onclick="closeRemainingModal(); editFromTable('{{ $p->hash_id }}', null)" 
+                            <button onclick="closeRemainingModal(); editFromTable('{{ $p->hash_id }}', null)"
                                     class="h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-all" title="Record Now">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
@@ -457,7 +457,7 @@
     const scanUrl = "{{ route('inventory.sto.scan', $stoEvent->hash_id) }}";
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
-    
+
     // Inject reasons for inline dropdowns
     const stoReasons = @json(\App\Models\InventoryModel\StoReason::where('is_active', true)->get());
 
@@ -468,7 +468,7 @@
         weightKg = parseFloat(weightKg || 0);
         grossCoil = parseFloat(grossCoil || 0);
         unitCode = (unitCode || '').toLowerCase();
-        
+
         let pcs = 0;
         // Logic should match InventoryProduct::calculatePcs
         if (unitCode.includes('coil') && grossCoil > 0) {
@@ -479,18 +479,17 @@
 
         let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
         let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
-        
+
         // Change COIL label to KG as per user request
         let unitLabel = unitCode.toUpperCase();
-        if (unitLabel.includes('COIL')) unitLabel = 'KG';
-        
+        if (unitLabel.includes('COIL')) unitLabel = 'PCS'; // Ensure PCS is displayed for coil
+
         if (pcsPerUnit == 1 && !unitCode.includes('coil')) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
-        
+
         return `
-            <div class='flex flex-col items-center justify-center'>
-                <span class='font-bold text-gray-900 dark:text-white'>${prefix}${unitDisplay} ${unitLabel}</span>
-                <span class='text-[10px] text-gray-400 leading-none mt-1 uppercase font-bold tracking-tighter'>${pcsDisplay} PCS</span>
-            </div>`;
+            <span class='font-bold'>${prefix}${pcsDisplay}</span>
+            <span class='text-gray-500 dark:text-gray-400'> (${unitDisplay} ${unitLabel})</span>
+        `;
     }
 
     function formatCurrencyHtml(val, isDiff = false) {
@@ -499,14 +498,14 @@
             if (isDiff) return '<span class="text-[11px] font-mono font-bold text-green-600">0</span>';
             return '<span class="text-gray-300">-</span>';
         }
-        
+
         let color = 'text-gray-600 dark:text-gray-400';
         let prefix = '';
         if (isDiff) {
             color = 'text-red-600';
             prefix = val > 0 ? '+' : '-';
         }
-        
+
         return `<span class="text-[11px] font-mono font-bold ${color}">${prefix}${Math.abs(val).toLocaleString()}</span>`;
     }
 
@@ -553,12 +552,12 @@
                         icon: 'warning',
                         confirmButtonColor: '#f59e0b'
                     });
-                    
+
                     // Optional: Smooth scroll to the first invalid reason
                     missingReasons[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 }
-                
+
                 document.getElementById('submitForCheckForm').submit();
             }
         });
@@ -593,7 +592,7 @@
     // --- Stats Update Logic ---
     window.updateStatsCard = function(stats) {
         if (!stats) return;
-        
+
         const formatNumber = (num, dec = 0) => parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: dec});
         const setVal = (id, val) => {
             const el = document.getElementById(id);
@@ -608,17 +607,17 @@
         setVal('stat-total-increase', '(' + formatNumber(stats.total_increase) + ' Unit / ' + (stats.count_increase || 0) + ' items)');
         setVal('stat-total-decrease-pcs', formatNumber(stats.total_decrease_pcs) + ' Pcs');
         setVal('stat-total-decrease', '(' + formatNumber(stats.total_decrease) + ' Unit / ' + (stats.count_decrease || 0) + ' items)');
-        
+
         const netPcsPrefix = (stats.net_adjustment_pcs || 0) >= 0 ? '+' : '';
         setVal('stat-net-adjustment-pcs', netPcsPrefix + formatNumber(stats.net_adjustment_pcs) + ' Pcs');
-        
+
         const netUnitPrefix = (stats.net_adjustment || 0) >= 0 ? '+' : '';
         setVal('stat-net-adjustment', '(' + netUnitPrefix + formatNumber(stats.net_adjustment) + ' Unit)');
-        
+
         const amountImpact = stats.net_amount_impact || 0;
         const amountPrefix = amountImpact > 0 ? '+' : (amountImpact < 0 ? '-' : '');
         setVal('stat-net-amount-impact', amountPrefix + formatNumber(Math.abs(amountImpact)));
-        
+
         setVal('stat-total-matched', stats.total_matched || 0);
         setVal('table-total-matched', stats.total_matched || 0);
         setVal('table-total-diff', stats.total_diff || 0);
@@ -664,8 +663,8 @@
                 },
                 columns: [
                     { data: 'row_number', className: 'text-center font-bold text-gray-500', orderable: false, searchable: false },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'font-medium',
                         render: function(data) {
                             return `
@@ -676,32 +675,32 @@
                         }
                     },
                     { data: 'auditor', className: 'text-xs font-semibold text-primary-600 dark:text-primary-400' },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
                         render: function(data) {
                             return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil);
                         }
                     },
-                    { 
-                        data: 'system_amount', 
+                    {
+                        data: 'system_amount',
                         className: 'text-right pr-4 bg-gray-50/30 dark:bg-gray-800/20',
                         render: (val) => formatCurrencyHtml(val)
                     },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'text-center bg-primary-50/10 dark:bg-primary-900/5',
                         render: function(data) {
                             if (data.can_edit_inline) {
                                 return `
                                     <div class="flex flex-col items-center justify-center gap-1">
                                         <div class="flex items-center gap-1">
-                                            <input type="number" step="any" 
-                                                class="qty-input text-center font-bold text-sm px-2 py-1 border border-primary-200 dark:border-primary-800 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-300" 
+                                            <input type="number" step="any"
+                                                class="qty-input text-center font-bold text-sm px-2 py-1 border border-primary-200 dark:border-primary-800 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-300"
                                                 style="width: 80px; min-width: 80px;"
-                                                data-detail-id="${data.hash_id}" 
+                                                data-detail-id="${data.hash_id}"
                                                 data-product-id="${data.product_hash_id}"
-                                                value="${data.real_qty_input}" 
+                                                value="${data.real_qty_input}"
                                                 placeholder="Qty" />
                                             <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.includes('coil') ? 'KG' : data.unit_code.toUpperCase()}</span>
                                         </div>
@@ -713,13 +712,13 @@
                             return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)}</div>`;
                         }
                     },
-                    { 
-                        data: 'real_amount', 
+                    {
+                        data: 'real_amount',
                         className: 'text-right pr-4 bg-primary-50/20 dark:bg-primary-900/10',
                         render: (val) => formatCurrencyHtml(val)
                     },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'text-center font-bold bg-slate-50/20',
                         render: function(data) {
                             if (Math.abs(data.diff_qty) < 0.0001) return `<span class="text-sm font-bold text-emerald-600">0</span>`;
@@ -727,18 +726,18 @@
                             return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, prefix, data.gross_coil)}</div>`;
                         }
                     },
-                    { 
-                        data: 'diff_amount', 
+                    {
+                        data: 'diff_amount',
                         className: 'text-right pr-4 bg-slate-50/30 dark:bg-slate-800/20',
                         render: (val) => formatCurrencyHtml(val, true)
                     },
-                    { 
-                        data: 'location_name', 
+                    {
+                        data: 'location_name',
                         className: 'text-center text-xs',
                         render: (val) => val || '<span class="text-gray-400 italic">No Location</span>'
                     },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'text-center',
                         render: function(data) {
                             if (data.can_edit_inline) {
@@ -746,7 +745,7 @@
                                 let options = stoReasons.filter(r => r.category === category || r.category === 'OTHERS')
                                     .map(r => `<option value="${r.id}" ${data.reason_id == r.id ? 'selected' : ''}>${r.name}</option>`)
                                     .join('');
-                                
+
                                 let isMismatch = Math.abs(data.total_diff_qty) > 0.0001;
                                 let isInvalid = isMismatch && !data.group_has_reason && data.is_primary;
                                 let borderClass = isInvalid ? 'border-red-500 bg-red-50/30' : 'border-slate-200 dark:border-gray-700';
@@ -766,25 +765,25 @@
                             if (data.reason_name) {
                                 return `<span class="text-[10px] text-emerald-600 font-bold uppercase tracking-tight"><i class="fa-solid fa-circle-check"></i> ${data.reason_name}</span>`;
                             }
-                            
+
                             let isMismatch = Math.abs(data.total_diff_qty) > 0.0001;
                             if (isMismatch && !data.group_has_reason && data.is_primary) {
                                 return `<span class="text-[10px] text-red-500 font-bold uppercase tracking-widest">Reason Required</span>`;
                             }
-                            
+
                             return `<span class="text-gray-400">-</span>`;
                         }
                     },
-                    { 
-                        data: null, 
+                    {
+                        data: null,
                         className: 'text-xs text-gray-500 italic',
                         render: function(data) {
                             if (data.can_edit_inline) {
-                                return `<input type="text" 
-                                    class="remark-input text-xs px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300" 
+                                return `<input type="text"
+                                    class="remark-input text-xs px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                                     style="width: 180px; min-width: 180px;"
-                                    data-detail-id="${data.hash_id}" 
-                                    value="${data.remark || ''}" 
+                                    data-detail-id="${data.hash_id}"
+                                    value="${data.remark || ''}"
                                     placeholder="Add note..." />`;
                             }
                             return data.remark || '-';
@@ -792,15 +791,15 @@
                     },
                     { data: 'updated_at', className: 'text-[10px] font-mono text-gray-500' },
                     @if($stoEvent->status === 'OPEN')
-                    { 
-                        data: null, 
-                        className: 'text-center', 
+                    {
+                        data: null,
+                        className: 'text-center',
                         orderable: false,
                         render: function(data) {
                             if (data.status !== 'OPEN') return '';
                             return `
                                 <div class="flex items-center justify-center">
-                                    <button type="button" onclick="deleteItem('${data.hash_id}')" 
+                                    <button type="button" onclick="deleteItem('${data.hash_id}')"
                                              class="h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" title="Delete Entry">
                                         <i class="fa-solid fa-trash-can text-sm"></i>
                                     </button>
@@ -820,7 +819,7 @@
                     let lastProduct = null;
                     let productCounts = {};
                     let startIdx = settings._iDisplayStart;
-                    
+
                     // 1. First pass: Count items per product group on the current page
                     api.column(1, { page: 'current' }).data().each(function(data, i) {
                         const productHash = data.product_hash_id;
@@ -828,12 +827,12 @@
                     });
 
                     let groupCounter = 1;
-                    
+
                     // 2. Second pass: Apply rowspan and hide redundant cells
                     api.column(1, { page: 'current' }).data().each(function(data, i) {
                         const productHash = data.product_hash_id;
                         const $row = $(rows).eq(i);
-                        
+
                         if (lastProduct !== productHash) {
                             // FIRST ROW of product group
                             const rowCount = productCounts[productHash];
@@ -853,13 +852,13 @@
 
                             // Set Group Data for merged columns
                             $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
-                            
+
                              $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
                             $row.find('td:eq(4)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
-                            
+
                             $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
                             $row.find('td:eq(8)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
-                            
+
                             $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');
                             lastProduct = productHash;
                         } else {
@@ -869,7 +868,7 @@
                                 $row.find(`td:eq(${idx})`).css('display', 'none');
                             });
                         }
-                        
+
                         $row.addClass('hover:bg-primary-50/5 transition-colors');
                     });
                 }
@@ -892,10 +891,10 @@
                 fetch(saveUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                    body: JSON.stringify({ 
-                        product_id_hash: productId, 
+                    body: JSON.stringify({
+                        product_id_hash: productId,
                         detail_id_hash: detailId,
-                        real_qty: newQty, 
+                        real_qty: newQty,
                         remark: existingRemark,
                         reason_id: existingReasonId
                     })
@@ -930,10 +929,10 @@
                 fetch(saveUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                    body: JSON.stringify({ 
-                        product_id_hash: productId, 
+                    body: JSON.stringify({
+                        product_id_hash: productId,
                         detail_id_hash: detailId,
-                        real_qty: currentQty, 
+                        real_qty: currentQty,
                         remark: newRemark,
                         reason_id: existingReasonId
                     })
@@ -962,7 +961,7 @@
                 } else {
                     pcs = val * pcsPerUnit;
                 }
-                
+
                 $preview.text(`${Math.abs(pcs).toLocaleString(undefined, {maximumFractionDigits:0})} PCS`);
             });
 
@@ -980,10 +979,10 @@
                 fetch(saveUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-                    body: JSON.stringify({ 
-                        product_id_hash: productId, 
+                    body: JSON.stringify({
+                        product_id_hash: productId,
                         detail_id_hash: detailId,
-                        real_qty: currentQty, 
+                        real_qty: currentQty,
                         remark: currentRemark,
                         reason_id: reasonId
                     })
@@ -1020,7 +1019,7 @@
                 if (!data.id) return data.text;
                 const $opt = $(data.element);
                 const isCounted = $opt.data('counted') === true || $opt.data('counted') === 'true';
-                
+
                 if (isCounted) {
                     return $(`
                         <div class="flex items-center justify-between gap-2">
@@ -1079,16 +1078,16 @@
         currentProductData = data;
         const container = document.getElementById('entriesFormContainer');
         container.innerHTML = ''; // Fresh start
-        
+
         processShowResult(data);
-        
+
         // Show all existing entries for this product
         if (data.existing_entries && data.existing_entries.length > 0) {
             data.existing_entries.forEach(entry => {
                 createFormRow(entry);
             });
         }
-        
+
         if (!data.existing_entries || data.existing_entries.length === 0) {
             createFormRow();
         }
@@ -1098,7 +1097,7 @@
         const container = document.getElementById('entriesFormContainer');
         const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
         const locations = @json($locations);
-        
+
         let locationOptions = '<option value="">-- No Location --</option>';
         locations.forEach(loc => {
             const selected = (entry && entry.location_id == loc.id) ? 'selected' : '';
@@ -1108,7 +1107,7 @@
         const rowHtml = `
             <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30 relative">
                 <input type="hidden" class="row-detail-hash" value="${entry ? entry.detail_id_hash : ''}">
-                
+
                 ${entry ? `
                     <div class="absolute -top-2 left-3 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-[8px] font-bold text-gray-500 rounded-full border border-gray-200 dark:border-gray-600 uppercase tracking-tighter">
                         <i class="fa-solid fa-user-check mr-1 opacity-70"></i> Recorded by: ${entry.auditor_name || 'System'}
@@ -1117,7 +1116,7 @@
 
                 <div class="flex-1 w-full mt-2 sm:mt-0 font-bold">
                     <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Qty (${currentProductData.unit?.toUpperCase().includes('COIL') ? 'KG' : (currentProductData.unit || 'PCS')})</div>
-                    <input type="number" step="any" class="row-qty w-full bg-white dark:bg-gray-900 border-2 border-primary-100 dark:border-primary-900/30 rounded-xs h-[40px] text-center font-bold text-sm focus:border-primary-500 transition-all outline-none text-primary-700 dark:text-primary-300" 
+                    <input type="number" step="any" class="row-qty w-full bg-white dark:bg-gray-900 border-2 border-primary-100 dark:border-primary-900/30 rounded-xs h-[40px] text-center font-bold text-sm focus:border-primary-500 transition-all outline-none text-primary-700 dark:text-primary-300"
                            placeholder="0.00" value="${entry ? entry.real_qty : ''}">
                 </div>
 
@@ -1130,15 +1129,15 @@
 
                 <div class="flex-[2] w-full">
                     <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Remark</div>
-                    <input type="text" class="row-remark w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 rounded-xs h-[40px] text-xs px-3 outline-none transition-all" 
+                    <input type="text" class="row-remark w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 rounded-xs h-[40px] text-xs px-3 outline-none transition-all"
                            placeholder="Optional Note..." value="${entry ? entry.remark || '' : ''}">
                 </div>
 
-                <button type="button" onclick="saveRowCount('${rowId}')" 
+                <button type="button" onclick="saveRowCount('${rowId}')"
                         class="h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2 active:scale-95">
                     ${entry ? '<i class="fa-solid fa-check"></i> Update' : '<i class="fa-solid fa-plus"></i> Save'}
                 </button>
-                
+
                 ${entry ? `
                     <button type="button" onclick="deleteItem('${entry.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
                         <i class="fa-solid fa-trash-can"></i>
@@ -1150,9 +1149,9 @@
                 `}
             </div>
         `;
-        
+
         container.insertAdjacentHTML('beforeend', rowHtml);
-        
+
         // Auto focus the first blank row's qty
         if (!entry) {
             const lastRow = container.lastElementChild;
@@ -1183,11 +1182,11 @@
         fetch(saveUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-            body: JSON.stringify({ 
-                product_id_hash: productHash, 
-                detail_id_hash: detailHash, 
-                real_qty: qty, 
-                remark: remark, 
+            body: JSON.stringify({
+                product_id_hash: productHash,
+                detail_id_hash: detailHash,
+                real_qty: qty,
+                remark: remark,
                 location_id: locId
             })
         })
@@ -1202,14 +1201,14 @@
                     showConfirmButton: false,
                     timer: 1500
                 });
-                
+
                 row.querySelector('.row-detail-hash').value = data.detail_id_hash || '';
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Update';
                 btn.className = 'h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2';
                 btn.disabled = false;
                 row.classList.replace('border-gray-200', 'border-primary-100');
                 row.classList.add('bg-primary-50/10');
-                
+
                 if (!row.querySelector('.fa-trash-can')) {
                     const deleteBtnHtml = `
                         <button type="button" onclick="deleteItem('${data.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
@@ -1243,7 +1242,7 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 const url = `{{ route('inventory.sto.deleteDetail', [$stoEvent->hash_id, ':detailHash']) }}`.replace(':detailHash', detailHash);
-                
+
                 fetch(url, {
                     method: 'POST',
                     headers: {
@@ -1265,11 +1264,11 @@
                             timer: 1500,
                             showConfirmButton: false
                         });
-                        
+
                         // Reload table and update stats
                         if (typeof table !== 'undefined') table.ajax.reload(null, false);
                         if (data.stats && window.updateStatsCard) window.updateStatsCard(data.stats);
-                        
+
                         if (currentHashId && currentHashId.value) {
                             fetchStoInfo(currentHashId.value);
                         }
@@ -1284,7 +1283,7 @@
     function processShowResult(data) {
         const area = document.getElementById('scanResultArea');
         area.classList.remove('hidden');
-        
+
         errorArea.classList.add('hidden');
         resPartName.innerText = data.part_name;
         resPartNo.innerText = data.part_no;
@@ -1292,11 +1291,11 @@
         let displayUnit = data.unit || 'PCS';
         if (displayUnit.toUpperCase().includes('COIL')) displayUnit = 'KG';
         resUnit.innerText = displayUnit;
-        
+
         // System Qty Display (Follow new format)
         const sysQtyHtml = formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit, 0, '', data.gross_coil);
         resSystemQty.innerHTML = sysQtyHtml;
-        
+
         // Update entries count display
         const entriesCountEl = document.getElementById('resEntriesCount');
         if (entriesCountEl) {
@@ -1320,13 +1319,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const productHash = urlParams.get('product');
-        
+
         if (productHash && document.getElementById('product_detail_id')) {
             setTimeout(() => {
                 console.log("[STO] Auto-selecting product from URL:", productHash);
                 $('#product_detail_id').val(productHash).trigger('change.select2');
                 fetchStoInfo(productHash);
-            }, 500); 
+            }, 500);
         }
 
         // Handle Session Alerts
@@ -1345,7 +1344,7 @@
 @endpush
 @endsection
 
- 
+
 @push('styles')
 <style>
     /* Fix Select2 responsive width */
@@ -1353,7 +1352,7 @@
         width: 100% !important;
     }
     .select2-selection {
-        height: 42px !important;    
+        height: 42px !important;
         display: flex !important;
         align-items: center !important;
         border-color: #d1d5db !important;
