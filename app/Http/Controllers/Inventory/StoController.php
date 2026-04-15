@@ -385,7 +385,8 @@ class StoController extends Controller
 
         $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline, $primaryEntries, $reasonsProvided) {
             $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
-            $unitCode = $detail->product->unit->code ?? 'PCS';
+            $unitCode = $detail->product->unit->name ?? 'PCS';
+            $unitDisplayCode = $detail->product->unit->code ?? 'PCS';
             
             // Get aggregates for this product in this event
             $productAggregates = DB::table('inv_t_sto_detail')
@@ -435,6 +436,7 @@ class StoController extends Controller
                 'weight_kg' => (float)$weightPerPcs,
                 'gross_coil' => (float)($detail->product->gross_coil ?? 0),
                 'unit_code' => $unitCode,
+                'unit_display' => $unitDisplayCode,
                 'location_name' => $detail->location_name,
                 'reason_id' => $detail->reason_id,
                 'reason_name' => $detail->reason_name,
@@ -532,7 +534,8 @@ class StoController extends Controller
                 'product_id_hash' => $product->hash_id,
                 'part_no' => ($product->product->part_no ?? '-') . ($product->revision ? ' - ' . $product->revision->code : ''),
                 'part_name' => $product->product->part_name ?? '-',
-                'unit' => $product->unit->code ?? 'PCS',
+                'unit' => $product->unit->name ?? 'PCS',
+                'unit_display' => $product->unit->code ?? 'PCS',
                 'system_qty' => $systemQty,
                 'gross_coil' => (float)($product->gross_coil ?? 0),
                 'pcs_per_unit' => (float)($product->pcs_per_unit ?? 1),

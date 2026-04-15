@@ -487,8 +487,12 @@
         let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
 
         // Change COIL label to KG as per user request
-        let unitLabel = unitCode.toUpperCase();
-        if (unitLabel.includes('COIL')) unitLabel = 'KG';
+        let unitLabel = (unitCode || '').toUpperCase();
+        if (unitLabel.includes('COIL')) {
+            unitLabel = 'KG';
+        } else {
+            // Use the code if we want (but for now keep labels as they were)
+        }
 
         if (pcsPerUnit == 1 && !unitCode.includes('coil')) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
 
@@ -711,10 +715,10 @@
                                                 data-product-id="${data.product_hash_id}"
                                                 value="${data.real_qty_input}"
                                                 placeholder="Qty" />
-                                            <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.includes('coil') ? 'KG' : data.unit_code.toUpperCase()}</span>
+                                            <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.toLowerCase().includes('coil') ? 'KG' : (data.unit_display || data.unit_code).toUpperCase()}</span>
                                         </div>
                                         <div class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
-                                            ${Math.abs(data.unit_code.includes('coil') ? (data.real_qty_input / data.gross_coil * data.pcs_per_unit) : (data.real_qty_input * data.pcs_per_unit)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
+                                            ${Math.abs(data.unit_code.toLowerCase().includes('coil') ? (data.real_qty_input / data.gross_coil * data.pcs_per_unit) : (data.real_qty_input * data.pcs_per_unit)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
                                         </div>
                                     </div>`;
                             }
