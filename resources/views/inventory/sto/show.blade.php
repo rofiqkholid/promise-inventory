@@ -482,14 +482,15 @@
 
         // Change COIL label to KG as per user request
         let unitLabel = unitCode.toUpperCase();
-        if (unitLabel.includes('COIL')) unitLabel = 'PCS'; // Ensure PCS is displayed for coil
+        if (unitLabel.includes('COIL')) unitLabel = 'KG';
 
         if (pcsPerUnit == 1 && !unitCode.includes('coil')) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
 
         return `
-            <span class='font-bold'>${prefix}${pcsDisplay}</span>
-            <span class='text-gray-500 dark:text-gray-400'> (${unitDisplay} ${unitLabel})</span>
-        `;
+            <div class='flex flex-col items-center justify-center'>
+                <span class='font-bold text-gray-900 dark:text-white'>${prefix}${unitDisplay} ${unitLabel}</span>
+                <span class='text-[10px] text-gray-400 leading-none mt-1 uppercase font-bold tracking-tighter'>${pcsDisplay} PCS</span>
+            </div>`;
     }
 
     function formatCurrencyHtml(val, isDiff = false) {
