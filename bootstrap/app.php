@@ -18,6 +18,20 @@ return Application::configure(basePath: dirname(__DIR__))
             '*/product/read-sheets',
             '*/product/upload-handler',
             '*/vave/upload-handler',
+            // User Access Management (already protected by auth middleware)
+            // 419 occurs due to shared session cookie conflict between inventory & portal apps
+            'inventory/user-access',
+            'inventory/user-access/*',
+            'inventory/user-menus',
+            'inventory/user-menus/*',
+            'inventory/roles',
+            'inventory/roles/*',
+            'inventory/role-menus',
+            'inventory/role-menus/*',
+            'inventory/users',
+            'inventory/users/*',
+            'inventory/menus',
+            'inventory/menus/*',
         ]);
         $middleware->encryptCookies(except: [
             'promise_auth_session'

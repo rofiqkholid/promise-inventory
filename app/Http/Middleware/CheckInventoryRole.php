@@ -21,97 +21,98 @@ class CheckInventoryRole
             abort(403, 'Access Denied. Please log in first.');
         }
 
-        // If user has no roles, check if they at least have some specific menu permissions
+        // 1. Base Role Check
+        // Ensure user has at least one role. We no longer restrict strictly by the hardcoded 
+        // middleware parameter roles to allow for fully DB-driven dynamic access control.
         if ($user->roles->isEmpty()) {
-            if (!$user->specificMenus()->exists()) {
-                abort(403, 'Access Denied. You do not have permission to access the Inventory System.');
-            }
+            abort(403, 'Unauthorized. You do not have any assigned roles.');
         }
 
-        // If roles are specified in middleware, they act as a base restriction.
-        if (!empty($roles)) {
-            $routeName = $request->route()->getName() ?? '';
-
-            // STEP 1: Fast-pass — if user's hardcoded role code is in the middleware role list,
-            // allow immediately. This covers ALL routes in the group, including AJAX helpers
-            // like getSheetNames, importExcel, etc., without needing DB menu entries.
-            $userRoleCodes = $user->roles->pluck('code')->toArray();
-            if (!empty(array_intersect($userRoleCodes, $roles))) {
+        // 2. Menu Access Check
+        $routeName = $request->route()->getName();
+        
+        if ($routeName) {
+            // Exceptions - always allowed for any user with ANY inventory access
+            $exceptions = [
+                'dashboard', 
+                'profile.index', 
+                'profile.update', 
+                'profile.updatePassword', 
+                'logout',
+                'inventory.scanInfo' // Public scan is allowed but often falls under inventory prefix
+            ];
+            
+            if (in_array($routeName, $exceptions)) {
                 return $next($request);
             }
 
-            // STEP 2: DB Menu check — for users who may not have a matching hardcoded role
-            // but have been granted specific menu access via User-Specific Menus or Role Menus.
-            if ($routeName) {
-                $segments = explode('.', $routeName);
-                $possibleRoutes = [];
-                $temp = '';
-                foreach ($segments as $segment) {
-                    $temp = $temp === '' ? $segment : $temp . '.' . $segment;
-                    $possibleRoutes[] = $temp;
-                }
+            // Get all active allowed routes for the user
+            $allowedRoutes = \App\Models\InventoryModel\Menu::where('is_active', true)
+                ->where(function($q) use ($user) {
+                    $q->whereHas('roles', function($rq) use ($user) {
+                        $rq->whereIn('inv_m_roles.id', $user->roles->pluck('id'));
+                    })->orWhereHas('userSpecific', function($uq) use ($user) {
+                        $uq->where('users.id', $user->id);
+                    });
+                })
+                ->pluck('route')
+                ->filter()
+                ->toArray();
 
-                // Also check parent routes with '.index' suffix
-                $indexedPossibleRoutes = array_map(fn($r) => $r . '.index', $possibleRoutes);
-
-                // Helper to expand menu routes to include their parents
-                $expandMenuRoutes = function ($menuRoutes) {
-                    $expanded = [];
-                    foreach ($menuRoutes as $route) {
-                        $expanded[] = $route;
-                        $parts = explode('.', $route);
-                        while (count($parts) > 1) {
-                            array_pop($parts);
-                            $expanded[] = implode('.', $parts);
-                        }
-                    }
-                    return array_unique($expanded);
-                };
-
-                // Check user-specific menus
-                $specificMenuRoutes = $user->specificMenus()->pluck('route')->toArray();
-                $allowedSpecificRoutes = $expandMenuRoutes($specificMenuRoutes);
-
-                if (in_array($routeName, $allowedSpecificRoutes) ||
-                    array_intersect($possibleRoutes, $specificMenuRoutes) ||
-                    array_intersect($indexedPossibleRoutes, $specificMenuRoutes)) {
-                    return $next($request);
-                }
-
-                // Special case for Master Data
-                $isMasterSubRoute = str_starts_with($routeName, 'inventory.master.');
-                if ($isMasterSubRoute && in_array('inventory.master.master.index', $specificMenuRoutes)) {
-                    return $next($request);
-                }
-
-                // Check role-based menus in database
-                foreach ($user->roles as $role) {
-                    $roleMenuRoutes = $role->menus()->pluck('route')->toArray();
-                    $allowedRoleRoutes = $expandMenuRoutes($roleMenuRoutes);
-
-                    if (in_array($routeName, $allowedRoleRoutes) ||
-                        array_intersect($possibleRoutes, $roleMenuRoutes) ||
-                        array_intersect($indexedPossibleRoutes, $roleMenuRoutes)) {
-                        return $next($request);
-                    }
-
-                    if ($isMasterSubRoute && in_array('inventory.master.master.index', $roleMenuRoutes)) {
-                        return $next($request);
-                    }
-                }
+            // Check if the current route is allowed
+            if ($this->hasAccess($routeName, $allowedRoutes)) {
+                return $next($request);
             }
 
-            // Log for debugging production issues
-            \Log::warning('CheckInventoryRole: 403 Access Denied', [
-                'user_id'        => $user->id,
-                'route'          => $routeName,
-                'user_roles'     => $userRoleCodes,
-                'required_roles' => $roles,
+            // Log denial for debugging
+            \Log::warning('CheckInventoryRole: Access Denied', [
+                'user_id' => $user->id,
+                'route'   => $routeName,
             ]);
 
-            abort(403, 'Unauthorized. Your assigned roles do not allow this action.');
+            abort(403, 'Unauthorized. Access to this menu has been revoked or is not assigned.');
         }
 
         return $next($request);
+    }
+
+    /**
+     * Helper to verify if route matches allowed menus or their sub-routes
+     */
+    private function hasAccess($routeName, array $allowedRoutes): bool
+    {
+        foreach ($allowedRoutes as $allowed) {
+            // Exact match
+            if ($routeName === $allowed) return true;
+
+            // Handle resource-like sub-routes
+            if (str_starts_with($routeName, $allowed . '.')) return true;
+
+            // Handle .index suffix in allowed route
+            if (str_ends_with($allowed, '.index')) {
+                $base = substr($allowed, 0, -6);
+                if ($routeName === $base || str_starts_with($routeName, $base . '.')) {
+                    return true;
+                }
+
+                // Special case for User Access menu which has multiple distinct route prefixes
+                if ($allowed === 'inventory.userAccess.index') {
+                    $userAccessPrefixes = [
+                        'inventory.roles.',
+                        'inventory.menus.',
+                        'inventory.users.',
+                        'inventory.roleMenus.',
+                        'inventory.userMenus.'
+                    ];
+                    
+                    foreach ($userAccessPrefixes as $prefix) {
+                        if (str_starts_with($routeName, $prefix)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

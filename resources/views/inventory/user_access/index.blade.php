@@ -55,6 +55,13 @@
         tabBtns.first().click();
     }
 
+    // Set CSRF token globally for all AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': "{{ csrf_token() }}"
+        }
+    });
+
     // Shared Form Handler
     function handleFormSubmit(e, url, modalId, dataTable) {
         e.preventDefault();

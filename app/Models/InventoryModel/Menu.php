@@ -23,4 +23,9 @@ class Menu extends Model
     {
         return $this->hasMany(Menu::class, 'parent_id')->orderBy('order');
     }
+
+    public function userSpecific()
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'inv_user_menus', 'menu_id', 'user_id');
+    }
 }
