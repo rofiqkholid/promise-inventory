@@ -927,26 +927,65 @@ class StoController extends Controller
 
     private function getStoStats($stoEvent)
     {
-        // Aggregate totals per product for this event
-        $productStats = DB::table('inv_t_sto_detail')
-            ->where('event_id', $stoEvent->id)
-            ->select('product_detail_id', 
-                DB::raw('SUM(ISNULL(real_qty_input, 0)) as total_real'),
-                DB::raw('SUM(ISNULL(system_qty_snapshot, 0)) as total_system')
+        // Aggregate totals per product for this event - Group strictly by product_detail_id 
+        // to handle multiple locations correctly.
+        $productStats = DB::table('inv_t_sto_detail as sd')
+            ->leftJoin('inv_t_product_detail as pd', 'sd.product_detail_id', '=', 'pd.id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'pd.unit_id')
+            ->where('sd.event_id', $stoEvent->id)
+            ->select(
+                'sd.product_detail_id', 
+                DB::raw('MAX(pd.pcs_per_unit) as pcs_per_unit'),
+                DB::raw('MAX(pd.gross_coil) as gross_coil'),
+                DB::raw('MAX(u.name) as unit_name'),
+                DB::raw('SUM(ISNULL(sd.real_qty_input, 0)) as total_real'),
+                DB::raw('SUM(ISNULL(sd.system_qty_snapshot, 0)) as total_system')
             )
-            ->groupBy('product_detail_id')
+            ->groupBy('sd.product_detail_id')
             ->get();
 
         $totalItems = $productStats->count();
         $totalMatched = 0;
         $totalDiff = 0;
+        
         $countIncrease = 0;
         $countDecrease = 0;
-        $totalIncrease = 0;
-        $totalDecrease = 0;
+        
+        $totalIncrease = 0; // Total positive diff (Base Unit: Kg/Pcs/Sheet)
+        $totalDecrease = 0; // Total negative diff (Base Unit: Kg/Pcs/Sheet)
+        
+        $incPcs = 0;
+        $decPcs = 0;
+        $netPcs = 0;
+        $totalRecordedPcs = 0;
+        $hasCoils = false;
 
         foreach ($productStats as $p) {
             $diff = (float)$p->total_real - (float)$p->total_system;
+            
+            $pcsPerUnit = (float)($p->pcs_per_unit ?? 1);
+            $grossCoil = (float)($p->gross_coil ?? 0);
+            $unitLower = strtolower((string)($p->unit_name ?? 'pcs'));
+            
+            if (strpos($unitLower, 'coil') !== false) $hasCoils = true;
+
+            // Calculate PCS conversions
+            $diffPcs = 0;
+            $recordedPcs = 0;
+            
+            if (strpos($unitLower, 'coil') !== false && $grossCoil > 0) {
+                // If it's a coil, calculate PCS based on ratio of qty to gross weight
+                $diffPcs = ($diff / $grossCoil) * $pcsPerUnit;
+                $recordedPcs = ((float)$p->total_real / $grossCoil) * $pcsPerUnit;
+            } else {
+                $diffPcs = $diff * $pcsPerUnit;
+                $recordedPcs = (float)$p->total_real * $pcsPerUnit;
+            }
+
+            $totalRecordedPcs += $recordedPcs;
+            $netPcs += $diffPcs;
+
+            // Strict matching check
             if (abs($diff) < 0.00001) {
                 $totalMatched++;
             } else {
@@ -954,24 +993,14 @@ class StoController extends Controller
                 if ($diff > 0) {
                     $countIncrease++;
                     $totalIncrease += $diff;
+                    $incPcs += $diffPcs;
                 } else {
                     $countDecrease++;
-                    $totalDecrease += $diff;
+                    $totalDecrease += abs($diff); 
+                    $decPcs += abs($diffPcs);
                 }
             }
         }
-
-        $pcsStats = DB::table('inv_t_sto_detail as sd')
-            ->leftJoin('inv_t_product_detail as pd', 'sd.product_detail_id', '=', 'pd.id')
-            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'pd.unit_id')
-            ->where('sd.event_id', $stoEvent->id)
-            ->select(
-                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot > 0 THEN ' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('(sd.real_qty_input - sd.system_qty_snapshot)', 'pd', 'u.name') . ' ELSE 0 END) as inc_pcs'),
-                DB::raw('SUM(CASE WHEN sd.real_qty_input - sd.system_qty_snapshot < 0 THEN ' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('(sd.system_qty_snapshot - sd.real_qty_input)', 'pd', 'u.name') . ' ELSE 0 END) as dec_pcs'),
-                DB::raw('SUM(' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('(sd.real_qty_input - sd.system_qty_snapshot)', 'pd', 'u.name') . ') as net_pcs'),
-                DB::raw('SUM(' . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('sd.real_qty_input', 'pd', 'u.name') . ') as total_recorded_pcs')
-            )
-            ->first();
 
         // Financial Impact
         $financialStats = DB::table('inv_t_sto_detail as sd')
@@ -980,30 +1009,32 @@ class StoController extends Controller
             ->select(DB::raw('SUM((sd.real_qty_input - sd.system_qty_snapshot) * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0)) as impact'))
             ->first();
 
-        $netAdjustment = StoDetail::where('event_id', $stoEvent->id)->sum(DB::raw('real_qty_input - system_qty_snapshot'));
-        $totalProducts = InventoryProduct::where('is_active', 1)->count();
+        // Calculate net adjustment properly based on Product Aggregate
+        $netAdjustment = $totalIncrease - $totalDecrease;
 
-        $stats = [
-            'total_recorded_pcs' => (float)($pcsStats->total_recorded_pcs ?? 0),
+        $totalProducts = \App\Models\InventoryModel\InventoryProduct::where('is_active', 1)->count();
+
+        return [
+            'total_recorded_pcs' => (float)$totalRecordedPcs,
             'total_items' => (int)$totalItems,
             'total_diff' => (int)$totalDiff,
             'total_matched' => (int)$totalMatched,
+            
             'count_increase' => (int)$countIncrease,
             'count_decrease' => (int)$countDecrease,
             'total_increase' => (float)$totalIncrease,
             'total_decrease' => (float)$totalDecrease,
             
-            'total_increase_pcs' => (float)($pcsStats->inc_pcs ?? 0),
-            'total_decrease_pcs' => (float)($pcsStats->dec_pcs ?? 0),
-            'net_adjustment_pcs' => (float)($pcsStats->net_pcs ?? 0),
+            'total_increase_pcs' => (float)$incPcs,
+            'total_decrease_pcs' => (float)$decPcs,
+            'net_adjustment_pcs' => (float)$netPcs,
             'net_amount_impact' => (float)($financialStats->impact ?? 0),
             
             'total_count' => (int)$totalProducts,
             'total_missing_items' => (int)max(0, $totalProducts - $totalItems),
             'progress' => (float)($totalProducts > 0 ? round(($totalItems / $totalProducts) * 100, 1) : 0),
-            'net_adjustment' => (float)$netAdjustment
+            'net_adjustment' => (float)$netAdjustment,
+            'has_coils' => $hasCoils
         ];
-
-        return $stats;
     }
 }
