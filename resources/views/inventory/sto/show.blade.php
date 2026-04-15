@@ -152,7 +152,7 @@
                 <span class="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400 uppercase tracking-widest mb-1">Stock Increment</span>
                 <span id="stat-total-increase-pcs" class="text-lg font-bold text-emerald-700 dark:text-emerald-400 leading-none">{{ number_format($stats['total_increase_pcs'], 0) }} Pcs</span>
                 <span id="stat-total-increase" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ number_format($stats['total_increase'], 1) }} <span class="unit-label">{{ ($stats['has_coils'] ?? false) ? 'KG' : 'Unit' }}</span> / {{ $stats['count_increase'] }} items)
+                    ({{ number_format($stats['total_increase'], 1) }} Unit / {{ $stats['count_increase'] }} items)
                 </span>
             </div>
 
@@ -164,7 +164,7 @@
                 <span class="text-[9px] font-bold text-rose-600/70 dark:text-rose-400 uppercase tracking-widest mb-1">Stock Decrement</span>
                 <span id="stat-total-decrease-pcs" class="text-lg font-bold text-rose-700 dark:text-rose-400 leading-none">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
                 <span id="stat-total-decrease" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ number_format($stats['total_decrease'], 1) }} <span class="unit-label">{{ ($stats['has_coils'] ?? false) ? 'KG' : 'Unit' }}</span> / {{ $stats['count_decrease'] }} items)
+                    ({{ number_format($stats['total_decrease'], 1) }} Unit / {{ $stats['count_decrease'] }} items)
                 </span>
             </div>
 
@@ -176,7 +176,7 @@
                 <span class="text-[9px] font-bold text-purple-600/70 dark:text-purple-400 uppercase tracking-widest mb-1">Adjustment Impact</span>
                 <span id="stat-net-adjustment-pcs" class="text-lg font-bold text-purple-700 dark:text-purple-400 leading-none">{{ ($stats['net_adjustment_pcs'] >= 0 ? '+' : '') . number_format($stats['net_adjustment_pcs'], 0) }} Pcs</span>
                 <span id="stat-net-adjustment" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, 1) }} <span class="unit-label">{{ ($stats['has_coils'] ?? false) ? 'KG' : 'Unit' }}</span>)
+                    ({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, 1) }} Unit)
                 </span>
             </div>
 
@@ -611,19 +611,17 @@
         setVal('stat-total-recorded-pcs', formatNumber(stats.total_recorded_pcs));
         setVal('stat-total-missing-items', stats.total_missing_items || 0);
         
-        const currentUnitLabel = stats.has_coils ? 'KG' : 'Unit';
         setVal('stat-total-increase-pcs', formatNumber(stats.total_increase_pcs) + ' Pcs');
-        setVal('stat-total-increase', '(' + formatNumber(stats.total_increase, 1) + ' ' + currentUnitLabel + ' / ' + (stats.count_increase || 0) + ' items)');
+        setVal('stat-total-increase', '(' + formatNumber(stats.total_increase, 1) + ' Unit / ' + (stats.count_increase || 0) + ' items)');
         setVal('stat-total-decrease-pcs', formatNumber(stats.total_decrease_pcs) + ' Pcs');
-        setVal('stat-total-decrease', '(' + formatNumber(stats.total_decrease, 1) + ' ' + currentUnitLabel + ' / ' + (stats.count_decrease || 0) + ' items)');
+        setVal('stat-total-decrease', '(' + formatNumber(stats.total_decrease, 1) + ' Unit / ' + (stats.count_decrease || 0) + ' items)');
+
 
         const netPcsPrefix = (stats.net_adjustment_pcs || 0) >= 0 ? '+' : '';
         setVal('stat-net-adjustment-pcs', netPcsPrefix + formatNumber(stats.net_adjustment_pcs) + ' Pcs');
 
         const netUnitPrefix = (stats.net_adjustment || 0) >= 0 ? '+' : '';
-        const unitLabel = stats.has_coils ? 'KG' : 'Unit';
-        $('.unit-label').text(unitLabel);
-        setVal('stat-net-adjustment', '(' + netUnitPrefix + formatNumber(stats.net_adjustment, 1) + ' ' + unitLabel + ')');
+        setVal('stat-net-adjustment', '(' + netUnitPrefix + formatNumber(stats.net_adjustment, 1) + ' Unit)');
 
         const amountImpact = stats.net_amount_impact || 0;
         const amountPrefix = amountImpact > 0 ? '+' : (amountImpact < 0 ? '-' : '');

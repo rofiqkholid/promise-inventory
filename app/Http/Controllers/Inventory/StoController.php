@@ -982,6 +982,10 @@ class StoController extends Controller
                 $recordedPcs = (float)$p->total_real * $pcsPerUnit;
             }
 
+            // Round PCS to Integer - Standard Inventory Logic
+            $diffPcs = (float)floor(abs($diffPcs)) * ($diffPcs >= 0 ? 1 : -1);
+            $recordedPcs = (float)floor($recordedPcs);
+
             $totalRecordedPcs += $recordedPcs;
             $netPcs += $diffPcs;
 
@@ -1033,8 +1037,7 @@ class StoController extends Controller
             'total_count' => (int)$totalProducts,
             'total_missing_items' => (int)max(0, $totalProducts - $totalItems),
             'progress' => (float)($totalProducts > 0 ? round(($totalItems / $totalProducts) * 100, 1) : 0),
-            'net_adjustment' => (float)$netAdjustment,
-            'has_coils' => $hasCoils
+            'net_adjustment' => (float)$netAdjustment
         ];
     }
 }
