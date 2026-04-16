@@ -25,7 +25,7 @@ class InventoryProductController extends Controller
     public function index()
     {
         // For filters: Only show customers and models that are actually in inv_t_product_detail
-        $customers = DB::table('customers as c')
+        $filterCustomers = DB::table('customers as c')
             ->join('products as p', 'p.customer_id', '=', 'c.id')
             ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
             ->where('pd.is_active', 1)
@@ -34,7 +34,7 @@ class InventoryProductController extends Controller
             ->orderBy('c.code')
             ->get();
 
-        $models = DB::table('models as m')
+        $filterModels = DB::table('models as m')
             ->join('inv_t_product_detail as pd', 'pd.model_id', '=', 'm.id')
             ->where('pd.is_active', 1)
             ->select(DB::raw('MIN(m.id) as id'), 'm.name')
@@ -42,7 +42,10 @@ class InventoryProductController extends Controller
             ->orderBy('m.name')
             ->get();
 
-        return view('inventory.master-data.product', compact('customers', 'models'));
+        // For Import & Add: We need ALL customers
+        $customers = DB::table('customers')->select('id', 'code')->orderBy('code')->get();
+
+        return view('inventory.master-data.product', compact('customers', 'filterCustomers', 'filterModels'));
     }
 
     /**

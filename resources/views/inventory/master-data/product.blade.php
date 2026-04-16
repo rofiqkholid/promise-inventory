@@ -40,7 +40,7 @@
                     <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Customer</label>
                     <select id="filterCustomer" class="select2-filter w-full">
                         <option value="">All Customers</option>
-                        @foreach($customers as $c)
+                        @foreach($filterCustomers as $c)
                             <option value="{{ $c->id }}">{{ $c->code }}</option>
                         @endforeach
                     </select>
@@ -51,7 +51,7 @@
                     <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Model</label>
                     <select id="filterModel" class="select2-filter w-full">
                         <option value="">All Models</option>
-                        @foreach($models as $m)
+                        @foreach($filterModels as $m)
                             <option value="{{ $m->id }}">{{ $m->name }}</option>
                         @endforeach
                     </select>
