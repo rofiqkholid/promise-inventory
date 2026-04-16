@@ -1003,34 +1003,52 @@ $(function() {
             btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin text-white mr-1.5"></i> Importing...');
             $('#importResult').addClass('hidden');
 
-            const formData = new FormData($('#importForm')[0]);
-            formData.append('_method', 'PUT'); // WAF Bypass: Use PUT spoofing for file uploads in production
+            const fileInput = $('#import_file')[0];
+            if (!fileInput.files || !fileInput.files[0]) {
+                window.showToast('Please select a file to import.', 'error');
+                btn.prop('disabled', false).html(originalText);
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
             
-            $.ajax({
-                url: this.config.routes.import,
-                method: 'POST', // Sent as POST but Laravel treats as PUT due to _method spoofing
-                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: (res) => {
-                    this.state.table.ajax.reload();
-                    $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
-                        .addClass('bg-emerald-50 text-emerald-900 border-emerald-100 p-5 rounded-sm')
-                        .html(res.message);
-                    window.showToast('Import completed successfully', 'success');
-                },
-                error: (xhr) => {
-                    const msg = xhr.responseJSON?.message || 'Upload failed.';
-                    $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
-                        .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
-                        .html(msg);
-                    window.showToast('Import failed - please check errors', 'error');
-                },
-                complete: () => {
-                    btn.prop('disabled', false).html(originalText);
-                }
-            });
+            reader.onload = (e) => {
+                const payload = {
+                    customer_id: $('#import_customer_id').val(),
+                    model_id: $('#import_model_id').val(),
+                    sheet_name: $('#sheet_name').val(),
+                    file_base64: e.target.result,
+                    _token: this.config.csrfToken
+                };
+
+                $.ajax({
+                    url: this.config.routes.import,
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
+                    data: JSON.stringify(payload),
+                    contentType: 'application/json',
+                    success: (res) => {
+                        this.state.table.ajax.reload();
+                        $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
+                            .addClass('bg-emerald-50 text-emerald-900 border-emerald-100 p-5 rounded-sm')
+                            .html(res.message);
+                        window.showToast('Import completed successfully', 'success');
+                    },
+                    error: (xhr) => {
+                        const msg = xhr.responseJSON?.message || 'Upload failed. WAF might still be blocking it.';
+                        $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
+                            .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
+                            .html(msg);
+                        window.showToast('Import failed - please check errors', 'error');
+                    },
+                    complete: () => {
+                        btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            };
+            
+            reader.readAsDataURL(file);
         },
 
         handleDelete: function() {

@@ -565,45 +565,62 @@ $(function() {
         
         $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Importing...');
         
-        const formData = new FormData(this);
-        formData.append('_method', 'PUT'); // WAF Bypass: Use PUT spoofing for file uploads in production
         $('#importResult').removeClass('hidden');
         $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-blue-50 text-blue-700 border-blue-100').html('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing data, please wait...');
         $('#importLogs').empty();
 
-        $.ajax({
-            url: '{{ route("inventory.vave.importExcel") }}',
-            method: 'POST', // Sent as POST but Laravel treats as PUT due to _method spoofing
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(res) {
-                $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-emerald-50 text-emerald-700 border-emerald-100').html(`<i class="fa-solid fa-circle-check mr-2"></i> ${res.message}`);
-                
-                if (res.log) {
-                    if (res.log.created.length) res.log.created.forEach(l => $('#importLogs').append(`<div class="text-emerald-600 italic">[CREATED] ${l}</div>`));
-                    if (res.log.updated.length) res.log.updated.forEach(l => $('#importLogs').append(`<div class="text-amber-600 italic">[UPDATED] ${l}</div>`));
-                    $('#importLogs').append(`<div class="text-slate-400 mt-2">Unchanged items: ${res.log.unchangedCount}</div>`);
+        const fileInput = $('#import_file')[0];
+        if (!fileInput.files || !fileInput.files[0]) {
+            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html('<i class="fa-solid fa-circle-exclamation mr-2"></i> Please select a file.');
+            $btn.prop('disabled', false).html(originalHtml);
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            const payload = {
+                sheet_name: $('#import_sheet_name').val(),
+                file_base64: e.target.result,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            };
+
+            $.ajax({
+                url: '{{ route("inventory.vave.importExcel") }}',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                data: JSON.stringify(payload),
+                contentType: 'application/json',
+                success: function(res) {
+                    $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-emerald-50 text-emerald-700 border-emerald-100').html(`<i class="fa-solid fa-circle-check mr-2"></i> ${res.message}`);
+                    
+                    if (res.log) {
+                        if (res.log.created.length) res.log.created.forEach(l => $('#importLogs').append(`<div class="text-emerald-600 italic">[CREATED] ${l}</div>`));
+                        if (res.log.updated.length) res.log.updated.forEach(l => $('#importLogs').append(`<div class="text-amber-600 italic">[UPDATED] ${l}</div>`));
+                        $('#importLogs').append(`<div class="text-slate-400 mt-2">Unchanged items: ${res.log.unchangedCount}</div>`);
+                    }
+                    
+                    table.ajax.reload();
+                    refreshEbdBases();
+                },
+                error: function(xhr) {
+                    const res = xhr.responseJSON || {};
+                    $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html(`<i class="fa-solid fa-circle-exclamation mr-2"></i> ${res.message || 'Error occurred. WAF might still be blocking it.'}`);
+                    
+                    if (res.errors) {
+                        res.errors.forEach(err => $('#importLogs').append(`<div class="text-rose-600 font-bold underline ">[ERROR] ${err}</div>`));
+                    }
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html(originalHtml);
                 }
-                
-                table.ajax.reload();
-                refreshEbdBases();
-            },
-            error: function(xhr) {
-                const res = xhr.responseJSON;
-                $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html(`<i class="fa-solid fa-circle-exclamation mr-2"></i> ${res.message || 'Error occurred'}`);
-                
-                if (res.errors) {
-                    res.errors.forEach(err => $('#importLogs').append(`<div class="text-rose-600 font-bold underline ">[ERROR] ${err}</div>`));
-                }
-            },
-            complete: function() {
-                $btn.prop('disabled', false).html(originalHtml);
-            }
-        });
+            });
+        };
+        
+        reader.readAsDataURL(file);
     });
 
     loadMainFilters();

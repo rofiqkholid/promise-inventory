@@ -268,18 +268,35 @@ class InventoryProductController extends Controller
     public function importExcel(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:51200', // 50MB max
             'customer_id' => 'required',
             'model_id' => 'required',
             'sheet_name' => 'required|string|max:50',
         ]);
+
+        $fileToImport = null;
+        $tmpPath = null;
+
+        if ($request->has('file_base64')) {
+            $base64data = preg_replace('/^data:[a-zA-Z0-9\/\-\.\+]+;base64,/', '', $request->file_base64);
+            $fileContent = base64_decode($base64data);
+            $tmpPath = sys_get_temp_dir() . '/' . uniqid('import_') . '.xlsx';
+            file_put_contents($tmpPath, $fileContent);
+            $fileToImport = $tmpPath;
+        } else {
+            $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:51200']); // 50MB max
+            $fileToImport = $request->file('file');
+        }
 
         $import = new \App\Imports\InventoryProductImport(
             $request->customer_id, 
             $request->model_id, 
             $request->sheet_name
         );
-        Excel::import($import, $request->file('file'));
+        Excel::import($import, $fileToImport);
+
+        if ($tmpPath && file_exists($tmpPath)) {
+            @unlink($tmpPath);
+        }
 
         if (!empty($import->getErrors())) {
             $errorCount = count($import->getErrors());
