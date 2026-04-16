@@ -110,14 +110,18 @@ class DashboardController extends Controller
         $materialInSum = (clone $queryTrans)->whereIn('tc.code', $inCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
         $materialOutSum = (clone $queryTrans)->whereIn('tc.code', $outCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
         
+        $materialOutPPSum = (clone $queryTrans)->where('tc.code', 'OUT-PP')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        $materialOutEventSum = (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        $materialOutTrialSum = (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+
         $stats = [
             'total_stock' => $totalStockPcs,
             'total_stock_value' => $totalStockAmount,
             'material_in' => $materialInSum,
             'material_out' => $materialOutSum,
-            'out_pp' => (clone $queryTrans)->where('tc.code', 'OUT-PP')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0,
-            'out_event' => (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0,
-            'out_trial' => (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0,
+            'out_pp' => $materialOutPPSum,
+            'out_event' => $materialOutEventSum,
+            'out_trial' => $materialOutTrialSum,
         ];
 
         $allProducts = $stockQuery->select(
@@ -264,14 +268,7 @@ class DashboardController extends Controller
 
         if ($request->ajax()) {
             return response()->json([
-                'stats' => [
-                    'total_stock' => $totalStockPcs,
-                    'material_in' => $materialInSum,
-                    'material_out' => $materialOutSum,
-                    'out_pp' => $materialOutPPSum,
-                    'out_event' => $materialOutEventSum,
-                    'out_trial' => $materialOutTrialSum,
-                ],
+                'stats' => $stats,
                 'charts' => [
                     'stock_grouped' => $stockDataGrouped,
                     'usage_model' => $usageByModel,
@@ -287,14 +284,7 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', [
-            'stats' => [
-                'total_stock' => $totalStockPcs,
-                'material_in' => $materialInSum,
-                'material_out' => $materialOutSum,
-                'out_pp' => $materialOutPPSum,
-                'out_event' => $materialOutEventSum,
-                'out_trial' => $materialOutTrialSum,
-            ],
+            'stats' => $stats,
             'charts' => [
                 'stock_grouped' => $stockDataGrouped,
                 'usage_model' => $usageByModel,
