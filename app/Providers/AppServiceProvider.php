@@ -63,6 +63,7 @@ class AppServiceProvider extends ServiceProvider
                         'p.product_status',
                         'ms.project_status',
                         'p.weight_kg',
+                        'p.gross_coil',
                         'u.name as unit_name'
                     ])
                     ->where('p.is_active', 1)
@@ -72,7 +73,9 @@ class AppServiceProvider extends ServiceProvider
                             $item->current_stock_qty, 
                             $item->weight_kg, 
                             $item->pcs_per_unit, 
-                            $item->unit_name
+                            $item->unit_name,
+                            0, 0, 0, 1, // Defaults for top, end, pitch, pcsPerPitch
+                            $item->gross_coil
                         );
 
                         $item->status = ucfirst(\App\Models\InventoryModel\InventoryProduct::calculateStockStatus(

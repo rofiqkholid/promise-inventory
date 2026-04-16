@@ -866,10 +866,10 @@
                             // Set Group Data for merged columns
                             $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
 
-                             $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
+                             $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
                             $row.find('td:eq(4)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
 
-                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
+                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
                             $row.find('td:eq(8)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
 
                             $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');

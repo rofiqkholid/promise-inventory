@@ -128,12 +128,17 @@ class InventoryProduct extends Model
         $weightKg = (float)$weightKg;
         $unitName = strtolower($unitName ?? '');
 
-        // Standard logic for non-coil or missing data
-        if (!str_contains($unitName, 'coil') || $grossCoil <= 0 || $pitch <= 0 || $weightKg <= 0) {
+        // Standard logic for non-coil or missing critical data
+        if (!str_contains($unitName, 'coil') || $grossCoil <= 0 || $weightKg <= 0) {
             return (int) floor($qty * (float)($pcsPerUnit ?: 1));
         }
 
-        // UNIFIED COIL LOGIC (Static)
+        // Fallback to ratio-based calculation if pitch is not provided
+        if ($pitch <= 0) {
+            return (int) floor(($qty / $grossCoil) * (float)($pcsPerUnit ?: 1));
+        }
+
+        // UNIFIED COIL LOGIC (Accurate with scrap mm)
         // 1. Calculate weight of 1mm: weigh_kg / pitch
         $weightPerMm = $weightKg / $pitch;
         
