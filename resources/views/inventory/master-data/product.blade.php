@@ -1004,10 +1004,11 @@ $(function() {
             $('#importResult').addClass('hidden');
 
             const formData = new FormData($('#importForm')[0]);
+            formData.append('_method', 'PUT'); // WAF Bypass: Use PUT spoofing for file uploads in production
             
             $.ajax({
                 url: this.config.routes.import,
-                method: 'POST', // The actual request method is POST, but Laravel treats it as PUT
+                method: 'POST', // Sent as POST but Laravel treats as PUT due to _method spoofing
                 headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
                 data: formData,
                 processData: false,

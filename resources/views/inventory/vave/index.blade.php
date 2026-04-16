@@ -566,13 +566,14 @@ $(function() {
         $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Importing...');
         
         const formData = new FormData(this);
+        formData.append('_method', 'PUT'); // WAF Bypass: Use PUT spoofing for file uploads in production
         $('#importResult').removeClass('hidden');
         $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-blue-50 text-blue-700 border-blue-100').html('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing data, please wait...');
         $('#importLogs').empty();
 
         $.ajax({
             url: '{{ route("inventory.vave.importExcel") }}',
-            method: 'POST',
+            method: 'POST', // Sent as POST but Laravel treats as PUT due to _method spoofing
             data: formData,
             processData: false,
             contentType: false,
