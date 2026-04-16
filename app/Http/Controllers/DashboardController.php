@@ -74,13 +74,14 @@ class DashboardController extends Controller
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
             ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
 
         if (!empty($selectedModels)) $stockQuery->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $stockQuery->whereIn('prod.customer_id', $selectedCustomers);
         $applyStatusFilter($stockQuery, $selectedStatusBalance);
 
-        $pcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('p.current_stock_qty', 'p');
+        $pcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('p.current_stock_qty', 'p', 'u.name');
         $totalStockPcs = $stockQuery->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
 
         // 2. Base Transaction Query (For Recent History - UNFILTERED except maybe strict scope if needed, but user asked to exclude filters)
@@ -88,6 +89,7 @@ class DashboardController extends Controller
         $recentTransQuery = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
         
@@ -99,7 +101,7 @@ class DashboardController extends Controller
         if ($monthYear) $queryTrans->where('t.transaction_date', 'like', "$monthYear%");
         $applyStatusFilter($queryTrans, $selectedStatusBalance);
 
-        $transPcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p');
+        $transPcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p', 'u.name');
         
         $materialInSum = (clone $queryTrans)->whereIn('tc.code', $inCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
         $materialOutSum = (clone $queryTrans)->whereIn('tc.code', $outCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
@@ -151,7 +153,7 @@ class DashboardController extends Controller
             ->whereIn('tc.code', $outCategories)
             ->select(
                 DB::raw("m.name + '|' + c.code as label"),
-                DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p') . ") as total")
+                DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p', 'u.name') . ") as total")
             )
             ->groupBy('m.name', 'c.code')
             ->get();
@@ -176,7 +178,7 @@ class DashboardController extends Controller
             ->select(
                 DB::raw("MONTH(t.transaction_date) as month_num"),
                 'tc.code as category',
-                DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p') . ") as total")
+                DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p', 'u.name') . ") as total")
             )
             ->groupBy(DB::raw("MONTH(t.transaction_date)"), 'tc.code')
             ->orderBy(DB::raw("MONTH(t.transaction_date)"))
@@ -190,7 +192,7 @@ class DashboardController extends Controller
         $usageByMaker = (clone $queryTrans)
             ->join('inv_m_coil_center as cc', 'cc.id', '=', 't.coil_center_id')
             ->whereIn('tc.code', $inCategories)
-            ->select('cc.code', DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p') . ") as total"))
+            ->select('cc.code', DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p', 'u.name') . ") as total"))
             ->groupBy('cc.code')
             ->get();
 
