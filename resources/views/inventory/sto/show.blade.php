@@ -467,22 +467,21 @@
     // Inject reasons for inline dropdowns
     const stoReasons = @json(\App\Models\InventoryModel\StoReason::where('is_active', true)->get());
 
-    // JS Formatter Helpers
-    function formatQtyHtml(qty, pcsPerUnit, unitCode, weightKg, prefix = '', grossCoil = 0) {
+    function calculatePcsJs(qty, pcsPerUnit, unitCode, grossCoil = 0) {
         qty = parseFloat(qty || 0);
         pcsPerUnit = parseFloat(pcsPerUnit || 1);
-        weightKg = parseFloat(weightKg || 0);
         grossCoil = parseFloat(grossCoil || 0);
         unitCode = (unitCode || '').toLowerCase();
 
-        let pcs = 0;
-        // Logic should match InventoryProduct::calculatePcs
-        // If gross_coil is set (> 0), it's a coil material regardless of unit name casing
         if (grossCoil > 0 && (unitCode.includes('coil') || unitCode.includes('kg'))) {
-            pcs = (qty / grossCoil) * pcsPerUnit;
-        } else {
-            pcs = qty * pcsPerUnit;
+            return (qty / grossCoil) * pcsPerUnit;
         }
+        return qty * pcsPerUnit;
+    }
+
+    // JS Formatter Helpers
+    function formatQtyHtml(qty, pcsPerUnit, unitCode, weightKg, prefix = '', grossCoil = 0) {
+        let pcs = calculatePcsJs(qty, pcsPerUnit, unitCode, grossCoil);
 
         let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
         let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -719,7 +718,7 @@
                                             <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.toLowerCase().includes('coil') ? 'KG' : (data.unit_display || data.unit_code).toUpperCase()}</span>
                                         </div>
                                         <div class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
-                                            ${Math.abs(data.gross_coil > 0 ? (data.real_qty_input / data.gross_coil * data.pcs_per_unit) : (data.real_qty_input * data.pcs_per_unit)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
+                                            ${Math.abs(calculatePcsJs(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.gross_coil)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
                                         </div>
                                     </div>`;
                             }
@@ -969,12 +968,7 @@
                 const grossCoil = parseFloat($preview.data('gross-coil') || 0);
                 const unit = ($preview.data('unit') || '').toLowerCase();
 
-                let pcs = 0;
-                if (unit.includes('coil') && grossCoil > 0) {
-                    pcs = (val / grossCoil) * pcsPerUnit;
-                } else {
-                    pcs = val * pcsPerUnit;
-                }
+                let pcs = calculatePcsJs(val, pcsPerUnit, unit, grossCoil);
 
                 $preview.text(`${Math.abs(pcs).toLocaleString(undefined, {maximumFractionDigits:0})} PCS`);
             });
