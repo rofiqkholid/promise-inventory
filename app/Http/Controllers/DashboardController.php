@@ -221,7 +221,6 @@ class DashboardController extends Controller
         $transactionHistory = (clone $recentTransQuery)
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
             ->select('prod.part_no', 'r.code as revision', 't.qty', 'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'tc.code as category', 't.transaction_date', 'u.name as unit_name')
-            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
             ->orderByDesc('t.transaction_date')
             ->limit(10)
             ->get()
