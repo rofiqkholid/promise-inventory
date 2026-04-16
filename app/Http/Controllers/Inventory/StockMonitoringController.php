@@ -495,7 +495,8 @@ class StockMonitoringController extends Controller
                 'p.gross_coil',
                 'p.current_stock_qty',
                 'p.pcs_per_unit',
-                'u.code as unit_code'
+                'u.code as unit_code',
+                'u.name as unit_name'
             ])
             ->first();
 

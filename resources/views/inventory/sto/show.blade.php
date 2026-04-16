@@ -464,45 +464,7 @@
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
 
-    // Inject reasons for inline dropdowns
-    const stoReasons = @json(\App\Models\InventoryModel\StoReason::where('is_active', true)->get());
-
-    function calculatePcsJs(qty, pcsPerUnit, unitCode, grossCoil = 0) {
-        qty = parseFloat(qty || 0);
-        pcsPerUnit = parseFloat(pcsPerUnit || 1);
-        grossCoil = parseFloat(grossCoil || 0);
-        unitCode = (unitCode || '').toLowerCase();
-
-        if (grossCoil > 0 && (unitCode.includes('coil') || unitCode.includes('kg'))) {
-            return (qty / grossCoil) * pcsPerUnit;
-        }
-        return qty * pcsPerUnit;
-    }
-
-    // JS Formatter Helpers
-    function formatQtyHtml(qty, pcsPerUnit, unitCode, weightKg, prefix = '', grossCoil = 0) {
-        let pcs = calculatePcsJs(qty, pcsPerUnit, unitCode, grossCoil);
-
-        let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
-        let unitDisplay = Math.abs(qty).toLocaleString(undefined, { maximumFractionDigits: 2 });
-
-        // Change COIL label to KG as per user request
-        let unitLabel = (unitCode || '').toUpperCase();
-        if (unitLabel.includes('COIL')) {
-            unitLabel = 'KG';
-        } else {
-            // Use the code if we want (but for now keep labels as they were)
-        }
-
-        if (pcsPerUnit == 1 && !unitCode.includes('coil')) return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
-
-        return `
-            <div class='flex flex-col items-center justify-center'>
-                <span class='font-bold text-gray-900 dark:text-white'>${prefix}${unitDisplay} ${unitLabel}</span>
-                <span class='text-[10px] text-gray-400 leading-none mt-1 uppercase font-bold tracking-tighter'>${pcsDisplay} PCS</span>
-            </div>`;
-    }
-
+    // (Local formatCurrency remains as it is as it's simple and specific to this page)
     function formatCurrencyHtml(val, isDiff = false) {
         val = parseFloat(val || 0);
         if (val == 0) {
@@ -692,7 +654,7 @@
                         data: null,
                         className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
                         render: function(data) {
-                            return formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil);
+                            return InventoryHelper.formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil);
                         }
                     },
                     {
@@ -718,11 +680,11 @@
                                             <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.toLowerCase().includes('coil') ? 'KG' : (data.unit_display || data.unit_code).toUpperCase()}</span>
                                         </div>
                                         <div class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
-                                            ${Math.abs(calculatePcsJs(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.gross_coil)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
+                                            ${Math.abs(InventoryHelper.calculatePcs(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.gross_coil)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
                                         </div>
                                     </div>`;
                             }
-                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)}</div>`;
+                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${InventoryHelper.formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)}</div>`;
                         }
                     },
                     {
@@ -736,7 +698,7 @@
                         render: function(data) {
                             if (Math.abs(data.diff_qty) < 0.0001) return `<span class="text-sm font-bold text-emerald-600">0</span>`;
                             const prefix = data.diff_qty > 0 ? '+' : '-';
-                            return `<div class="text-red-600 font-medium">${formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, prefix, data.gross_coil)}</div>`;
+                            return `<div class="text-red-600 font-medium">${InventoryHelper.formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, prefix, data.gross_coil)}</div>`;
                         }
                     },
                     {
@@ -866,10 +828,10 @@
                             // Set Group Data for merged columns
                             $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
 
-                             $row.find('td:eq(3)').html(formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
+                             $row.find('td:eq(3)').html(InventoryHelper.formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
                             $row.find('td:eq(4)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
 
-                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
+                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${InventoryHelper.formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
                             $row.find('td:eq(8)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
 
                             $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');
@@ -968,7 +930,7 @@
                 const grossCoil = parseFloat($preview.data('gross-coil') || 0);
                 const unit = ($preview.data('unit') || '').toLowerCase();
 
-                let pcs = calculatePcsJs(val, pcsPerUnit, unit, grossCoil);
+                let pcs = InventoryHelper.calculatePcs(val, pcsPerUnit, unit, grossCoil);
 
                 $preview.text(`${Math.abs(pcs).toLocaleString(undefined, {maximumFractionDigits:0})} PCS`);
             });
@@ -1301,7 +1263,7 @@
         resUnit.innerText = displayUnit;
 
         // System Qty Display (Follow new format)
-        const sysQtyHtml = formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit, 0, '', data.gross_coil);
+        const sysQtyHtml = InventoryHelper.formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit, 0, '', data.gross_coil);
         resSystemQty.innerHTML = sysQtyHtml;
 
         // Update entries count display

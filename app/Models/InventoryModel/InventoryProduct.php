@@ -122,37 +122,7 @@ class InventoryProduct extends Model
 
     public static function calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName, $topMm = 0, $endMm = 0, $pitch = 0, $pcsPerPitch = 1, $grossCoil = 0)
     {
-        $qty = (float)$qty;
-        $grossCoil = (float)$grossCoil;
-        $pitch = (float)$pitch;
-        $weightKg = (float)$weightKg;
-        $unitName = strtolower($unitName ?? '');
-
-        // Standard logic for non-coil or missing critical data
-        if (!str_contains($unitName, 'coil') || $grossCoil <= 0 || $weightKg <= 0) {
-            return (int) floor($qty * (float)($pcsPerUnit ?: 1));
-        }
-
-        // Fallback to ratio-based calculation if pitch is not provided
-        if ($pitch <= 0) {
-            return (int) floor(($qty / $grossCoil) * (float)($pcsPerUnit ?: 1));
-        }
-
-        // UNIFIED COIL LOGIC (Accurate with scrap mm)
-        // 1. Calculate weight of 1mm: weigh_kg / pitch
-        $weightPerMm = $weightKg / $pitch;
-        
-        // 2. Calculate scrap weight
-        $scrapKg = ((float)$topMm + (float)$endMm) * $weightPerMm;
-        
-        // 3. Yield Ratio based on Master Data
-        $yieldRatio = max(0, ($grossCoil - $scrapKg) / $grossCoil);
-        
-        // 4. Net Qty
-        $netQty = $qty * $yieldRatio;
-        
-        // 6. Final PCS = floor(Net Qty / Weight per Pitch) * Pcs per Pitch
-        return (int) (floor($netQty / $weightKg) * (float)($pcsPerPitch ?: 1));
+        return \App\Services\Inventory\StockCalculator::calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName, $topMm, $endMm, $pitch, $pcsPerPitch, $grossCoil);
     }
 
     /**

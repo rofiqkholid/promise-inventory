@@ -102,12 +102,17 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
     public function map($row): array
     {
         static $no = 1;
-        $balancePcs = floatval($row->current_stock_qty) * ($row->pcs_per_unit ?? 1);
-        $amount = floatval($row->weight_kg) * floatval($row->material_price) * $balancePcs;
-        $stockStatus = $this->calculateStockStatus(
+        $balancePcs = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
             $row->current_stock_qty, 
+            $row->weight_kg, 
+            $row->pcs_per_unit, 
+            $row->unit_name,
+            $row->top_coil, $row->end_coil, $row->pitch, $row->pcs_per_pitch, $row->gross_coil
+        );
+        $amount = floatval($row->weight_kg) * floatval($row->material_price) * $balancePcs;
+        $stockStatus = \App\Models\InventoryModel\InventoryProduct::calculateStockStatus(
+            $balancePcs, 
             $row->min_stock, 
-            $row->pcs_per_unit ?? 1, 
             $row->product_status ?: $row->model_project_status
         );
 
@@ -131,10 +136,23 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
 
         foreach ($this->categories as $cat) {
             $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
-            $mapped[] = $row->$alias ? floatval($row->$alias) * ($row->pcs_per_unit ?? 1) : 0;
+            $qtyVal = $row->$alias ? floatval($row->$alias) : 0;
+            $mapped[] = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+                $qtyVal, 
+                $row->weight_kg, 
+                $row->pcs_per_unit, 
+                $row->unit_name,
+                $row->top_coil, $row->end_coil, $row->pitch, $row->pcs_per_pitch, $row->gross_coil
+            );
         }
 
-        $mapped[] = $row->sto_gap ? floatval($row->sto_gap) * ($row->pcs_per_unit ?? 1) : 0; // STO GAP
+        $mapped[] = $row->sto_gap ? \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+            floatval($row->sto_gap), 
+            $row->weight_kg, 
+            $row->pcs_per_unit, 
+            $row->unit_name,
+            $row->top_coil, $row->end_coil, $row->pitch, $row->pcs_per_pitch, $row->gross_coil
+        ) : 0; // STO GAP
         $mapped[] = number_format(floatval($row->min_stock), 0, '.', ''); // Min Stock
         $mapped[] = number_format($balancePcs, 0, '.', '');         // Balance (PCS)
         $mapped[] = number_format(floatval($row->current_stock_qty), 0, '.', ''); // Balance (Unit)
@@ -270,27 +288,7 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
         return $widths;
     }
 
-    private function calculateStockStatus($current, $min, $pcsPerUnit, $projectStatus = null)
-    {
-        $min = floatval($min);
-        $currentPCS = floatval($current) * $pcsPerUnit;
-
-        if ($min <= 0) return 'Safe';
-
-        $maxStock = $min * 3;
-
-        if ($currentPCS > $maxStock) return 'Over';
-        
-        $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
-        if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
-            return 'Safe';
-        }
-
-        if ($currentPCS < ($min - 30)) return 'Critical'; 
-        if ($currentPCS < $min) return 'Warning';
-
-        return 'Safe';
-    }
+    // (calculateStockStatus helper was redundant, better to use the centralized one in InventoryProduct)
 
     private function getColumnLetter($index)
     {

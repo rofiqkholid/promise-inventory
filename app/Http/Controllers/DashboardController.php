@@ -80,7 +80,8 @@ class DashboardController extends Controller
         if (!empty($selectedCustomers)) $stockQuery->whereIn('prod.customer_id', $selectedCustomers);
         $applyStatusFilter($stockQuery, $selectedStatusBalance);
 
-        $totalStockPcs = $stockQuery->sum(DB::raw('p.current_stock_qty * p.pcs_per_unit'));
+        $pcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('p.current_stock_qty', 'p');
+        $totalStockPcs = $stockQuery->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
 
         // 2. Base Transaction Query (For Recent History - UNFILTERED except maybe strict scope if needed, but user asked to exclude filters)
         // actually we should probably respect NO filters for "Recent Transactions" to show global activity.
@@ -98,11 +99,13 @@ class DashboardController extends Controller
         if ($monthYear) $queryTrans->where('t.transaction_date', 'like', "$monthYear%");
         $applyStatusFilter($queryTrans, $selectedStatusBalance);
 
-        $materialInSum = (clone $queryTrans)->whereIn('tc.code', $inCategories)->sum(DB::raw('t.qty * p.pcs_per_unit'));
-        $materialOutSum = (clone $queryTrans)->whereIn('tc.code', $outCategories)->sum(DB::raw('t.qty * p.pcs_per_unit'));
-        $materialOutPPSum = (clone $queryTrans)->where('tc.code', 'OUT-PP')->sum(DB::raw('t.qty * p.pcs_per_unit'));
-        $materialOutEventSum = (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->sum(DB::raw('t.qty * p.pcs_per_unit'));
-        $materialOutTrialSum = (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->sum(DB::raw('t.qty * p.pcs_per_unit'));
+        $transPcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p');
+        
+        $materialInSum = (clone $queryTrans)->whereIn('tc.code', $inCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        $materialOutSum = (clone $queryTrans)->whereIn('tc.code', $outCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        $materialOutPPSum = (clone $queryTrans)->where('tc.code', 'OUT-PP')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        $materialOutEventSum = (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        $materialOutTrialSum = (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
 
         $allProducts = $stockQuery->select(
             'm.name as model_name',
@@ -148,7 +151,7 @@ class DashboardController extends Controller
             ->whereIn('tc.code', $outCategories)
             ->select(
                 DB::raw("m.name + '|' + c.code as label"),
-                DB::raw('SUM(t.qty * p.pcs_per_unit) as total')
+                DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p') . ") as total")
             )
             ->groupBy('m.name', 'c.code')
             ->get();
@@ -173,7 +176,7 @@ class DashboardController extends Controller
             ->select(
                 DB::raw("MONTH(t.transaction_date) as month_num"),
                 'tc.code as category',
-                DB::raw('SUM(t.qty * p.pcs_per_unit) as total')
+                DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p') . ") as total")
             )
             ->groupBy(DB::raw("MONTH(t.transaction_date)"), 'tc.code')
             ->orderBy(DB::raw("MONTH(t.transaction_date)"))
@@ -187,7 +190,7 @@ class DashboardController extends Controller
         $usageByMaker = (clone $queryTrans)
             ->join('inv_m_coil_center as cc', 'cc.id', '=', 't.coil_center_id')
             ->whereIn('tc.code', $inCategories)
-            ->select('cc.code', DB::raw('SUM(t.qty * p.pcs_per_unit) as total'))
+            ->select('cc.code', DB::raw("SUM(" . \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p') . ") as total"))
             ->groupBy('cc.code')
             ->get();
 
@@ -215,10 +218,15 @@ class DashboardController extends Controller
         // Recent Transactions (Unfiltered Global)
         $transactionHistory = (clone $recentTransQuery)
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
-            ->select('prod.part_no', 'r.code as revision', 't.qty', 'p.pcs_per_unit', 'tc.code as category', 't.transaction_date')
+            ->select('prod.part_no', 'r.code as revision', 't.qty', 'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'tc.code as category', 't.transaction_date', 'u.name as unit_name')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
             ->orderByDesc('t.transaction_date')
             ->limit(10)
-            ->get();
+            ->get()
+            ->map(function ($item) {
+                $item->qty_pcs = \App\Models\InventoryModel\InventoryProduct::calculatePcs($item->qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_name, 0, 0, 0, 1, $item->gross_coil);
+                return $item;
+            });
 
 
         $initialModels = [];
