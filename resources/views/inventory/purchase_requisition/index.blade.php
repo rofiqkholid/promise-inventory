@@ -96,9 +96,9 @@
                 <thead>
                     <tr>
                         <th class="w-12 text-center text-xs font-bold uppercase tracking-wider">No</th>
+                        <th class="w-40 text-center text-xs font-bold uppercase tracking-wider">Model / Customer</th>
                         <th class="text-left text-xs font-bold uppercase tracking-wider">Part Details</th>
                         <th class="text-left text-xs font-bold uppercase tracking-wider">Specifications</th>
-                        <th class="w-40 text-center text-xs font-bold uppercase tracking-wider">Model / Customer</th>
                         <th class="w-24 text-center text-xs font-bold uppercase tracking-wider">Stock</th>
                         <th class="w-24 text-center text-xs font-bold uppercase tracking-wider">Min Stock</th>
                         <th class="w-24 text-center text-xs font-bold uppercase tracking-wider text-red-600">Shortage</th>
@@ -224,6 +224,16 @@ $(function() {
                 render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1 
             },
             { 
+                data: null,
+                className: 'text-center',
+                render: function(data, type, row) {
+                    return `
+                        <div class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase leading-none mb-1.5">${row.model || '-'}</div>
+                        <div class="text-[10px] font-medium text-slate-400 dark:text-gray-500 uppercase tracking-widest pl-1">${row.customer || '-'}</div>
+                    `;
+                }
+            },
+            { 
                 data: 'part_no', 
                 className: 'py-3 min-w-[180px]',
                 render: function(data, type, row) {
@@ -237,16 +247,6 @@ $(function() {
                 data: 'material',
                 className: 'text-xs text-gray-600 dark:text-gray-400',
                 render: d => d || '-'
-            },
-            { 
-                data: null,
-                className: 'text-center',
-                render: function(data, type, row) {
-                    return `
-                        <div class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase leading-none mb-1.5">${row.model || '-'}</div>
-                        <div class="text-[10px] font-medium text-slate-400 dark:text-gray-500 uppercase tracking-widest pl-1">${row.customer || '-'}</div>
-                    `;
-                }
             },
             { 
                 data: 'current_stock', 

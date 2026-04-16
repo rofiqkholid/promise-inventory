@@ -21,12 +21,17 @@ class InventoryTransactionController extends Controller
         }
         
         $products = InventoryProduct::join('products', 'inv_t_product_detail.product_id', '=', 'products.id')
+            ->leftJoin('models as m', 'm.id', '=', 'inv_t_product_detail.model_id')
+            ->leftJoin('customers as c', 'c.id', '=', 'products.customer_id')
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
             ->select(
                 'inv_t_product_detail.id', 
+                'inv_t_product_detail.current_stock_qty', 
                 'products.part_no', 
                 'products.part_name', 
+                'm.name as model_name',
+                'c.code as customer_code',
                 'r.code as revision', 
                 'inv_t_product_detail.pcs_per_unit',
                 'inv_t_product_detail.weight_kg',
@@ -53,7 +58,7 @@ class InventoryTransactionController extends Controller
 
     public function data(Request $request)
     {
-        $query = InventoryTransaction::with(['product.product', 'product.revision', 'user', 'transactionCategory']);
+        $query = InventoryTransaction::with(['product.product', 'product.model', 'product.revision', 'user', 'transactionCategory']);
 
         // Filter by Product
         if ($request->has('product_detail_id') && !empty($request->product_detail_id)) {
@@ -120,17 +125,23 @@ class InventoryTransactionController extends Controller
         if ($request->has('order')) {
             $sortableColumns = [
                 0 => 'inv_t_inventory_transaction.transaction_date',
-                1 => 'products.part_no',
-                2 => 'inv_m_transaction_category.name',
-                3 => 'inv_t_inventory_transaction.qty',
-                4 => 'users.name',
+                1 => 'models.name',
+                2 => 'products.part_no',
+                3 => 'inv_m_transaction_category.name',
+                4 => 'inv_t_inventory_transaction.qty',
+                5 => 'users.name',
             ];
             
             $colIndex = $request->input('order.0.column');
             $dir = $request->input('order.0.dir', 'desc');
             $colName = $sortableColumns[$colIndex] ?? 'inv_t_inventory_transaction.created_at';
 
-            if ($colName === 'products.part_no') {
+            if ($colName === 'models.name') {
+                $query->join('inv_t_product_detail', 'inv_t_product_detail.id', '=', 'inv_t_inventory_transaction.product_detail_id')
+                      ->leftJoin('models', 'models.id', '=', 'inv_t_product_detail.model_id')
+                      ->select('inv_t_inventory_transaction.*')
+                      ->orderBy('models.name', $dir);
+            } elseif ($colName === 'products.part_no') {
                 $query->join('inv_t_product_detail', 'inv_t_product_detail.id', '=', 'inv_t_inventory_transaction.product_detail_id')
                       ->join('products', 'products.id', '=', 'inv_t_product_detail.product_id')
                       ->select('inv_t_inventory_transaction.*')
@@ -166,6 +177,7 @@ class InventoryTransactionController extends Controller
                 'id' => $item->hash_id,
                 'transaction_date' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
                 'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision->code : ''),
+                'model_name' => $item->product->model->name ?? 'No Model',
                 'product_name' => $item->product->product->part_name ?? '-',
                 'category' => $item->transactionCategory->code ?? '-',
                 'qty' => $item->qty,
@@ -236,6 +248,16 @@ class InventoryTransactionController extends Controller
         try {
             // Get Category Effect
             $category = TransactionCategory::findOrFail($request->transaction_category_id);
+
+            // 2. Stock Balance Check for Outgoing Transactions
+            if ($category->effect == -1) {
+                if ($product->current_stock_qty < $request->qty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient Stock: You are trying to take out {$request->qty}, but the current balance is only {$product->current_stock_qty}."
+                    ], 422);
+                }
+            }
 
             // Save Transaction
             $transaction = InventoryTransaction::create([
@@ -335,13 +357,42 @@ class InventoryTransactionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Revert stock from old values
+            // Get Products and Categories
             $oldProduct = InventoryProduct::findOrFail($transaction->product_detail_id);
             $oldCategory = TransactionCategory::findOrFail($transaction->transaction_category_id);
+            $newProduct = InventoryProduct::findOrFail($request->product_detail_id);
+            $newCategory = TransactionCategory::findOrFail($request->transaction_category_id);
+
+            // 1. Stock Balance Validation for the ADJUSTED state
+            // Logic: Revert old effect, apply new effect. Result must be >= 0.
+            if ($oldProduct->id === $newProduct->id) {
+                // Same product: net stock change must be sustainable
+                $projectedStock = $oldProduct->current_stock_qty - ($transaction->qty * $oldCategory->effect) + ($request->qty * $newCategory->effect);
+                if ($projectedStock < 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient Stock: This adjustment would result in a negative balance ({$projectedStock}). Please check your quantities."
+                    ], 422);
+                }
+            } else {
+                // Different product: both must be sustainable
+                // First, check if reverting the old one is okay (usually always okay since it's an 'undo')
+                // but applying the new one must be checked if it's an OUT activity.
+                if ($newCategory->effect == -1) {
+                    if ($newProduct->current_stock_qty < $request->qty) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Insufficient Stock on target product: Current balance is only {$newProduct->current_stock_qty}."
+                        ], 422);
+                    }
+                }
+            }
+
+            // 2. Revert stock from old values
             $oldProduct->current_stock_qty -= ($transaction->qty * $oldCategory->effect);
             $oldProduct->save();
 
-            // Update transaction
+            // 3. Update transaction
             $transaction->update([
                 'product_detail_id' => $request->product_detail_id,
                 'transaction_date' => $request->transaction_date,
@@ -353,9 +404,7 @@ class InventoryTransactionController extends Controller
                 'destination_id' => $request->destination_id,
             ]);
 
-            // Apply new stock values
-            $newProduct = InventoryProduct::findOrFail($request->product_detail_id);
-            $newCategory = TransactionCategory::findOrFail($request->transaction_category_id);
+            // 4. Apply new stock values
             $newProduct->current_stock_qty += ($request->qty * $newCategory->effect);
             $newProduct->save();
 

@@ -120,9 +120,32 @@ class InventoryProduct extends Model
         ";
     }
 
+    /**
+     * Get the universal Raw SQL to convert stock / qty column to monetary Amount.
+     * Principle: Total Price = Total Weight (KG) * Price per KG.
+     */
+    public static function getAmountCalculationSql($qtyColumn = 'inv_t_product_detail.current_stock_qty', $tableAlias = 'inv_t_product_detail', $unitNameColumn = null)
+    {
+        $alias = $tableAlias ? $tableAlias . '.' : '';
+        $unitCheck = $unitNameColumn ?: "(SELECT name FROM inv_m_unit WHERE id = {$alias}unit_id)";
+        
+        return "
+            CASE 
+                WHEN LOWER({$unitCheck}) LIKE '%coil%' 
+                THEN ({$qtyColumn} * ISNULL({$alias}material_price, 0)) 
+                ELSE ({$qtyColumn} * COALESCE({$alias}pcs_per_unit, 1) * ISNULL({$alias}weight_kg, 0) * ISNULL({$alias}material_price, 0)) 
+            END
+        ";
+    }
+
     public static function calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName, $topMm = 0, $endMm = 0, $pitch = 0, $pcsPerPitch = 1, $grossCoil = 0)
     {
         return \App\Services\Inventory\StockCalculator::calculatePcs($qty, $weightKg, $pcsPerUnit, $unitName, $topMm, $endMm, $pitch, $pcsPerPitch, $grossCoil);
+    }
+
+    public static function calculateAmount($qty, $materialPrice, $weightKg = 0, $pcsPerUnit = 1, $unitName = '')
+    {
+        return \App\Services\Inventory\StockCalculator::calculateAmount($qty, $materialPrice, $weightKg, $pcsPerUnit, $unitName);
     }
 
     /**

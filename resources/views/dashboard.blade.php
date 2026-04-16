@@ -62,12 +62,12 @@
     <div class="overflow-x-auto pb-1 scrollbar-hide">
         <div class="flex gap-3 min-w-max">
             @foreach([
-                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock Value', 'icon' => 'fa-cubes', 'color' => 'primary', 'id' => 'stat_total_stock'],
-                ['val' => number_format($stats['material_in']), 'label' => 'Material In', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'emerald', 'id' => 'stat_material_in'],
-                ['val' => number_format($stats['material_out']), 'label' => 'Total Out', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'amber', 'id' => 'stat_material_out'],
+                ['val' => number_format($stats['total_stock_value']), 'label' => 'Total Stock Value (Rp)', 'icon' => 'fa-coins', 'color' => 'primary', 'id' => 'stat_total_stock_value'],
+                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock (PCS)', 'icon' => 'fa-cubes', 'color' => 'slate', 'id' => 'stat_total_stock'],
+                ['val' => number_format($stats['material_in']), 'label' => 'In (PCS)', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'emerald', 'id' => 'stat_material_in'],
+                ['val' => number_format($stats['material_out']), 'label' => 'Out (PCS)', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'amber', 'id' => 'stat_material_out'],
                 ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'icon' => 'fa-industry', 'color' => 'indigo', 'id' => 'stat_out_pp'],
-                ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'icon' => 'fa-calendar-check', 'color' => 'purple', 'id' => 'stat_out_event'],
-                ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'icon' => 'fa-vial', 'color' => 'rose', 'id' => 'stat_out_trial'],
+                ['val' => number_format($stats['out_trial']), 'label' => 'Trial', 'icon' => 'fa-vial', 'color' => 'rose', 'id' => 'stat_out_trial'],
             ] as $stat)
             <div class="flex-1 min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xs border border-slate-200 dark:border-gray-600 flex items-center gap-3">
                 <div class="flex-shrink-0 w-9 h-9 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-base">
@@ -432,6 +432,7 @@
                     dataType: 'json',
                     success: function(response) {
                         // Update Stats
+                        $('#stat_total_stock_value').text(new Intl.NumberFormat().format(response.stats.total_stock_value));
                         $('#stat_total_stock').text(new Intl.NumberFormat().format(response.stats.total_stock));
                         $('#stat_material_in').text(new Intl.NumberFormat().format(response.stats.material_in));
                         $('#stat_material_out').text(new Intl.NumberFormat().format(response.stats.material_out));
@@ -562,12 +563,18 @@
                  };
                  const colorClass = statusColors[row.status] || statusColors['Safe'];
                  let partName = row.part_no + (row.revision ? ' - ' + row.revision : '');
-                 
-                 return `
+                  return `
                     <tr class="hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-colors">
                         <td class="py-3 px-5">
-                            <p class="text-xs font-black text-slate-800 dark:text-white truncate max-w-[150px]">${partName}</p>
-                            <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tight">${row.customer_code || '-'} • ${row.model_name || '-'}</p>
+                            <div class="flex items-center gap-1.5 mb-1.5">
+                                <span class="px-1.2 py-0.5 rounded-[2px] bg-slate-100 dark:bg-slate-700 text-[7px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">
+                                    ${row.customer_code || '-'}
+                                </span>
+                                <span class="px-1.2 py-0.5 rounded-[2px] bg-primary-50 dark:bg-primary-900/20 text-[7px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest border border-primary-100/50 dark:border-primary-800/50">
+                                    ${row.model_name || 'No Model'}
+                                </span>
+                            </div>
+                            <p class="text-xs font-black text-slate-800 dark:text-white truncate max-w-[150px] leading-tight uppercase tracking-tight">${partName}</p>
                         </td>
                         <td class="py-3 px-5 text-right font-mono">
                             <div class="text-xs font-black text-slate-900 dark:text-white">${new Intl.NumberFormat().format(row.current_stock_qty)}</div>
@@ -589,8 +596,13 @@
                             <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-[10px] font-black text-slate-500 group-hover/item:bg-primary-500 group-hover/item:text-white transition-all">
                                 ${row.category.substring(0, 1)}
                             </div>
-                            <div>
-                                <p class="text-xs font-black text-slate-800 dark:text-white">${row.part_no}</p>
+                             <div>
+                                <div class="flex items-center gap-1.2 mb-1">
+                                    <span class="px-1.2 py-0.5 rounded-[2px] bg-primary-50 dark:bg-primary-900/20 text-[7px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest border border-primary-100/50 dark:border-primary-800/50 leading-none">
+                                        ${row.model_name || 'No Model'}
+                                    </span>
+                                </div>
+                                <p class="text-xs font-black text-slate-800 dark:text-white leading-tight uppercase tracking-tight">${row.part_no}</p>
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">${row.category} • ${dateStr}</p>
                             </div>
                         </div>

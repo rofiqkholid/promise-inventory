@@ -204,6 +204,7 @@
             <thead>
                 <tr>
                     <th rowspan="2" class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
+                    <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Model</th>
                     <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
                     <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
                     <th colspan="{{ 2 + max(1, $categories->count()) + 2 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">Current Balance & Movement</th>
@@ -262,6 +263,11 @@
                 orderable: false, // Not sortable
                 searchable: false,
                 render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+            },
+            { 
+                data: 'model_name',
+                className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                render: d => d || '-'
             },
             {
                 data: 'part_no',

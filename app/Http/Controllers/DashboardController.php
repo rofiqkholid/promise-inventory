@@ -82,7 +82,10 @@ class DashboardController extends Controller
         $applyStatusFilter($stockQuery, $selectedStatusBalance);
 
         $pcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('p.current_stock_qty', 'p', 'u.name');
-        $totalStockPcs = $stockQuery->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
+        $amountSql = \App\Models\InventoryModel\InventoryProduct::getAmountCalculationSql('p.current_stock_qty', 'p', 'u.name');
+        
+        $totalStockPcs = (clone $stockQuery)->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
+        $totalStockAmount = (clone $stockQuery)->selectRaw("SUM({$amountSql}) as total")->value('total') ?? 0;
 
         // 2. Base Transaction Query (For Recent History - UNFILTERED except maybe strict scope if needed, but user asked to exclude filters)
         // actually we should probably respect NO filters for "Recent Transactions" to show global activity.
@@ -102,12 +105,20 @@ class DashboardController extends Controller
         $applyStatusFilter($queryTrans, $selectedStatusBalance);
 
         $transPcsSql = \App\Models\InventoryModel\InventoryProduct::getPcsCalculationSql('t.qty', 'p', 'u.name');
+        $transAmountSql = \App\Models\InventoryModel\InventoryProduct::getAmountCalculationSql('t.qty', 'p', 'u.name');
         
         $materialInSum = (clone $queryTrans)->whereIn('tc.code', $inCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
         $materialOutSum = (clone $queryTrans)->whereIn('tc.code', $outCategories)->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
-        $materialOutPPSum = (clone $queryTrans)->where('tc.code', 'OUT-PP')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
-        $materialOutEventSum = (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
-        $materialOutTrialSum = (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0;
+        
+        $stats = [
+            'total_stock' => $totalStockPcs,
+            'total_stock_value' => $totalStockAmount,
+            'material_in' => $materialInSum,
+            'material_out' => $materialOutSum,
+            'out_pp' => (clone $queryTrans)->where('tc.code', 'OUT-PP')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0,
+            'out_event' => (clone $queryTrans)->where('tc.code', 'OUT-EVENT')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0,
+            'out_trial' => (clone $queryTrans)->where('tc.code', 'OUT-TRIAL')->selectRaw("SUM({$transPcsSql}) as total")->value('total') ?? 0,
+        ];
 
         $allProducts = $stockQuery->select(
             'm.name as model_name',
@@ -212,6 +223,10 @@ class DashboardController extends Controller
                  } else {
                      $item->status = 'Safe';
                  }
+                 
+                 // Show model in brackets
+                 $item->part_no = '[' . ($item->model_name ?? 'No Model') . '] ' . $item->part_no;
+                 
                  return $item;
             });
 
@@ -226,6 +241,7 @@ class DashboardController extends Controller
             ->get()
             ->map(function ($item) {
                 $item->qty_pcs = \App\Models\InventoryModel\InventoryProduct::calculatePcs($item->qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_name, 0, 0, 0, 1, $item->gross_coil);
+                
                 return $item;
             });
 

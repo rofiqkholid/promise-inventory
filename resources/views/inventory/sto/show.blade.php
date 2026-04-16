@@ -260,8 +260,8 @@
                     <option value="">Pick Product via Search or Scanning...</option>
                     @foreach($allProducts as $product)
                         @php $is_counted = in_array($product->id, $countedIds); @endphp
-                        <option value="{{ $product->hash_id }}" data-partno="{{ $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
-                             {{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}
+                        <option value="{{ $product->hash_id }}" data-partno="[{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
+                             [{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}
                         </option>
                     @endforeach
                 </select>
@@ -350,6 +350,7 @@
                 <thead>
                     <tr>
                         <th rowspan="2" class="text-center">No</th>
+                        <th rowspan="2" class="text-left">Model</th>
                         <th rowspan="2" class="text-left">Material Information</th>
                         <th rowspan="2" class="text-left">Auditor</th>
                         <th colspan="2" class="text-center bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
@@ -434,7 +435,7 @@
                     @forelse($products as $p)
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
                         <td class="px-6 py-3 font-mono font-bold text-xs text-gray-900 dark:text-white">
-                            {{ $p->part_no }} {{ $p->revision ? '- ' . $p->revision : '' }}
+                            [{{ $p->model_name ?? 'No Model' }}] {{ $p->part_no }} {{ $p->revision ? '- ' . $p->revision : '' }}
                         </td>
                         <td class="px-6 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $p->part_name }}</td>
                         <td class="px-6 py-3 text-center">
@@ -639,6 +640,11 @@
                 columns: [
                     { data: 'row_number', className: 'text-center font-bold text-gray-500', orderable: false, searchable: false },
                     {
+                        data: 'model_name',
+                        className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                        render: d => d || '-'
+                    },
+                    {
                         data: null,
                         className: 'font-medium',
                         render: function(data) {
@@ -815,8 +821,8 @@
                             const diffClass = diffQty > 0 ? 'text-rose-600' : (diffQty < 0 ? 'text-rose-600' : 'text-emerald-600');
                             const diffIcon = diffQty > 0 ? '+' : '';
 
-                            // Apply rowspans (No, Material Info, System Status Qty/Amount, Var Qty/Amount)
-                            const mergeIndices = [0, 1, 3, 4, 7, 8];
+                            // Apply rowspans (No, Model, Material Info, System Status Qty/Amount, Var Qty/Amount)
+                            const mergeIndices = [0, 1, 2, 4, 5, 8, 9];
                             mergeIndices.forEach(idx => {
                                 const $td = $row.find(`td:eq(${idx})`);
                                 $td.attr('rowspan', rowCount).css({
@@ -828,17 +834,17 @@
                             // Set Group Data for merged columns
                             $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
 
-                             $row.find('td:eq(3)').html(InventoryHelper.formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
-                            $row.find('td:eq(4)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
+                             $row.find('td:eq(4)').html(InventoryHelper.formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
+                            $row.find('td:eq(5)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
 
-                            $row.find('td:eq(7)').html(`<div class="${diffClass}">${InventoryHelper.formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
-                            $row.find('td:eq(8)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
+                            $row.find('td:eq(8)').html(`<div class="${diffClass}">${InventoryHelper.formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
+                            $row.find('td:eq(9)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
 
                             $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');
                             lastProduct = productHash;
                         } else {
                             // SUBSEQUENT ROWS - hide merged cells
-                            const mergeIndices = [0, 1, 3, 4, 7, 8];
+                            const mergeIndices = [0, 1, 2, 4, 5, 8, 9];
                             mergeIndices.forEach(idx => {
                                 $row.find(`td:eq(${idx})`).css('display', 'none');
                             });

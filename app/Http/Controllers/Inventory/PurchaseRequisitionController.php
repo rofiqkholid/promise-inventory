@@ -137,9 +137,9 @@ class PurchaseRequisitionController extends Controller
         // Ordering
         if ($request->has('order')) {
             $sortableColumns = [
-                1 => 'products.part_no',
-                2 => 'inv_m_material_spec.spec_name',
-                3 => 'models.name',
+                1 => 'models.name',
+                2 => 'products.part_no',
+                3 => 'inv_m_material_spec.spec_name',
                 4 => 'inv_t_product_detail.current_stock_qty',
                 5 => 'inv_t_product_detail.min_stock',
                 6 => 'shortage',

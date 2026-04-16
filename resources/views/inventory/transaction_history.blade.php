@@ -41,7 +41,7 @@
                         <option value="">All Parts</option>
                         @foreach($products as $product)
                         <option value="{{ $product->hash_id }}">
-                            {{ $product->part_no }} {{ $product->revision ? '- '.$product->revision : '' }} - {{ $product->part_name }}
+                            [{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }}{{ $product->revision ? ' - '.$product->revision : '' }} - {{ $product->part_name }}
                         </option>
                         @endforeach
                     </select>
@@ -93,6 +93,7 @@
                         <th class="w-12 text-center text-xs font-bold uppercase tracking-wider">No</th>
                         <th class="w-28 text-left text-xs font-bold uppercase tracking-wider">Trans. Date</th>
                         <th class="w-40 text-left text-xs font-bold uppercase tracking-wider">Timestamp</th>
+                        <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">Model</th>
                         <th class="text-left text-xs font-bold uppercase tracking-wider">Part Details</th>
                         <th class="w-28 text-center text-xs font-bold uppercase tracking-wider">Category</th>
                         <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">Origin / Destination</th>
@@ -163,12 +164,19 @@
                     className: 'text-[10px] text-gray-500 font-mono',
                     render: d => d || '-'
                 },
+                {
+                    data: 'model_name',
+                    className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                    render: d => d || '-'
+                },
                 { 
                     data: null, 
                     className: 'py-3 min-w-[200px]',
                     render: row => `
-                        <div class="font-bold text-slate-800 dark:text-white leading-tight uppercase">${row.part_no}</div>
-                        <div class="text-[10px] text-slate-500 uppercase truncate max-w-[250px]">${row.product_name}</div>
+                        <div class="flex flex-col">
+                            <div class="font-bold text-slate-800 dark:text-white leading-tight uppercase tracking-tight">${row.part_no}</div>
+                            <div class="text-[10px] text-slate-500 uppercase truncate max-w-[250px] mt-1">${row.product_name}</div>
+                        </div>
                     `
                 },
                 { 

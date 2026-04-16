@@ -45,9 +45,21 @@
                                         data-pitch="{{ $product->pitch ?? 0 }}"
                                         data-ppp="{{ $product->pcs_per_pitch ?? 1 }}"
                                         data-unit="{{ $product->unit_name ?? '' }}"
-                                    >{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                                        data-stock="{{ $product->current_stock_qty ?? 0 }}"
+                                    >{{ '[' . ($product->model_name ?? 'No Model') . '] ' . $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                 @endforeach
                             </select>
+                            
+                            {{-- Balance Display --}}
+                            <div id="balanceDisplay" class="mt-2 hidden">
+                                <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-boxes-stacked text-primary-500 text-[10px]"></i>
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Current Balance</span>
+                                    </div>
+                                    <span id="currentBalanceVal" class="text-xs font-black text-slate-900 dark:text-white">0</span>
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Transaction Category --}}
@@ -171,7 +183,7 @@
                                 <select id="filter_product_detail_id" class="select2-filter-log w-full">
                                     <option value="">All Parts</option>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->hash_id }}">{{ $product->part_no }} - {{ $product->part_name }}</option>
+                                        <option value="{{ $product->hash_id }}">{{ '[' . ($product->model_name ?? 'No Model') . '] ' . $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -218,6 +230,7 @@
                         <thead>
                             <tr>
                                 <th class="w-32 text-left font-bold uppercase tracking-wider text-xs">Timestamp</th>
+                                <th class="text-left font-bold uppercase tracking-wider text-xs">Model</th>
                                 <th class="text-left font-bold uppercase tracking-wider text-xs">Part Information</th>
                                 <th class="w-32 text-center font-bold uppercase tracking-wider text-xs">Category</th>
                                 <th class="w-24 text-center font-bold uppercase tracking-wider text-xs">Qty</th>
@@ -265,12 +278,12 @@
                         <select id="edit_product_detail_id" class="select2-modal" disabled>
                             <option value="">Select Material...</option>
                             @foreach($products as $product)
-                            <option value="{{ $product->hash_id }}"
-                                data-partno="{{ $product->part_no }}" 
-                                data-pcs="{{ $product->pcs_per_unit ?? 1 }}"
-                                data-weight="{{ $product->weight_kg ?? 0 }}"
-                                data-unit="{{ $product->unit_name ?? '' }}"
-                            >{{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                             <option value="{{ $product->hash_id }}"
+                                 data-partno="[{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }}" 
+                                 data-pcs="{{ $product->pcs_per_unit ?? 1 }}"
+                                 data-weight="{{ $product->weight_kg ?? 0 }}"
+                                 data-unit="{{ $product->unit_name ?? '' }}"
+                            >{{ '[' . ($product->model_name ?? 'No Model') . '] ' . $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }} - {{ $product->part_name }}</option>
                             @endforeach
                         </select>
                         <input type="hidden" name="product_detail_id" id="hidden_edit_product_detail_id">
@@ -452,12 +465,17 @@
                     data: 'transaction_date',
                     render: (d) => `<span class="text-[10px] font-semibold text-gray-500 uppercase tracking-tight">${d}</span>`
                 },
+                {
+                    data: 'model_name',
+                    className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                    render: d => d || '-'
+                },
                 { 
                     data: 'part_no', 
                     render: (d, t, r) => `
-                        <div class="flex flex-col">
+                        <div class="flex flex-col py-1">
                             <span class="font-bold text-gray-900 dark:text-white leading-tight uppercase tracking-tighter">${r.part_no}</span>
-                            <span class="text-[9px] text-gray-400 uppercase tracking-tight">${r.product_name || ''}</span>
+                            <span class="text-[9px] text-gray-400 uppercase tracking-tight mt-1">${r.product_name || ''}</span>
                         </div>
                     `
                 },
@@ -628,7 +646,16 @@
             const pcsPerUnit = parseFloat(selectedProduct.data('pcs')) || 0;
             const weightKg = parseFloat(selectedProduct.data('weight')) || 0;
             const unitType = (selectedProduct.data('unit') || '').toLowerCase();
+            const currentStock = parseFloat(selectedProduct.data('stock')) || 0;
             const isCoil = unitType.includes('coil');
+
+            // Show/Update Balance Display
+            if (selectedProduct.val()) {
+                $('#balanceDisplay').removeClass('hidden');
+                $('#currentBalanceVal').text(new Intl.NumberFormat().format(currentStock) + ' ' + (isCoil ? 'KG' : (unitType || 'Unit')));
+            } else {
+                $('#balanceDisplay').addClass('hidden');
+            }
 
             if (isCoil) {
                 $('#qtyLabel').html('Qty (Kg) <span class="text-red-500">*</span>');

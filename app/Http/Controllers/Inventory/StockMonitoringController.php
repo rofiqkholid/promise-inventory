@@ -252,13 +252,14 @@ class StockMonitoringController extends Controller
         // Sorting - Map frontend index to backend field accurately
         $sortableColumns = [
             0 => 'inv_t_product_detail.id', // No
-            1 => 'part_no',              // Part Information
-            2 => 'project_status',        // Status
-            3 => 'min_stock',             // Min Stock
-            4 => 'balance_pcs',           // Current Balance
+            1 => 'models.name',           // Model
+            2 => 'part_no',              // Part Information
+            3 => 'project_status',        // Status
+            4 => 'min_stock',             // Min Stock
+            5 => 'balance_pcs',           // Current Balance
         ];
         
-        $currentIdx = 5;
+        $currentIdx = 6;
         foreach ($categories as $cat) {
             $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
             $sortableColumns[$currentIdx++] = $alias;
@@ -271,7 +272,9 @@ class StockMonitoringController extends Controller
         $orderDir = $request->input('order.0.dir', 'asc');
         $orderCol = $sortableColumns[$orderColIdx] ?? 'part_no';
 
-        if ($orderCol === 'part_no') {
+        if ($orderCol === 'models.name') {
+            $query->orderBy('models.name', $orderDir);
+        } elseif ($orderCol === 'part_no') {
             $query->orderBy('products.part_no', $orderDir);
         } elseif ($orderCol === 'project_status') {
             // Sort by product_status override first, then by model's project_status
@@ -343,7 +346,8 @@ class StockMonitoringController extends Controller
             $row = [
                 'id' => $item->id,
                 'hash_id' => $hashId,
-                'part_no' => $item->part_no, // Send raw part_no
+                'model_name' => $item->model_name ?? '-',
+                'part_no' => $item->part_no, 
                 'part_name' => $item->part_name,
                 'revision' => $item->revision,
                 'remark' => $item->remark ?? '-',
