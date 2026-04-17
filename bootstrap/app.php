@@ -16,8 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'logout',
             '*/product/read-sheets',
-            '*/product/import-bulk-data',
-            '*/vave/import-bulk-data',
+            '*/product/import-data',
+            '*/vave/import-data',
             // User Access Management (already protected by auth middleware)
             // 419 occurs due to shared session cookie conflict between inventory & portal apps
             'inventory/user-access',

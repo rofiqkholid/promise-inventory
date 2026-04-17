@@ -86,17 +86,14 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                     if (!$rank) $rowErrors[] = "Rank '{$rankName}' not found.";
                 }
 
-                // Initialize/Sync Product Base
+                // Resolve Product Base (Strict Check)
                 $product = Products::where('part_no', $partNo)
                     ->where('customer_id', $this->customerId)
                     ->first();
                 
                 if (!$product) {
-                    $product = Products::create([
-                        'part_no' => $partNo,
-                        'part_name' => $partNo,
-                        'customer_id' => $this->customerId,
-                    ]);
+                    $this->errors[] = "Row {$rowNum}: Part No '{$partNo}' not found in Global Product Master for this Customer.";
+                    continue;
                 }
 
                 $maxCols = $row->count();
