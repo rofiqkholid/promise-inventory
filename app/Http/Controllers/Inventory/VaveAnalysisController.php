@@ -589,8 +589,26 @@ class VaveAnalysisController extends Controller
         $fileToImport = null;
         $tmpPath = null;
 
-        if ($request->has('file_base64')) {
-            $base64data = preg_replace('/^data:[a-zA-Z0-9\/\-\.\+]+;base64,/', '', $request->file_base64);
+        if ($request->has('chunk_index')) {
+            $chunkIndex = $request->input('chunk_index');
+            $totalChunks = $request->input('total_chunks');
+            $uploadId = $request->input('upload_id');
+            $chunkData = $request->input('file_base64_chunk');
+            
+            $tmpTxtPath = sys_get_temp_dir() . '/upload_vave_' . $uploadId . '.txt';
+            
+            // Append chunk
+            file_put_contents($tmpTxtPath, $chunkData, FILE_APPEND);
+            
+            if ($chunkIndex < $totalChunks - 1) {
+                return response()->json(['success' => true, 'message' => 'Chunk processed']);
+            }
+            
+            // All chunks received
+            $fullBase64 = file_get_contents($tmpTxtPath);
+            @unlink($tmpTxtPath);
+            
+            $base64data = preg_replace('/^data:[a-zA-Z0-9\/\-\.\+]+;base64,/', '', $fullBase64);
             $fileContent = base64_decode($base64data);
             $tmpPath = sys_get_temp_dir() . '/' . uniqid('import_vave_') . '.xlsx';
             file_put_contents($tmpPath, $fileContent);

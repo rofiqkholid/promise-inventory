@@ -563,7 +563,7 @@ $(function() {
         const $btn = $('#btnSubmitImport');
         const originalHtml = $btn.html();
         
-        $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Importing...');
+        $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing...');
         
         $('#importResult').removeClass('hidden');
         $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-blue-50 text-blue-700 border-blue-100').html('<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing data, please wait...');
@@ -580,44 +580,69 @@ $(function() {
         const reader = new FileReader();
         
         reader.onload = function(e) {
-            const payload = {
-                sheet_name: $('#import_sheet_name').val(),
-                file_base64: e.target.result,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            };
+            const fullBase64 = e.target.result;
+            const chunkSize = 64 * 1024; // 64KB chunks to safely bypass strict WAF limits
+            const totalChunks = Math.ceil(fullBase64.length / chunkSize);
+            const uploadId = Date.now().toString() + Math.floor(Math.random() * 1000);
+            
+            const uploadChunk = function(index) {
+                const chunkData = fullBase64.substring(index * chunkSize, (index + 1) * chunkSize);
+                
+                const payload = {
+                    sheet_name: $('#import_sheet_name').val(),
+                    upload_id: uploadId,
+                    chunk_index: index,
+                    total_chunks: totalChunks,
+                    file_base64_chunk: chunkData,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                };
 
-            $.ajax({
-                url: '{{ route("inventory.vave.importExcel") }}',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: JSON.stringify(payload),
-                contentType: 'application/json',
-                success: function(res) {
-                    $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-emerald-50 text-emerald-700 border-emerald-100').html(`<i class="fa-solid fa-circle-check mr-2"></i> ${res.message}`);
-                    
-                    if (res.log) {
-                        if (res.log.created.length) res.log.created.forEach(l => $('#importLogs').append(`<div class="text-emerald-600 italic">[CREATED] ${l}</div>`));
-                        if (res.log.updated.length) res.log.updated.forEach(l => $('#importLogs').append(`<div class="text-amber-600 italic">[UPDATED] ${l}</div>`));
-                        $('#importLogs').append(`<div class="text-slate-400 mt-2">Unchanged items: ${res.log.unchangedCount}</div>`);
+                let percent = Math.round((index / totalChunks) * 100);
+                if (index === totalChunks - 1) percent = 99;
+                $btn.html(`<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Uploading ${percent}% ...`);
+
+                $.ajax({
+                    url: '{{ route("inventory.vave.importExcel") }}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    data: JSON.stringify(payload),
+                    contentType: 'application/json',
+                    success: function(res) {
+                        if (index < totalChunks - 1) {
+                            uploadChunk(index + 1);
+                        } else {
+                            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-emerald-50 text-emerald-700 border-emerald-100').html(`<i class="fa-solid fa-circle-check mr-2"></i> ${res.message}`);
+                            
+                            if (res.log) {
+                                if (res.log.created.length) res.log.created.forEach(l => $('#importLogs').append(`<div class="text-emerald-600 italic">[CREATED] ${l}</div>`));
+                                if (res.log.updated.length) res.log.updated.forEach(l => $('#importLogs').append(`<div class="text-amber-600 italic">[UPDATED] ${l}</div>`));
+                                $('#importLogs').append(`<div class="text-slate-400 mt-2">Unchanged items: ${res.log.unchangedCount}</div>`);
+                            }
+                            
+                            table.ajax.reload();
+                            refreshEbdBases();
+                            $btn.prop('disabled', false).html(originalHtml);
+                        }
+                    },
+                    error: function(xhr) {
+                        const res = xhr.responseJSON || {};
+                        let msg = res.message || 'Error occurred. WAF might still be blocking it.';
+                        if (xhr.status === 413) {
+                            msg = 'Error 413: File is too large for the server even with chunks.';
+                        }
+                        $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html(`<i class="fa-solid fa-circle-exclamation mr-2"></i> ${msg}`);
+                        
+                        if (res.errors) {
+                            res.errors.forEach(err => $('#importLogs').append(`<div class="text-rose-600 font-bold underline ">[ERROR] ${err}</div>`));
+                        }
+                        $btn.prop('disabled', false).html(originalHtml);
                     }
-                    
-                    table.ajax.reload();
-                    refreshEbdBases();
-                },
-                error: function(xhr) {
-                    const res = xhr.responseJSON || {};
-                    $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html(`<i class="fa-solid fa-circle-exclamation mr-2"></i> ${res.message || 'Error occurred. WAF might still be blocking it.'}`);
-                    
-                    if (res.errors) {
-                        res.errors.forEach(err => $('#importLogs').append(`<div class="text-rose-600 font-bold underline ">[ERROR] ${err}</div>`));
-                    }
-                },
-                complete: function() {
-                    $btn.prop('disabled', false).html(originalHtml);
-                }
-            });
+                });
+            };
+            
+            uploadChunk(0);
         };
         
         reader.readAsDataURL(file);

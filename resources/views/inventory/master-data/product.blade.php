@@ -1000,7 +1000,7 @@ $(function() {
             e.preventDefault();
             const btn = $('#btnSubmitImport');
             const originalText = btn.html();
-            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin text-white mr-1.5"></i> Importing...');
+            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin text-white mr-1.5"></i> Processing...');
             $('#importResult').addClass('hidden');
 
             const fileInput = $('#import_file')[0];
@@ -1014,38 +1014,66 @@ $(function() {
             const reader = new FileReader();
             
             reader.onload = (e) => {
-                const payload = {
-                    customer_id: $('#import_customer_id').val(),
-                    model_id: $('#import_model_id').val(),
-                    sheet_name: $('#sheet_name').val(),
-                    file_base64: e.target.result,
-                    _token: this.config.csrfToken
-                };
+                const fullBase64 = e.target.result;
+                const chunkSize = 64 * 1024; // 64KB chunks to safely bypass strict WAF limits
+                const totalChunks = Math.ceil(fullBase64.length / chunkSize);
+                const uploadId = Date.now().toString() + Math.floor(Math.random() * 1000);
+                
+                const uploadChunk = (index) => {
+                    const chunkData = fullBase64.substring(index * chunkSize, (index + 1) * chunkSize);
+                    
+                    const payload = {
+                        customer_id: $('#import_customer_id').val(),
+                        model_id: $('#import_model_id').val(),
+                        sheet_name: $('#sheet_name').val(),
+                        upload_id: uploadId,
+                        chunk_index: index,
+                        total_chunks: totalChunks,
+                        file_base64_chunk: chunkData,
+                        _token: this.config.csrfToken
+                    };
 
-                $.ajax({
-                    url: this.config.routes.import,
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
-                    data: JSON.stringify(payload),
-                    contentType: 'application/json',
-                    success: (res) => {
-                        this.state.table.ajax.reload();
-                        $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
-                            .addClass('bg-emerald-50 text-emerald-900 border-emerald-100 p-5 rounded-sm')
-                            .html(res.message);
-                        window.showToast('Import completed successfully', 'success');
-                    },
-                    error: (xhr) => {
-                        const msg = xhr.responseJSON?.message || 'Upload failed. WAF might still be blocking it.';
-                        $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
-                            .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
-                            .html(msg);
-                        window.showToast('Import failed - please check errors', 'error');
-                    },
-                    complete: () => {
-                        btn.prop('disabled', false).html(originalText);
-                    }
-                });
+                    let percent = Math.round((index / totalChunks) * 100);
+                    if (index === totalChunks - 1) percent = 99; // 99% while waiting for server to process the final file
+                    btn.html(`<i class="fa-solid fa-circle-notch fa-spin text-white mr-1.5"></i> Uploading ${percent}% ...`);
+
+                    $.ajax({
+                        url: this.config.routes.import,
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
+                        data: JSON.stringify(payload),
+                        contentType: 'application/json',
+                        success: (res) => {
+                            if (index < totalChunks - 1) {
+                                uploadChunk(index + 1); // Next chunk
+                            } else {
+                                // Done!
+                                this.state.table.ajax.reload();
+                                $('#importResult').removeClass('hidden bg-red-50 text-red-700 border-red-200')
+                                    .addClass('bg-emerald-50 text-emerald-900 border-emerald-100 p-5 rounded-sm')
+                                    .html(res.message);
+                                window.showToast('Import completed successfully', 'success');
+                                btn.prop('disabled', false).html(originalText);
+                            }
+                        },
+                        error: (xhr) => {
+                            const msg = xhr.responseJSON?.message || 'Upload failed. WAF or Server might still be blocking it.';
+                            if (xhr.status === 413) {
+                                $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
+                                    .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
+                                    .html('Error 413: File is too large for the server even with chunks.');
+                            } else {
+                                $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
+                                    .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
+                                    .html(msg);
+                            }
+                            window.showToast('Import failed - please check errors', 'error');
+                            btn.prop('disabled', false).html(originalText);
+                        }
+                    });
+                };
+                
+                uploadChunk(0); // Start upload
             };
             
             reader.readAsDataURL(file);
