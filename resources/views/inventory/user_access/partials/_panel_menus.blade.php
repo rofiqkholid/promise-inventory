@@ -90,6 +90,7 @@
 <script>
     $(document).ready(function() {
         menusTable = window.defaultDataTable('#MenusTable', {
+            processing: true, serverSide: true,
             ajax: "{{ route('inventory.menus.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-medium text-gray-400' },

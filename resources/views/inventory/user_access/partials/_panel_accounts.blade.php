@@ -81,6 +81,7 @@
 <script>
     $(document).ready(function() {
         accountsTable = window.defaultDataTable('#AccountsTable', {
+            processing: true, serverSide: true,
             ajax: "{{ route('inventory.users.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-medium text-gray-400' },

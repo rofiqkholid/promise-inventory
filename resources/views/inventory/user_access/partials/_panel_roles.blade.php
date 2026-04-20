@@ -64,6 +64,7 @@
 <script>
     $(document).ready(function() {
         rolesTable = window.defaultDataTable('#RolesTable', {
+            processing: true, serverSide: true,
             ajax: "{{ route('inventory.roles.data') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-medium text-gray-400' },

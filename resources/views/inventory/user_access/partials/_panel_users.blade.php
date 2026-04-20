@@ -64,49 +64,41 @@
     </div>
 </div>
 
-<div id="permissionModal" tabindex="-1" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
-    <div class="relative w-full max-w-xl">
-        <div class="bg-white dark:bg-gray-800 rounded-xs overflow-hidden border border-slate-200 dark:border-gray-600">
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-slate-200 dark:border-gray-600 flex justify-between items-center">
+<div id="permissionModal" tabindex="-1" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4">
+    <div class="relative w-full max-w-4xl max-h-[95vh] flex flex-col scale-100 transition-transform duration-300">
+        <div class="bg-white dark:bg-gray-900 rounded-xs overflow-hidden border border-slate-200 dark:border-gray-700 shadow-xl flex flex-col h-full">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center shrink-0">
                 <div>
-                    <h3 id="permissionModalTitle" class="text-lg font-medium text-gray-900 dark:text-white tracking-tight">Access Control</h3>
-                    <p class="text-xs font-medium text-primary-600 dark:text-primary-400 tracking-widest mt-0.5" id="permissionSubjectName"></p>
+                    <h3 id="permissionModalTitle" class="text-sm font-black text-gray-900 dark:text-white tracking-widest uppercase">Access Privilege Configuration</h3>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
+                        <p class="text-[10px] font-bold text-primary-600 dark:text-primary-400 tracking-widest uppercase" id="permissionSubjectName"></p>
+                    </div>
                 </div>
-                <button onclick="closeModal('permissionModal')" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                <button onclick="closeModal('permissionModal')" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-700 dark:hover:text-white transition-all border border-transparent hover:border-slate-200 dark:hover:border-gray-600">
+                    <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
-            <form id="permissionForm" class="p-6">
+            
+            <form id="permissionForm" class="flex-1 flex flex-col min-h-0">
                 @csrf
                 <input type="hidden" name="role_id" id="permission_role_id">
                 <input type="hidden" name="user_id" id="permission_user_id">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[50vh] overflow-y-auto px-1 py-2 custom-scrollbar-minimal">
-                    @foreach($allMenus as $menu)
-                        <div class="p-3 bg-gray-50/50 dark:bg-gray-900/30 rounded-xs border border-gray-100 dark:border-gray-800">
-                            <label class="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" name="menu_ids[]" value="{{ $menu->id }}" class="menu-checkbox w-4 h-4 rounded-sm border-gray-300 text-primary-600 focus:ring-0 transition-all cursor-pointer">
-                                <div class="flex items-center gap-2">
-                                    <i class="{{ $menu->icon }} text-primary-600 dark:text-primary-400 text-sm"></i>
-                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $menu->title }}</span>
-                                </div>
-                            </label>
-                            
-                            @if($menu->children->count() > 0)
-                                <div class="mt-2 ml-6 space-y-1.5 border-l border-slate-200 dark:border-slate-700 pl-4">
-                                    @foreach($menu->children as $child)
-                                        <label class="flex items-center gap-2.5 cursor-pointer group/child">
-                                            <input type="checkbox" name="menu_ids[]" value="{{ $child->id }}" class="menu-checkbox w-3.5 h-3.5 rounded-sm border-gray-300 text-primary-500 focus:ring-0 transition-all cursor-pointer">
-                                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 group-hover/child:text-primary-600 transition-colors">{{ $child->title }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
+                
+                <div class="p-4 overflow-y-auto custom-scrollbar-minimal flex-1">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-4">
+                        @include('inventory.user_access.partials._menu_tree_item', ['menus' => $allMenus, 'depth' => 0])
+                    </div>
                 </div>
-                <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="closeModal('permissionModal')" class="flex-1 py-2 text-sm font-medium text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all rounded-xs">Cancel</button>
-                    <button type="submit" class="flex-1 py-2 text-sm font-medium text-white bg-slate-900 dark:bg-white dark:text-slate-950 rounded-xs shadow-sm transition-all active:scale-95">Sync Permissions</button>
+
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-t border-slate-200 dark:border-gray-700 flex items-center justify-between shrink-0">
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                        <i class="fa-solid fa-circle-info mr-1"></i> Changes apply on next interaction.
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeModal('permissionModal')" class="px-4 py-2 text-[11px] font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white transition-all rounded-xs border border-transparent hover:border-slate-200 dark:hover:border-gray-700">DISCARD</button>
+                        <button type="submit" class="px-6 py-2 text-[11px] font-bold text-white bg-slate-900 dark:bg-primary-600 rounded-xs shadow-sm shadow-slate-900/10 dark:shadow-primary-900/20 transition-all active:scale-95 uppercase tracking-wider">Save Permissions</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -148,7 +140,6 @@
                 $('#user_allocation_id').val(data.user_id);
                 $('#edit_mode_user_id').val(data.user_id);
                 
-                // Clear and set checkboxes
                 $('.role-checkbox').prop('checked', false);
                 data.role_ids.forEach(roleId => {
                     $(`.role-checkbox[value="${roleId}"]`).prop('checked', true);
@@ -180,6 +171,46 @@
 
         $('#addUserRoleForm').on('submit', e => handleFormSubmit(e, "{{ route('inventory.userAccess.store') }}", 'addUserRoleModal', userTable));
         
+        // --- RECURSIVE CHECKBOX LOGIC (RESTORED) ---
+        $(document).on('change', '.menu-checkbox', function() {
+            const isChecked = $(this).is(':checked');
+            const id = $(this).data('id');
+            const parentId = $(this).data('parent');
+
+            // 1. If checking/unchecking a parent, handle all descendants (Select All effect)
+            const descendants = $(`.menu-checkbox[data-parent="${id}"]`);
+            if (descendants.length > 0) {
+                checkDescendants(id, isChecked);
+            }
+
+            // 2. If checking a child, ensure all ancestors are checked
+            if (isChecked && parentId) {
+                checkAncestors(parentId);
+            }
+        });
+
+        $(document).on('click', '.select-all-children', function() {
+            const id = $(this).data('id');
+            const parentCheckbox = $(`.menu-checkbox[data-id="${id}"]`);
+            parentCheckbox.prop('checked', true).trigger('change');
+        });
+
+        function checkDescendants(parentId, state) {
+            $(`.menu-checkbox[data-parent="${parentId}"]`).each(function() {
+                $(this).prop('checked', state);
+                checkDescendants($(this).data('id'), state);
+            });
+        }
+
+        function checkAncestors(id) {
+            const current = $(`.menu-checkbox[data-id="${id}"]`);
+            if (current.length > 0) {
+                current.prop('checked', true);
+                const parentId = current.data('parent');
+                if (parentId) checkAncestors(parentId);
+            }
+        }
+
         $('#permissionForm').on('submit', function(e) {
             e.preventDefault();
             const userId = $('#permission_user_id').val();

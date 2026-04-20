@@ -34,8 +34,14 @@
         
         <div x-show="sectionOpen" 
              x-collapse 
+             id="collapsible-section-{{ $menu->id }}"
              style="display: {{ $isActive ? 'block' : 'none' }}"
              class="space-y-1">
+            <script>
+                if (localStorage.getItem('section_{{ $menu->id }}') === 'true' || {{ $isActive ? 'true' : 'false' }}) {
+                    document.getElementById('collapsible-section-{{ $menu->id }}').style.display = 'block';
+                }
+            </script>
             {{-- Render Children --}}
             @foreach($menu->children as $child)
                 @include('layouts.partials.sidebar_item', ['menu' => $child, 'depth' => ($depth ?? 0)])
@@ -71,9 +77,15 @@
         {{-- SUBMENU ITEMS (RECURSIVE CALL) --}}
         <div x-show="open && sidebarExpanded" 
              x-collapse 
-             class="submenu-container space-y-1 mt-1 transition-all duration-300"
-             :class="sidebarExpanded ? '{{ ($depth ?? 0) === 0 ? 'pl-4' : 'pl-3' }}' : 'pl-0'"
+             id="collapsible-menu-{{ $menu->id }}"
+             class="submenu-container space-y-1 mt-1 transition-all duration-300 {{ ($depth ?? 0) === 0 ? 'pl-4' : 'pl-3' }}"
+             :class="!sidebarExpanded ? 'pl-0' : ''"
              style="display: {{ $isActive ? 'block' : 'none' }}">
+            <script>
+                if (localStorage.getItem('menu_open_{{ $menu->id }}') === 'true' || {{ $isActive ? 'true' : 'false' }}) {
+                    document.getElementById('collapsible-menu-{{ $menu->id }}').style.display = 'block';
+                }
+            </script>
             @foreach($menu->children as $child)
                 @include('layouts.partials.sidebar_item', ['menu' => $child, 'depth' => ($depth ?? 0) + 1])
             @endforeach

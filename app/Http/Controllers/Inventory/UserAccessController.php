@@ -191,8 +191,38 @@ class UserAccessController extends Controller
     #Region Roles Management
     public function roleData(Request $request)
     {
-        $roles = \App\Models\InventoryModel\InvRole::all();
-        $formattedData = $roles->map(function ($row, $index) {
+        $draw = (int) $request->input('draw');
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        $search = $request->input('search.value');
+        
+        $query = \App\Models\InventoryModel\InvRole::query();
+
+        $recordsTotal = (clone $query)->count();
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $recordsFiltered = $query->count();
+
+        $order = $request->input('order.0');
+        if ($order) {
+            $colIdx = $order['column'];
+            $dir = $order['dir'];
+            $columns = [1 => 'code', 2 => 'name', 3 => 'description'];
+            if (isset($columns[$colIdx])) {
+                $query->orderBy($columns[$colIdx], $dir);
+            }
+        }
+
+        $data = $query->skip($start)->take($length)->get();
+
+        $formattedData = $data->map(function ($row, $index) use ($start) {
             $btn = '
                 <div class="flex items-center justify-center gap-1.5">
                     <button class="edit-role-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
@@ -207,7 +237,7 @@ class UserAccessController extends Controller
                 </div>
             ';
             return [
-                'DT_RowIndex' => $index + 1,
+                'DT_RowIndex' => $start + $index + 1,
                 'code' => strtoupper($row->code),
                 'name' => $row->name,
                 'description' => $row->description ?? '-',
@@ -215,7 +245,12 @@ class UserAccessController extends Controller
             ];
         });
 
-        return response()->json(['data' => $formattedData]);
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $formattedData,
+        ]);
     }
 
     public function storeRole(Request $request)
@@ -275,8 +310,40 @@ class UserAccessController extends Controller
     #Region Users Management
     public function userData(Request $request)
     {
-        $users = \App\Models\User::orderBy('name')->get();
-        $formattedData = $users->map(function ($row, $index) {
+        $draw = (int) $request->input('draw');
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        $search = $request->input('search.value');
+        
+        $query = \App\Models\User::query();
+
+        $recordsTotal = (clone $query)->count();
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nik', 'like', "%{$search}%");
+            });
+        }
+
+        $recordsFiltered = $query->count();
+
+        $order = $request->input('order.0');
+        if ($order) {
+            $colIdx = $order['column'];
+            $dir = $order['dir'];
+            $columns = [1 => 'nik', 2 => 'name', 3 => 'email'];
+            if (isset($columns[$colIdx])) {
+                $query->orderBy($columns[$colIdx], $dir);
+            }
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $data = $query->skip($start)->take($length)->get();
+
+        $formattedData = $data->map(function ($row, $index) use ($start) {
             $btn = '
                 <div class="flex items-center justify-center gap-1.5">
                     <button class="edit-user-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="' . $row->id . '" title="Edit">
@@ -288,7 +355,7 @@ class UserAccessController extends Controller
                 </div>
             ';
             return [
-                'DT_RowIndex' => $index + 1,
+                'DT_RowIndex' => $start + $index + 1,
                 'nik' => $row->nik ?? '-',
                 'name' => $row->name,
                 'email' => $row->email,
@@ -296,7 +363,12 @@ class UserAccessController extends Controller
             ];
         });
 
-        return response()->json(['data' => $formattedData]);
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $formattedData,
+        ]);
     }
 
     public function getUser($id)
@@ -355,8 +427,47 @@ class UserAccessController extends Controller
     #Region Menu Management
     public function menuData(Request $request)
     {
-        $menus = \App\Models\InventoryModel\Menu::with('parent')->orderBy('order')->get();
-        $formattedData = $menus->map(function ($row, $index) {
+        $draw = (int) $request->input('draw');
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        $search = $request->input('search.value');
+        
+        $query = \App\Models\InventoryModel\Menu::with('parent');
+
+        $recordsTotal = (clone $query)->count();
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('route', 'like', "%{$search}%")
+                  ->orWhereHas('parent', function($pq) use ($search) {
+                      $pq->where('title', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $recordsFiltered = $query->count();
+
+        $order = $request->input('order.0');
+        if ($order) {
+            $colIdx = $order['column'];
+            $dir = $order['dir'];
+            $columns = [1 => 'title', 2 => 'parent_id', 5 => 'order'];
+            if (isset($columns[$colIdx])) {
+                if ($columns[$colIdx] === 'parent_id') {
+                    // Sorting by parent title would be better but simple parent_id for now
+                    $query->orderBy('parent_id', $dir);
+                } else {
+                    $query->orderBy($columns[$colIdx], $dir);
+                }
+            }
+        } else {
+            $query->orderBy('order', 'asc');
+        }
+
+        $data = $query->skip($start)->take($length)->get();
+
+        $formattedData = $data->map(function ($row, $index) use ($start) {
             $parentTitle = $row->parent ? $row->parent->title : '<span class="text-gray-400 italic font-normal">None (Root)</span>';
             $iconHtml = '<div class="flex items-center justify-center bg-gray-50 dark:bg-gray-700/50 w-8 h-8 rounded-md"><i class="' . $row->icon . ' text-blue-500"></i></div>';
             
@@ -375,7 +486,7 @@ class UserAccessController extends Controller
                 </div>
             ';
             return [
-                'DT_RowIndex' => $index + 1,
+                'DT_RowIndex' => $start + $index + 1,
                 'title' => '<div><div class="font-black text-gray-900 dark:text-white">' . $row->title . '</div><div class="text-[10px] text-gray-400 font-mono italic">' . $row->route . '</div></div>',
                 'parent' => $parentTitle,
                 'status' => $statusBadge,
@@ -385,7 +496,12 @@ class UserAccessController extends Controller
             ];
         });
 
-        return response()->json(['data' => $formattedData]);
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $formattedData,
+        ]);
     }
 
     public function getMenu($id)
