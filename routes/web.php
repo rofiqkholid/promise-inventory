@@ -147,7 +147,16 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::resource('vave-base-suffix', \App\Http\Controllers\Inventory\VaveBaseSuffixController::class)->names('vave-base-suffix')->except(['create', 'edit', 'index']);
         });
 
-
+        // Tool Master Data Grouped Routes
+        Route::prefix('inventory/tool')->name('inventory.tool.')->group(function () {
+            // Dashboard
+            Route::get('/dashboard', [\App\Http\Controllers\Inventory\Tool\ToolDashboardController::class, 'index'])->name('dashboard');
+            
+            // Category
+            Route::resource('category', \App\Http\Controllers\Inventory\Tool\ToolCategoryController::class)->except(['create', 'edit', 'show']);
+            // Master Specification
+            Route::resource('master', \App\Http\Controllers\Inventory\Tool\ToolMasterController::class)->except(['create', 'edit', 'show']);
+        });
 
         // User Access Management
         Route::get('/inventory/user-access', [\App\Http\Controllers\Inventory\UserAccessController::class, 'index'])->name('inventory.userAccess.index');

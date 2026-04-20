@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Menu extends Model
 {
     protected $table = 'inv_m_menus';
-    protected $fillable = ['title', 'route', 'icon', 'order', 'is_active', 'parent_id'];
+    protected $fillable = ['title', 'route', 'icon', 'order', 'is_active', 'parent_id', 'type'];
 
     public function roles()
     {
@@ -21,7 +21,7 @@ class Menu extends Model
 
     public function children()
     {
-        return $this->hasMany(Menu::class, 'parent_id')->orderBy('order');
+        return $this->hasMany(Menu::class, 'parent_id')->with('children')->orderBy('order');
     }
 
     public function userSpecific()
