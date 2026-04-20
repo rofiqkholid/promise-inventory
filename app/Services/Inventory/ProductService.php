@@ -2,7 +2,7 @@
 
 namespace App\Services\Inventory;
 
-use App\Models\InventoryModel\InventoryProduct;
+use App\Models\InventoryModel\Material\InventoryProduct;
 use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 

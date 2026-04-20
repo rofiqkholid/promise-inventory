@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\InventoryModel\InventoryProduct;
+use App\Models\InventoryModel\Material\InventoryProduct;
 use Illuminate\Support\Facades\DB;
 
 class SyncStock extends Command

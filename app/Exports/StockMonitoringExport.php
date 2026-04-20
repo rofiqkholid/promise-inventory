@@ -102,7 +102,7 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
     public function map($row): array
     {
         static $no = 1;
-        $balancePcs = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+        $balancePcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
             $row->current_stock_qty, 
             $row->weight_kg, 
             $row->pcs_per_unit, 
@@ -110,7 +110,7 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
             $row->top_coil, $row->end_coil, $row->pitch, $row->pcs_per_pitch, $row->gross_coil
         );
         $amount = floatval($row->weight_kg) * floatval($row->material_price) * $balancePcs;
-        $stockStatus = \App\Models\InventoryModel\InventoryProduct::calculateStockStatus(
+        $stockStatus = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
             $balancePcs, 
             $row->min_stock, 
             $row->product_status ?: $row->model_project_status
@@ -137,7 +137,7 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
         foreach ($this->categories as $cat) {
             $alias = 'usage_' . preg_replace('/[^a-zA-Z0-9]/', '_', $cat->code);
             $qtyVal = $row->$alias ? floatval($row->$alias) : 0;
-            $mapped[] = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+            $mapped[] = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
                 $qtyVal, 
                 $row->weight_kg, 
                 $row->pcs_per_unit, 
@@ -146,7 +146,7 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
             );
         }
 
-        $mapped[] = $row->sto_gap ? \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+        $mapped[] = $row->sto_gap ? \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
             floatval($row->sto_gap), 
             $row->weight_kg, 
             $row->pcs_per_unit, 

@@ -2,11 +2,11 @@
 
 namespace App\Imports;
 
-use App\Models\InventoryModel\InventoryProduct;
-use App\Models\InventoryModel\MaterialSpec;
-use App\Models\InventoryModel\Rank;
-use App\Models\InventoryModel\Unit;
-use App\Models\InventoryModel\Revision;
+use App\Models\InventoryModel\Material\InventoryProduct;
+use App\Models\InventoryModel\Material\MaterialSpec;
+use App\Models\InventoryModel\Material\Rank;
+use App\Models\InventoryModel\Material\Unit;
+use App\Models\InventoryModel\Material\Revision;
 use App\Models\Products;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

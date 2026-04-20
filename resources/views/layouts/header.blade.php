@@ -52,6 +52,60 @@
                 <i class="fa-solid fa-moon text-xl" x-show="darkMode" style="display: none;"></i>
             </button>
 
+            <!-- Apps Menu -->
+            <div x-data="{ appsDropdownOpen: false }" class="relative flex-shrink-0">
+                <button @click="appsDropdownOpen = !appsDropdownOpen"
+                    class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none text-gray-500 dark:text-gray-400" title="Apps Menu">
+                    <i class="fa-solid fa-grip text-xl"></i>
+                </button>
+
+                <div x-show="appsDropdownOpen"
+                    @click.away="appsDropdownOpen = false"
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="transform opacity-0 scale-95"
+                    x-transition:enter-end="transform opacity-100 scale-100"
+                    x-transition:leave="transition ease-in duration-75"
+                    x-transition:leave-start="transform opacity-100 scale-100"
+                    x-transition:leave-end="transform opacity-0 scale-95"
+                    class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-slate-100 dark:border-gray-700 p-4 z-50 origin-top-right"
+                    style="display: none;">
+                    
+                    <div class="grid grid-cols-4 gap-1">
+                        <a href="{{ env('APP_DRAWING_URL') }}"
+                            class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                            <div class="w-11 h-11 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
+                                <i class="fa-solid fa-pen-ruler text-lg"></i>
+                            </div>
+                            <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300">Drawing</span>
+                        </a>
+
+                        <a href="{{ env('APP_INVENTORY_URL') }}"
+                            class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                            <div class="w-11 h-11 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
+                                <i class="fa-solid fa-boxes-stacked text-lg"></i>
+                            </div>
+                            <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300">Inventory</span>
+                        </a>
+
+                        <a href="{{ env('APP_NPC_URL') }}"
+                            class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                            <div class="w-11 h-11 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
+                                <i class="fa-solid fa-users-gear text-lg"></i>
+                            </div>
+                            <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300">NPC</span>
+                        </a>
+
+                        <a href="{{ env('APP_DASH_URL') }}"
+                            class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                            <div class="w-11 h-11 rounded-full flex items-center justify-center bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
+                                <i class="fa-solid fa-chart-pie text-lg"></i>
+                            </div>
+                            <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300 leading-tight">All Dashboard</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
             <!-- User Menu -->
             @auth
             <div x-data="{ open: false }" class="relative pl-4 border-l border-slate-200 dark:border-gray-700">

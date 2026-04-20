@@ -4,20 +4,31 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
 
-use App\Http\Controllers\Inventory\CoilCenterController;
-use App\Http\Controllers\Inventory\MaterialSpecController;
-use App\Http\Controllers\Inventory\UnitController;
-use App\Http\Controllers\Inventory\RankController;
-use App\Http\Controllers\Inventory\SupplierController;
-use App\Http\Controllers\Inventory\TransactionCategoryController;
-use App\Http\Controllers\Inventory\InventoryProductController;
-use App\Http\Controllers\Inventory\InventoryTransactionController;
-use App\Http\Controllers\Inventory\StockMonitoringController;
-use App\Http\Controllers\Inventory\TransactionHistoryController;
-use App\Http\Controllers\Inventory\PurchaseRequisitionController;
-use App\Http\Controllers\Inventory\ModelConfigController;
+use App\Http\Controllers\Inventory\Material\CoilCenterController;
+use App\Http\Controllers\Inventory\Material\MaterialSpecController;
+use App\Http\Controllers\Inventory\Material\TransactionCategoryController;
+use App\Http\Controllers\Inventory\Material\InventoryProductController;
+use App\Http\Controllers\Inventory\Material\InventoryTransactionController;
+use App\Http\Controllers\Inventory\Material\StockMonitoringController;
+use App\Http\Controllers\Inventory\Material\TransactionHistoryController;
+use App\Http\Controllers\Inventory\Material\PurchaseRequisitionController;
+use App\Http\Controllers\Inventory\Material\ModelConfigController;
+use App\Http\Controllers\Inventory\Material\DashboardController;
+use App\Http\Controllers\Inventory\Material\StoController;
+use App\Http\Controllers\Inventory\Material\VaveAnalysisController;
+use App\Http\Controllers\Inventory\Material\RevisionController;
+use App\Http\Controllers\Inventory\Material\VaveBaseSuffixController;
+
+use App\Http\Controllers\Inventory\Tool\ToolDashboardController;
+use App\Http\Controllers\Inventory\Tool\ToolCategoryController;
+use App\Http\Controllers\Inventory\Tool\ToolMasterController;
+
+use App\Http\Controllers\Inventory\Material\UnitController;
+use App\Http\Controllers\Inventory\Material\RankController;
+use App\Http\Controllers\Inventory\Material\SupplierController;
+use App\Http\Controllers\Inventory\Material\LocationController;
 use App\Http\Controllers\Inventory\ProfileController;
-use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Inventory\UserAccessController;
 
 // Route for redirecting to Central SSO Portal
 Route::get('/debug-sso', function () {
@@ -132,65 +143,65 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::post('/model-config/update-status', [ModelConfigController::class, 'updateStatus'])->name('modelConfig.updateStatus');
 
             // Location (Master Data)
-            Route::get('/location', [\App\Http\Controllers\Inventory\LocationController::class, 'index'])->name('location.index');
-            Route::get('/location/data', [\App\Http\Controllers\Inventory\LocationController::class, 'data'])->name('location.data');
-            Route::resource('location', \App\Http\Controllers\Inventory\LocationController::class)->names('location')->except(['create', 'edit', 'index']);
+            Route::get('/location', [LocationController::class, 'index'])->name('location.index');
+            Route::get('/location/data', [LocationController::class, 'data'])->name('location.data');
+            Route::resource('location', LocationController::class)->names('location')->except(['create', 'edit', 'index']);
 
             // Revision (Master Data)
-            Route::get('/revision', [\App\Http\Controllers\Inventory\RevisionController::class, 'index'])->name('revision.index');
-            Route::get('/revision/data', [\App\Http\Controllers\Inventory\RevisionController::class, 'data'])->name('revision.data');
-            Route::resource('revision', \App\Http\Controllers\Inventory\RevisionController::class)->names('revision')->except(['create', 'edit', 'index']);
+            Route::get('/revision', [RevisionController::class, 'index'])->name('revision.index');
+            Route::get('/revision/data', [RevisionController::class, 'data'])->name('revision.data');
+            Route::resource('revision', RevisionController::class)->names('revision')->except(['create', 'edit', 'index']);
 
             // Vave Base Suffix (Master Data)
-            Route::get('/vave-base-suffix', [\App\Http\Controllers\Inventory\VaveBaseSuffixController::class, 'index'])->name('vave-base-suffix.index');
-            Route::get('/vave-base-suffix/data', [\App\Http\Controllers\Inventory\VaveBaseSuffixController::class, 'data'])->name('vave-base-suffix.data');
-            Route::resource('vave-base-suffix', \App\Http\Controllers\Inventory\VaveBaseSuffixController::class)->names('vave-base-suffix')->except(['create', 'edit', 'index']);
+            Route::get('/vave-base-suffix', [VaveBaseSuffixController::class, 'index'])->name('vave-base-suffix.index');
+            Route::get('/vave-base-suffix/data', [VaveBaseSuffixController::class, 'data'])->name('vave-base-suffix.data');
+            Route::resource('vave-base-suffix', VaveBaseSuffixController::class)->names('vave-base-suffix')->except(['create', 'edit', 'index']);
         });
 
         // Tool Master Data Grouped Routes
         Route::prefix('inventory/tool')->name('inventory.tool.')->group(function () {
             // Dashboard
-            Route::get('/dashboard', [\App\Http\Controllers\Inventory\Tool\ToolDashboardController::class, 'index'])->name('dashboard');
+            Route::get('/dashboard', [ToolDashboardController::class, 'index'])->name('dashboard');
             
             // Category
-            Route::resource('category', \App\Http\Controllers\Inventory\Tool\ToolCategoryController::class)->except(['create', 'edit', 'show']);
+            Route::resource('category', ToolCategoryController::class)->except(['create', 'edit', 'show']);
             // Master Specification
-            Route::resource('master', \App\Http\Controllers\Inventory\Tool\ToolMasterController::class)->except(['create', 'edit', 'show']);
+            Route::resource('master', ToolMasterController::class)->except(['create', 'edit', 'show']);
         });
 
         // User Access Management
-        Route::get('/inventory/user-access', [\App\Http\Controllers\Inventory\UserAccessController::class, 'index'])->name('inventory.userAccess.index');
-        Route::get('/inventory/user-access/data', [\App\Http\Controllers\Inventory\UserAccessController::class, 'data'])->name('inventory.userAccess.data');
-        Route::get('/inventory/user-access/search', [\App\Http\Controllers\Inventory\UserAccessController::class, 'searchUsers'])->name('inventory.userAccess.search');
-        Route::get('/inventory/user-access/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'getUserRole'])->name('inventory.userAccess.get');
-        Route::post('/inventory/user-access', [\App\Http\Controllers\Inventory\UserAccessController::class, 'store'])->name('inventory.userAccess.store');
-        Route::delete('/inventory/user-access/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'destroy'])->name('inventory.userAccess.destroy');
+        Route::get('/inventory/user-access', [UserAccessController::class, 'index'])->name('inventory.userAccess.index');
+        Route::get('/inventory/user-access/data', [UserAccessController::class, 'data'])->name('inventory.userAccess.data');
+        Route::get('/inventory/user-access/search', [UserAccessController::class, 'searchUsers'])->name('inventory.userAccess.search');
+        Route::get('/inventory/user-access/{id}', [UserAccessController::class, 'getUserRole'])->name('inventory.userAccess.get');
+        Route::post('/inventory/user-access', [UserAccessController::class, 'store'])->name('inventory.userAccess.store');
+        Route::delete('/inventory/user-access/{id}', [UserAccessController::class, 'destroy'])->name('inventory.userAccess.destroy');
 
         // User Specific Menu Permissions
-        Route::get('/inventory/user-menus/{userId}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'userMenuData'])->name('inventory.userMenus.data');
-        Route::post('/inventory/user-menus', [\App\Http\Controllers\Inventory\UserAccessController::class, 'updateUserMenu'])->name('inventory.userMenus.update');
+        Route::get('/inventory/user-menus/{userId}', [UserAccessController::class, 'userMenuData'])->name('inventory.userMenus.data');
+        Route::post('/inventory/user-menus', [UserAccessController::class, 'updateUserMenu'])->name('inventory.userMenus.update');
 
         // Role Management Extensions
-        Route::get('/inventory/roles/data', [\App\Http\Controllers\Inventory\UserAccessController::class, 'roleData'])->name('inventory.roles.data');
-        Route::get('/inventory/roles/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'getRole'])->name('inventory.roles.get');
-        Route::post('/inventory/roles', [\App\Http\Controllers\Inventory\UserAccessController::class, 'storeRole'])->name('inventory.roles.store');
-        Route::delete('/inventory/roles/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'destroyRole'])->name('inventory.roles.destroy');
+        Route::get('/inventory/roles/data', [UserAccessController::class, 'roleData'])->name('inventory.roles.data');
+        Route::get('/inventory/roles/{id}', [UserAccessController::class, 'getRole'])->name('inventory.roles.get');
+        Route::post('/inventory/roles', [UserAccessController::class, 'storeRole'])->name('inventory.roles.store');
+        Route::delete('/inventory/roles/{id}', [UserAccessController::class, 'destroyRole'])->name('inventory.roles.destroy');
         
         // Role Menu Permissions
-        Route::get('/inventory/role-menus/{roleId}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'roleMenuData'])->name('inventory.roleMenus.data');
-        Route::post('/inventory/role-menus', [\App\Http\Controllers\Inventory\UserAccessController::class, 'updateRoleMenu'])->name('inventory.roleMenus.update');
+        Route::get('/inventory/role-menus/{roleId}', [UserAccessController::class, 'roleMenuData'])->name('inventory.roleMenus.data');
+        Route::post('/inventory/role-menus', [UserAccessController::class, 'updateRoleMenu'])->name('inventory.roleMenus.update');
 
         // User Management Extensions
-        Route::get('/inventory/users/data', [\App\Http\Controllers\Inventory\UserAccessController::class, 'userData'])->name('inventory.users.data');
-        Route::get('/inventory/users/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'getUser'])->name('inventory.users.get');
-        Route::post('/inventory/users', [\App\Http\Controllers\Inventory\UserAccessController::class, 'storeUser'])->name('inventory.users.store');
-        Route::delete('/inventory/users/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'destroyUser'])->name('inventory.users.destroy');
+        Route::get('/inventory/users/data', [UserAccessController::class, 'userData'])->name('inventory.users.data');
+        Route::get('/inventory/users/{id}', [UserAccessController::class, 'getUser'])->name('inventory.users.get');
+        Route::post('/inventory/users', [UserAccessController::class, 'storeUser'])->name('inventory.users.store');
+        Route::delete('/inventory/users/{id}', [UserAccessController::class, 'destroyUser'])->name('inventory.users.destroy');
 
         // Menu Management Extensions
-        Route::get('/inventory/menus/data', [\App\Http\Controllers\Inventory\UserAccessController::class, 'menuData'])->name('inventory.menus.data');
-        Route::get('/inventory/menus/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'getMenu'])->name('inventory.menus.get');
-        Route::post('/inventory/menus', [\App\Http\Controllers\Inventory\UserAccessController::class, 'storeMenu'])->name('inventory.menus.store');
-        Route::delete('/inventory/menus/{id}', [\App\Http\Controllers\Inventory\UserAccessController::class, 'destroyMenu'])->name('inventory.menus.destroy');
+        Route::get('/inventory/menus/data', [UserAccessController::class, 'menuData'])->name('inventory.menus.data');
+        Route::get('/inventory/menus/{id}', [UserAccessController::class, 'getMenu'])->name('inventory.menus.get');
+        Route::post('/inventory/menus', [UserAccessController::class, 'storeMenu'])->name('inventory.menus.store');
+        Route::delete('/inventory/menus/{id}', [UserAccessController::class, 'destroyMenu'])->name('inventory.menus.destroy');
     });
     #Endregion
 
@@ -215,38 +226,38 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
 
     // Stock Opname (STO) (Admin, Approver, Checker, Operator)
     Route::middleware(['inventory.role:admin,approver,checker,operator,pic'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Inventory\StoController::class, 'index'])->name('index');
-        Route::get('/get-preview-code', [\App\Http\Controllers\Inventory\StoController::class, 'previewCode'])->name('previewCode');
-        Route::post('/', [\App\Http\Controllers\Inventory\StoController::class, 'store'])->name('store');
-        Route::get('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [\App\Http\Controllers\Inventory\StoController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'update'])->name('update');
-        Route::delete('/{id}', [\App\Http\Controllers\Inventory\StoController::class, 'destroy'])->name('destroy');
-        Route::get('/{id}/details-data', [\App\Http\Controllers\Inventory\StoController::class, 'detailsData'])->name('detailsData');
-        Route::post('/{id}/scan', [\App\Http\Controllers\Inventory\StoController::class, 'scan'])->name('scan');
-        Route::post('/{id}/save-count', [\App\Http\Controllers\Inventory\StoController::class, 'saveCount'])->name('saveCount');
-        Route::delete('/{id}/detail/{detailId}', [\App\Http\Controllers\Inventory\StoController::class, 'deleteDetail'])->name('deleteDetail');
-        Route::post('/{id}/submit-for-check', [\App\Http\Controllers\Inventory\StoController::class, 'submitForCheck'])->name('submitForCheck');
-        Route::post('/{id}/verify', [\App\Http\Controllers\Inventory\StoController::class, 'verify'])->name('verify');
-        Route::post('/{id}/reject', [\App\Http\Controllers\Inventory\StoController::class, 'reject'])->name('reject');
-        Route::post('/{id}/finalize', [\App\Http\Controllers\Inventory\StoController::class, 'finalize'])->name('finalize');
-        Route::post('/{id}/reopen', [\App\Http\Controllers\Inventory\StoController::class, 'reopen'])->name('reopen');
-        Route::get('/{id}/export-excel', [\App\Http\Controllers\Inventory\StoController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('/', [StoController::class, 'index'])->name('index');
+        Route::get('/get-preview-code', [StoController::class, 'previewCode'])->name('previewCode');
+        Route::post('/', [StoController::class, 'store'])->name('store');
+        Route::get('/{id}', [StoController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [StoController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [StoController::class, 'update'])->name('update');
+        Route::delete('/{id}', [StoController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/details-data', [StoController::class, 'detailsData'])->name('detailsData');
+        Route::post('/{id}/scan', [StoController::class, 'scan'])->name('scan');
+        Route::post('/{id}/save-count', [StoController::class, 'saveCount'])->name('saveCount');
+        Route::delete('/{id}/detail/{detailId}', [StoController::class, 'deleteDetail'])->name('deleteDetail');
+        Route::post('/{id}/submit-for-check', [StoController::class, 'submitForCheck'])->name('submitForCheck');
+        Route::post('/{id}/verify', [StoController::class, 'verify'])->name('verify');
+        Route::post('/{id}/reject', [StoController::class, 'reject'])->name('reject');
+        Route::post('/{id}/finalize', [StoController::class, 'finalize'])->name('finalize');
+        Route::post('/{id}/reopen', [StoController::class, 'reopen'])->name('reopen');
+        Route::get('/{id}/export-excel', [StoController::class, 'exportExcel'])->name('exportExcel');
     });
 
     // VAVE Analysis (Admin, Approver, Checker, Viewer)
     Route::middleware(['inventory.role:admin,approver,checker,viewer'])->prefix('inventory/vave')->name('inventory.vave.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'index'])->name('index');
-        Route::get('/data', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'data'])->name('data');
-        Route::get('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'showBase'])->name('showBase');
-        Route::post('/base', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'storeBase'])->name('storeBase');
-        Route::get('/comparison/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getComparison'])->name('getComparison');
-        Route::get('/comparison/{id}/export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportExcel'])->name('export');
-        Route::get('/summary-export', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
-        Route::get('/get-bases', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'getBases'])->name('getBases');
-        Route::get('/download-template', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
-        Route::match(['post', 'put'], '/import-data', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'importExcel'])->name('importExcel');
-        Route::delete('/base/{id}', [\App\Http\Controllers\Inventory\VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
+        Route::get('/', [VaveAnalysisController::class, 'index'])->name('index');
+        Route::get('/data', [VaveAnalysisController::class, 'data'])->name('data');
+        Route::get('/base/{id}', [VaveAnalysisController::class, 'showBase'])->name('showBase');
+        Route::post('/base', [VaveAnalysisController::class, 'storeBase'])->name('storeBase');
+        Route::get('/comparison/{id}', [VaveAnalysisController::class, 'getComparison'])->name('getComparison');
+        Route::get('/comparison/{id}/export', [VaveAnalysisController::class, 'exportExcel'])->name('export');
+        Route::get('/summary-export', [VaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
+        Route::get('/get-bases', [VaveAnalysisController::class, 'getBases'])->name('getBases');
+        Route::get('/download-template', [VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::match(['post', 'put'], '/import-data', [VaveAnalysisController::class, 'importExcel'])->name('importExcel');
+        Route::delete('/base/{id}', [VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
     });
 
     // Purchase Requisition (Admin, Approver, Checker)

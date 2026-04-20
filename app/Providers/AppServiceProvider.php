@@ -69,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
                     ->where('p.is_active', 1)
                     ->get()
                     ->map(function ($item) {
-                        $currentPCS = \App\Models\InventoryModel\InventoryProduct::calculatePcs(
+                        $currentPCS = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
                             $item->current_stock_qty, 
                             $item->weight_kg, 
                             $item->pcs_per_unit, 
@@ -78,7 +78,7 @@ class AppServiceProvider extends ServiceProvider
                             $item->gross_coil
                         );
 
-                        $item->status = ucfirst(\App\Models\InventoryModel\InventoryProduct::calculateStockStatus(
+                        $item->status = ucfirst(\App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
                             $currentPCS, 
                             $item->min_stock, 
                             $item->product_status ?: $item->project_status

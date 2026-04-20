@@ -2,10 +2,10 @@
 
 namespace App\Imports;
 
-use App\Models\InventoryModel\VaveBase;
-use App\Models\InventoryModel\VaveBaseSuffix;
-use App\Models\InventoryModel\MaterialSpec;
-use App\Models\InventoryModel\Unit;
+use App\Models\InventoryModel\Material\VaveBase;
+use App\Models\InventoryModel\Material\VaveBaseSuffix;
+use App\Models\InventoryModel\Material\MaterialSpec;
+use App\Models\InventoryModel\Material\Unit;
 use App\Models\Products;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

@@ -19,21 +19,20 @@
 
 @if(isset($menu->type) && $menu->type === 'header')
     {{-- SECTION HEADER (COLLAPSIBLE) --}}
-    <div x-data="{ sectionOpen: {{ $isActive ? 'true' : 'false' }} }" class="section-container mb-1">
-        <button @click="sectionOpen = !sectionOpen; sidebarExpanded = true" 
-            class="w-full flex items-center justify-between px-3 pt-4 pb-2 group cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-700/30 rounded-xs transition-colors">
+    <div x-data="{ sectionOpen: localStorage.getItem('section_' + {{ $menu->id }}) === 'true' || {{ $isActive ? 'true' : 'false' }} }" 
+         class="section-container mb-1 {{ ($depth ?? 0) === 0 ? 'border-t border-slate-200 dark:border-gray-700/50 mt-2 first:border-0 first:mt-0' : '' }}">
+        <button x-show="sidebarExpanded" @click="sectionOpen = !sectionOpen; localStorage.setItem('section_' + {{ $menu->id }}, sectionOpen); sidebarExpanded = true" 
+            class="section-header-button w-full flex items-center justify-between px-3 pt-4 pb-2 group cursor-pointer hover:bg-slate-50 dark:hover:bg-gray-700/30 rounded-xs transition-colors">
             
-            <div class="flex items-center gap-2 overflow-hidden">
-                <span x-show="sidebarExpanded" class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap transition-all duration-300">
-                    {{ $menu->title }}
-                </span>
-            </div>
+            <span x-show="sidebarExpanded" class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest whitespace-nowrap transition-all duration-300 text-left">
+                {{ $menu->title }}
+            </span>
 
             <i x-show="sidebarExpanded" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"
                :class="sectionOpen ? 'rotate-180' : ''"></i>
         </button>
         
-        <div x-show="sectionOpen && sidebarExpanded" 
+        <div x-show="sectionOpen" 
              x-collapse 
              style="display: {{ $isActive ? 'block' : 'none' }}"
              class="space-y-1">
@@ -46,8 +45,8 @@
 
 @elseif($hasChildren)
     {{-- PARENT MENU WITH DROPDOWN (RECURSIVE) --}}
-    <div x-data="{ open: {{ $isActive ? 'true' : 'false' }} }" class="relative w-full">
-        <button @click="open = !open; sidebarExpanded = true"
+    <div x-data="{ open: localStorage.getItem('menu_open_' + {{ $menu->id }}) === 'true' || {{ $isActive ? 'true' : 'false' }} }" class="relative w-full">
+        <button @click="open = !open; localStorage.setItem('menu_open_' + {{ $menu->id }}, open); sidebarExpanded = true"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xs transition-all duration-200 group relative
             {{ $isActive ? 'bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-400 font-semibold' : 'text-slate-600 dark:text-gray-300 hover:bg-slate-50 dark:hover:bg-gray-700/50 hover:text-slate-900 dark:hover:text-white' }}"
             :class="!sidebarExpanded ? 'justify-center' : ''">
@@ -72,7 +71,8 @@
         {{-- SUBMENU ITEMS (RECURSIVE CALL) --}}
         <div x-show="open && sidebarExpanded" 
              x-collapse 
-             class="submenu-container space-y-1 mt-1 {{ ($depth ?? 0) === 0 ? 'pl-4' : 'pl-3' }}"
+             class="submenu-container space-y-1 mt-1 transition-all duration-300"
+             :class="sidebarExpanded ? '{{ ($depth ?? 0) === 0 ? 'pl-4' : 'pl-3' }}' : 'pl-0'"
              style="display: {{ $isActive ? 'block' : 'none' }}">
             @foreach($menu->children as $child)
                 @include('layouts.partials.sidebar_item', ['menu' => $child, 'depth' => ($depth ?? 0) + 1])

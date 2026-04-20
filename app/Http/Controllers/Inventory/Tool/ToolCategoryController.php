@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Inventory\Tool;
 
 use App\Http\Controllers\Controller;
-use App\Models\InventoryModel\TolCategory;
+use App\Models\InventoryModel\Tool\TolCategory;
 use Illuminate\Http\Request;
 
 class ToolCategoryController extends Controller

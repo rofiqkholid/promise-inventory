@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Inventory\Tool;
 
 use App\Http\Controllers\Controller;
-use App\Models\InventoryModel\TolTool;
-use App\Models\InventoryModel\TolCategory;
+use App\Models\InventoryModel\Tool\TolTool;
+use App\Models\InventoryModel\Tool\TolCategory;
 use Illuminate\Http\Request;
 
 class ToolMasterController extends Controller
@@ -23,7 +23,7 @@ class ToolMasterController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'category_id' => 'required|exists:App\Models\InventoryModel\TolCategory,id',
+            'category_id' => 'required|exists:App\Models\InventoryModel\Tool\TolCategory,id',
             'name' => 'required|string|max:150',
             'brand' => 'required|string|max:100',
             'spec_code' => 'nullable|string|max:100',
@@ -43,7 +43,7 @@ class ToolMasterController extends Controller
     {
         $tool = TolTool::findOrFail($id);
         $validated = $request->validate([
-            'category_id' => 'required|exists:App\Models\InventoryModel\TolCategory,id',
+            'category_id' => 'required|exists:App\Models\InventoryModel\Tool\TolCategory,id',
             'name' => 'required|string|max:150',
             'brand' => 'required|string|max:100',
             'spec_code' => 'nullable|string|max:100',

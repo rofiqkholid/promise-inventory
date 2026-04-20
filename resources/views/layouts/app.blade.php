@@ -37,13 +37,6 @@
 
     @yield('css')
     @stack('styles')
-    <style>
-        /* Prevent Sidebar Flickering */
-        .sidebar-collapsed .logo-label,
-        .sidebar-collapsed .side-label {
-            display: none !important;
-        }
-    </style>
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 text-slate-800 dark:text-gray-200 antialiased">

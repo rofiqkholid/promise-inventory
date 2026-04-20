@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\InventoryModel\StoEvent;
+use App\Models\InventoryModel\Material\StoEvent;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;

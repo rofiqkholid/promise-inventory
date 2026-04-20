@@ -396,17 +396,44 @@ textarea[disabled] {
 }
 
 
+/* 
+   ==========================================================================
+   SIDEBAR & NAVIGATION
+   ========================================================================== 
+*/
+
 /* Sidebar Toggle Label Continuity (Zero Flicker) */
-.side-label {
+.side-label,
+.logo-label {
     display: inline-block;
 }
 
+.section-header-button {
+    display: flex !important;
+}
+
 .sidebar-collapsed .side-label,
-.sidebar-collapsed .submenu-container {
+.sidebar-collapsed .logo-label,
+.sidebar-collapsed .section-header-button {
     display: none !important;
 }
 
-/* Specific for Logo/Header container inside sidebar */
-.sidebar-collapsed .logo-label {
-    display: none !important;
+/* Force Centering when collapsed (Pre-Alpine) */
+.sidebar-collapsed .section-container {
+    border-top-color: #e2e8f0 !important; /* Slate-200 for better visibility */
+    margin-top: 1rem !important;
+}
+.dark .sidebar-collapsed .section-container {
+    border-top-color: #334155 !important; /* Gray-700 */
+}
+
+.sidebar-collapsed nav a, 
+.sidebar-collapsed nav button:not(.section-header-button) {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.sidebar-collapsed .submenu-container {
+    padding-left: 0 !important;
 }
