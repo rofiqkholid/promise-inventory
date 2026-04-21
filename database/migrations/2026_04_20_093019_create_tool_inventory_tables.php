@@ -95,7 +95,7 @@ return new class extends Migration
             $table->index('transacted_at');
             $table->foreign('tool_id')->references('id')->on('tol_m_tools')->onUpdate('cascade');
             $table->foreign('location_id')->references('id')->on('tol_m_locations')->onUpdate('cascade');
-            $table->foreign('transacted_by')->references('id')->on('users')->onUpdate('cascade');
+            $table->foreign('transacted_by')->references('id')->on('users');
         });
 
         // 6. tol_t_sto_fast
@@ -117,8 +117,8 @@ return new class extends Migration
             $table->index('sto_date');
             $table->foreign('tool_id')->references('id')->on('tol_m_tools')->onUpdate('cascade');
             $table->foreign('location_id')->references('id')->on('tol_m_locations')->onUpdate('cascade');
-            $table->foreign('conducted_by')->references('id')->on('users')->onUpdate('cascade');
-            $table->foreign('approved_by')->references('id')->on('users')->onUpdate('cascade');
+            $table->foreign('conducted_by')->references('id')->on('users');
+            $table->foreign('approved_by')->references('id')->on('users');
         });
 
         // 7. tol_t_slow_batches
@@ -143,7 +143,7 @@ return new class extends Migration
             $table->index('purchase_date');
             $table->foreign('tool_id')->references('id')->on('tol_m_tools')->onUpdate('cascade');
             $table->foreign('location_id')->references('id')->on('tol_m_locations')->onUpdate('cascade');
-            $table->foreign('nok_by')->references('id')->on('users')->onUpdate('cascade');
+            $table->foreign('nok_by')->references('id')->on('users');
         });
 
         // 8. tol_t_sto_slow
@@ -166,8 +166,8 @@ return new class extends Migration
 
             $table->index('sto_date');
             $table->foreign('batch_id')->references('id')->on('tol_t_slow_batches')->onUpdate('cascade');
-            $table->foreign('conducted_by')->references('id')->on('users')->onUpdate('cascade');
-            $table->foreign('approved_by')->references('id')->on('users')->onUpdate('cascade');
+            $table->foreign('conducted_by')->references('id')->on('users');
+            $table->foreign('approved_by')->references('id')->on('users');
         });
     }
 
