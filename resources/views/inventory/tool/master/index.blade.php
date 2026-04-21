@@ -96,7 +96,12 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">UOM <span class="text-red-500">*</span></label>
-                        <input type="text" name="uom" required value="PCS" class="bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs block w-full p-3">
+                        <select name="uom" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                            <option value="PCS">PCS</option>
+                            <option value="BOX">BOX</option>
+                            <option value="SET">SET</option>
+                            <option value="ROLL">ROLL</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs / Unit <span class="text-red-500">*</span></label>

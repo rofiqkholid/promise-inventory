@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TolCategory extends Model
 {
     protected $table = 'tol_m_categories';
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'moving_type', 'description', 'is_active'];
 
     public function tools()
     {

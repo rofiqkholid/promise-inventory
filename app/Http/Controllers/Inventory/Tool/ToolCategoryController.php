@@ -20,8 +20,9 @@ class ToolCategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'description' => 'nullable|string',
+            'name'         => 'required|string|max:100',
+            'moving_type'  => 'required|in:fast,slow',
+            'description'  => 'nullable|string',
         ]);
 
         TolCategory::create($validated);
@@ -32,8 +33,9 @@ class ToolCategoryController extends Controller
     {
         $category = TolCategory::findOrFail($id);
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'description' => 'nullable|string',
+            'name'         => 'required|string|max:100',
+            'moving_type'  => 'required|in:fast,slow',
+            'description'  => 'nullable|string',
         ]);
 
         $category->update($validated);

@@ -21,6 +21,7 @@
             <tr>
                 <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Name</th>
+                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Moving Type</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Description</th>
                 <th scope="col" class="px-6 py-4 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
             </tr>
@@ -46,6 +47,13 @@
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Category Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. Endmill">
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Moving Type <span class="text-red-500">*</span></label>
+                    <select name="moving_type" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                        <option value="fast">Fast Moving (qty-based, e.g. Endmill, Drill)</option>
+                        <option value="slow">Slow Moving (asset-based, e.g. Arbor, Collet)</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Description</label>
@@ -76,12 +84,18 @@
             columns: [
                 { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                 { data: 'name' },
+                {
+                    data: 'moving_type', className: 'text-center',
+                    render: d => d === 'slow'
+                        ? '<span class="px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">Slow Moving</span>'
+                        : '<span class="px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Fast Moving</span>'
+                },
                 { data: 'description', render: d => d || '-' },
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center', width: '100px',
                     render: (d, t, r) => `
                         <div class="flex items-center justify-center gap-1.5">
-                             <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.id}" data-name="${r.name}" data-description="${r.description || ''}" title="Edit">
+                             <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.id}" data-name="${r.name}" data-moving-type="${r.moving_type}" data-description="${r.description || ''}" title="Edit">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
                             <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.id}" title="Delete">
@@ -109,6 +123,7 @@
             $('#categoryForm')[0].reset();
             $('#categoryId').val($(this).data('id'));
             $('input[name="name"]').val($(this).data('name'));
+            $('select[name="moving_type"]').val($(this).data('moving-type'));
             $('textarea[name="description"]').val($(this).data('description'));
             $('input[name="_method"]').val('PUT');
             $('#modal-title').text('Edit Category');

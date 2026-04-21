@@ -23,6 +23,12 @@ use App\Http\Controllers\Inventory\Tool\ToolDashboardController;
 use App\Http\Controllers\Inventory\Tool\ToolCategoryController;
 use App\Http\Controllers\Inventory\Tool\ToolMasterController;
 
+use App\Http\Controllers\Inventory\Tool\ToolLocationController;
+use App\Http\Controllers\Inventory\Tool\ToolFastStockController;
+use App\Http\Controllers\Inventory\Tool\ToolSlowBatchController;
+use App\Http\Controllers\Inventory\Tool\ToolStoFastController;
+use App\Http\Controllers\Inventory\Tool\ToolStoSlowController;
+
 use App\Http\Controllers\Inventory\Material\UnitController;
 use App\Http\Controllers\Inventory\Material\RankController;
 use App\Http\Controllers\Inventory\Material\SupplierController;
@@ -158,15 +164,53 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::resource('vave-base-suffix', VaveBaseSuffixController::class)->names('vave-base-suffix')->except(['create', 'edit', 'index']);
         });
 
-        // Tool Master Data Grouped Routes
+        // Tool Inventory Grouped Routes
         Route::prefix('inventory/tool')->name('inventory.tool.')->group(function () {
             // Dashboard
             Route::get('/dashboard', [ToolDashboardController::class, 'index'])->name('dashboard');
-            
-            // Category
+
+            // Master — Category
             Route::resource('category', ToolCategoryController::class)->except(['create', 'edit', 'show']);
-            // Master Specification
+
+            // Master — Tool Specification
             Route::resource('master', ToolMasterController::class)->except(['create', 'edit', 'show']);
+
+            // Master — Location
+            Route::get('/location', [ToolLocationController::class, 'index'])->name('location.index');
+            Route::resource('location', ToolLocationController::class)->except(['create', 'edit', 'show', 'index']);
+
+            // Operational — Fast Moving Stock (IN / OUT / List)
+            Route::prefix('fast-stock')->name('fast-stock.')->group(function () {
+                Route::get('/', [ToolFastStockController::class, 'index'])->name('index');
+                Route::post('/', [ToolFastStockController::class, 'store'])->name('store');        // IN
+                Route::post('/out', [ToolFastStockController::class, 'out'])->name('out');          // OUT
+                Route::get('/history', [ToolFastStockController::class, 'history'])->name('history');
+            });
+
+            // Operational — Slow Moving Batches
+            Route::prefix('slow-batch')->name('slow-batch.')->group(function () {
+                Route::get('/', [ToolSlowBatchController::class, 'index'])->name('index');
+                Route::post('/', [ToolSlowBatchController::class, 'store'])->name('store');
+                Route::put('/{id}', [ToolSlowBatchController::class, 'update'])->name('update');
+                Route::get('/total-asset', [ToolSlowBatchController::class, 'totalAssetValue'])->name('totalAsset');
+            });
+
+            // STO — Fast Moving
+            Route::prefix('sto-fast')->name('sto-fast.')->group(function () {
+                Route::get('/', [ToolStoFastController::class, 'index'])->name('index');
+                Route::post('/', [ToolStoFastController::class, 'store'])->name('store');
+                Route::post('/{id}/approve', [ToolStoFastController::class, 'approve'])->name('approve');
+                Route::delete('/{id}', [ToolStoFastController::class, 'destroy'])->name('destroy');
+            });
+
+            // STO — Slow Moving
+            Route::prefix('sto-slow')->name('sto-slow.')->group(function () {
+                Route::get('/', [ToolStoSlowController::class, 'index'])->name('index');
+                Route::post('/', [ToolStoSlowController::class, 'store'])->name('store');
+                Route::post('/preview', [ToolStoSlowController::class, 'preview'])->name('preview');
+                Route::post('/{id}/approve', [ToolStoSlowController::class, 'approve'])->name('approve');
+                Route::delete('/{id}', [ToolStoSlowController::class, 'destroy'])->name('destroy');
+            });
         });
 
         // User Access Management
