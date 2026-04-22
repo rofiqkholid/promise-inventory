@@ -95,7 +95,7 @@
                             <span class="text-[0.65rem] font-semibold text-gray-700 dark:text-gray-300">NPC</span>
                         </a>
 
-                        <a href="{{ env('APP_DASH_URL') }}"
+                        <a href="{{ env('APP_ALL_DASHBOARD_URL') }}"
                             class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
                             <div class="w-11 h-11 rounded-full flex items-center justify-center bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 mb-2 group-hover:scale-110 transition-transform shadow-sm">
                                 <i class="fa-solid fa-chart-pie text-lg"></i>
