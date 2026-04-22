@@ -1,19 +1,25 @@
 @extends('layouts.app')
-@section('title', 'Stock Monitoring')
-@section('page_title', 'Stock Monitoring')
-@section('header-title', 'Stock Monitoring')
+@section('title', 'Material Monitoring')
+@section('page_title', 'Material Monitoring')
+@section('header-title', 'Material Monitoring')
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter leading-none">Stock Monitoring</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Real-time status of parts balance and consumption.</p>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter leading-none">Material Monitoring</h2>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Real-time status of material balance and usage.</p>
         </div>
 
         {{-- Action Toolbar --}}
         <div class="flex items-center gap-2 mt-4 sm:mt-0 relative">
+            {{-- Mode Switch --}}
+            <div class="bg-slate-100 dark:bg-gray-900/50 p-1 rounded-xs flex items-center mr-2 border border-slate-200 dark:border-gray-700">
+                <button id="mode-balance" class="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-all duration-200 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm">Balance Stock</button>
+                <button id="mode-usage" class="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-all duration-200 text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200">Material Usage</button>
+            </div>
+
             <button id="btnToggleFilter" class="h-10 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Toggle Filters">
                 <i class="fa-solid fa-filter text-sm mr-2.5"></i>
                 <span class="text-[11px] font-bold uppercase tracking-wider">Filters</span>
@@ -36,33 +42,37 @@
                     <div class="space-y-2 mb-4">
                         <div class="flex items-center text-xs">
                             <span class="w-2.5 h-2.5 rounded-full bg-primary-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Over <span class="text-gray-400 text-[10px] tracking-tighter">(&gt; Max)</span></div>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Over <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &gt; [Min Stock x 3])</span></div>
                         </div>
                         <div class="flex items-center text-xs">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Safe <span class="text-gray-400 text-[10px] tracking-tighter">(Min - Max)</span></div>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Safe <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock to [Min Stock x 3])</span></div>
                         </div>
                         <div class="flex items-center text-xs">
                             <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Warning <span class="text-gray-400 text-[10px] tracking-tighter">(Min-30 - Min-1)</span></div>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Warning <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock-30 to Min Stock)</span></div>
                         </div>
                         <div class="flex items-center text-xs">
                             <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0 animate-pulse"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Critical <span class="text-gray-400 text-[10px] tracking-tighter">(&lt; Min-30)</span></div>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Critical <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &lt; Min Stock-30)</span></div>
                         </div>
                     </div>
 
                     <div class="border-t border-gray-100 dark:border-gray-700 my-3"></div>
 
-                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Trial Validation</h4>
-                    <div class="space-y-2">
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Trial Material Usage</h4>
+                    <div class="space-y-2 mb-4">
                         <div class="flex items-center text-xs">
-                            <span class="px-1.5 py-0.5 rounded-xs bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 font-bold mr-2 text-[10px]">WARN</span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Near Limit <span class="text-gray-400 text-[10px] tracking-tighter">(&gt; Limit-50)</span></div>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">On Budget <span class="text-gray-400 text-[10px] tracking-tighter">(Usage 0 to Rank-50)</span></div>
                         </div>
                         <div class="flex items-center text-xs">
-                            <span class="px-1.5 py-0.5 rounded-xs bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 font-bold mr-2 text-[10px]">CRIT</span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Over Limit <span class="text-gray-400 text-[10px] tracking-tighter">(&gt; Limit)</span></div>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Near Loss <span class="text-gray-400 text-[10px] tracking-tighter">(Usage Rank-49 to Rank)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Loss <span class="text-gray-400 text-[10px] tracking-tighter">(Usage &gt; Rank)</span></div>
                         </div>
                     </div>
                 </div>
@@ -106,7 +116,7 @@
                     <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Project Status</label>
                     <div class="w-full">
                         <select id="filter_project_status" class="select2 w-full">
-                            <option value="">All Statuses</option>
+                            <option value="">All Status</option>
                             @foreach($project_statuses as $ps)
                                 <option value="{{ $ps }}">{{ $ps }}</option>
                             @endforeach
@@ -115,15 +125,28 @@
                 </div>
 
                 <!-- Stock Status -->
-                <div class="space-y-1.5">
+                <div class="space-y-1.5" id="filter_status_container">
                     <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Stock Status</label>
                     <div class="w-full">
                         <select id="filter_status" class="select2 w-full">
                             <option value="">All Status</option>
-                            <option value="safe">Safe Stock</option>
+                            <option value="safe">Safe</option>
                             <option value="warning">Warning</option>
                             <option value="critical">Critical</option>
-                            <option value="over">Over Stock</option>
+                            <option value="over">Over</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Usage Status (Hidden by default) -->
+                <div class="space-y-1.5 hidden" id="filter_usage_status_container">
+                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Usage Status</label>
+                    <div class="w-full">
+                        <select id="filter_usage_status" class="select2 w-full">
+                            <option value="">All Status</option>
+                            <option value="on_budget">On Budget</option>
+                            <option value="near_loss">Near Loss</option>
+                            <option value="loss">Loss</option>
                         </select>
                     </div>
                 </div>
@@ -139,7 +162,7 @@
     </div>
     
     {{-- Individual KPI Cards - Forced Single Row --}}
-    <div class="flex flex-nowrap gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+    <div id="kpi-balance" class="flex flex-nowrap gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
         <!-- Total -->
         <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
             <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
@@ -147,7 +170,7 @@
             </div>
             <div>
                 <div class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Parts</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['total'] ?? 0) }}</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['total'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -158,7 +181,7 @@
             </div>
             <div>
                 <div class="text-[9px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1">Safe Stock</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['safe'] ?? 0) }}</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['safe'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -169,7 +192,7 @@
             </div>
             <div>
                 <div class="text-[9px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1">Warning</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['warning'] ?? 0) }}</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['warning'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -180,7 +203,7 @@
             </div>
             <div>
                 <div class="text-[9px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest mb-1">Critical</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['critical'] ?? 0) }}</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['critical'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -191,43 +214,113 @@
             </div>
             <div>
                 <div class="text-[9px] font-bold text-primary-600 dark:text-primary-500 uppercase tracking-widest mb-1">Over Stock</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['over'] ?? 0) }}</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['over'] ?? 0) }}</div>
+            </div>
+        </div>
+    </div>
+    
+    {{-- Individual KPI Cards - Usage / Out Trial --}}
+    <div id="kpi-usage" class="hidden flex-nowrap gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+        <!-- Total Trial Parts -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
+                <i class="fa-solid fa-flask"></i>
+            </div>
+            <div>
+                <div class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Trial Parts</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['total'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- On Budget -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
+            <div class="w-10 h-10 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg">
+                <i class="fa-solid fa-piggy-bank"></i>
+            </div>
+            <div>
+                <div class="text-[9px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1">On Budget</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['on_budget'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- Near Loss -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
+            <div class="w-10 h-10 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-lg">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <div>
+                <div class="text-[9px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1">Near Loss</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['near_loss'] ?? 0) }}</div>
+            </div>
+        </div>
+
+        <!-- Loss -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
+            <div class="w-10 h-10 rounded-xs bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center text-red-600 dark:text-red-400 text-lg">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+            <div>
+                <div class="text-[9px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest mb-1">Loss</div>
+                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['loss'] ?? 0) }}</div>
             </div>
         </div>
     </div>
 
 
 
-    {{-- DataTable --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
-        <x-table id="stockMonitoringTable">
-            <thead>
-                <tr>
-                    <th rowspan="2" class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
-                    <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Model</th>
-                    <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
-                    <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
-                    <th colspan="{{ 2 + max(1, $categories->count()) + 2 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">Current Balance & Movement</th>
-                    <th rowspan="2" class="w-20 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
-                </tr>
-                <tr>
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Min Stock</th>
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Balance</th>
+    {{-- DataTables Wrapper --}}
+    <div id="balanceView">
+        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+            <x-table id="stockMonitoringTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
+                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Model</th>
+                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
+                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
+                        <th colspan="{{ 2 + max(1, $categories->count()) + 2 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">Current Balance & Movement</th>
+                        <th rowspan="2" class="w-20 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
+                    </tr>
+                    <tr>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Min Stock</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Balance</th>
 
-                    @foreach($categories as $cat)
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{{ $cat->code }}</th>
-                    @endforeach
-                    
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-amber-50/30 dark:bg-amber-900/10">STO GAP</th>
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount</th>
+                        @foreach($categories as $cat)
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{{ $cat->code }}</th>
+                        @endforeach
+                        
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-amber-50/30 dark:bg-amber-900/10">STO GAP</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount</th>
 
-                    @if($categories->count() === 0)
-                    <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px]">-</th>
-                    @endif
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </x-table>
+                        @if($categories->count() === 0)
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px]">-</th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </x-table>
+        </div>
+    </div>
+
+    <div id="usageView" class="hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+            <x-table id="usageTable">
+                <thead>
+                    <tr>
+                        <th class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Model</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Project Status</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Supplier</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Rank</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Out-Trial</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-amber-50/30 dark:bg-amber-900/10">Gap</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </x-table>
+        </div>
     </div>
 
     {{-- Popover Components --}}
@@ -257,8 +350,10 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        // DataTable Configuration
-        let columns = [{
+        let currentMode = 'balance'; // 'balance' or 'usage'
+        
+        // Base Columns Configuration
+        let baseColumns = [{
                 data: null,
                 orderable: false, // Not sortable
                 searchable: false,
@@ -393,6 +488,9 @@
             }
         };
 
+        // Clone base columns for balance table
+        let balanceColumns = [...baseColumns];
+        
         const categories = <?php echo json_encode(isset($categories) ? $categories->values() : []); ?>;
 
         if (Array.isArray(categories) && categories.length > 0) {
@@ -401,7 +499,7 @@
                 let alias = 'usage_' + safeCode;
 
                 if (cat.is_trial) {
-                    columns.push({
+                    balanceColumns.push({
                         data: alias,
                         className: 'text-center',
                         defaultContent: '-',
@@ -417,7 +515,7 @@
                         }
                     });
                 } else {
-                    columns.push({
+                    balanceColumns.push({
                         data: alias,
                         className: 'text-center text-[10px] font-medium text-gray-500',
                         defaultContent: '-'
@@ -426,19 +524,19 @@
             });
         }
         
-        columns.push(stoColumnDef);
-        columns.push(amountColumnDef);
+        balanceColumns.push(stoColumnDef);
+        balanceColumns.push(amountColumnDef);
 
         if (!(Array.isArray(categories) && categories.length > 0)) {
-            columns.splice(columns.length - 1, 0, {
+            balanceColumns.splice(balanceColumns.length - 1, 0, {
                 data: null,
                 defaultContent: '-',
                 className: 'text-center text-gray-300 font-mono text-[10px]'
             });
         }
 
-        // Add Action Column
-        columns.push({
+        // Add Action Column for Balance
+        balanceColumns.push({
             data: null,
             orderable: false,
             searchable: false,
@@ -465,7 +563,7 @@
                 }
             },
             order: [[1, 'asc']], // Default sort by Part Information
-            columns: columns,
+            columns: balanceColumns,
             createdRow: function(row, data, dataIndex) {
                 if (data.stock_status === 'critical') {
                     $(row).addClass('bg-red-50 dark:bg-red-900/10');
@@ -477,11 +575,122 @@
             }
         });
 
+        // Setup Usage Table
+        let usageColumns = [...baseColumns.slice(0, 4)]; // Take only No, Model, Part No, Status
+        
+        // Add Usage specific columns
+        usageColumns.push(
+            {
+                data: 'supplier_name',
+                className: 'text-left text-[11px] font-medium text-slate-700 dark:text-gray-300',
+                render: d => d || '-'
+            },
+            {
+                data: 'rank_value',
+                className: 'text-center font-mono font-bold text-slate-600 dark:text-gray-300 text-[11px]',
+                render: d => d || '0'
+            },
+            {
+                data: 'out_trial_value',
+                className: 'text-center font-mono font-bold text-primary-600 dark:text-primary-400 text-[11px]',
+                render: d => d || '0'
+            },
+            {
+                data: 'gap',
+                className: 'text-center font-mono font-bold text-[11px]',
+                render: function(data, type, row) {
+                    let val = parseFloat(data) || 0;
+                    let colorClass = val >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+                    return `<span class="${colorClass}">${data}</span>`;
+                }
+            },
+            {
+                data: 'material_usage_status',
+                className: 'text-center',
+                render: function(data) {
+                    let colorClass = 'bg-slate-50 text-slate-600 border-slate-100';
+                    if (data === 'Loss') colorClass = 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/50';
+                    else if (data === 'Near Loss') colorClass = 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50';
+                    else if (data === 'On Budget') colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50';
+                    
+                    return `<span class="px-2.5 py-1 rounded-xs border ${colorClass} text-[9px] font-bold uppercase tracking-widest inline-block">${data || '-'}</span>`;
+                }
+            }
+        );
+
+        const usageTable = window.defaultDataTable('#usageTable', {
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: "{{ route('inventory.stockMonitoring.data') }}",
+                data: function(d) {
+                    d.customer_id = $('#filter_customer').val();
+                    d.model_id = $('#filter_model').val();
+                    d.project_status = $('#filter_project_status').val();
+                    d.usage_status = $('#filter_usage_status').val();
+                }
+            },
+            order: [[1, 'asc']],
+            columns: usageColumns,
+            createdRow: function(row, data, dataIndex) {
+                if (data.material_usage_status === 'Loss') {
+                    $(row).addClass('bg-red-50 dark:bg-red-900/10');
+                } else if (data.material_usage_status === 'Near Loss') {
+                    $(row).addClass('bg-amber-50 dark:bg-amber-900/10');
+                }
+            }
+        });
+
+        // Mode Toggling Logic
+        $('#mode-balance').click(function() {
+            currentMode = 'balance';
+            $(this).addClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').removeClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
+            $('#mode-usage').removeClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').addClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
+            
+            $('#kpi-balance').removeClass('hidden').addClass('flex');
+            $('#kpi-usage').addClass('hidden').removeClass('flex');
+            
+            $('#balanceView').removeClass('hidden');
+            $('#usageView').addClass('hidden');
+            
+            $('#filter_status_container').show();
+            $('#filter_usage_status_container').addClass('hidden');
+            $('#filter_usage_status').val('').trigger('change.select2');
+            
+            // Re-adjust columns for balance table since it might have been hidden
+            setTimeout(function() {
+                if ($.fn.dataTable) table.columns.adjust();
+            }, 50);
+        });
+
+        $('#mode-usage').click(function() {
+            currentMode = 'usage';
+            $(this).addClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').removeClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
+            $('#mode-balance').removeClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').addClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
+            
+            $('#kpi-usage').removeClass('hidden').addClass('flex');
+            $('#kpi-balance').addClass('hidden').removeClass('flex');
+            
+            $('#usageView').removeClass('hidden');
+            $('#balanceView').addClass('hidden');
+            
+            $('#filter_status_container').hide();
+            $('#filter_status').val('').trigger('change.select2'); // Reset stock status filter when moving to usage
+
+            $('#filter_usage_status_container').removeClass('hidden');
+            
+            // Re-adjust columns for usage table
+            setTimeout(function() {
+                if ($.fn.dataTable) usageTable.columns.adjust();
+            }, 50);
+        });
+
         // Search from URL parameter initialization
         const urlParams = new URLSearchParams(window.location.search);
         const searchVal = urlParams.get('search');
         if (searchVal) {
             table.search(searchVal).draw();
+            usageTable.search(searchVal).draw();
         }
 
         // Filter Toggle Logic
@@ -523,20 +732,16 @@
         $(document).on('click', 'button[\\@click*="toggleSidebar"]', function() {
             setTimeout(function() {
                 if ($.fn.dataTable) {
-                    $.fn.dataTable.tables({
-                        visible: true,
-                        api: true
-                    }).columns.adjust();
+                    if (currentMode === 'balance') table.columns.adjust();
+                    else usageTable.columns.adjust();
                 }
             }, 300);
         });
 
         $(window).on('resize', function() {
             if ($.fn.dataTable) {
-                $.fn.dataTable.tables({
-                    visible: true,
-                    api: true
-                }).columns.adjust();
+                if (currentMode === 'balance') table.columns.adjust();
+                else usageTable.columns.adjust();
             }
         });
 
@@ -544,10 +749,11 @@
         $('#btnExportExcel').on('click', function() {
             const params = {
                 stock_status: $('#filter_status').val(),
+                usage_status: $('#filter_usage_status').val(),
                 customer_id: $('#filter_customer').val(),
                 model_id: $('#filter_model').val(),
                 project_status: $('#filter_project_status').val(),
-                search: table.search()
+                search: currentMode === 'balance' ? table.search() : usageTable.search()
             };
             
             const queryString = $.param(params);
@@ -568,8 +774,16 @@
         });
 
         // Filter Handlers
-        $('#filter_status, #filter_customer, #filter_model, #filter_project_status').on('change', function() {
-            table.draw();
+        $('#filter_customer, #filter_model, #filter_project_status, #filter_status, #filter_usage_status').on('change', function() {
+            if (currentMode === 'balance') table.draw();
+            else usageTable.draw();
+        });
+
+        // Reset Filters
+        $('#reset_filters').click(function() {
+            $('#filter_customer, #filter_model, #filter_project_status, #filter_status, #filter_usage_status').val('').trigger('change.select2');
+            if (currentMode === 'balance') table.draw();
+            else usageTable.draw();
         });
 
         // Load Models Function
@@ -610,6 +824,7 @@
             $('#filter_status').val('').trigger('change.select2');
             
             table.search('').columns().search('').draw();
+            usageTable.search('').columns().search('').draw();
         });
 
         // Dynamic Model Loading

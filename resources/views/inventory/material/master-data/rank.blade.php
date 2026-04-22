@@ -22,6 +22,7 @@
             <tr>
                 <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Code</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Process Type</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Limit Value</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Description</th>
                 <th scope="col" class="px-6 py-4 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
@@ -45,7 +46,17 @@
                 @csrf
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
-                    <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. A">
+                    <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. 1-A">
+                    <p class="error-msg hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Process Type <span class="text-red-500">*</span></label>
+                    <select name="process_type" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                        <option value="">Select Category</option>
+                        <option value="Draw">Draw (1-4)</option>
+                        <option value="Blank">Blank (5-8)</option>
+                        <option value="Full Progressive">Full Progressive (9-12)</option>
+                    </select>
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
@@ -82,6 +93,16 @@
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
                     <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                    <p class="error-msg hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Process Type <span class="text-red-500">*</span></label>
+                    <select name="process_type" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                        <option value="">Select Category</option>
+                        <option value="Draw">Draw (1-4)</option>
+                        <option value="Blank">Blank (5-8)</option>
+                        <option value="Full Progressive">Full Progressive (9-12)</option>
+                    </select>
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
@@ -123,6 +144,7 @@
             columns: [
                 { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                 { data: 'code' },
+                { data: 'process_type', className: 'font-bold' },
                 { data: 'limit_value' },
                 { data: 'description' },
                 {

@@ -38,6 +38,7 @@ class RankController extends Controller
         if (!empty($searchValue)) {
             $query->where(function($q) use ($searchValue) {
                 $q->where('code', 'like', '%' . $searchValue . '%')
+                  ->orWhere('process_type', 'like', '%' . $searchValue . '%')
                   ->orWhere('description', 'like', '%' . $searchValue . '%')
                   ->orWhere('limit_value', 'like', '%' . $searchValue . '%');
             });
@@ -73,6 +74,7 @@ class RankController extends Controller
     {
         $validated = $request->validate([
             'code' => 'required|string|max:20|unique:inv_m_rank,code',
+            'process_type' => 'required|string|in:Draw,Blank,Full Progressive',
             'limit_value' => 'required|integer|min:0',
             'description' => 'nullable|string|max:255',
         ]);
@@ -104,6 +106,7 @@ class RankController extends Controller
                 'max:20',
                 Rule::unique('inv_m_rank')->ignore($rank->id),
             ],
+            'process_type' => 'required|string|in:Draw,Blank,Full Progressive',
             'limit_value' => 'required|integer|min:0',
             'description' => 'nullable|string|max:255',
         ]);

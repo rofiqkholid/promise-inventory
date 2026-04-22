@@ -26,6 +26,7 @@ class Rank extends Model
      */
     protected $fillable = [
         'code',
+        'process_type',
         'limit_value',
         'description',
     ];
