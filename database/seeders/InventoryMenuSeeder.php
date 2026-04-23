@@ -57,7 +57,7 @@ class InventoryMenuSeeder extends Seeder
                     ],
                     ['title' => 'Transaction', 'route' => 'inventory.transaction', 'icon' => 'fa-solid fa-right-left', 'order' => 2, 'roles' => ['admin', 'approver', 'operator']],
                     ['title' => 'Transaction History', 'route' => 'transactionHistory', 'icon' => 'fa-solid fa-clock-rotate-left', 'order' => 3, 'roles' => ['admin', 'approver', 'checker']],
-                    ['title' => 'Material Monitoring', 'route' => 'inventory.stockMonitoring', 'icon' => 'fa-solid fa-desktop', 'order' => 4, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']],
+                    ['title' => 'Material Monitoring', 'route' => 'inventory.stockMonitoring', 'icon' => 'fa-solid fa-cubes', 'order' => 4, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']],
                     ['title' => 'Purchase Requisition', 'route' => 'inventory.purchaseRequisition.index', 'icon' => 'fa-solid fa-receipt', 'order' => 5, 'roles' => ['admin', 'approver', 'checker']],
                     ['title' => 'Stock Opname', 'route' => 'inventory.sto.index', 'icon' => 'fa-solid fa-clipboard-check', 'order' => 6, 'roles' => ['admin', 'approver', 'checker', 'operator']],
                     [
