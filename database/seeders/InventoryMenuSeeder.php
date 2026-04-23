@@ -29,14 +29,14 @@ class InventoryMenuSeeder extends Seeder
                 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
                 'children' => [
                     [
-                        'title' => 'Dashboard',
+                        'title' => 'Dashboard Material',
                         'route' => 'dashboard',
                         'icon'  => 'fa-solid fa-chart-pie',
                         'order' => 0,
                         'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
                     ],
                     [
-                        'title' => 'Master Data',
+                        'title' => 'Data Master',
                         'route' => '#',
                         'icon'  => 'fa-solid fa-database',
                         'order' => 1,
@@ -55,12 +55,22 @@ class InventoryMenuSeeder extends Seeder
                             ['title' => 'EBD Suffix', 'route' => 'inventory.master.vave-base-suffix.index', 'icon' => 'fa-solid fa-tags', 'order' => 11, 'roles' => ['admin', 'approver']],
                         ]
                     ],
-                    ['title' => 'VA/VE Analysis', 'route' => 'inventory.vave.index', 'icon' => 'fa-solid fa-vial', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
-                    ['title' => 'Inventory Transaction', 'route' => 'inventory.transaction', 'icon' => 'fa-solid fa-right-left', 'order' => 3, 'roles' => ['admin', 'approver', 'operator']],
-                    ['title' => 'Stock Monitoring', 'route' => 'inventory.stockMonitoring', 'icon' => 'fa-solid fa-chart-line', 'order' => 4, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']],
+                    ['title' => 'Transaksi', 'route' => 'inventory.transaction', 'icon' => 'fa-solid fa-right-left', 'order' => 2, 'roles' => ['admin', 'approver', 'operator']],
+                    ['title' => 'History', 'route' => 'transactionHistory', 'icon' => 'fa-solid fa-clock-rotate-left', 'order' => 3, 'roles' => ['admin', 'approver', 'checker']],
+                    ['title' => 'Stock', 'route' => 'inventory.stockMonitoring', 'icon' => 'fa-solid fa-desktop', 'order' => 4, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']],
                     ['title' => 'Purchase Requisition', 'route' => 'inventory.purchaseRequisition.index', 'icon' => 'fa-solid fa-receipt', 'order' => 5, 'roles' => ['admin', 'approver', 'checker']],
-                    ['title' => 'Stock Opname (STO)', 'route' => 'inventory.sto.index', 'icon' => 'fa-solid fa-clipboard-check', 'order' => 6, 'roles' => ['admin', 'approver', 'checker', 'operator']],
-                    ['title' => 'Transaction History', 'route' => 'transactionHistory', 'icon' => 'fa-solid fa-clock-rotate-left', 'order' => 7, 'roles' => ['admin', 'approver', 'checker']],
+                    ['title' => 'STO', 'route' => 'inventory.sto.index', 'icon' => 'fa-solid fa-clipboard-check', 'order' => 6, 'roles' => ['admin', 'approver', 'checker', 'operator']],
+                    [
+                        'title' => 'VAVE',
+                        'route' => '#',
+                        'icon'  => 'fa-solid fa-vial',
+                        'order' => 7,
+                        'roles' => ['admin', 'approver', 'checker', 'viewer'],
+                        'children' => [
+                            ['title' => 'VA/VE Dashboard', 'route' => 'inventory.vaveDashboard.index', 'icon' => 'fa-solid fa-chart-line', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                            ['title' => 'VA/VE Analysis', 'route' => 'inventory.vave.index', 'icon' => 'fa-solid fa-calculator', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                        ]
+                    ],
                 ]
             ],
 

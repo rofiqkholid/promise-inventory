@@ -16,6 +16,7 @@ use App\Http\Controllers\Inventory\Material\ModelConfigController;
 use App\Http\Controllers\Inventory\Material\DashboardController;
 use App\Http\Controllers\Inventory\Material\StoController;
 use App\Http\Controllers\Inventory\Material\VaveAnalysisController;
+use App\Http\Controllers\Inventory\Material\VaveDashboardController;
 use App\Http\Controllers\Inventory\Material\RevisionController;
 use App\Http\Controllers\Inventory\Material\VaveBaseSuffixController;
 
@@ -302,6 +303,13 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/download-template', [VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
         Route::match(['post', 'put'], '/import-data', [VaveAnalysisController::class, 'importExcel'])->name('importExcel');
         Route::delete('/base/{id}', [VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
+    });
+
+    // VAVE Gap Benefit Dashboard (Admin, Approver, Checker, Viewer)
+    Route::middleware(['inventory.role:admin,approver,checker,viewer'])->prefix('inventory/vave-dashboard')->name('inventory.vaveDashboard.')->group(function () {
+        Route::get('/', [VaveDashboardController::class, 'index'])->name('index');
+        Route::get('/chart-data', [VaveDashboardController::class, 'chartData'])->name('chartData');
+        Route::get('/pareto-data', [VaveDashboardController::class, 'paretoData'])->name('paretoData');
     });
 
     // Purchase Requisition (Admin, Approver, Checker)

@@ -222,14 +222,4 @@ input::placeholder {
     text-align: left;
 }
 
-/* apex style chart */
-
-.apexcharts-canvas {
-    transition: all 0.3s ease-in-out;
-}
-
-/* Ensure chart containers have proper background */
-.bg-white .apexcharts-canvas,
-.bg-gray-800 .apexcharts-canvas {
-    background: transparent !important;
-}
+/* apex style chart removed */
