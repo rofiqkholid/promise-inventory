@@ -1015,12 +1015,16 @@ $(function() {
             
             reader.onload = (e) => {
                 const fullBase64 = e.target.result;
-                const chunkSize = 64 * 1024; // 64KB chunks to safely bypass strict WAF limits
-                const totalChunks = Math.ceil(fullBase64.length / chunkSize);
-                const uploadId = Date.now().toString() + Math.floor(Math.random() * 1000);
+                // Optimization: Strip the prefix (e.g. "data:...;base64,") before chunking 
+                // so the server doesn't have to use regex on a massive string.
+                const base64Only = fullBase64.split(',')[1]; 
+                
+                const chunkSize = 256 * 1024; // Increased to 256KB for better speed while still being safe for most WAFs
+                const totalChunks = Math.ceil(base64Only.length / chunkSize);
+                const uploadId = 'UP-' + Date.now().toString() + '-' + Math.floor(Math.random() * 10000);
                 
                 const uploadChunk = (index) => {
-                    const chunkData = fullBase64.substring(index * chunkSize, (index + 1) * chunkSize);
+                    const chunkData = base64Only.substring(index * chunkSize, (index + 1) * chunkSize);
                     
                     const payload = {
                         customer_id: $('#import_customer_id').val(),
@@ -1057,17 +1061,27 @@ $(function() {
                             }
                         },
                         error: (xhr) => {
-                            const msg = xhr.responseJSON?.message || 'Upload failed. WAF or Server might still be blocking it.';
+                            let msg = xhr.responseJSON?.message || 'Upload failed. WAF or Server might still be blocking it.';
+                            
+                            // Enhanced error reporting
+                            if (xhr.status) {
+                                msg = `<span class='font-bold'>[Error ${xhr.status}: ${xhr.statusText}]</span><br>${msg}`;
+                            }
+
                             if (xhr.status === 413) {
                                 $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
                                     .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
-                                    .html('Error 413: File is too large for the server even with chunks.');
+                                    .html('Error 413: File is too large for the server even with chunks. Please try splitting the data.');
+                            } else if (xhr.status === 419) {
+                                $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
+                                    .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
+                                    .html('Error 419: Session expired. Please refresh the page and try again.');
                             } else {
                                 $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
                                     .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
                                     .html(msg);
                             }
-                            window.showToast('Import failed - please check errors', 'error');
+                            window.showToast('Import failed - check error details', 'error');
                             btn.prop('disabled', false).html(originalText);
                         }
                     });

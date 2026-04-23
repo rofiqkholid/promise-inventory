@@ -168,7 +168,7 @@
         {{-- Pareto Analysis --}}
         <div class="lg:col-span-8 bg-white dark:bg-gray-800 p-4 rounded-xs border border-slate-200 dark:border-gray-700">
             <h3 class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-chart-simple text-primary-500"></i> Pareto Analysis (Benefit per Part)
+                <i class="fa-solid fa-chart-simple text-primary-500"></i> Pareto Analysis (IDR)
             </h3>
             <div class="h-[300px] relative">
                 <canvas id="paretoChart"></canvas>
@@ -178,7 +178,7 @@
         {{-- Item Performance Count --}}
         <div class="lg:col-span-4 bg-white dark:bg-gray-800 p-4 rounded-xs border border-slate-200 dark:border-gray-700">
             <h3 class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-emerald-500"></i> Item Performance by Model (Count)
+                <i class="fa-solid fa-list-check text-emerald-500"></i> Item Performance by Model (Part Count)
             </h3>
             <div class="h-[300px] relative">
                 <canvas id="statusModelChart"></canvas>
@@ -206,7 +206,7 @@
                         <th class="px-3 py-3 text-center">Act (Kg)</th>
                         <th class="px-3 py-3 text-center text-primary-600 bg-primary-50/30">Gap (Kg)</th>
                         <th class="px-3 py-3 text-center">IDR/Kg</th>
-                        <th class="px-3 py-3 text-center">Qty In</th>
+                        <th class="px-3 py-3 text-center">Qty In (PART)</th>
                         <th class="px-4 py-3 text-right">Benefit (IDR)</th>
                         <th class="px-3 py-3 text-center">Status</th>
                     </tr>
@@ -381,10 +381,18 @@ $(function() {
                             let max = Math.max(...context.chart.data.datasets[1].data);
                             return max > 0 ? max * 1.2 : 1000000;
                         },
-                        ticks: { callback: (v) => v.toLocaleString(), font: { size: 10 } } 
+                        ticks: { callback: (v) => v.toLocaleString(), font: { size: 10 } }
                     },
-                    y1: { position: 'right', max: 110, min: 0, grid: { drawOnChartArea: false }, ticks: { callback: (v) => v + '%', font: { size: 10 } } },
-                    x: { ticks: { font: { size: 9 } } }
+                    y1: { 
+                        position: 'right', 
+                        max: 110, 
+                        min: 0, 
+                        grid: { drawOnChartArea: false }, 
+                        ticks: { callback: (v) => v + '%', font: { size: 10 } }
+                    },
+                    x: { 
+                        ticks: { font: { size: 9 } }
+                    }
                 },
                 plugins: {
                     legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 8 } },
@@ -475,7 +483,10 @@ $(function() {
                 responsive: true,
                 maintainAspectRatio: false,
                 layout: { padding: { top: 20, bottom: 0 } },
-                scales: { x: { stacked: true, ticks: { font: { size: 10 } } }, y: { stacked: true, beginAtZero: true, ticks: { font: { size: 10 } } } },
+                scales: { 
+                    x: { stacked: true, ticks: { font: { size: 10 } } }, 
+                    y: { stacked: true, beginAtZero: true, ticks: { font: { size: 10 } } } 
+                },
                 plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 }, padding: 8 } }, datalabels: { display: (c) => c.dataset.data[c.dataIndex] > 0 } }
             }
         });
@@ -526,7 +537,7 @@ $(function() {
     }
 
     $('#btnExportExcel').on('click', function() {
-        let csv = 'Part No,Model,Plan (Kg),Act (Kg),Gap (Kg),IDR/Kg,Qty In (Pcs),Benefit (IDR),Status\n';
+        let csv = 'Part No,Model,Plan (Kg),Act (Kg),Gap (Kg),IDR/Kg,Qty In (Part),Benefit (IDR),Status\n';
         $('#vaveDetailTable tbody tr').each(function() {
             let row = [];
             $(this).find('td').each(function(index) {

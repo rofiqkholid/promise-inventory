@@ -63,7 +63,7 @@
         <div class="flex gap-3 min-w-max">
             @foreach([
                 ['val' => number_format($stats['total_stock_value']), 'label' => 'Total Stock Value', 'sub' => 'IDR', 'icon' => 'fa-coins', 'color' => 'primary', 'id' => 'stat_total_stock_value'],
-                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock', 'sub' => 'PCS', 'icon' => 'fa-cubes', 'color' => 'slate', 'id' => 'stat_total_stock'],
+                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock', 'sub' => 'ITEM PART', 'icon' => 'fa-cubes', 'color' => 'slate', 'id' => 'stat_total_stock'],
                 ['val' => number_format($stats['material_in']), 'label' => 'Total In', 'sub' => 'ITEM PART', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'emerald', 'id' => 'stat_material_in'],
                 ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'sub' => 'ITEM PART', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'amber', 'id' => 'stat_out_event'],
                 ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'sub' => 'ITEM PART', 'icon' => 'fa-industry', 'color' => 'indigo', 'id' => 'stat_out_pp'],
@@ -93,7 +93,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-1 h-5 bg-primary-500 rounded-full"></div>
-                            <h4 class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Stock Status</h4>
+                            <h4 class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Stock Status (PART)</h4>
                         </div>
                         <button class="w-8 h-8 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
                     </div>
@@ -104,7 +104,7 @@
                     <div class="flex items-center justify-between mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-1 h-5 bg-amber-500 rounded-full"></div>
-                            <h4 id="usageChartTitle" class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Usage by Models</h4>
+                            <h4 id="usageChartTitle" class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Usage by Models (PART)</h4>
                         </div>
                         <div class="flex items-center gap-3">
                              <div class="flex bg-slate-100 dark:bg-gray-700 p-1 rounded-xs">
@@ -223,7 +223,7 @@
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-3">
                         <div class="w-1 h-5 bg-emerald-500 rounded-full"></div>
-                        <h4 class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Transaction Trend</h4>
+                        <h4 class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Transaction Trend (ITEM PART)</h4>
                     </div>
                     <button class="w-8 h-8 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
                 </div>
@@ -361,7 +361,7 @@
 
         window.switchUsageChart = function(type) {
             const isModel = type === 'model';
-            $('#usageChartTitle').text(isModel ? 'Usage by Models' : 'Supply by Makers');
+            $('#usageChartTitle').text(isModel ? 'Usage by Models (PART)' : 'Supply by Makers (PART)');
             
             // Toggle container
             $('#containerUsageModel').toggleClass('hidden', !isModel);
@@ -771,8 +771,15 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } } },
-                        y: { stacked: true, beginAtZero: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' } }
+                        x: { 
+                            stacked: true, 
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
+                        },
+                        y: { 
+                            stacked: true, 
+                            beginAtZero: true, 
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                        }
                     },
                     plugins: {
                         legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#64748b' } }
@@ -796,8 +803,14 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' } },
-                        y: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' } }
+                        x: { 
+                            stacked: true, 
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                        },
+                        y: { 
+                            stacked: true, 
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                        }
                     },
                     plugins: {
                         legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#64748b' } }
@@ -888,7 +901,7 @@
                                     let label = context.dataset.label || '';
                                     if (label) label += ': ';
                                     if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat().format(context.parsed.y) + ' PCS';
+                                        label += new Intl.NumberFormat().format(context.parsed.y) + ' ITEM PART';
                                     }
                                     return label;
                                 },
@@ -935,8 +948,14 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' } },
-                        y: { stacked: true, ticks: { color: isDark ? '#94a3b8' : '#64748b' } }
+                        x: { 
+                            stacked: true, 
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                        },
+                        y: { 
+                            stacked: true, 
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                        }
                     },
                     plugins: {
                         legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#64748b' } }

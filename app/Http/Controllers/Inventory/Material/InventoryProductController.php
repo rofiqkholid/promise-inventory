@@ -282,10 +282,14 @@ class InventoryProductController extends Controller
             $uploadId = $request->input('upload_id');
             $chunkData = $request->input('file_base64_chunk');
             
-            $tmpTxtPath = sys_get_temp_dir() . '/upload_' . $uploadId . '.txt';
+            $chunksPath = storage_path('app/chunks');
+            if (!file_exists($chunksPath)) {
+                mkdir($chunksPath, 0777, true);
+            }
+            $tmpTxtPath = $chunksPath . '/upload_' . $uploadId . '.txt';
             
-            // Append chunk
-            file_put_contents($tmpTxtPath, $chunkData, FILE_APPEND);
+            // Append chunk with exclusive lock to prevent any race condition
+            file_put_contents($tmpTxtPath, $chunkData, FILE_APPEND | LOCK_EX);
             
             if ($chunkIndex < $totalChunks - 1) {
                 return response()->json(['success' => true, 'message' => 'Chunk processed']);
@@ -295,10 +299,9 @@ class InventoryProductController extends Controller
             $fullBase64 = file_get_contents($tmpTxtPath);
             @unlink($tmpTxtPath);
             
-            $base64data = preg_replace('/^data:[a-zA-Z0-9\/\-\.\+]+;base64,/', '', $fullBase64);
-            $fileContent = base64_decode($base64data);
+            $fileContent = base64_decode($fullBase64);
             
-            $tmpPath = sys_get_temp_dir() . '/' . uniqid('import_') . '.xlsx';
+            $tmpPath = $chunksPath . '/' . uniqid('import_') . '.xlsx';
             file_put_contents($tmpPath, $fileContent);
             $fileToImport = $tmpPath;
         } else {
