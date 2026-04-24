@@ -89,18 +89,23 @@
         {{-- Column 1 --}}
         <div class="w-full lg:w-1/3 flex flex-col gap-2 h-full min-h-0">
             {{-- Chart Card 1 --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-1 min-h-0">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-[55] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                        <i class="fa-solid fa-chart-column mr-2 text-primary-500"></i> Stock Status <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                        <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i> 
+                        <span class="truncate">Stock Status</span> 
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
                     </h3>
-                    <button class="text-gray-400 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand"></i></button>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button id="stockStatusChartPrev" onclick="paginateChart('stockStatusChart', -1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                        <button id="stockStatusChartNext" onclick="paginateChart('stockStatusChart', 1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                    </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0"><canvas id="stockStatusChart"></canvas></div>
             </div>
 
             {{-- Balance Warnings Table --}}
-            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-1 min-h-0">
+            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i> Balance Warnings
@@ -126,17 +131,22 @@
         {{-- Column 2 --}}
         <div class="w-full lg:w-1/3 flex flex-col gap-2 h-full min-h-0">
             {{-- Chart Card 2 --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-1 min-h-0">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-[55] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 id="usageChartTitle" class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                        <i class="fa-solid fa-chart-pie mr-2 text-amber-500"></i> Usage by Models <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>
+                    <h3 id="usageChartTitle" class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                        <i class="fa-solid fa-chart-pie mr-2 text-amber-500 flex-shrink-0"></i> 
+                        <span class="truncate">Usage by Models</span> 
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
                     </h3>
-                    <div class="flex items-center gap-2">
-                            <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs">
-                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all bg-white dark:bg-gray-600 text-primary-600 shadow-sm">Model</button>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs">
+                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all bg-white dark:bg-gray-600 text-primary-600 dark:hover:text-gray-300 shadow-sm">Model</button>
                             <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Maker</button>
                         </div>
-                        <button class="text-gray-400 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand"></i></button>
+                        <div class="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-2">
+                            <button id="usageChartPrev" onclick="paginateActiveUsageChart(-1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                            <button id="usageChartNext" onclick="paginateActiveUsageChart(1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        </div>
                     </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
@@ -146,7 +156,7 @@
             </div>
 
             {{-- Material Usage Table --}}
-            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-1 min-h-0">
+            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-vial mr-2 text-indigo-500"></i> Material Usage Detail
@@ -173,18 +183,19 @@
         {{-- Column 3 --}}
         <div class="w-full lg:w-1/3 flex flex-col gap-2 h-full min-h-0">
             {{-- Transaction Trend Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-1 min-h-0">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-[55] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                        <i class="fa-solid fa-arrow-trend-up mr-2 text-emerald-500"></i> Transaction Trend <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0">
+                        <i class="fa-solid fa-arrow-trend-up mr-2 text-emerald-500 flex-shrink-0"></i> 
+                        <span class="truncate">Transaction Trend</span> 
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
                     </h3>
-                    <button class="text-gray-400 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand"></i></button>
                 </div>
                 <div class="relative w-full flex-1 min-h-0"><canvas id="trendlineChart"></canvas></div>
             </div>
 
             {{-- Recent Transactions --}}
-            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-1 min-h-0">
+            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-clock-rotate-left mr-2 text-primary-500"></i> Recent Activity
@@ -205,6 +216,99 @@
                     </table>
             </div>
         </div>
+        </div>
+    </div>
+</div>
+
+{{-- Drilldown Modal --}}
+<div id="drilldownModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
+    <div class="absolute inset-0 bg-black/40" onclick="closeDrilldownModal()"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="drilldownPanel">
+        {{-- Header --}}
+        <div class="flex-none flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                    <p class="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Detail Explorer</p>
+                    <span id="drilldownCountBadge" class="px-1.5 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-[9px] font-bold">0</span>
+                </div>
+                <h2 id="drilldownTitle" class="text-base font-bold text-gray-800 dark:text-gray-100 truncate max-w-[300px]">Loading...</h2>
+            </div>
+            <button onclick="closeDrilldownModal()" class="w-8 h-8 flex items-center justify-center rounded-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+        {{-- Loader --}}
+        <div id="drilldownLoader" class="flex-1 flex items-center justify-center">
+            <div class="text-center">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-primary-400 mb-3"></i>
+                <p class="text-[11px] text-slate-400">Fetching data...</p>
+            </div>
+        </div>
+        {{-- Content --}}
+        <div id="drilldownContent" class="flex-1 flex-col hidden min-h-0">
+            {{-- Quick Filters (Segmented Control Style) --}}
+            <div id="drilldownLegendContainer" class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/20">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Filter by Status</p>
+                </div>
+                <div id="drilldownLegendButtons" class="inline-flex p-1 bg-gray-100 dark:bg-gray-800/80 rounded-lg gap-1">
+                    {{-- Buttons injected by JS --}}
+                </div>
+            </div>
+
+            <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-20 flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-[9px] font-semibold text-slate-400 uppercase whitespace-nowrap tracking-wider">Show</span>
+                    <select id="drilldownPageSize" onchange="resetDrilldownAndFetch()" class="h-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[11px] px-2 focus:ring-1 focus:ring-primary-500 outline-none cursor-pointer">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-[9px] font-semibold text-slate-400 uppercase whitespace-nowrap tracking-wider">entries</span>
+                </div>
+                <div class="relative w-full md:w-60">
+                    <input type="text" id="drilldownSearch" placeholder="Search Part No..." class="w-full h-8 pl-9 pr-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[11px] focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-gray-400">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-[9px]"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 relative min-h-0">
+                {{-- Partial Table Loader --}}
+                <div id="drilldownTableLoader" class="hidden absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-30 flex items-center justify-center backdrop-blur-[1px] transition-all">
+                    <div class="flex flex-col items-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-xl text-primary-500 mb-2"></i>
+                        <span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Updating...</span>
+                    </div>
+                </div>
+
+                <div class="h-full overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left text-[11px]">
+                        <thead id="drilldownHead" class="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
+                        </thead>
+                        <tbody id="drilldownBody" class="divide-y divide-slate-100 dark:divide-gray-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {{-- Pagination Footer --}}
+            <div class="flex-none px-5 py-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+                <div class="text-[10px] text-slate-500 dark:text-slate-400">
+                    Showing <span id="ddPageStart">0</span>-<span id="ddPageEnd">0</span> of <span id="ddTotal">0</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="changeDrilldownPage(-1)" id="ddPrev" class="w-7 h-7 flex items-center justify-center rounded-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <div class="px-2 text-[10px] font-bold text-slate-600 dark:text-slate-300">
+                        Page <span id="ddCurrentPage">1</span>
+                    </div>
+                    <button onclick="changeDrilldownPage(1)" id="ddNext" class="w-7 h-7 flex items-center justify-center rounded-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -233,6 +337,34 @@
         Chart.defaults.borderColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
         Chart.defaults.font.family = "'Inter', sans-serif";
         
+        // Global Tooltip & Interaction
+        const commonInteraction = { mode: 'index', intersect: false };
+        const commonTooltip = {
+            enabled: true,
+            usePointStyle: true,
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            titleColor: isDark ? '#f8fafc' : '#1e293b',
+            bodyColor: isDark ? '#94a3b8' : '#64748b',
+            borderColor: isDark ? '#334155' : '#e2e8f0',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: true,
+            boxPadding: 6,
+            callbacks: {
+                labelPointStyle: function(context) {
+                    return { pointStyle: 'rect', rotation: 0 };
+                },
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.parsed.y !== null) {
+                        label += new Intl.NumberFormat().format(context.parsed.y) + ' Item';
+                    }
+                    return label;
+                }
+            }
+        };
+        
         const chartsData = {
             stockLabels: @json(array_keys($charts['stock_grouped'])).map(l => l.split('|')),
             stockData: @json(array_values($charts['stock_grouped'])),
@@ -251,9 +383,9 @@
         window.switchUsageChart = function(type) {
             const isModel = type === 'model';
             $('#usageChartTitle').html(
-                '<i class="fa-solid fa-chart-pie mr-2 text-amber-500"></i> ' + 
-                (isModel ? 'Usage by Models' : 'Supply by Makers') + 
-                ' <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>'
+                '<i class="fa-solid fa-chart-pie mr-2 text-amber-500 flex-shrink-0"></i> ' + 
+                '<span class="truncate">' + (isModel ? 'Usage by Models' : 'Supply by Makers') + '</span>' + 
+                ' <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>'
             );
             
             // Toggle container
@@ -265,6 +397,15 @@
                 .toggleClass('text-slate-500 hover:text-slate-700', !isModel);
             $('#btnUsageMaker').toggleClass('bg-white dark:bg-gray-600 text-primary-600 shadow-sm', !isModel)
                 .toggleClass('text-slate-500 hover:text-slate-700', isModel);
+                
+            // Update shared pagination buttons
+            const activeId = isModel ? 'usageModelChart' : 'makerChart';
+            if(window.chartStore && window.chartStore[activeId]) {
+                const store = window.chartStore[activeId];
+                const end = store.page * store.pageSize + store.pageSize;
+                $('#usageChartPrev').prop('disabled', store.page <= 0);
+                $('#usageChartNext').prop('disabled', end >= store.labels.length);
+            }
         };
 
         const chartColors = {
@@ -502,7 +643,7 @@
                         tension: 0.5,
                         pointRadius: 3,
                         pointHoverRadius: 6,
-                        borderWidth: 1.5,
+                        borderWidth: 2,
                         pointStyle: 'circle'
                     };
                 });
@@ -522,27 +663,70 @@
                         ctx.setLineDash([5, 5]);
                         ctx.moveTo(x, yAxis.top);
                         ctx.lineTo(x, yAxis.bottom);
-                        ctx.lineWidth = 1;
-                        ctx.strokeStyle = isDark ? '#475569' : '#cbd5e1';
+                        ctx.lineWidth = 1.5;
+                        ctx.strokeStyle = document.documentElement.classList.contains('dark') ? '#64748b' : '#94a3b8';
                         ctx.stroke();
                         ctx.restore();
                     }
                 }
             };
+            window.chartStore = {};
+            window.paginateChart = function(id, dir) {
+                if(chartStore[id]) {
+                    chartStore[id].page += dir;
+                    renderChartPage(id);
+                }
+            };
+            window.paginateActiveUsageChart = function(dir) {
+                const activeId = document.getElementById('containerUsageModel').classList.contains('hidden') ? 'makerChart' : 'usageModelChart';
+                paginateChart(activeId, dir);
+            };
+            
+            function renderChartPage(id) {
+                const store = chartStore[id];
+                const chart = id === 'stockStatusChart' ? stockStatusChart : (id === 'usageModelChart' ? usageModelChart : (id === 'makerChart' ? makerChart : trendlineChart));
+                if(!chart || !store) return;
+                
+                const start = store.page * store.pageSize;
+                const end = start + store.pageSize;
+                
+                chart.data.labels = store.labels.slice(start, end);
+                store.datasets.forEach((data, i) => {
+                    if(chart.data.datasets[i]) {
+                        chart.data.datasets[i].data = data.slice(start, end);
+                    }
+                });
+                chart.update();
+                
+                const btnPrev = id === 'usageModelChart' || id === 'makerChart' ? 'usageChartPrev' : id + 'Prev';
+                const btnNext = id === 'usageModelChart' || id === 'makerChart' ? 'usageChartNext' : id + 'Next';
+                
+                $(`#${btnPrev}`).prop('disabled', store.page <= 0);
+                $(`#${btnNext}`).prop('disabled', end >= store.labels.length);
+            }
+
             function updateChartData(chart, labels, data1, data2, data3, data4) {
                 if(!chart) return;
-                chart.data.labels = labels;
-                if(data1) chart.data.datasets[0].data = data1;
-                if(data2) chart.data.datasets[1].data = data2;
-                if(data3) chart.data.datasets[2].data = data3;
-                if(data4) chart.data.datasets[3].data = data4;
-                chart.update();
+                const id = chart.canvas.id;
+                
+                if (id === 'trendlineChart') {
+                    chart.data.labels = labels;
+                    if(data1) chart.data.datasets[0].data = data1;
+                    if(data2) chart.data.datasets[1].data = data2;
+                    if(data3) chart.data.datasets[2].data = data3;
+                    if(data4) chart.data.datasets[3].data = data4;
+                    chart.update();
+                    return;
+                }
+
+                chartStore[id] = chartStore[id] || { page: 0, pageSize: 6 };
+                chartStore[id].labels = labels;
+                chartStore[id].datasets = [data1, data2, data3, data4].filter(d => d !== undefined);
+                chartStore[id].page = 0;
+                renderChartPage(id);
             }
             function updateChartDataSingle(chart, labels, data) {
-                 if(!chart) return;
-                 chart.data.labels = labels;
-                 chart.data.datasets[0].data = data;
-                 chart.update();
+                 updateChartData(chart, labels, data);
             }
             function renderTable(selector, data, rowGenerator, emptyText = 'No data found') {
                 const tbody = $(selector);
@@ -661,6 +845,18 @@
                     ]
                 },
                 options: {
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const i = elements[0].index;
+                            const datasetIndex = elements[0].datasetIndex;
+                            const label = stockStatusChart.data.labels[i];
+                            const labelStr = Array.isArray(label) ? label.join('|') : label;
+                            const status = stockStatusChart.data.datasets[datasetIndex].label;
+                            openDrilldownModal('stock', labelStr, status);
+                        }
+                    },
+                    onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
+                    interaction: commonInteraction,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
@@ -671,10 +867,11 @@
                         y: { 
                             stacked: true, 
                             beginAtZero: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
                         }
                     },
                     plugins: {
+                        tooltip: commonTooltip,
                         legend: { 
                             position: 'bottom', 
                             labels: { 
@@ -702,19 +899,34 @@
                     ]
                 },
                 options: {
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const i = elements[0].index;
+                            const datasetIndex = elements[0].datasetIndex;
+                            const label = usageModelChart.data.labels[i];
+                            const labelStr = Array.isArray(label) ? label.join('|') : label;
+                            const category = usageModelChart.data.datasets[datasetIndex].label;
+                            // Map 'Event' -> 'OUT-EVENT', etc.
+                            const statusMap = { 'Event': 'OUT-EVENT', 'PP': 'OUT-PP', 'Trial': 'OUT-TRIAL' };
+                            openDrilldownModal('usage_model', labelStr, statusMap[category] || category);
+                        }
+                    },
+                    onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
+                    interaction: commonInteraction,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         x: { 
                             stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
                         },
                         y: { 
                             stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
                         }
                     },
                     plugins: {
+                        tooltip: commonTooltip,
                         legend: { 
                             position: 'bottom', 
                             labels: { 
@@ -742,15 +954,25 @@
                     datasets: buildTrendlineDatasets(trendData || [], dates)
                 },
                 options: {
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const i = elements[0].index;
+                            const datasetIndex = elements[0].datasetIndex;
+                            const label = trendlineChart.data.labels[i];
+                            const category = trendlineChart.data.datasets[datasetIndex].label;
+                            
+                            // Map dataset label back to DB category
+                            const statusMap = { 'In': 'IN', 'Event': 'OUT-EVENT', 'PP': 'OUT-PP', 'Trial': 'OUT-TRIAL' };
+                            openDrilldownModal('trendline', label, statusMap[category] || category);
+                        }
+                    },
+                    onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
+                    interaction: commonInteraction,
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
                     scales: {
                         x: {
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 10 } },
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } },
                             grid: { 
                                 display: true,
                                 color: isDark ? 'rgba(71, 85, 105, 0.2)' : 'rgba(226, 232, 240, 0.6)',
@@ -760,7 +982,7 @@
                         y: {
                             stacked: false,
                             beginAtZero: true,
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 10 } },
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } },
                             grid: { 
                                 display: true,
                                 color: isDark ? 'rgba(71, 85, 105, 0.2)' : 'rgba(226, 232, 240, 0.6)',
@@ -769,41 +991,15 @@
                         }
                     },
                     plugins: {
+                        tooltip: commonTooltip,
                         legend: {
                             position: 'bottom',
                             labels: { 
                                 color: isDark ? '#94a3b8' : '#64748b',
                                 font: { size: 10 },
                                 usePointStyle: true,
-                                pointStyle: 'circle',
+                                pointStyle: 'rect',
                                 padding: 15
-                            }
-                        },
-                        tooltip: {
-                            enabled: true,
-                            usePointStyle: true,
-                            backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                            titleColor: isDark ? '#f8fafc' : '#1e293b',
-                            bodyColor: isDark ? '#94a3b8' : '#64748b',
-                            borderColor: isDark ? '#334155' : '#e2e8f0',
-                            borderWidth: 1,
-                            padding: 12,
-                            displayColors: true,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) label += ': ';
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat().format(context.parsed.y) + ' Item';
-                                    }
-                                    return label;
-                                },
-                                labelPointStyle: function(context) {
-                                    return {
-                                        pointStyle: 'circle',
-                                        rotation: 0
-                                    };
-                                }
                             }
                         }
                     }
@@ -838,19 +1034,32 @@
                     ]
                 },
                 options: {
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const i = elements[0].index;
+                            const datasetIndex = elements[0].datasetIndex;
+                            const label = makerChart.data.labels[i];
+                            const labelStr = Array.isArray(label) ? label.join('|') : label;
+                            const status = makerChart.data.datasets[datasetIndex].label;
+                            openDrilldownModal('maker', labelStr, status);
+                        }
+                    },
+                    onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
+                    interaction: commonInteraction,
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         x: { 
                             stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
                         },
                         y: { 
                             stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b' }
+                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
                         }
                     },
                     plugins: {
+                        tooltip: commonTooltip,
                         legend: { 
                             position: 'bottom', 
                             labels: { 
@@ -865,7 +1074,290 @@
                 }
             });
         }
+
+        // Initial Scroll Width Calculations
+        if (typeof chartsData !== 'undefined') {
+            if (stockStatusChart) updateChartData(stockStatusChart, chartsData.stockLabels, chartsData.stockData.map(d => d.critical), chartsData.stockWarning, chartsData.stockData.map(d => d.over), chartsData.stockData.map(d => d.safe));
+            if (usageModelChart) updateChartData(usageModelChart, chartsData.usageModelLabels, chartsData.usageModelEvent, chartsData.usageModelPP, chartsData.usageModelTrial);
+            if (makerChart) updateChartData(makerChart, chartsData.makerLabels, chartsData.makerOnBudget, chartsData.makerNearLoss, chartsData.makerLoss);
+        }
+
+        // --- DYNAMIC THEME OBSERVER ---
+        function updateChartsTheme() {
+            const dark = document.documentElement.classList.contains('dark');
+            const textColor = dark ? '#94a3b8' : '#64748b';
+            const gridColor = dark ? 'rgba(71, 85, 105, 0.25)' : 'rgba(226, 232, 240, 0.75)';
+            const tooltipBg = dark ? '#1e293b' : '#ffffff';
+            const tooltipTitle = dark ? '#f8fafc' : '#1e293b';
+            const tooltipBody = dark ? '#94a3b8' : '#64748b';
+            const tooltipBorder = dark ? '#334155' : '#e2e8f0';
+
+            Chart.defaults.color = textColor;
+            Chart.defaults.borderColor = dark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+
+            const chartsToUpdate = [stockStatusChart, usageModelChart, makerChart, trendlineChart];
+            chartsToUpdate.forEach(chart => {
+                if (chart && chart.options) {
+                    // Update scales
+                    if (chart.options.scales) {
+                        if (chart.options.scales.x) {
+                            if (chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = textColor;
+                            if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = gridColor;
+                        }
+                        if (chart.options.scales.y) {
+                            if (chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = textColor;
+                            if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = gridColor;
+                        }
+                    }
+                    // Update legend
+                    if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                        chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    // Update tooltip
+                    if (chart.options.plugins && chart.options.plugins.tooltip) {
+                        chart.options.plugins.tooltip.backgroundColor = tooltipBg;
+                        chart.options.plugins.tooltip.titleColor = tooltipTitle;
+                        chart.options.plugins.tooltip.bodyColor = tooltipBody;
+                        chart.options.plugins.tooltip.borderColor = tooltipBorder;
+                    }
+                    chart.update();
+                }
+            });
+        }
+
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === "class") {
+                    updateChartsTheme();
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+        
     });
+</script>
+
+<script>
+    // ── DRILLDOWN MODAL ──────────────────────────────────────────────────────
+    const drilldownUrl = '{{ route("api.dashboard.drilldown") }}';
+    let currentMonthYear = '{{ $filters["month_year"] ?? date("Y-m") }}';
+
+    const DRILLDOWN_COLS = {
+        stock: [
+            { key: 'part_no',   label: 'Part No',      cls: 'text-left py-2 px-3' },
+            { key: 'stock',     label: 'Stock',         cls: 'text-right py-2 px-2' },
+            { key: 'min_stock', label: 'Min',           cls: 'text-right py-2 px-2' },
+            { key: 'unit',      label: 'Unit',          cls: 'text-center py-2 px-2' },
+            { key: 'status',    label: 'Status',        cls: 'text-center py-2 px-3' },
+        ],
+        usage_model: [
+            { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
+            { key: 'category',  label: 'Category',      cls: 'text-center py-2 px-2' },
+            { key: 'qty_pcs',   label: 'Qty (pcs)',     cls: 'text-right py-2 px-2' },
+            { key: 'date',      label: 'Date',          cls: 'text-center py-2 px-3' },
+        ],
+        maker: [
+            { key: 'part_no', label: 'Part Number', cls: 'py-2 px-3' },
+            { key: 'model', label: 'Model', cls: 'py-2 px-2' },
+            { key: 'rank', label: 'Rank', cls: 'py-2 px-2 text-center' },
+            { key: 'usage', label: 'Usage (PCS)', cls: 'py-2 px-2 text-right' },
+            { key: 'gap', label: 'Gap', cls: 'py-2 px-2 text-right' },
+            { key: 'status', label: 'Status', cls: 'py-2 px-3 text-right' }
+        ],
+        trendline: [
+            { key: 'part_no', label: 'Part Number', cls: 'py-2 px-3' },
+            { key: 'category', label: 'Category', cls: 'py-2 px-2 text-center' },
+            { key: 'qty_pcs', label: 'Quantity (PCS)', cls: 'py-2 px-3 text-right font-mono' },
+            { key: 'date', label: 'Date', cls: 'py-2 px-3 text-right' }
+        ]
+    };
+
+    const STATUS_BADGE = {
+        'Critical':   'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+        'Warning':    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+        'Over':       'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+        'Safe':       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+        'Loss':       'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+        'Near Loss':  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+        'On Budget':  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+        'OUT-EVENT':  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+        'OUT-PP':     'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+        'OUT-TRIAL':  'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+    };
+
+    let drilldownPage = 1;
+    let drilldownCurrentType = '';
+    let drilldownCurrentLabel = '';
+    let drilldownCurrentStatus = '';
+    let searchDebounceTimer;
+
+    window.openDrilldownModal = function(chartType, label, status = null) {
+        drilldownCurrentType = chartType;
+        drilldownCurrentLabel = label;
+        drilldownCurrentStatus = status || '';
+        drilldownPage = 1;
+
+        const modal  = document.getElementById('drilldownModal');
+        const panel  = document.getElementById('drilldownPanel');
+        const searchInput = document.getElementById('drilldownSearch');
+
+        if(searchInput) searchInput.value = '';
+
+        modal.classList.remove('hidden');
+        requestAnimationFrame(() => panel.classList.remove('translate-x-full'));
+        
+        document.getElementById('drilldownTitle').textContent = 'Loading...';
+        document.getElementById('drilldownCountBadge').textContent = '0';
+
+        renderDrilldownLegend(chartType, drilldownCurrentStatus);
+        fetchDrilldownData(true);
+    };
+
+    function fetchDrilldownData(isInitial = false) {
+        const my = document.getElementById('month_picker')?.value || currentMonthYear;
+        const loader = document.getElementById('drilldownLoader');
+        const tableLoader = document.getElementById('drilldownTableLoader');
+        const content = document.getElementById('drilldownContent');
+        const search = document.getElementById('drilldownSearch').value;
+        const pageSize = document.getElementById('drilldownPageSize').value;
+        
+        if (isInitial) {
+            loader.classList.remove('hidden');
+            content.classList.add('hidden');
+            content.classList.remove('flex');
+        } else {
+            tableLoader.classList.remove('hidden');
+        }
+
+        $.get(drilldownUrl, { 
+            chart: drilldownCurrentType, 
+            label: drilldownCurrentLabel, 
+            status: drilldownCurrentStatus, 
+            month_year: my,
+            search: search,
+            page: drilldownPage,
+            pageSize: pageSize
+        })
+        .done(function(res) {
+            document.getElementById('drilldownTitle').textContent = res.title;
+            const cols = DRILLDOWN_COLS[res.chart] || [];
+            const tbody = document.getElementById('drilldownBody');
+            
+            // Header
+            document.getElementById('drilldownHead').innerHTML = '<tr>' + cols.map(c =>
+                `<th class="${c.cls} text-[9px] font-bold text-slate-500 uppercase tracking-widest">${c.label}</th>`
+            ).join('') + '</tr>';
+
+            // Body
+            if (!res.data || res.data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${cols.length}" class="py-10 text-center text-slate-400 italic text-[11px]">No data found.</td></tr>`;
+            } else {
+                tbody.innerHTML = res.data.map(row => {
+                    return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
+                        const val = row[c.key] ?? '-';
+                        const badgeCls = (c.key === 'status' || c.key === 'category') ? STATUS_BADGE[val] : null;
+                        const cell = badgeCls
+                            ? `<span class="inline-block px-1.5 py-0.5 rounded-xs text-[9px] font-bold uppercase ${badgeCls}">${val}</span>`
+                            : `<span class="${c.key === 'part_no' ? 'font-medium text-slate-700 dark:text-gray-200' : 'text-slate-500 dark:text-slate-400'}">${val}</span>`;
+                        return `<td class="${c.cls}">${cell}</td>`;
+                    }).join('') + '</tr>';
+                }).join('');
+            }
+
+            // Pagination Stats
+            const total = res.total;
+            const start = (drilldownPage - 1) * pageSize + 1;
+            const end = Math.min(drilldownPage * pageSize, total);
+            
+            document.getElementById('drilldownCountBadge').textContent = total;
+            document.getElementById('ddTotal').textContent = total;
+            document.getElementById('ddPageStart').textContent = total === 0 ? 0 : start;
+            document.getElementById('ddPageEnd').textContent = end;
+            document.getElementById('ddCurrentPage').textContent = drilldownPage;
+            
+            document.getElementById('ddPrev').disabled = drilldownPage <= 1;
+            document.getElementById('ddNext').disabled = end >= total;
+
+            if (isInitial) {
+                loader.classList.add('hidden');
+                content.classList.remove('hidden');
+                content.classList.add('flex');
+                content.style.flexDirection = 'column';
+            } else {
+                tableLoader.classList.add('hidden');
+            }
+        });
+    }
+
+    window.resetDrilldownAndFetch = function() {
+        drilldownPage = 1;
+        fetchDrilldownData();
+    };
+
+    window.changeDrilldownPage = function(dir) {
+        drilldownPage += dir;
+        fetchDrilldownData();
+        document.querySelector('#drilldownContent .overflow-y-auto').scrollTop = 0;
+    };
+
+    function renderDrilldownLegend(type, activeStatus) {
+        const container = document.getElementById('drilldownLegendButtons');
+        container.innerHTML = '';
+        
+        const legends = {
+            'stock': ['Critical', 'Warning', 'Over', 'Safe'],
+            'usage_model': ['OUT-EVENT', 'OUT-PP', 'OUT-TRIAL'],
+            'maker': ['On Budget', 'Near Loss', 'Loss'],
+            'trendline': ['IN', 'OUT-EVENT', 'OUT-PP', 'OUT-TRIAL']
+        };
+
+        const currentLegends = legends[type] || [];
+        
+        const allBtn = createLegendBtn('All', activeStatus === '');
+        allBtn.onclick = () => { drilldownCurrentStatus = ''; drilldownPage = 1; updateLegendActive(allBtn); fetchDrilldownData(); };
+        container.appendChild(allBtn);
+
+        currentLegends.forEach(leg => {
+            const isActive = leg === activeStatus;
+            const btn = createLegendBtn(leg.replace('OUT-', ''), isActive);
+            btn.onclick = () => { drilldownCurrentStatus = leg; drilldownPage = 1; updateLegendActive(btn); fetchDrilldownData(); };
+            container.appendChild(btn);
+        });
+    }
+
+    function createLegendBtn(label, isActive) {
+        const btn = document.createElement('button');
+        btn.className = `legend-btn px-4 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all duration-200 ${
+            isActive 
+            ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm' 
+            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+        }`;
+        btn.textContent = label;
+        return btn;
+    }
+
+    function updateLegendActive(activeBtn) {
+        $(activeBtn).siblings().removeClass('bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm')
+            .addClass('text-slate-500 dark:text-slate-400');
+        $(activeBtn).removeClass('text-slate-500 dark:text-slate-400')
+            .addClass('bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm');
+    }
+
+    $('#drilldownSearch').on('input', function() {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            resetDrilldownAndFetch();
+        }, 400);
+    });
+
+    window.closeDrilldownModal = function() {
+        const panel = document.getElementById('drilldownPanel');
+        panel.classList.add('translate-x-full');
+        setTimeout(() => document.getElementById('drilldownModal').classList.add('hidden'), 300);
+    };
+
+    // Close on Escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrilldownModal(); });
 </script>
 <style>
     .scrollbar-hide::-webkit-scrollbar {
@@ -874,6 +1366,35 @@
     .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;
+    }
+
+    /* Drilldown Modal Overrides (Anti-Pulling from app.css) */
+    #drilldownModal select {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        padding-right: 1.75rem !important;
+        background-position: right 0.4rem center !important;
+        background-size: 1rem 1rem !important;
+        height: 32px !important;
+        line-height: 32px !important;
+    }
+    #drilldownModal input#drilldownSearch {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 32px !important;
+        line-height: 32px !important;
+        padding-left: 2.25rem !important;
+    }
+    #drilldownModal .legend-btn {
+        padding: 0.4rem 1rem !important;
+        border: none !important;
+        height: auto !important;
+        line-height: 1 !important;
+        width: auto !important;
+        box-shadow: none !important;
+    }
+    #drilldownModal .legend-btn.bg-white {
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
     }
 </style>
 @endpush

@@ -120,34 +120,38 @@ class DashboardController extends Controller
         ];
 
         // Stock Data for Bar Chart (Item Count per Status)
-        $allProducts = $stockQuery->select('m.name as model_name', 'c.code as customer_code', 'p.current_stock_qty', 'p.min_stock', 'p.product_status', 'ms.project_status')->get();
+        $allProducts = $stockQuery->select(
+            'm.name as model_name', 
+            'c.code as customer_code', 
+            'p.current_stock_qty', 
+            'p.min_stock', 
+            'p.product_status', 
+            'ms.project_status',
+            'p.pcs_per_unit',
+            'p.weight_kg',
+            'p.gross_coil',
+            'u.name as unit_name'
+        )->get();
+
         $stockDataGrouped = [];
         foreach ($allProducts as $prd) {
             $key = ($prd->model_name ?? 'N/A') . '|' . ($prd->customer_code ?? 'N/A');
-            if (!isset($stockDataGrouped[$key])) $stockDataGrouped[$key] = ['critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0];
-            $current = floatval($prd->current_stock_qty);
-            $min = floatval($prd->min_stock);
-            if ($min > 0) {
-                if ($current > $min * 3) {
-                    $stockDataGrouped[$key]['over']++;
-                } elseif ($current < $min) {
-                    $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
-                    $isSafeOverride = in_array($prd->project_status, $safeStatuses) || in_array($prd->product_status, $safeStatuses);
-                    
-                    if ($isSafeOverride) {
-                        $stockDataGrouped[$key]['safe']++;
-                    } else {
-                        if ($current < ($min - 30)) {
-                            $stockDataGrouped[$key]['critical']++;
-                        } else {
-                            $stockDataGrouped[$key]['warning']++;
-                        }
-                    }
-                } else {
-                    $stockDataGrouped[$key]['safe']++;
-                }
-            } else {
-                $stockDataGrouped[$key]['safe']++;
+            if (!isset($stockDataGrouped[$key])) {
+                $stockDataGrouped[$key] = ['critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0];
+            }
+
+            // Convert to PCS for accurate comparison
+            $currentPcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
+                $prd->current_stock_qty, $prd->weight_kg, $prd->pcs_per_unit, $prd->unit_name, 
+                0, 0, 0, 1, $prd->gross_coil
+            );
+
+            $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                $currentPcs, $prd->min_stock, $prd->project_status ?: $prd->product_status
+            );
+
+            if (isset($stockDataGrouped[$key][$status])) {
+                $stockDataGrouped[$key][$status]++;
             }
         }
 
@@ -191,7 +195,7 @@ class DashboardController extends Controller
             ->select(
                 DB::raw("MONTH(t.transaction_date) as month_num"), 
                 'tc.code as category', 
-                DB::raw("SUM(t.qty * ISNULL(p.pcs_per_unit, 1)) as total")
+                DB::raw("COUNT(DISTINCT p.id) as total")
             )
             ->groupBy(DB::raw("MONTH(t.transaction_date)"), 'tc.code')
             ->get();
@@ -236,28 +240,27 @@ class DashboardController extends Controller
             ->get();
 
         $makerData = [];
+        $usageTable = [];
+
         foreach ($makerUsageQuery as $item) {
             $limit = $this->calculateAdjustedRank($item->process_type, $item->limit_value, $item->unit_per_car, $item->pcs_per_unit);
             $usagePcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs($item->usage_qty, 0, $item->pcs_per_unit, $item->unit_name, 0, 0, 0, 1, $item->gross_coil);
             $gap = $limit - $usagePcs;
-            $status = ($gap < 0) ? 'loss' : (($gap < 50) ? 'near_loss' : 'on_budget');
+            
+            $statusRaw = ($gap < 0) ? 'Loss' : (($gap < 50) ? 'Near Loss' : 'On Budget');
+            
+            // Apply Status Usage Filter
+            if (!empty($selectedStatusUsage) && !in_array($statusRaw, $selectedStatusUsage)) {
+                continue;
+            }
+
+            // For Chart
+            $statusKey = strtolower(str_replace(' ', '_', $statusRaw));
             $maker = $item->maker ?: 'Unknown';
             if (!isset($makerData[$maker])) $makerData[$maker] = ['on_budget' => 0, 'near_loss' => 0, 'loss' => 0];
-            $makerData[$maker][$status]++;
-        }
-        $usageByMaker = [];
-        $usageTable = [];
-        foreach ($makerData as $maker => $counts) {
-            $usageByMaker[] = ['maker' => $maker, 'on_budget' => $counts['on_budget'], 'near_loss' => $counts['near_loss'], 'loss' => $counts['loss']];
-        }
+            $makerData[$maker][$statusKey]++;
 
-        // Detailed Usage Table
-        foreach ($makerUsageQuery as $item) {
-            $limit = $this->calculateAdjustedRank($item->process_type, $item->limit_value, $item->unit_per_car, $item->pcs_per_unit);
-            $usagePcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs($item->usage_qty, 0, $item->pcs_per_unit, $item->unit_name, 0, 0, 0, 1, $item->gross_coil);
-            $gap = $limit - $usagePcs;
-            $status = ($gap < 0) ? 'Loss' : (($gap < 50) ? 'Near Loss' : 'On Budget');
-            
+            // For Table
             $usageTable[] = [
                 'part_no' => $item->part_no,
                 'revision' => $item->revision,
@@ -265,27 +268,37 @@ class DashboardController extends Controller
                 'rank_display' => ($item->rank_code ?? '-') . ' ' . number_format($limit),
                 'out_trial' => $usagePcs,
                 'gap' => $gap,
-                'status' => $status
+                'status' => $statusRaw
             ];
+        }
+
+        $usageByMaker = [];
+        foreach ($makerData as $maker => $counts) {
+            $usageByMaker[] = ['maker' => $maker, 'on_budget' => $counts['on_budget'], 'near_loss' => $counts['near_loss'], 'loss' => $counts['loss']];
         }
 
         // Tables
         $balanceStatusTable = (clone $stockQuery)
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
-            ->select('prod.part_no', 'r.code as revision', 'c.code as customer_code', 'm.name as model_name', 'p.current_stock_qty', 'p.min_stock')
+            ->select(
+                'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
+                'm.name as model_name', 'p.current_stock_qty', 'p.min_stock',
+                'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'u.name as unit_name',
+                'ms.project_status', 'p.product_status'
+            )
             ->limit(10)
             ->get()
             ->map(function ($item) {
-                 $current = floatval($item->current_stock_qty);
-                 $min = floatval($item->min_stock);
-                 if ($min > 0) {
-                     if ($current > $min * 3) $item->status = 'Over';
-                     elseif ($current < ($min - 30)) $item->status = 'Critical';
-                     elseif ($current < $min) $item->status = 'Warning';
-                     else $item->status = 'Safe';
-                 } else {
-                     $item->status = 'Safe';
-                 }
+                 $currentPcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
+                    $item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_name, 
+                    0, 0, 0, 1, $item->gross_coil
+                 );
+                 
+                 $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                    $currentPcs, $item->min_stock, $item->project_status ?: $item->product_status
+                 );
+
+                 $item->status = ucfirst($status);
                  return $item;
             });
 
@@ -378,8 +391,256 @@ class DashboardController extends Controller
 
     public function getStatuses(Request $request, $type)
     {
-        $statuses = ($type === 'balance') ? ['Critical', 'Warning', 'Over', 'Safe'] : ['Over', 'Safe'];
+        $statuses = ($type === 'balance') ? ['Critical', 'Warning', 'Over', 'Safe'] : ['Loss', 'Near Loss', 'On Budget'];
         $formatted = array_map(fn($item) => ['id' => $item, 'text' => $item], $statuses);
         return response()->json(['results' => $formatted]);
+    }
+
+    public function chartDrilldown(Request $request)
+    {
+        $chartType  = $request->input('chart');
+        $label      = $request->input('label');
+        $monthYear  = $request->input('month_year', date('Y-m'));
+        $statusFilter = $request->input('status');
+        $search     = $request->input('search');
+        $pageSize   = $request->input('pageSize', 10);
+        $page       = $request->input('page', 1);
+        $offset     = ($page - 1) * $pageSize;
+
+        $outCategories = \App\Models\InventoryModel\Material\TransactionCategory::where('effect', -1)->pluck('code');
+
+        $baseProduct = DB::table('inv_t_product_detail as p')
+            ->join('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
+            ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
+            ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
+            ->where('p.is_active', 1);
+
+        $baseTrans = DB::table('inv_t_inventory_transaction as t')
+            ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
+            ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
+            ->join('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
+            ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
+            ->leftJoin('inv_m_supplier as s', 's.id', '=', 't.supplier_id');
+
+        $result = [];
+        $title  = '';
+        $total  = 0;
+
+        if ($chartType === 'stock') {
+            $parts = explode('|', $label);
+            $modelName = $parts[0] ?? '';
+            $custCode  = $parts[1] ?? '';
+            $title = "Stock Detail — {$modelName} / {$custCode}";
+
+            $query = (clone $baseProduct)
+                ->where(DB::raw('ISNULL(m.name, \'N/A\')'), $modelName)
+                ->where(DB::raw('ISNULL(c.code, \'N/A\')'), $custCode);
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('prod.part_no', 'like', "%{$search}%")
+                      ->orWhere('m.name', 'like', "%{$search}%");
+                });
+            }
+
+            $items = $query->select(
+                    'prod.part_no', 'rev.code as revision',
+                    'm.name as model_name', 'c.code as customer_code',
+                    'p.current_stock_qty', 'p.min_stock',
+                    'u.name as unit_name', 'p.pcs_per_unit',
+                    'p.weight_kg', 'p.gross_coil',
+                    'p.product_status', 'ms.project_status'
+                )
+                ->orderBy('prod.part_no')
+                ->get();
+
+            $processed = [];
+            foreach ($items as $row) {
+                // Convert to PCS for accurate comparison
+                $currentPcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
+                    $row->current_stock_qty, $row->weight_kg, $row->pcs_per_unit, $row->unit_name, 
+                    0, 0, 0, 1, $row->gross_coil
+                );
+
+                $statusRaw = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                    $currentPcs, $row->min_stock, $row->project_status ?: $row->product_status
+                );
+
+                if ($statusFilter && strcasecmp($statusRaw, $statusFilter) !== 0) {
+                    continue;
+                }
+
+                $processed[] = [
+                    'part_no'       => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'model'         => $row->model_name ?? '-',
+                    'customer'      => $row->customer_code ?? '-',
+                    'stock'         => number_format($currentPcs) . ' PCS',
+                    'min_stock'     => number_format($row->min_stock) . ' PCS',
+                    'unit'          => $row->unit_name ?? '-',
+                    'status'        => ucfirst($statusRaw),
+                ];
+            }
+            $total = count($processed);
+            $result = array_slice($processed, $offset, $pageSize);
+
+        } elseif ($chartType === 'trendline') {
+            $monthName = $label;
+            $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            $monthIdx = array_search($monthName, $monthNames);
+            $monthNum = ($monthIdx !== false) ? $monthIdx + 1 : 1;
+            $year = substr($monthYear, 0, 4) ?: date('Y');
+            
+            $title = "Transaction Detail — {$monthName} {$year} ({$statusFilter})";
+
+            $query = (clone $baseTrans)
+                ->whereYear('t.transaction_date', $year)
+                ->whereMonth('t.transaction_date', $monthNum);
+
+            if ($statusFilter) {
+                // Map display label back to OUT-EVENT etc. if needed
+                $catMap = ['Event' => 'OUT-EVENT', 'PP' => 'OUT-PP', 'Trial' => 'OUT-TRIAL', 'In' => 'IN'];
+                $dbStatus = $catMap[$statusFilter] ?? $statusFilter;
+                $query->where('tc.code', $dbStatus);
+            }
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('prod.part_no', 'like', "%{$search}%");
+                });
+            }
+
+            $total = (clone $query)->distinct()->count(DB::raw("CONCAT(prod.part_no, ISNULL(rev.code,''), tc.code, CAST(t.transaction_date AS NVARCHAR))"));
+            
+            $items = $query->select(
+                    'prod.part_no', 'rev.code as revision',
+                    'tc.code as category',
+                    DB::raw('SUM(t.qty * ISNULL(p.pcs_per_unit, 1)) as qty_pcs'),
+                    't.transaction_date'
+                )
+                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date')
+                ->orderBy('t.transaction_date', 'desc')
+                ->offset($offset)->limit($pageSize)
+                ->get();
+
+            foreach ($items as $row) {
+                $result[] = [
+                    'part_no'   => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'category'  => $row->category,
+                    'qty_pcs'   => number_format($row->qty_pcs),
+                    'date'      => $row->transaction_date,
+                ];
+            }
+
+        } elseif ($chartType === 'usage_model') {
+            $parts = explode('|', $label);
+            $modelName = $parts[0] ?? '';
+            $custCode  = $parts[1] ?? '';
+            $title = "Usage Detail — {$modelName} / {$custCode}";
+
+            $query = (clone $baseTrans)
+                ->where('t.transaction_date', 'like', "{$monthYear}%")
+                ->whereIn('tc.code', $outCategories)
+                ->where(DB::raw('ISNULL(m.name, \'N/A\')'), $modelName)
+                ->where(DB::raw('ISNULL(c.code, \'N/A\')'), $custCode);
+
+            if ($statusFilter) {
+                $query->where('tc.code', $statusFilter);
+            }
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('prod.part_no', 'like', "%{$search}%");
+                });
+            }
+
+            $total = (clone $query)->distinct()->count(DB::raw("CONCAT(prod.part_no, ISNULL(rev.code,''), tc.code, CAST(t.transaction_date AS NVARCHAR))"));
+            
+            $items = $query->select(
+                    'prod.part_no', 'rev.code as revision',
+                    'tc.code as category',
+                    DB::raw('SUM(t.qty * ISNULL(p.pcs_per_unit, 1)) as qty_pcs'),
+                    't.transaction_date'
+                )
+                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date')
+                ->orderBy('t.transaction_date', 'desc')
+                ->offset($offset)->limit($pageSize)
+                ->get();
+
+            foreach ($items as $row) {
+                $result[] = [
+                    'part_no'   => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'category'  => $row->category,
+                    'qty_pcs'   => number_format($row->qty_pcs),
+                    'date'      => $row->transaction_date,
+                ];
+            }
+
+        } elseif ($chartType === 'maker') {
+            $title = "Maker Detail — {$label}";
+
+            $query = (clone $baseTrans)
+                ->where('t.transaction_date', 'like', "{$monthYear}%")
+                ->where('tc.code', 'OUT-TRIAL')
+                ->where('s.code', $label);
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('prod.part_no', 'like', "%{$search}%")
+                      ->orWhere('m.name', 'like', "%{$search}%");
+                });
+            }
+
+            $items = $query->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
+                ->select(
+                    'prod.part_no', 'rev.code as revision',
+                    'm.name as model_name', 'c.code as customer_code',
+                    's.code as maker',
+                    'r.code as rank_code', 'r.process_type', 'r.limit_value',
+                    'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil',
+                    'u.name as unit_name',
+                    DB::raw('SUM(t.qty) as usage_qty')
+                )
+                ->groupBy(
+                    'prod.part_no', 'rev.code', 'm.name', 'c.code',
+                    's.code', 'r.code', 'r.process_type', 'r.limit_value',
+                    'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name'
+                )
+                ->get();
+
+            $processed = [];
+            foreach ($items as $row) {
+                $limit    = $this->calculateAdjustedRank($row->process_type, $row->limit_value, $row->unit_per_car, $row->pcs_per_unit);
+                $usagePcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs($row->usage_qty, 0, $row->pcs_per_unit, $row->unit_name, 0, 0, 0, 1, $row->gross_coil);
+                $gap      = $limit - $usagePcs;
+                $status   = ($gap < 0) ? 'Loss' : (($gap < 50) ? 'Near Loss' : 'On Budget');
+
+                if ($statusFilter && $status !== $statusFilter) continue;
+
+                $processed[] = [
+                    'part_no'   => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'model'     => $row->model_name ?? '-',
+                    'customer'  => $row->customer_code ?? '-',
+                    'rank'      => ($row->rank_code ?? '-') . ' ' . number_format($limit),
+                    'usage'     => number_format($usagePcs),
+                    'gap'       => number_format($gap),
+                    'status'    => $status,
+                ];
+            }
+            $total = count($processed);
+            $result = array_slice($processed, $offset, $pageSize);
+        }
+
+        return response()->json([
+            'title'  => $title,
+            'chart'  => $chartType,
+            'data'   => $result,
+            'total'  => $total
+        ]);
     }
 }

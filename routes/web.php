@@ -333,4 +333,5 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
 Route::post('/api/data/models', [DashboardController::class, 'getModels'])->name('api.data.models');
 Route::post('/api/data/customers', [DashboardController::class, 'getCustomers'])->name('api.data.customers');
 Route::get('/api/data/statuses/{type}', [DashboardController::class, 'getStatuses'])->name('api.data.statuses');
+Route::get('/api/dashboard/drilldown', [DashboardController::class, 'chartDrilldown'])->name('api.dashboard.drilldown');
 #End region
