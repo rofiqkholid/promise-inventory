@@ -4,47 +4,73 @@
 @section('page_title', 'Dashboard')
 
 @section('content')
-<div class="dashboard-container flex-1 flex flex-col gap-4">
-    {{-- Header & Filters --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h2 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight uppercase">Inventory Overview</h2>
-            <p class="text-[11px] text-slate-500 font-bold tracking-wide">Real-time stock monitoring and transaction analytics</p>
+<div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar lg:pb-0">
+    {{-- Header, KPIs & Filters --}}
+    <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+        <!-- Section 1: Title Section -->
+        <div class="flex-none">
+            <h2 class="text-lg xl:text-xl font-bold text-gray-800 dark:text-white leading-none mb-1">Inventory Overview</h2>
+            <p class="text-[11px] xl:text-xs text-gray-500 dark:text-gray-400 leading-tight">Stock monitoring and transaction analytics</p>
         </div>
-        <div class="flex items-center gap-2">
-            <button id="btnToggleDashFilter" class="group flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xs">
-                <i class="fa-solid fa-filter text-slate-400 transition-colors"></i>
-                <span class="text-xs font-bold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Filters</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 transition-transform duration-300" id="filterChevron"></i>
-            </button>
-            <div class="h-8 w-px bg-slate-200 dark:bg-gray-700 mx-1"></div>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ date('d M Y') }}</p>
+
+        <!-- Section 2: KPI Cards & Filter Toggle -->
+        <div class="flex-1 flex flex-col md:flex-row gap-2 items-stretch lg:justify-end min-w-[100%] xl:min-w-[750px]">
+            <!-- KPI Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-2 flex-1">
+                @foreach([
+                    ['val' => number_format($stats['total_stock_value']), 'label' => 'Total Value', 'unit' => 'IDR', 'icon' => 'fa-coins', 'color' => 'primary', 'id' => 'stat_total_stock_value'],
+                    ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock', 'unit' => 'Item Part', 'icon' => 'fa-cubes', 'color' => 'slate', 'id' => 'stat_total_stock'],
+                    ['val' => number_format($stats['material_in']), 'label' => 'In', 'unit' => 'Item Part', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'emerald', 'id' => 'stat_material_in'],
+                    ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'unit' => 'Item Part', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'amber', 'id' => 'stat_out_event'],
+                    ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'unit' => 'Item Part', 'icon' => 'fa-industry', 'color' => 'indigo', 'id' => 'stat_out_pp'],
+                    ['val' => number_format($stats['out_trial']), 'label' => 'Out Trial', 'unit' => 'Item Part', 'icon' => 'fa-vial', 'color' => 'rose', 'id' => 'stat_out_trial'],
+                ] as $stat)
+                <div class="bg-white dark:bg-gray-800 px-2.5 py-2 rounded-xs border border-gray-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-9 h-9 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-base shrink-0">
+                        <i class="fa-solid {{ $stat['icon'] }}"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
+                            {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-medium ml-0.5">{{ $stat['unit'] }}</span>
+                        </h3>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <!-- Filter Toggle Section -->
+            <div class="shrink-0 flex items-stretch">
+                <button id="btnToggleDashFilter" title="Toggle Filters" class="group flex items-center justify-center w-full md:w-[52px] h-[52px] md:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xs transition-all hover:bg-slate-50 dark:hover:bg-gray-700">
+                    <i class="fa-solid fa-filter text-slate-400 group-hover:text-primary-500 transition-colors text-sm"></i>
+                </button>
+            </div>
         </div>
     </div>
 
     {{-- Collapsible Filter Card --}}
-    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4 mb-2">
+    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4">
         <form id="filterForm">
-            <div class="flex flex-col xl:flex-row gap-4 xl:items-end">
+            <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Period</label>
-                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-bold border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
+                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Period</label>
+                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Customer</label>
+                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Customer</label>
                         <select id="filterCustomer" name="customer[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Model</label>
+                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Model</label>
                         <select id="filterModel" name="model[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Balance Status</label>
+                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Balance Status</label>
                         <select id="filterBalance" name="status_balance[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Usage Status</label>
+                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Usage Status</label>
                         <select id="filterUsage" name="status_usage[]" class="w-full text-xs"></select>
                     </div>
                 </div>
@@ -58,283 +84,146 @@
         </form>
     </div>
 
-    {{-- KPI Cards Section --}}
-    <div class="overflow-x-auto scrollbar-hide">
-        <div class="flex gap-3 min-w-max">
-            @foreach([
-                ['val' => number_format($stats['total_stock_value']), 'label' => 'Total Stock Value', 'sub' => 'IDR', 'icon' => 'fa-coins', 'color' => 'primary', 'id' => 'stat_total_stock_value'],
-                ['val' => number_format($stats['total_stock']), 'label' => 'Total Stock', 'sub' => 'ITEM PART', 'icon' => 'fa-cubes', 'color' => 'slate', 'id' => 'stat_total_stock'],
-                ['val' => number_format($stats['material_in']), 'label' => 'Total In', 'sub' => 'ITEM PART', 'icon' => 'fa-arrow-right-to-bracket', 'color' => 'emerald', 'id' => 'stat_material_in'],
-                ['val' => number_format($stats['out_event']), 'label' => 'Out Event', 'sub' => 'ITEM PART', 'icon' => 'fa-arrow-right-from-bracket', 'color' => 'amber', 'id' => 'stat_out_event'],
-                ['val' => number_format($stats['out_pp']), 'label' => 'Out PP', 'sub' => 'ITEM PART', 'icon' => 'fa-industry', 'color' => 'indigo', 'id' => 'stat_out_pp'],
-                ['val' => number_format($stats['out_trial']), 'label' => 'Trial Usage', 'sub' => 'ITEM PART', 'icon' => 'fa-vial', 'color' => 'rose', 'id' => 'stat_out_trial'],
-            ] as $stat)
-            <div class="flex-1 min-w-[180px] bg-white dark:bg-gray-800 px-4 py-3 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center justify-between transition-all hover:border-{{ $stat['color'] }}-300 dark:hover:border-{{ $stat['color'] }}-500 group">
-                <div class="flex-1 min-w-0">
-                    <p class="text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest mb-1 truncate">{{ $stat['label'] }}</p>
-                    <div class="flex items-baseline gap-1">
-                        <h3 class="text-xl font-black text-slate-900 dark:text-white leading-none tracking-tight" id="{{ $stat['id'] }}">{{ $stat['val'] }}</h3>
-                        <span class="text-[7px] font-black text-slate-300 dark:text-gray-600 uppercase">{{ $stat['sub'] }}</span>
-                    </div>
-                </div>
-                <div class="w-11 h-11 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-xl transition-all group-hover:scale-110 group-hover:bg-{{ $stat['color'] }}-100 dark:group-hover:bg-{{ $stat['color'] }}-900/40">
-                    <i class="fa-solid {{ $stat['icon'] }}"></i>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
 
-    <div class="grid grid-cols-12 gap-4 mt-1 items-stretch" style="min-height: calc(100vh - 250px);">
-        <div class="col-span-12 xl:col-span-8 flex flex-col gap-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
-                {{-- Chart Card 1 --}}
-                <div class="chart-card bg-white dark:bg-gray-800 p-6 rounded-xs border border-slate-200 dark:border-gray-700 flex flex-col relative h-[340px]">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-1 h-5 bg-primary-500 rounded-full"></div>
-                            <h4 class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Stock Status (PART)</h4>
-                        </div>
-                        <button class="w-8 h-8 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
-                    </div>
-                    <div class="flex-1 min-h-0 relative"><canvas id="stockStatusChart"></canvas></div>
+    <div class="flex flex-col lg:flex-row gap-2 flex-1 min-h-0">
+        {{-- Column 1 --}}
+        <div class="w-full lg:w-1/3 flex flex-col gap-2 h-full min-h-0">
+            {{-- Chart Card 1 --}}
+            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-1 min-h-0">
+                <div class="flex-none flex justify-between items-center mb-1">
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                        <i class="fa-solid fa-chart-column mr-2 text-primary-500"></i> Stock Status <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>
+                    </h3>
+                    <button class="text-gray-400 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand"></i></button>
                 </div>
-                {{-- Chart Card 2 --}}
-                <div class="chart-card bg-white dark:bg-gray-800 p-6 rounded-xs border border-slate-200 dark:border-gray-700 flex flex-col relative h-[340px]">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-1 h-5 bg-amber-500 rounded-full"></div>
-                            <h4 id="usageChartTitle" class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Usage by Models (PART)</h4>
-                        </div>
-                        <div class="flex items-center gap-3">
-                             <div class="flex bg-slate-100 dark:bg-gray-700 p-1 rounded-xs">
-                                <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-3 py-1 rounded-xs text-[8px] font-black uppercase transition-all bg-white dark:bg-gray-600 text-primary-600 shadow-sm">Model</button>
-                                <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-3 py-1 rounded-xs text-[8px] font-black uppercase transition-all text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Maker</button>
-                            </div>
-                            <button class="w-8 h-8 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
-                        </div>
-                    </div>
-                    <div class="flex-1 min-h-0 relative">
-                        <div id="containerUsageModel" class="h-full"><canvas id="usageModelChart"></canvas></div>
-                        <div id="containerUsageMaker" class="h-full hidden"><canvas id="makerChart"></canvas></div>
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
-                {{-- Chart Card 3 --}}
-                {{-- Balance Warnings Table (Moved here) --}}
-                {{-- Balance Warnings Table --}}
-                <div class="table-container bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden flex flex-col relative h-[340px]">
-                    <div class="py-4 px-6 border-b border-slate-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-xs bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center text-rose-500">
-                                <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
-                            </div>
-                            <span class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Balance Warnings</span>
-                        </div>
-                    </div>
-                    <div class="overflow-y-auto flex-1 custom-scrollbar">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
-                                <tr>
-                                    <th class="py-3 px-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">Part No</th>
-                                    <th class="py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Min</th>
-                                    <th class="py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actual</th>
-                                    <th class="py-3 px-6 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="balanceTableBody" class="divide-y divide-slate-50 dark:divide-gray-700">
-                                @forelse($tables['balance'] as $row)
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                                    <td class="py-3 px-6">
-                                        <p class="text-[11px] font-bold text-slate-800 dark:text-white tracking-tight leading-tight uppercase">{{ $row->part_no }} {{ $row->revision ? '- ' . $row->revision : '' }}</p>
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{{ $row->model_name }} | {{ $row->customer_code }}</p>
-                                    </td>
-                                    <td class="py-3 px-4 text-right">
-                                        <div class="text-[11px] font-bold text-slate-400 font-mono">{{ number_format($row->min_stock) }}</div>
-                                    </td>
-                                    <td class="py-3 px-4 text-right">
-                                        <div class="text-[11px] font-black text-slate-900 dark:text-white font-mono">{{ number_format($row->current_stock_qty) }}</div>
-                                    </td>
-                                    <td class="py-3 px-6 text-right">
-                                        @php 
-                                            $color = $row->status == 'Critical' ? 'red' : ($row->status == 'Warning' ? 'amber' : ($row->status == 'Over' ? 'primary' : 'emerald'));
-                                        @endphp
-                                        <span class="inline-flex px-2 py-1 rounded-xs text-[8px] font-black bg-{{ $color == 'primary' ? 'primary' : $color }}-50 text-{{ $color == 'primary' ? 'primary' : $color }}-600 dark:bg-{{ $color == 'primary' ? 'primary' : $color }}-900/30 dark:text-{{ $color == 'primary' ? 'primary' : $color }}-400 border border-{{ $color == 'primary' ? 'primary' : $color }}-100 dark:border-{{ $color == 'primary' ? 'primary' : $color }}-800 uppercase italic leading-none">{{ $row->status }}</span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="4" class="p-10 text-center text-slate-400 italic text-[11px]">All items are currently within safe limits.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {{-- Material Usage Table --}}
-                <div class="table-container bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden flex flex-col relative h-[340px]">
-                    <div class="py-4 px-6 border-b border-slate-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-xs bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-500">
-                                <i class="fa-solid fa-vial text-[11px]"></i>
-                            </div>
-                            <span class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Material Usage Detail</span>
-                        </div>
-                    </div>
-                    <div class="overflow-y-auto flex-1 custom-scrollbar">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
-                                <tr>
-                                    <th class="py-3 px-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">Part No</th>
-                                    <th class="py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Supplier</th>
-                                    <th class="py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Rank</th>
-                                    <th class="py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actual</th>
-                                    <th class="py-3 px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Gap</th>
-                                    <th class="py-3 px-6 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="usageTableBody" class="divide-y divide-slate-50 dark:divide-gray-700">
-                                @forelse($tables['usage'] as $row)
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                                    <td class="py-3 px-6 text-[10px] font-black text-slate-700 dark:text-white uppercase tracking-tighter">{{ $row['part_no'] }} {{ $row['revision'] ? '- ' . $row['revision'] : '' }}</td>
-                                    <td class="py-3 px-4 text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-tight">{{ $row['supplier_name'] }}</td>
-                                    <td class="py-3 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 font-mono">{{ $row['rank_display'] }}</td>
-                                    <td class="py-3 px-4 text-[11px] font-black text-slate-900 dark:text-white text-right font-mono">{{ number_format($row['out_trial']) }}</td>
-                                    <td class="py-3 px-4 text-[11px] font-black {{ $row['gap'] < 0 ? 'text-red-500' : 'text-emerald-500' }} text-right font-mono">{{ number_format($row['gap']) }}</td>
-                                    <td class="py-3 px-6 text-right">
-                                        @php 
-                                            $color = $row['status'] == 'Loss' ? 'red' : ($row['status'] == 'Near Loss' ? 'amber' : 'emerald');
-                                        @endphp
-                                        <span class="inline-flex px-2 py-1 rounded-xs text-[8px] font-black bg-{{ $color }}-50 text-{{ $color }}-600 dark:bg-{{ $color }}-900/30 dark:text-{{ $color }}-400 border border-{{ $color }}-100 dark:border-{{ $color }}-800 uppercase italic leading-none">{{ $row['status'] }}</span>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="6" class="p-10 text-center text-slate-400 italic text-[11px]">No trial data available.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-span-12 xl:col-span-4 flex flex-col gap-4">
-            {{-- Transaction Trend Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-6 rounded-xs border border-slate-200 dark:border-gray-700 flex flex-col relative h-[340px]">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-1 h-5 bg-emerald-500 rounded-full"></div>
-                        <h4 class="font-bold text-[11px] text-slate-800 dark:text-white uppercase tracking-widest">Transaction Trend (ITEM PART)</h4>
-                    </div>
-                    <button class="w-8 h-8 rounded-xs flex items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand text-[10px]"></i></button>
-                </div>
-                <div class="flex-1 min-h-0 relative"><canvas id="trendlineChart"></canvas></div>
+                <div class="relative w-full flex-1 min-h-0"><canvas id="stockStatusChart"></canvas></div>
             </div>
 
-            {{-- Recent Transactions --}}
-            <div class="table-container bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 overflow-hidden flex flex-col flex-1 min-h-0">
-                <div class="py-3 px-5 border-b border-slate-50 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="w-7 h-7 rounded-xs bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-primary-500">
-                            <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
-                        </div>
-                        <span class="font-bold text-[10px] text-slate-800 dark:text-white uppercase tracking-wider">Recent Activity</span>
-                    </div>
+            {{-- Balance Warnings Table --}}
+            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-1 min-h-0">
+                <div class="flex-none flex justify-between items-center mb-1">
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                        <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i> Balance Warnings
+                    </h3>
                 </div>
-                <div class="overflow-y-auto flex-1 custom-scrollbar">
+                <div class="overflow-y-auto flex-1 custom-scrollbar border border-gray-100 dark:border-gray-700/50 rounded-xs">
                     <table class="w-full text-left">
-                        <thead class="bg-slate-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
+                        <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-3 px-5 text-[8px] font-black text-slate-400 uppercase tracking-widest">Part No</th>
-                                <th class="py-3 px-3 text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Type</th>
-                                <th class="py-3 px-5 text-[8px] font-black text-slate-400 uppercase tracking-widest text-center">Datetime</th>
-                                <th class="py-3 px-5 text-[8px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
+                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Part No</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Min</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Actual</th>
+                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="historyTableBody" class="divide-y divide-slate-50 dark:divide-gray-700">
-                            @forelse($tables['history'] as $row)
-                            <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                                <td class="py-3 px-5">
-                                    <p class="text-[10px] font-black text-slate-800 dark:text-white leading-tight uppercase">{{ $row->part_no }} {{ $row->revision ? '- ' . $row->revision : '' }}</p>
-                                    <p class="text-[8px] font-bold text-slate-400 uppercase">{{ $row->model_name }} | {{ $row->customer_code }}</p>
-                                </td>
-                                <td class="py-3 px-3 text-center">
-                                    <span class="px-1.5 py-0.5 rounded-xs text-[8px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase">{{ $row->category }}</span>
-                                </td>
-                                <td class="py-3 px-5 text-center">
-                                    <div class="text-[9px] font-bold text-slate-600 dark:text-slate-400">{{ \Carbon\Carbon::parse($row->transaction_date)->format('d M y') }}</div>
-                                    <div class="text-[8px] font-bold text-slate-400 dark:text-slate-500 font-mono">{{ \Carbon\Carbon::parse($row->created_at)->format('H:i') }}</div>
-                                </td>
-                                <td class="py-3 px-5 text-right">
-                                    <div class="text-[10px] font-black text-slate-900 dark:text-white font-mono">{{ number_format($row->qty_pcs) }}</div>
-                                    <div class="text-[7px] font-bold text-slate-400 uppercase leading-none">PCS</div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="4" class="p-10 text-center text-slate-400 italic text-[10px]">No activity.</td></tr>
-                            @endforelse
+                        <tbody id="balanceTableBody" class="divide-y divide-slate-100 dark:divide-gray-700">
                         </tbody>
                     </table>
                 </div>
             </div>
+        </div>
+
+        {{-- Column 2 --}}
+        <div class="w-full lg:w-1/3 flex flex-col gap-2 h-full min-h-0">
+            {{-- Chart Card 2 --}}
+            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-1 min-h-0">
+                <div class="flex-none flex justify-between items-center mb-1">
+                    <h3 id="usageChartTitle" class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                        <i class="fa-solid fa-chart-pie mr-2 text-amber-500"></i> Usage by Models <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>
+                    </h3>
+                    <div class="flex items-center gap-2">
+                            <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs">
+                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all bg-white dark:bg-gray-600 text-primary-600 shadow-sm">Model</button>
+                            <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Maker</button>
+                        </div>
+                        <button class="text-gray-400 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="relative w-full flex-1 min-h-0">
+                    <div id="containerUsageModel" class="h-full"><canvas id="usageModelChart"></canvas></div>
+                    <div id="containerUsageMaker" class="h-full hidden"><canvas id="makerChart"></canvas></div>
+                </div>
+            </div>
+
+            {{-- Material Usage Table --}}
+            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-1 min-h-0">
+                <div class="flex-none flex justify-between items-center mb-1">
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                        <i class="fa-solid fa-vial mr-2 text-indigo-500"></i> Material Usage Detail
+                    </h3>
+                </div>
+                <div class="overflow-y-auto flex-1 custom-scrollbar border border-gray-100 dark:border-gray-700/50 rounded-xs">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
+                            <tr>
+                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Part No</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Supplier</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Actual</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Gap</th>
+                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usageTableBody" class="divide-y divide-slate-100 dark:divide-gray-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Column 3 --}}
+        <div class="w-full lg:w-1/3 flex flex-col gap-2 h-full min-h-0">
+            {{-- Transaction Trend Chart --}}
+            <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-1 min-h-0">
+                <div class="flex-none flex justify-between items-center mb-1">
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                        <i class="fa-solid fa-arrow-trend-up mr-2 text-emerald-500"></i> Transaction Trend <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>
+                    </h3>
+                    <button class="text-gray-400 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fa-solid fa-expand"></i></button>
+                </div>
+                <div class="relative w-full flex-1 min-h-0"><canvas id="trendlineChart"></canvas></div>
+            </div>
+
+            {{-- Recent Transactions --}}
+            <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-1 min-h-0">
+                <div class="flex-none flex justify-between items-center mb-1">
+                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left mr-2 text-primary-500"></i> Recent Activity
+                    </h3>
+                </div>
+                <div class="overflow-y-auto flex-1 custom-scrollbar border border-gray-100 dark:border-gray-700/50 rounded-xs">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
+                            <tr>
+                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Part No</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Type</th>
+                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Date</th>
+                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="divide-y divide-slate-100 dark:divide-gray-700">
+                        </tbody>
+                    </table>
+            </div>
+        </div>
         </div>
     </div>
 </div>
 @endsection
 
 @push('scripts')
-<style>
-    /* Hide chevron when clear button is present */
-    .select2-container--default .select2-selection--single:has(.select2-selection__clear) .select2-selection__arrow {
-        display: none !important;
-    }
-    
-    /* Center clear button vertically */
-    .select2-container--default .select2-selection--single .select2-selection__clear {
-        top: 50% !important;
-        transform: translateY(25%) !important;
-    }
 
-    /* Match Select2 height with other inputs (38px) */
-    .select2-container .select2-selection--single {
-        height: 38px !important;
-        display: flex !important;
-        align-items: center !important;
-        border-color: #d1d5db !important; /* gray-300 */
-        border-radius: 0.125rem !important; /* rounded-xs */
-    }
-    .dark .select2-container .select2-selection--single {
-        background-color: #1f2937 !important; /* gray-800 */
-        border-color: #4b5563 !important; /* gray-600 */
-        color: white !important;
-    }
-    .select2-container .select2-selection--single .select2-selection__rendered {
-        padding-left: 0.75rem !important; /* px-3 */
-        font-size: 0.75rem !important; /* text-xs */
-        font-weight: 600 !important;
-        color: #1e293b !important; /* slate-800 */
-    }
-    .dark .select2-container .select2-selection--single .select2-selection__rendered {
-        color: #e2e8f0 !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 38px !important;
-        top: 0 !important;
-        right: 8px !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow b {
-        margin-top: 0 !important;
-        top: auto !important;
-    }
-</style>
 <script>
     $(document).ready(function() {
         // Toggle Filter Logic
         $('#btnToggleDashFilter').on('click', function(e) {
             e.stopPropagation();
             $('#dashboardFilterCard').slideToggle(200);
-            $('#filterChevron').toggleClass('rotate-180');
+            
+            // Toggle active styling
+            $(this).toggleClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700');
+            $(this).toggleClass('bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-700 hover:bg-primary-100 dark:hover:bg-primary-900/40');
+            $(this).find('i').toggleClass('text-slate-400 group-hover:text-primary-500');
+            $(this).find('i').toggleClass('text-primary-600 dark:text-primary-400');
         });
 
         const isDark = document.documentElement.classList.contains('dark');
@@ -361,7 +250,11 @@
 
         window.switchUsageChart = function(type) {
             const isModel = type === 'model';
-            $('#usageChartTitle').text(isModel ? 'Usage by Models (PART)' : 'Supply by Makers (PART)');
+            $('#usageChartTitle').html(
+                '<i class="fa-solid fa-chart-pie mr-2 text-amber-500"></i> ' + 
+                (isModel ? 'Usage by Models' : 'Supply by Makers') + 
+                ' <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">Item Part</span>'
+            );
             
             // Toggle container
             $('#containerUsageModel').toggleClass('hidden', !isModel);
@@ -547,26 +440,9 @@
 
                         const trends = response.charts.trendline;
                         const dates = [...new Set(trends.map(d => d.transaction_date))]; 
-                        const cats = [...new Set(trends.map(d => d.category))];
-                        
-                        const newDatasets = cats.map((cat, idx) => {
-                            const colorKeys = Object.keys(chartColors);
-                            const color = chartColors[colorKeys[idx % colorKeys.length]];
-                            return {
-                                label: cat.replace('OUT-', ''),
-                                data: dates.map(d => (trends.find(td => td.transaction_date === d && td.category === cat) || {total: 0}).total),
-                                borderColor: color.solid,
-                                backgroundColor: color.light,
-                                fill: false,
-                                tension: 0.4,
-                                pointRadius: 3,
-                                pointHoverRadius: 6,
-                                borderWidth: 3
-                            };
-                        });
                         
                         trendlineChart.data.labels = dates;
-                        trendlineChart.data.datasets = newDatasets;
+                        trendlineChart.data.datasets = buildTrendlineDatasets(trends, dates);
                         trendlineChart.update();
 
                         // Update Recent Activity
@@ -583,13 +459,18 @@
                 });
             }
 
+            let isResetting = false;
+
             // Auto-apply logic
             $('#month_picker, #filterCustomer, #filterModel, #filterBalance, #filterUsage').on('change', function() {
+                if (isResetting) return;
                 fetchDashboardData($('#filterForm').serialize());
             });
 
             $('#btnReset').on('click', function() {
                 const btn = $(this);
+                isResetting = true;
+                
                 // Reset Form
                 $('#month_picker').val('{{ date("Y-m") }}'); // Default to current month
                 $('#filterCustomer').val(null).trigger('change');
@@ -597,14 +478,36 @@
                 $('#filterBalance').val(null).trigger('change');
                 $('#filterUsage').val(null).trigger('change');
                 
-                // Fetch Data with reset form
+                // Fetch Data with reset form ONCE
                 fetchDashboardData($('#filterForm').serialize(), btn);
+                
+                setTimeout(() => { isResetting = false; }, 100);
             });
-
-
 
             // Chart Globals
             let stockStatusChart, usageModelChart, trendlineChart, makerChart;
+
+            // Helper to generate trendline datasets consistently
+            function buildTrendlineDatasets(trendsData, datesList) {
+                const cats = [...new Set(trendsData.map(d => d.category))];
+                return cats.map((cat, idx) => {
+                    const colorKeys = Object.keys(chartColors);
+                    const color = chartColors[colorKeys[idx % colorKeys.length]];
+                    return {
+                        label: cat.replace('OUT-', '').split(' ').map(w => w === 'PP' ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
+                        data: datesList.map(d => (trendsData.find(td => td.transaction_date === d && td.category === cat) || {total: 0}).total),
+                        borderColor: color.solid,
+                        backgroundColor: color.light,
+                        fill: false,
+                        tension: 0.5,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        borderWidth: 1.5,
+                        pointStyle: 'circle'
+                    };
+                });
+            }
+
 
             // Custom Vertical Line Plugin
             const verticalLinePlugin = {
@@ -641,15 +544,15 @@
                  chart.data.datasets[0].data = data;
                  chart.update();
             }
-            function renderTable(selector, data, rowGenerator) {
+            function renderTable(selector, data, rowGenerator, emptyText = 'No data found') {
                 const tbody = $(selector);
                 tbody.empty();
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     const colCount = $(selector).closest('table').find('thead th').length || 5;
-                    tbody.append(`<tr><td colspan="${colCount}" class="p-10 text-center text-slate-400 dark:text-gray-500 italic text-[11px]">No data found</td></tr>`);
+                    tbody.append(`<tr><td colspan="${colCount}" class="p-8 text-center text-slate-400 dark:text-gray-500 italic text-[11px]">${emptyText}</td></tr>`);
                     return;
                 }
-                data.forEach(item => {
+                data.slice(0, 15).forEach(item => {
                     tbody.append(rowGenerator(item));
                 });
             }
@@ -665,30 +568,18 @@
                  let partName = row.part_no + (row.revision ? ' - ' + row.revision : '');
                   return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                        <td class="py-3 px-6">
-                            <div class="flex items-center gap-1.5 mb-1.5">
-                                <span class="px-1.2 py-0.5 rounded-[2px] bg-slate-100 dark:bg-slate-700 text-[7px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50">
-                                    ${row.customer_code || '-'}
-                                </span>
-                                <span class="px-1.2 py-0.5 rounded-[2px] bg-primary-50 dark:bg-primary-900/20 text-[7px] font-black text-primary-600 dark:text-primary-400 uppercase tracking-widest border border-primary-100/50 dark:border-primary-800/50">
-                                    ${row.model_name || 'No Model'}
-                                </span>
-                            </div>
-                            <p class="text-[11px] font-bold text-slate-800 dark:text-white truncate max-w-[150px] leading-tight uppercase tracking-tight">
-                                ${row.part_no} ${row.revision ? '- ' + row.revision : ''}
-                            </p>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                                ${row.model_name} | ${row.customer_code}
-                            </p>
+                        <td class="py-1.5 px-3">
+                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name} | ${row.customer_code || '-'}</p>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-[11px] font-bold text-slate-400">
-                            ${new Intl.NumberFormat().format(row.min_stock)}
+                        <td class="py-1.5 px-2 text-right">
+                            <div class="text-[11px] font-medium text-slate-500 font-mono">${new Intl.NumberFormat().format(row.min_stock)}</div>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono text-[11px] font-black text-slate-900 dark:text-white">
-                            ${new Intl.NumberFormat().format(row.current_stock_qty)}
+                        <td class="py-1.5 px-2 text-right">
+                            <div class="text-[11px] font-medium text-slate-800 dark:text-white font-mono">${new Intl.NumberFormat().format(row.current_stock_qty)}</div>
                         </td>
-                        <td class="py-3 px-6 text-right">
-                            <span class="inline-flex px-2 py-1 rounded-xs text-[8px] font-black ${colorClass} border uppercase italic leading-none">${row.status}</span>
+                        <td class="py-1.5 px-3 text-right">
+                            <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[9px] font-medium ${colorClass} border uppercase leading-none">${row.status}</span>
                         </td>
                     </tr>
                  `;
@@ -697,13 +588,12 @@
                 const color = row.status == 'Loss' ? 'red' : (row.status == 'Near Loss' ? 'amber' : 'emerald');
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                        <td class="py-3 px-6 text-[10px] font-black text-slate-700 dark:text-white uppercase tracking-tighter">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</td>
-                        <td class="py-3 px-4 text-[11px] font-bold text-slate-800 dark:text-white uppercase tracking-tight">${row.supplier_name}</td>
-                        <td class="py-3 px-4 text-[10px] font-bold text-slate-500 dark:text-slate-400 font-mono">${row.rank_display}</td>
-                        <td class="py-3 px-4 text-[11px] font-black text-slate-900 dark:text-white text-right font-mono">${new Intl.NumberFormat().format(row.out_trial)}</td>
-                        <td class="py-3 px-4 text-[11px] font-black ${row.gap < 0 ? 'text-red-500' : 'text-emerald-500'} text-right font-mono">${new Intl.NumberFormat().format(row.gap)}</td>
-                        <td class="py-3 px-6 text-right">
-                            <span class="inline-flex px-2 py-1 rounded-xs text-[8px] font-black bg-${color}-50 text-${color}-600 dark:bg-${color}-900/30 dark:text-${color}-400 border border-${color}-100 dark:border-${color}-800 uppercase italic leading-none">${row.status}</span>
+                        <td class="py-1.5 px-3 text-[11px] font-medium text-slate-700 dark:text-gray-200 uppercase tracking-tight">${row.part_no}</td>
+                        <td class="py-1.5 px-2 text-[10px] text-slate-500 dark:text-slate-400 uppercase truncate max-w-[80px]">${row.supplier_name || '-'}</td>
+                        <td class="py-1.5 px-2 text-[11px] font-medium text-slate-800 dark:text-white text-right font-mono">${new Intl.NumberFormat().format(row.out_trial)}</td>
+                        <td class="py-1.5 px-2 text-[11px] font-medium ${row.gap < 0 ? 'text-red-500' : 'text-emerald-500'} text-right font-mono">${new Intl.NumberFormat().format(row.gap)}</td>
+                        <td class="py-1.5 px-3 text-right">
+                            <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[9px] font-medium bg-${color}-50 text-${color}-600 dark:bg-${color}-900/30 dark:text-${color}-400 border border-${color}-100 dark:border-${color}-800 uppercase leading-none">${row.status}</span>
                         </td>
                     </tr>
                 `;
@@ -716,24 +606,27 @@
                 
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                        <td class="py-3 px-5">
-                            <p class="text-[10px] font-black text-slate-800 dark:text-white leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
-                            <p class="text-[8px] font-bold text-slate-400 uppercase">${row.model_name} | ${row.customer_code}</p>
+                        <td class="py-1.5 px-3">
+                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name} | ${row.customer_code}</p>
                         </td>
-                        <td class="py-3 px-3 text-center">
-                            <span class="px-1.5 py-0.5 rounded-xs text-[8px] font-black bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase">${row.category}</span>
+                        <td class="py-1.5 px-2 text-center">
+                            <span class="px-1.5 py-0.5 rounded-xs text-[9px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase">${row.category}</span>
                         </td>
-                        <td class="py-3 px-5 text-center">
-                            <div class="text-[9px] font-bold text-slate-600 dark:text-slate-400">${dateStr}</div>
-                            <div class="text-[8px] font-bold text-slate-400 dark:text-slate-500 font-mono">${timeStr}</div>
+                        <td class="py-1.5 px-2 text-center whitespace-nowrap">
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400">${dateStr} <span class="text-[9px] text-slate-400 font-mono ml-1">${timeStr}</span></div>
                         </td>
-                        <td class="py-3 px-5 text-right">
-                            <div class="text-[10px] font-black text-slate-900 dark:text-white font-mono">${new Intl.NumberFormat().format(row.qty_pcs)}</div>
-                            <div class="text-[7px] font-bold text-slate-400 uppercase leading-none">PCS</div>
+                        <td class="py-1.5 px-3 text-right">
+                            <div class="text-[11px] font-medium text-slate-800 dark:text-white font-mono">${new Intl.NumberFormat().format(row.qty_pcs)}</div>
                         </td>
                     </tr>
                 `;
             }
+
+            // --- INITIALIZATION ---
+            renderTable('#balanceTableBody', @json($tables['balance'] ?? []), generateBalanceRow, 'All items are currently within safe limits.');
+            renderTable('#usageTableBody', @json($tables['usage'] ?? []), generateUsageRow, 'No trial data available.');
+            renderTable('#historyTableBody', @json($tables['history'] ?? []), generateHistoryRow, 'No recent activity.');
 
 
                 if (document.getElementById('stockStatusChart')) {
@@ -782,7 +675,16 @@
                         }
                     },
                     plugins: {
-                        legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#64748b' } }
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: isDark ? '#94a3b8' : '#64748b',
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'rect',
+                                padding: 15
+                            } 
+                        }
                     }
                 }
             });
@@ -813,7 +715,16 @@
                         }
                     },
                     plugins: {
-                        legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#64748b' } }
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: isDark ? '#94a3b8' : '#64748b',
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'rect',
+                                padding: 15
+                            } 
+                        }
                     }
                 }
             });
@@ -822,32 +733,13 @@
         if (document.getElementById('trendlineChart')) {
             const trendData = chartsData.trendData;
             const dates = trendData ? [...new Set(trendData.map(d => d.transaction_date))] : [];
-            const cats = trendData ? [...new Set(trendData.map(d => d.category))] : [];
-            const colors = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-                trendlineChart = new Chart(document.getElementById('trendlineChart'), {
+            trendlineChart = new Chart(document.getElementById('trendlineChart'), {
                 type: 'line',
                 plugins: [verticalLinePlugin],
                 data: {
                     labels: dates,
-                    datasets: cats.map((cat, idx) => {
-                        const colorKeys = Object.keys(chartColors);
-                        const color = chartColors[colorKeys[idx % colorKeys.length]];
-                        return {
-                            label: cat.replace('OUT-', ''),
-                            data: dates.map(d => (trendData.find(td => td.transaction_date === d && td.category === cat) || {
-                                total: 0
-                            }).total),
-                            borderColor: color.solid,
-                            backgroundColor: color.light,
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            borderWidth: 3,
-                            pointStyle: 'circle'
-                        };
-                    })
+                    datasets: buildTrendlineDatasets(trendData || [], dates)
                 },
                 options: {
                     responsive: true,
@@ -878,12 +770,13 @@
                     },
                     plugins: {
                         legend: {
-                            position: 'top',
+                            position: 'bottom',
                             labels: { 
                                 color: isDark ? '#94a3b8' : '#64748b',
+                                font: { size: 10 },
                                 usePointStyle: true,
                                 pointStyle: 'circle',
-                                padding: 20
+                                padding: 15
                             }
                         },
                         tooltip: {
@@ -901,7 +794,7 @@
                                     let label = context.dataset.label || '';
                                     if (label) label += ': ';
                                     if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat().format(context.parsed.y) + ' ITEM PART';
+                                        label += new Intl.NumberFormat().format(context.parsed.y) + ' Item';
                                     }
                                     return label;
                                 },
@@ -958,7 +851,16 @@
                         }
                     },
                     plugins: {
-                        legend: { position: 'top', labels: { color: isDark ? '#94a3b8' : '#64748b' } }
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                color: isDark ? '#94a3b8' : '#64748b',
+                                font: { size: 10 },
+                                usePointStyle: true,
+                                pointStyle: 'rect',
+                                padding: 15
+                            } 
+                        }
                     }
                 }
             });
