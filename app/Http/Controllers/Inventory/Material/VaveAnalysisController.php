@@ -220,30 +220,52 @@ class VaveAnalysisController extends Controller
         }
 
         $validated = validator($data, [
-            'base_name' => 'nullable|string|max:100',
-            'is_active' => 'boolean',
-            'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
-            'unit_id' => 'nullable|integer|exists:inv_m_unit,id',
+            'base_name'           => 'nullable|string|max:100',
+            'is_active'           => 'boolean',
+            'material_spec_id'    => 'nullable|exists:inv_m_material_spec,id',
+            'unit_id'             => 'nullable|integer|exists:inv_m_unit,id',
             'vave_base_suffix_id' => 'nullable|integer|exists:inv_m_vave_base_suffix,id',
-            'thickness' => 'required|numeric|min:0',
-            'width' => 'required|numeric|min:0',
-            'length' => 'nullable|numeric|min:0',
-            'length_2' => 'nullable|numeric|min:0',
-            'pitch' => 'nullable|numeric|min:0',
-            'density' => 'required|numeric|min:0',
-            'weight_kg' => 'required|numeric|min:0',
-            'net_weight' => 'nullable|numeric|min:0',
-            'material_price' => 'nullable|numeric|min:0',
-            'remark' => 'nullable|string',
+            'thickness'           => 'required|numeric|min:0',
+            'width'               => 'required|numeric|min:0',
+            'length'              => 'nullable|numeric|min:0',
+            'length_2'            => 'nullable|numeric|min:0',
+            'pitch'               => 'nullable|numeric|min:0',
+            'density'             => 'required|numeric|min:0',
+            'weight_kg'           => 'required|numeric|min:0',
+            'net_weight'          => 'nullable|numeric|min:0',
+            'material_price'      => 'nullable|numeric|min:0',
+            'effective_from'      => 'nullable|integer|min:2000|max:2099',
+            'effective_to'        => 'nullable|integer|min:2000|max:2099',
+            'remark'              => 'nullable|string',
         ])->validate();
 
         $validated['product_id'] = $productId;
+        $currentYear = (int) date('Y');
 
         DB::beginTransaction();
         try {
-            // Automatic Active Logic: The latest saved/updated baseline always becomes active
+            // When saving/activating, close the previous active EBD's effective range
+            $previousActive = VaveBase::where('product_id', $productId)
+                ->where('is_active', 1)
+                ->when($baseId, fn($q) => $q->where('id', '!=', $baseId))
+                ->first();
+
+            if ($previousActive && is_null($previousActive->effective_to)) {
+                $previousActive->update(['effective_to' => $currentYear - 1]);
+            }
+
+            // Deactivate all, then activate the saved one
             VaveBase::where('product_id', $productId)->update(['is_active' => 0]);
             $validated['is_active'] = 1;
+
+            // Set effective_from on the newly activated EBD if not already set by user
+            if (empty($validated['effective_from'])) {
+                $validated['effective_from'] = $currentYear;
+            }
+            // Respect user-provided effective_to; only default to null if not provided
+            if (!array_key_exists('effective_to', $validated) || $validated['effective_to'] === '') {
+                $validated['effective_to'] = null;
+            }
 
             if ($baseId) {
                 // Update Existing

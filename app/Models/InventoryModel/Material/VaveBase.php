@@ -40,6 +40,8 @@ class VaveBase extends Model
         'net_weight',
         'material_price',
         'vave_base_suffix_id',
+        'effective_from',
+        'effective_to',
         'remark',
     ];
 
@@ -56,11 +58,13 @@ class VaveBase extends Model
         'length_2' => 'float',
         'pitch' => 'float',
         'density' => 'float',
-        'weight_kg' => 'float',
-        'net_weight' => 'float',
+        'weight_kg'      => 'float',
+        'net_weight'     => 'float',
         'material_price' => 'float',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'effective_from' => 'integer',
+        'effective_to'   => 'integer',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
     ];
 
     /**

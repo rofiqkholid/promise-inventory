@@ -142,6 +142,12 @@
                                         <span id="active_weight_display" class="text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/40 px-2 py-0.5 rounded-xs">0.000 Kg</span>
                                     </div>
                                 </div>
+                                {{-- Effective Year Badge --}}
+                                <div id="effective_year_badge" class="hidden flex items-center gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-xs">
+                                    <i class="fa-solid fa-calendar-days text-[10px] text-amber-500"></i>
+                                    <span class="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Effective:</span>
+                                    <span id="effective_year_display" class="text-[10px] font-black text-amber-700 dark:text-amber-300">-</span>
+                                </div>
                             </div>
                         </div>
 
@@ -154,78 +160,99 @@
                                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">EBD Name</label>
                                     <input type="text" name="base_name" id="base_name" readonly class="bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold rounded-xs block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all uppercase tracking-widest">
                                     <input type="hidden" name="is_active" value="1">
+                                    <input type="hidden" name="effective_from" id="rfq_effective_from">
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Material Spec</label>
-                                    <select name="material_spec_id" id="rfq_material_spec_id" class="select2-rfq bg-white border border-slate-200 text-slate-900 text-[11px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                        <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Material Spec</label>
+                                    <select name="material_spec_id" id="rfq_material_spec_id" class="select2-rfq bg-white border border-slate-200 text-slate-800 text-[11px] font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                             <option value="">Select Spec</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Unit Type</label>
-                                        <select name="unit_id" id="rfq_unit_id" class="select2-rfq bg-white border border-slate-200 text-slate-900 text-[11px] font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                        <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Unit Type</label>
+                                        <select name="unit_id" id="rfq_unit_id" class="select2-rfq bg-white border border-slate-200 text-slate-800 text-[11px] font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
                                             <option value="">Select Unit</option>
                                         </select>
                                     </div>
                                 </div>
                                 
-                                <div class="space-y-2">
-                                    <label for="remark" class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Remark / Notes</label>
-                                    <textarea name="remark" id="remark" rows="3" class="block p-3 w-full text-xs font-bold text-slate-800 bg-white rounded-xs border border-slate-200 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-slate-300" placeholder="Optional notes..."></textarea>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="col-span-2 space-y-2">
+                                        <label for="remark" class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Remark / Notes</label>
+                                        <textarea name="remark" id="remark" rows="3" class="block p-3 w-full text-xs font-normal text-slate-700 bg-white rounded-xs border border-slate-200 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all placeholder-slate-300" placeholder="Optional notes..."></textarea>
+                                    </div>
+                                    {{-- Effective Year Range --}}
+                                    <div>
+                                        <label class="block mb-2 text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i class="fa-solid fa-calendar-days"></i> Effective From
+                                        </label>
+                                        <input type="number" name="effective_from" id="rfq_effective_from"
+                                            min="2000" max="2099" placeholder="{{ date('Y') }}"
+                                            class="bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium rounded-xs focus:ring-amber-400 focus:border-amber-400 block w-full h-10 px-3 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300 transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block mb-2 text-[10px] font-medium text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                                            <i class="fa-solid fa-calendar-xmark"></i> Effective To
+                                        </label>
+                                        <input type="number" name="effective_to" id="rfq_effective_to"
+                                            min="2000" max="2099" placeholder="Empty = Still active"
+                                            class="bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium rounded-xs focus:ring-amber-400 focus:border-amber-400 block w-full h-10 px-3 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300 transition-all">
+                                    </div>
+                                    <p class="col-span-2 text-[9px] text-slate-400 -mt-2">Specify the effective years for this EBD for dashboard analysis. Leave "Effective To" empty if it is still active.</p>
                                 </div>
                             </div>
 
                             {{-- Parameters & Calculations --}}
                             <div class="space-y-6">
                                 <div class="p-5 bg-slate-50 dark:bg-gray-900/30 rounded-xs border border-slate-100 dark:border-gray-700 relative">
-                                    <h5 class="text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4 flex items-center absolute -top-3 left-4 bg-white dark:bg-gray-800 px-3 py-1 border border-slate-100 dark:border-gray-700 rounded-xs shadow-sm">
+                                    <h5 class="text-[9px] font-medium text-slate-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-4 flex items-center absolute -top-3 left-4 bg-white dark:bg-gray-800 px-3 py-1 border border-slate-100 dark:border-gray-700 rounded-xs shadow-sm">
                                         <i class="fa-solid fa-ruler-combined mr-2 text-primary-500"></i>
                                         Dimensions (mm)
                                     </h5>
                                     
                                     <div class="grid grid-cols-2 gap-4 mt-2">
                                          <div>
-                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Thickness</label>
-                                            <input type="number" step="0.01" name="thickness" id="rfq_thickness" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Thickness</label>
+                                            <input type="number" step="0.01" name="thickness" id="rfq_thickness" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div>
-                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Width</label>
-                                            <input type="number" step="0.01" name="width" id="rfq_width" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Width</label>
+                                            <input type="number" step="0.01" name="width" id="rfq_width" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_length_container">
-                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-400 uppercase tracking-wider" id="label_rfq_length">Length</label>
-                                            <input type="number" step="0.01" name="length" id="rfq_length" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider" id="label_rfq_length">Length</label>
+                                            <input type="number" step="0.01" name="length" id="rfq_length" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_length2_container" class="hidden">
-                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Length 2 (L2)</label>
-                                            <input type="number" step="0.01" name="length_2" id="rfq_length_2" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Length 2 (L2)</label>
+                                            <input type="number" step="0.01" name="length_2" id="rfq_length_2" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                         <div id="rfq_pitch_container" class="hidden">
-                                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pitch (mm)</label>
-                                            <input type="number" step="0.01" name="pitch" id="rfq_pitch" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Pitch (mm)</label>
+                                            <input type="number" step="0.01" name="pitch" id="rfq_pitch" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.00">
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Density</label>
-                                        <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
-                                    </div>
-                                    <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wider">Gross Weight (Kg)</label>
-                                        <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-black rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed uppercase tracking-tighter" placeholder="0.000">
-                                    </div>
-                                    <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Net Weight (Kg)</label>
-                                        <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-slate-900 text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
-                                    </div>
-                                    <div>
-                                        <label class="block mb-2 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Price (Rp/Kg)</label>
-                                        <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-black rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all uppercase tracking-tighter" placeholder="0.00">
-                                    </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Density</label>
+                                    <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-medium text-primary-600 dark:text-primary-400 uppercase tracking-wider">Gross Weight (Kg)</label>
+                                    <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-medium rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed" placeholder="0.000">
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Net Weight (Kg)</label>
+                                    <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
+                                </div>
+                                <div>
+                                    <label class="block mb-2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Price (Rp/Kg)</label>
+                                    <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all" placeholder="0.00">
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -832,8 +859,11 @@ $(function() {
         $('#rfq_density').val(7.85); 
         $('#rfq_net_weight').val('');
         $('#remark').val('');
-        $('#rfq_material_spec_id').val('').trigger('change'); // Clear spec
-        $('#rfq_unit_id').val('').trigger('change'); // Clear unit and reset visibility
+        $('#rfq_effective_from').val('');
+        $('#rfq_effective_to').val('');
+        $('#effective_year_badge').addClass('hidden').removeClass('flex');
+        $('#rfq_material_spec_id').val('').trigger('change');
+        $('#rfq_unit_id').val('').trigger('change');
         $('#rfq_material_price').val('20000');
 
         // 2. Auto-fill from latest revision if available
@@ -886,6 +916,20 @@ $(function() {
         $('#rfq_net_weight').val(parseFloat(data.net_weight || 0));
         $('#rfq_material_price').val(parseFloat(data.material_price || 20000));
         $('#remark').val(data.remark);
+
+        // --- Effective Year Handling ---
+        $('#rfq_effective_from').val(data.effective_from || '');
+        $('#rfq_effective_to').val(data.effective_to || '');
+        const fromYear = data.effective_from || '-';
+        const toYear   = data.effective_to   ? data.effective_to : 'Present';
+        if (data.effective_from) {
+            $('#effective_year_display').text(`${fromYear} – ${toYear}`);
+            $('#effective_year_badge').removeClass('hidden').addClass('flex');
+        } else {
+            $('#effective_year_badge').addClass('hidden').removeClass('flex');
+        }
+        // ---
+
         calculateRfqWeight();
     }
 
@@ -934,8 +978,8 @@ $(function() {
             if(res.baseHistory && res.baseHistory.length > 0) {
                  res.baseHistory.forEach((h, index) => {
                     const activeLabel = h.is_active ? ' (Active)' : '';
-                    const isSelected = index === 0 ? 'selected' : '';
-                    const suffix = h.suffix ? ` - ${h.suffix.name}` : '';
+                    const isSelected  = index === 0 ? 'selected' : '';
+                    const suffix      = h.suffix ? ` - ${h.suffix.name}` : '';
                     histSelect.append(`<option value="${h.hash_id}" ${isSelected}>${h.base_name || 'EBD'}${suffix} - ${parseFloat(h.weight_kg).toFixed(3)}kg${activeLabel}</option>`);
                 });
             }
