@@ -100,14 +100,17 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                     if ($weight <= 0) {
                         $unitLower = strtolower($unitName);
                         if (str_contains($unitLower, 'sheet')) {
+                            // Formula: (t x w x l x d / 1,000,000) / pcs_per_unit
                             $weight = (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
                         } elseif (str_contains($unitLower, 'coil')) {
-                            $weight = ($thickness * $width * $pitch * $density) / 1000000;
+                            // Formula: (t x w x pitch x d / 1,000,000) / pcs_per_pitch
+                            $weight = (($thickness * $width * $pitch * $density) / 1000000) / $pcsPerPitch;
                         } elseif (str_contains($unitLower, 'trapezoid')) {
                             $avgL = ($length + $length2) / 2;
+                            // Formula: (t x w x avgL x d / 1,000,000) / pcs_per_unit
                             $weight = (($thickness * $width * $avgL * $density) / 1000000) / $pcsPerUnit;
                         } else {
-                            $weight = ($thickness * $width * $length * $density) / 1000000;
+                            $weight = (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
                         }
                     }
 
@@ -132,19 +135,19 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                         'vave_base_suffix_id' => $suffix ? $suffix->id : null,
                         'material_spec_id' => $ms ? $ms->id : null,
                         'unit_id' => $unit ? $unit->id : null,
-                        'density' => $density,
-                        'thickness' => $thickness,
-                        'width' => $width,
-                        'length' => $length,
-                        'length_2' => $length2,
-                        'pitch' => $pitch,
+                        'density' => round($density, 4),
+                        'thickness' => round($thickness, 4),
+                        'width' => round($width, 4),
+                        'length' => round($length, 4),
+                        'length_2' => round($length2, 4),
+                        'pitch' => round($pitch, 4),
                         'pcs_per_unit' => $pcsPerUnit,
                         'pcs_per_pitch' => $pcsPerPitch,
-                        'weight_kg' => $weight,
-                        'net_weight' => $netWeight,
-                        'material_price' => $price,
+                        'weight_kg' => round($weight, 4),
+                        'net_weight' => round($netWeight, 4),
+                        'material_price' => round($price, 4),
                         'remark' => $remark,
-                        'is_active' => 1, // Set recently imported as active
+                        'is_active' => 1,
                     ];
 
                     $existing = VaveBase::where([
@@ -153,7 +156,10 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                     ])->first();
 
                     // Deactivate others for this product before creating/updating this one
-                    VaveBase::where('product_id', $product->id)->update(['is_active' => 0]);
+                    // Only deactivate if we are processing the FIRST block of the row to avoid deactivating what we just imported in previous blocks
+                    if ($col == 4) {
+                        VaveBase::where('product_id', $product->id)->update(['is_active' => 0]);
+                    }
 
                     if ($existing) {
                         $changes = [];
