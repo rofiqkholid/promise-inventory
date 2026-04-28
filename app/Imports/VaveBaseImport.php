@@ -19,6 +19,7 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
     private $sheetName;
     private $customerId;
     private $modelId;
+    private $processedProducts = [];
     private $errors = [];
     private $successLog = [
         'created' => [],
@@ -176,10 +177,11 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                         'base_name' => $baseName
                     ])->first();
 
-                    // Deactivate others for this product before creating/updating this one
-                    // Only deactivate if we are processing the FIRST block of the row to avoid deactivating what we just imported in previous blocks
-                    if ($col == 4) {
+                    // Deactivate others for this product ONLY ONCE per product per import
+                    // to ensure the imported bases from this file are the ones that end up active.
+                    if (!in_array($product->id, $this->processedProducts)) {
                         VaveBase::where('product_id', $product->id)->update(['is_active' => 0]);
+                        $this->processedProducts[] = $product->id;
                     }
 
                     if ($existing) {
@@ -194,8 +196,14 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                             $existing->update($data);
                             $this->successLog['updated'][] = "{$partNo} [{$baseName}] (Updated: " . implode(', ', $changes) . ")";
                         } else {
-                            // Even if no data changes, ensure it's active if desired
-                            $existing->update(['is_active' => 1]);
+                            // Force active state to 1 in DB even if no other data changes,
+                            // because it might have been deactivated by a previous row's raw query.
+                            $existing->is_active = 1;
+                            $existing->save();
+                            
+                            // If Eloquent still skips because it thinks it's already 1, do a raw update
+                            VaveBase::where('id', $existing->id)->update(['is_active' => 1]);
+                            
                             $this->successLog['unchangedCount']++;
                         }
                     } else {
