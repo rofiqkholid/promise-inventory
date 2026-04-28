@@ -6,20 +6,20 @@
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     <div class="mb-4">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter leading-none">Stock Opname</h2>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Coordinate and track physical inventory count events.</p>
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Stock Opname</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Coordinate and track physical inventory count events.</p>
     </div>
 
     <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="p-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 flex-1 w-full flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
                 <h3 class="font-bold text-slate-800 dark:text-white leading-tight">Active STO Events</h3>
-                <p class="text-[11px] text-gray-500 font-medium tracking-wider">List of scheduled and completed inventory counts.</p>
+                <p class="text-[11px] text-gray-500 font-normal">List of scheduled and completed inventory counts.</p>
             </div>
             
             <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
                 @if(auth()->user()->hasAppRole('pic') || auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'))
-                    <button onclick="window.openCreateModal()" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all whitespace-nowrap">
+                    <button onclick="window.openCreateModal()" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all whitespace-nowrap shadow-sm">
                         <i class="fa-solid fa-calendar-plus text-sm"></i> 
                         New STO Event
                     </button>
@@ -33,15 +33,15 @@
         <x-table id="stoEventsTable">
             <thead>
                 <tr>
-                    <th class="w-16 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-xs">No</th>
-                    <th class="text-left w-48 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Event Code</th>
-                    <th class="text-left border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Counting Period</th>
-                    <th class="text-left w-40 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">PIC</th>
-                    <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Net Amount</th>
-                    <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Net PCS</th>
-                    <th class="text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Status</th>
-                    <th class="text-center w-40 border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">STO Control</th>
-                    <th class="w-[100px] text-center border-b border-slate-200 dark:border-gray-700 font-bold uppercase tracking-wider text-xs">Action</th>
+                    <th class="px-6 py-4 w-16 border-b border-slate-200 dark:border-gray-700 text-center font-bold text-gray-500 dark:text-gray-400 text-xs">No</th>
+                    <th class="px-6 py-4 text-left w-48 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Event Code</th>
+                    <th class="px-6 py-4 text-left border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Counting Period</th>
+                    <th class="px-6 py-4 text-left w-40 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">PIC</th>
+                    <th class="px-6 py-4 text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Net Amount</th>
+                    <th class="px-6 py-4 text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Net PCS</th>
+                    <th class="px-6 py-4 text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Status</th>
+                    <th class="px-6 py-4 text-center w-40 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">STO Control</th>
+                    <th class="px-6 py-4 w-[100px] text-center border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Action</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -56,7 +56,7 @@
         
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xs text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-10 border border-slate-200 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-widest">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
                     <i class="fa-solid fa-calendar-plus text-slate-400"></i> Initialize STO
                 </h3>
                 <button onclick="document.getElementById('createEventModal').classList.add('hidden')" class="text-slate-400 hover:text-rose-500 transition-colors">
@@ -68,17 +68,17 @@
                 @csrf
                 <div class="space-y-4">
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Date</label>
+                        <label class="block mb-1 text-[11px] font-bold text-slate-500">Start Date</label>
                         <input type="date" id="sto_period_start" name="period_start" required class="w-full p-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-xs font-bold focus:ring-1 focus:ring-primary-500 outline-none" value="{{ date('Y-m-d') }}">
                     </div>
                     
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Code Preview</label>
+                        <label class="block mb-1 text-[11px] font-bold text-slate-400">Event Code Preview</label>
                         <input type="text" id="eventCodePreview" readonly class="w-full p-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-mono font-bold text-slate-500 dark:text-gray-400" value="SAI/STO/{{ date('dmY') }}/....">
                     </div>
                     
                     <div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xs border border-slate-100 dark:border-gray-700">
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Assigned PIC</label>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1">Assigned PIC</label>
                         <div class="text-xs font-bold text-slate-700 dark:text-gray-300 flex items-center gap-2">
                              <i class="fa-solid fa-user-check text-[10px] text-slate-400"></i>
                              {{ auth()->user()->name }}
@@ -86,14 +86,14 @@
                     </div>
 
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Notes / Scope (Optional)</label>
+                        <label class="block mb-1 text-[11px] font-bold text-slate-500">Notes / Scope (Optional)</label>
                         <textarea name="description" rows="3" class="w-full p-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-xs font-medium focus:ring-1 focus:ring-primary-500 outline-none" placeholder="Enter STO notes or coverage area..."></textarea>
                     </div>
                 </div>
                 
                 <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="document.getElementById('createEventModal').classList.add('hidden')" class="flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-xs transition-all border border-slate-200">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-700 rounded-xs active:scale-95 transition-all outline-none shadow-sm">Initialize Event</button>
+                    <button type="button" onclick="document.getElementById('createEventModal').classList.add('hidden')" class="flex-1 py-2.5 text-xs font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-xs transition-all border border-slate-200 shadow-sm active:scale-95">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xs active:scale-95 transition-all outline-none shadow-sm">Initialize Event</button>
                 </div>
             </form>
         </div>
@@ -107,7 +107,7 @@
         
         <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-xs text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full relative z-10 border border-slate-200 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center">
-                <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-widest">
+                <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
                     <i class="fa-solid fa-pen-to-square text-primary-500"></i> Edit STO details
                 </h3>
                 <button onclick="document.getElementById('editEventModal').classList.add('hidden')" class="text-slate-400 hover:text-rose-500 transition-colors">
@@ -120,24 +120,24 @@
                 @method('PUT')
                 <div class="space-y-4">
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Start Date</label>
+                        <label class="block mb-1 text-[11px] font-bold text-slate-500">Start Date</label>
                         <input type="date" id="edit_period_start" name="period_start" required class="w-full p-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-xs font-bold focus:ring-1 focus:ring-primary-500 outline-none">
                     </div>
                     
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Event Code</label>
+                        <label class="block mb-1 text-[11px] font-bold text-slate-400">Event Code</label>
                         <input type="text" id="edit_code" readonly class="w-full p-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-mono font-bold text-slate-400">
                     </div>
 
                     <div>
-                        <label class="block mb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Notes / Scope (Optional)</label>
+                        <label class="block mb-1 text-[11px] font-bold text-slate-500">Notes / Scope (Optional)</label>
                         <textarea id="edit_description" name="description" rows="3" class="w-full p-2.5 bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-xs font-medium focus:ring-1 focus:ring-primary-500 outline-none" placeholder="Enter STO notes..."></textarea>
                     </div>
                 </div>
                 
                 <div class="mt-8 flex gap-3">
-                    <button type="button" onclick="document.getElementById('editEventModal').classList.add('hidden')" class="flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-xs transition-all border border-slate-200">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 text-[11px] font-bold uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-700 rounded-xs active:scale-95 transition-all outline-none shadow-sm">Save Changes</button>
+                    <button type="button" onclick="document.getElementById('editEventModal').classList.add('hidden')" class="flex-1 py-2.5 text-xs font-medium text-gray-600 bg-white hover:bg-gray-50 rounded-xs transition-all border border-slate-200 shadow-sm active:scale-95">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 text-xs font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-xs active:scale-95 transition-all outline-none shadow-sm">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -194,7 +194,7 @@
                             else if (status === 'WAITING CHECK') statusClass = 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800';
                             else if (status === 'WAITING APPROVAL') statusClass = 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800';
                             
-                            return `<span class="px-2 py-1 text-[10px] font-black uppercase tracking-widest rounded-xs whitespace-nowrap border ${statusClass}">${status.replace('_', ' ')}</span>`;
+                            return `<span class="px-2 py-1 text-[10px] font-bold rounded-xs whitespace-nowrap border ${statusClass}">${status.replace('_', ' ')}</span>`;
                         }
                     },
                     { 

@@ -7,11 +7,11 @@
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Transaction Category</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory flow categories and effects.</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Transaction Category</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage inventory flow categories and effects.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all" data-target="transaction-category">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm" data-target="transaction-category">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
@@ -20,11 +20,11 @@
     <x-table id="transactionCategoryTable">
         <thead class="bg-gray-50 dark:bg-gray-800/50">
             <tr>
-                <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
-                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Code</th>
-                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Name</th>
-                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Effect</th>
-                <th scope="col" class="px-6 py-4 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
+                <th scope="col" class="px-6 py-4 w-16 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Code</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Name</th>
+                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Effect</th>
+                <th scope="col" class="px-6 py-4 text-center w-[100px] text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -35,7 +35,7 @@
 <div id="modal-transaction-category-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Add Category</h3>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Add Category</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -44,17 +44,17 @@
             <form class="modal-form" data-action="{{ route('inventory.master.transactionCategory.store') }}">
                 @csrf
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Code <span class="text-red-500">*</span></label>
                     <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. IN-PO">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Effect <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Effect <span class="text-red-500">*</span></label>
                     <select name="effect" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <option value="1">In (+)</option>
                         <option value="-1">Out (-)</option>
@@ -65,8 +65,8 @@
             </form>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
-            <button type="submit" class="submit-btn flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all shadow-sm active:scale-95">Save</button>
         </div>
     </div>
 </div>
@@ -74,7 +74,7 @@
 <div id="modal-transaction-category-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest">Edit Category</h3>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Edit Category</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -84,17 +84,17 @@
                 @csrf
                 @method('PUT')
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Code <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Code <span class="text-red-500">*</span></label>
                     <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Effect <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Effect <span class="text-red-500">*</span></label>
                     <select name="effect" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <option value="1">In (+)</option>
                         <option value="-1">Out (-)</option>
@@ -105,8 +105,8 @@
             </form>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
-            <button type="submit" class="submit-btn flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save Changes</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all shadow-sm active:scale-95">Save Changes</button>
         </div>
     </div>
 </div>

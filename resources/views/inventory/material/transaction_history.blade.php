@@ -6,17 +6,17 @@
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+    <div class="sm:flex sm:items-center sm:justify-between mb-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Transaction History</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Audit trail of all inventory movements and manual adjustments.</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-none">Transaction History</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Audit trail of all inventory movements and manual adjustments.</p>
         </div>
     </div>
 
     {{-- FILTER BAR --}}
-    <div class="mb-8 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+    <div class="mb-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <h3 class="text-[10px] font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-[0.15em]">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
                 <i class="fa-solid fa-filter text-primary-600"></i> History Filter
             </h3>
         </div>
@@ -24,7 +24,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
                 {{-- DATE RANGE --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Timeline</label>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">Timeline</label>
                     <div class="relative group">
                         <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 text-[10px] pointer-events-none transition-colors z-10"></i>
                         <input type="text" id="filter_date_range" readonly 
@@ -36,7 +36,7 @@
 
                 {{-- PART --}}
                 <div class="w-full lg:col-span-1">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Part</label>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">Part</label>
                     <select id="filter_product" class="select2-filter w-full">
                         <option value="">All Parts</option>
                         @foreach($products as $product)
@@ -49,7 +49,7 @@
 
                 {{-- CATEGORY --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Category</label>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">Category</label>
                     <select id="filter_category" class="select2-filter w-full">
                         <option value="">All Transactions</option>
                         @foreach($categories as $category)
@@ -60,7 +60,7 @@
 
                 {{-- User/PIC --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">PIC</label>
+                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">PIC</label>
                     <select id="filter_user" class="select2-filter w-full">
                         <option value="">All PICs</option>
                         @foreach($pics as $p)
@@ -71,8 +71,8 @@
 
                 {{-- ACTIONS --}}
                 <div class="flex items-center w-full">
-                    <button type="button" id="reset_filter" class="w-full h-10 px-4 text-[10px] font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-100 dark:border-gray-700 transition-all uppercase tracking-widest active:scale-95">
-                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filter
+                    <button type="button" id="reset_filter" class="h-9 px-4 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-200 dark:border-gray-700 transition-all active:scale-95 shadow-sm">
+                        <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset
                     </button>
                 </div>
             </div>
@@ -82,7 +82,7 @@
     {{-- History Table Panel --}}
     <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden flex flex-col">
         <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center">
                 <i class="fa-solid fa-table-list mr-3 text-primary-600"></i> History Data
             </h3>
         </div>
@@ -90,16 +90,16 @@
             <x-table id="TransactionHistoryTable">
                 <thead>
                     <tr>
-                        <th class="w-12 text-center text-xs font-bold uppercase tracking-wider">No</th>
-                        <th class="w-28 text-left text-xs font-bold uppercase tracking-wider">Trans. Date</th>
-                        <th class="w-40 text-left text-xs font-bold uppercase tracking-wider">Timestamp</th>
-                        <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">Model</th>
-                        <th class="text-left text-xs font-bold uppercase tracking-wider">Part Details</th>
-                        <th class="w-28 text-center text-xs font-bold uppercase tracking-wider">Category</th>
-                        <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">Origin / Destination</th>
-                        <th class="w-20 text-center text-xs font-bold uppercase tracking-wider">Qty</th>
-                        <th class="w-32 text-left text-xs font-bold uppercase tracking-wider">PIC</th>
-                        <th class="text-left text-xs font-bold uppercase tracking-wider">Remarks</th>
+                        <th class="w-12 text-center text-xs font-medium tracking-wider">No</th>
+                        <th class="w-28 text-left text-xs font-medium tracking-wider">Trans. Date</th>
+                        <th class="w-40 text-left text-xs font-medium tracking-wider">Timestamp</th>
+                        <th class="w-32 text-left text-xs font-medium tracking-wider">Model</th>
+                        <th class="text-left text-xs font-medium tracking-wider">Part Details</th>
+                        <th class="w-28 text-center text-xs font-medium tracking-wider">Category</th>
+                        <th class="w-32 text-left text-xs font-medium tracking-wider">Origin / Destination</th>
+                        <th class="w-20 text-center text-xs font-medium tracking-wider">Qty</th>
+                        <th class="w-32 text-left text-xs font-medium tracking-wider">PIC</th>
+                        <th class="text-left text-xs font-medium tracking-wider">Remarks</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -166,7 +166,7 @@
                 },
                 {
                     data: 'model_name',
-                    className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                    className: 'text-left font-medium text-slate-700 dark:text-gray-300 text-[10px] tracking-tight',
                     render: d => d || '-'
                 },
                 { 
@@ -174,8 +174,8 @@
                     className: 'py-3 min-w-[200px]',
                     render: row => `
                         <div class="flex flex-col">
-                            <div class="font-bold text-slate-800 dark:text-white leading-tight uppercase tracking-tight">${row.part_no}</div>
-                            <div class="text-[10px] text-slate-500 uppercase truncate max-w-[250px] mt-1">${row.product_name}</div>
+                            <div class="font-medium text-slate-800 dark:text-white leading-tight tracking-tight">${row.part_no}</div>
+                            <div class="text-[10px] text-slate-500 truncate max-w-[250px] mt-1">${row.product_name}</div>
                         </div>
                     `
                 },
@@ -183,14 +183,19 @@
                     data: 'category', 
                     className: 'text-center',
                     render: d => {
-                        const style = d === 'IN' 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' 
-                            : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
-                        return `<span class="inline-block px-2 py-0.5 rounded-xs border text-[10px] font-bold uppercase tracking-widest whitespace-nowrap ${style}">${d}</span>`;
+                        const colorMap = {
+                            'IN': 'emerald',
+                            'OUT-EVENT': 'amber',
+                            'OUT-PP': 'indigo',
+                            'OUT-TRIAL': 'rose'
+                        };
+                        const color = colorMap[d] || (d.includes('OUT') ? 'rose' : 'emerald');
+                        const style = `bg-${color}-50 text-${color}-700 border-${color}-100 dark:bg-${color}-900/30 dark:text-${color}-400 dark:border-${color}-800`;
+                        return `<span class="inline-block px-2 py-0.5 rounded-xs border text-[10px] font-medium tracking-widest whitespace-nowrap ${style}">${d}</span>`;
                     }
                 },
                 { data: 'origin_destination', orderable: false, className: 'text-xs text-gray-600 dark:text-gray-400' },
-                { data: 'qty', className: 'text-center font-bold text-slate-900 dark:text-white' },
+                { data: 'qty', className: 'text-center font-medium text-slate-900 dark:text-white' },
                 { data: 'pic_name', className: 'text-xs text-gray-600 dark:text-gray-400' },
                 { data: 'remark', defaultContent: '-', className: 'text-xs text-gray-500 font-normal leading-relaxed' }
             ],

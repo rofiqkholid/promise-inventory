@@ -409,7 +409,7 @@ class UserAccessController extends Controller
 
     public function destroyUser($id)
     {
-        if (auth()->id() == $id) {
+        if (auth()->user()->id == $id) {
             return response()->json(['success' => false, 'message' => 'Cannot delete your own account.'], 422);
         }
 

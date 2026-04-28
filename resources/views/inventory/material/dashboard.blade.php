@@ -9,8 +9,8 @@
     <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
         <!-- Section 1: Title Section -->
         <div class="flex-none">
-            <h2 class="text-lg xl:text-xl font-bold text-gray-800 dark:text-white leading-none mb-1">Inventory Overview</h2>
-            <p class="text-[11px] xl:text-xs text-gray-500 dark:text-gray-400 leading-tight">Stock monitoring and transaction analytics</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-800 dark:text-white leading-tight mb-0.5">Inventory Overview</h2>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">Stock monitoring and transaction analytics</p>
         </div>
 
         <!-- Section 2: KPI Cards & Filter Toggle -->
@@ -30,9 +30,9 @@
                         <i class="fa-solid {{ $stat['icon'] }}"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
+                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
-                            {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-medium ml-0.5">{{ $stat['unit'] }}</span>
+                            {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
                         </h3>
                     </div>
                 </div>
@@ -54,29 +54,29 @@
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Period</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Period</label>
                         <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Customer</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Customer</label>
                         <select id="filterCustomer" name="customer[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Model</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Model</label>
                         <select id="filterModel" name="model[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Balance Status</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Balance Status</label>
                         <select id="filterBalance" name="status_balance[]" class="w-full text-xs"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Usage Status</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Usage Status</label>
                         <select id="filterUsage" name="status_usage[]" class="w-full text-xs"></select>
                     </div>
                 </div>
 
                 <div class="flex gap-2 pt-2 xl:pt-0">
-                    <button type="button" id="btnReset" class="h-[40px] px-6 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xs text-[10px] font-bold text-slate-600 dark:text-gray-300 uppercase tracking-widest transition-all">
+                    <button type="button" id="btnReset" class="h-9 px-6 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xs text-xs font-medium text-slate-600 dark:text-gray-300 transition-all border border-slate-200 dark:border-gray-600">
                         Reset Filters
                     </button>
                 </div>
@@ -91,14 +91,14 @@
             {{-- Chart Card 1 --}}
             <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-[55] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                         <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i> 
-                        <span class="truncate">Stock Status</span> 
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
+                        <span class="truncate">Stock status</span> 
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[9px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item part</span>
                     </h3>
                     <div class="flex items-center gap-1 flex-shrink-0">
-                        <button id="stockStatusChartPrev" onclick="paginateChart('stockStatusChart', -1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
-                        <button id="stockStatusChartNext" onclick="paginateChart('stockStatusChart', 1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                        <button id="stockStatusChartPrev" onclick="paginateChart('stockStatusChart', -1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                        <button id="stockStatusChartNext" onclick="paginateChart('stockStatusChart', 1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-right text-xs"></i></button>
                     </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0"><canvas id="stockStatusChart"></canvas></div>
@@ -107,7 +107,7 @@
             {{-- Balance Warnings Table --}}
             <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i> Balance Warnings
                     </h3>
                 </div>
@@ -115,10 +115,10 @@
                     <table class="w-full text-left">
                         <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Part No</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Min</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Actual</th>
-                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Status</th>
+                                <th class="py-2 px-3 text-[10px] font-medium text-slate-500 tracking-wider">Part No</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider text-right">Min</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider text-right">Actual</th>
+                                <th class="py-2 px-3 text-[10px] font-medium text-slate-500 tracking-wider text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody id="balanceTableBody" class="divide-y divide-slate-100 dark:divide-gray-700">
@@ -133,15 +133,15 @@
             {{-- Chart Card 2 --}}
             <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-[55] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 id="usageChartTitle" class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                    <h3 id="usageChartTitle" class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                         <i class="fa-solid fa-chart-pie mr-2 text-amber-500 flex-shrink-0"></i> 
                         <span class="truncate">Usage by Models</span> 
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
                     </h3>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs">
-                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all bg-white dark:bg-gray-600 text-primary-600 dark:hover:text-gray-300 shadow-sm">Model</button>
-                            <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Maker</button>
+                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all bg-white dark:bg-gray-600 text-primary-600 dark:hover:text-gray-300 shadow-sm">Model</button>
+                            <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Maker</button>
                         </div>
                         <div class="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-2">
                             <button id="usageChartPrev" onclick="paginateActiveUsageChart(-1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
@@ -158,7 +158,7 @@
             {{-- Material Usage Table --}}
             <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-vial mr-2 text-indigo-500"></i> Material Usage Detail
                     </h3>
                 </div>
@@ -166,11 +166,11 @@
                     <table class="w-full text-left">
                         <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Part No</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Supplier</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Actual</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Gap</th>
-                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Status</th>
+                                <th class="py-2 px-3 text-[10px] font-medium text-slate-500 tracking-wider">Part No</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider">Supplier</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider text-right">Actual</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider text-right">Gap</th>
+                                <th class="py-2 px-3 text-[10px] font-medium text-slate-500 tracking-wider text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody id="usageTableBody" class="divide-y divide-slate-100 dark:divide-gray-700">
@@ -185,10 +185,10 @@
             {{-- Transaction Trend Chart --}}
             <div class="chart-card bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[250px] lg:h-auto lg:flex-[55] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0">
+                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0">
                         <i class="fa-solid fa-arrow-trend-up mr-2 text-emerald-500 flex-shrink-0"></i> 
                         <span class="truncate">Transaction Trend</span> 
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
                     </h3>
                 </div>
                 <div class="relative w-full flex-1 min-h-0"><canvas id="trendlineChart"></canvas></div>
@@ -197,7 +197,7 @@
             {{-- Recent Transactions --}}
             <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-clock-rotate-left mr-2 text-primary-500"></i> Recent Activity
                     </h3>
                 </div>
@@ -205,10 +205,10 @@
                     <table class="w-full text-left">
                         <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Part No</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Type</th>
-                                <th class="py-2 px-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">Date</th>
-                                <th class="py-2 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest text-right">Qty</th>
+                                <th class="py-2 px-3 text-[10px] font-medium text-slate-500 tracking-wider">Part No</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider text-center">Type</th>
+                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 tracking-wider text-center">Date</th>
+                                <th class="py-2 px-3 text-[10px] font-medium text-slate-500 tracking-wider text-right">Qty</th>
                             </tr>
                         </thead>
                         <tbody id="historyTableBody" class="divide-y divide-slate-100 dark:divide-gray-700">
@@ -228,7 +228,7 @@
         <div class="flex-none flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div>
                 <div class="flex items-center gap-2 mb-0.5">
-                    <p class="text-[10px] font-bold text-primary-500 uppercase tracking-widest">Detail Explorer</p>
+                    <p class="text-xs font-medium text-primary-500 tracking-wider">Detail Explorer</p>
                     <span id="drilldownCountBadge" class="px-1.5 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-[9px] font-bold">0</span>
                 </div>
                 <h2 id="drilldownTitle" class="text-base font-bold text-gray-800 dark:text-gray-100 truncate max-w-[300px]">Loading...</h2>
@@ -249,7 +249,7 @@
             {{-- Quick Filters (Segmented Control Style) --}}
             <div id="drilldownLegendContainer" class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/20">
                 <div class="flex items-center justify-between mb-2">
-                    <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Filter by Status</p>
+                    <p class="text-[10px] font-medium text-slate-400 dark:text-slate-500 tracking-wider">Filter by status</p>
                 </div>
                 <div id="drilldownLegendButtons" class="inline-flex p-1 bg-gray-100 dark:bg-gray-800/80 rounded-lg gap-1">
                     {{-- Buttons injected by JS --}}
@@ -258,14 +258,14 @@
 
             <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-20 flex flex-col md:flex-row gap-3 items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="text-[9px] font-semibold text-slate-400 uppercase whitespace-nowrap tracking-wider">Show</span>
+                    <span class="text-[10px] font-medium text-slate-400 whitespace-nowrap tracking-wider">Show</span>
                     <select id="drilldownPageSize" onchange="resetDrilldownAndFetch()" class="h-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[11px] px-2 focus:ring-1 focus:ring-primary-500 outline-none cursor-pointer">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span class="text-[9px] font-semibold text-slate-400 uppercase whitespace-nowrap tracking-wider">entries</span>
+                    <span class="text-[10px] font-medium text-slate-400 whitespace-nowrap tracking-wider">entries</span>
                 </div>
                 <div class="relative w-full md:w-60">
                     <input type="text" id="drilldownSearch" placeholder="Search Part No..." class="w-full h-8 pl-9 pr-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[11px] focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-gray-400">
@@ -279,7 +279,7 @@
                 <div id="drilldownTableLoader" class="hidden absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-30 flex items-center justify-center backdrop-blur-[1px] transition-all">
                     <div class="flex flex-col items-center">
                         <i class="fa-solid fa-circle-notch fa-spin text-xl text-primary-500 mb-2"></i>
-                        <span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Updating...</span>
+                        <span class="text-[10px] font-medium text-slate-500 tracking-wider">Updating...</span>
                     </div>
                 </div>
 
@@ -315,8 +315,10 @@
 @endsection
 
 @push('scripts')
-
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
+    Chart.register(ChartDataLabels);
+
     $(document).ready(function() {
         // Toggle Filter Logic
         $('#btnToggleDashFilter').on('click', function(e) {
@@ -363,6 +365,16 @@
                     return label;
                 }
             }
+        };
+
+        const commonDataLabels = {
+            color: isDark ? '#94a3b8' : '#64748b',
+            font: { weight: '500', size: 13 },
+            formatter: (value) => value > 0 ? new Intl.NumberFormat().format(value) : '',
+            anchor: 'center',
+            align: 'center',
+            display: (context) => context.dataset.data[context.dataIndex] > 0 ? 'auto' : false,
+            clip: false
         };
         
         const chartsData = {
@@ -631,9 +643,15 @@
             // Helper to generate trendline datasets consistently
             function buildTrendlineDatasets(trendsData, datesList) {
                 const cats = [...new Set(trendsData.map(d => d.category))];
-                return cats.map((cat, idx) => {
-                    const colorKeys = Object.keys(chartColors);
-                    const color = chartColors[colorKeys[idx % colorKeys.length]];
+                const colorMap = {
+                    'IN': chartColors.emerald,
+                    'OUT-EVENT': chartColors.amber,
+                    'OUT-PP': chartColors.indigo,
+                    'OUT-TRIAL': chartColors.rose
+                };
+                
+                return cats.map((cat) => {
+                    const color = colorMap[cat] || chartColors.primary;
                     return {
                         label: cat.replace('OUT-', '').split(' ').map(w => w === 'PP' ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '),
                         data: datesList.map(d => (trendsData.find(td => td.transaction_date === d && td.category === cat) || {total: 0}).total),
@@ -754,7 +772,7 @@
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
                         <td class="py-1.5 px-3">
                             <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name} | ${row.customer_code || '-'}</p>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
                         </td>
                         <td class="py-1.5 px-2 text-right">
                             <div class="text-[11px] font-medium text-slate-500 font-mono">${new Intl.NumberFormat().format(row.min_stock)}</div>
@@ -772,7 +790,10 @@
                 const color = row.status == 'Loss' ? 'red' : (row.status == 'Near Loss' ? 'amber' : 'emerald');
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
-                        <td class="py-1.5 px-3 text-[11px] font-medium text-slate-700 dark:text-gray-200 uppercase tracking-tight">${row.part_no}</td>
+                        <td class="py-1.5 px-3">
+                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
+                        </td>
                         <td class="py-1.5 px-2 text-[10px] text-slate-500 dark:text-slate-400 uppercase truncate max-w-[80px]">${row.supplier_name || '-'}</td>
                         <td class="py-1.5 px-2 text-[11px] font-medium text-slate-800 dark:text-white text-right font-mono">${new Intl.NumberFormat().format(row.out_trial)}</td>
                         <td class="py-1.5 px-2 text-[11px] font-medium ${row.gap < 0 ? 'text-red-500' : 'text-emerald-500'} text-right font-mono">${new Intl.NumberFormat().format(row.gap)}</td>
@@ -788,14 +809,23 @@
                 const dateStr = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' });
                 const timeStr = createdAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
                 
+                const colorMap = {
+                    'IN': 'emerald',
+                    'OUT-EVENT': 'amber',
+                    'OUT-PP': 'indigo',
+                    'OUT-TRIAL': 'rose'
+                };
+                const color = colorMap[row.category] || 'slate';
+                const badgeClass = `bg-${color}-50 text-${color}-600 dark:bg-${color}-900/30 dark:text-${color}-400 border-${color}-100 dark:border-${color}-800`;
+
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
                         <td class="py-1.5 px-3">
                             <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name} | ${row.customer_code}</p>
+                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
                         </td>
                         <td class="py-1.5 px-2 text-center">
-                            <span class="px-1.5 py-0.5 rounded-xs text-[9px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase">${row.category}</span>
+                            <span class="px-1.5 py-0.5 rounded-xs text-[9px] font-bold border uppercase whitespace-nowrap ${badgeClass}">${row.category}</span>
                         </td>
                         <td class="py-1.5 px-2 text-center whitespace-nowrap">
                             <div class="text-[10px] text-slate-500 dark:text-slate-400">${dateStr} <span class="text-[9px] text-slate-400 font-mono ml-1">${timeStr}</span></div>
@@ -867,11 +897,18 @@
                         y: { 
                             stacked: true, 
                             beginAtZero: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
+                            grace: '20%',
+                            ticks: { 
+                                color: isDark ? '#94a3b8' : '#64748b', 
+                                font: { size: 11 },
+                                precision: 0,
+                                callback: (v) => Math.floor(v) === v ? v : ''
+                            }
                         }
                     },
                     plugins: {
                         tooltip: commonTooltip,
+                        datalabels: commonDataLabels,
                         legend: { 
                             position: 'bottom', 
                             labels: { 
@@ -922,11 +959,19 @@
                         },
                         y: { 
                             stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
+                            beginAtZero: true,
+                            grace: '20%',
+                            ticks: { 
+                                color: isDark ? '#94a3b8' : '#64748b', 
+                                font: { size: 11 },
+                                precision: 0,
+                                callback: (v) => Math.floor(v) === v ? v : ''
+                            }
                         }
                     },
                     plugins: {
                         tooltip: commonTooltip,
+                        datalabels: commonDataLabels,
                         legend: { 
                             position: 'bottom', 
                             labels: { 
@@ -982,7 +1027,13 @@
                         y: {
                             stacked: false,
                             beginAtZero: true,
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } },
+                            grace: '20%',
+                            ticks: { 
+                                color: isDark ? '#94a3b8' : '#64748b', 
+                                font: { size: 11 },
+                                precision: 0,
+                                callback: (v) => Math.floor(v) === v ? v : ''
+                            },
                             grid: { 
                                 display: true,
                                 color: isDark ? 'rgba(71, 85, 105, 0.2)' : 'rgba(226, 232, 240, 0.6)',
@@ -992,8 +1043,15 @@
                     },
                     plugins: {
                         tooltip: commonTooltip,
+                        datalabels: {
+                            ...commonDataLabels,
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 2,
+                            clip: false
+                        },
                         legend: {
-                            position: 'bottom',
+                            position: 'bottom', 
                             labels: { 
                                 color: isDark ? '#94a3b8' : '#64748b',
                                 font: { size: 10 },
@@ -1055,11 +1113,19 @@
                         },
                         y: { 
                             stacked: true, 
-                            ticks: { color: isDark ? '#94a3b8' : '#64748b', font: { size: 11 } }
+                            beginAtZero: true,
+                            grace: '20%',
+                            ticks: { 
+                                color: isDark ? '#94a3b8' : '#64748b', 
+                                font: { size: 11 },
+                                precision: 0,
+                                callback: (v) => Math.floor(v) === v ? v : ''
+                            }
                         }
                     },
                     plugins: {
                         tooltip: commonTooltip,
+                        datalabels: commonDataLabels,
                         legend: { 
                             position: 'bottom', 
                             labels: { 

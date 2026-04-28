@@ -7,12 +7,12 @@
 <div class="text-gray-900 dark:text-gray-100">
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">VA/VE Analysis</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Compare EBD (Engineering Breakdown) data with production revisions to analyze material efficiency.</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">VA/VE Analysis</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Compare EBD (Engineering Breakdown) data with production revisions to analyze material efficiency.</p>
         </div>
         <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <button type="button" id="btnImportEbd" class="h-10 px-6 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-[11px] font-bold uppercase tracking-widest rounded-xs transition-all gap-2 active:scale-95 hover:bg-slate-50 shadow-sm">
-                <i class="fa-solid fa-file-import text-primary-500"></i> Import EBD Data
+            <button type="button" id="btnImportEbd" class="h-9 px-4 inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xs transition-all gap-2 active:scale-95 shadow-sm text-xs font-medium">
+                <i class="fa-solid fa-file-import"></i> Import EBD Data
             </button>
         </div>
     </div>
@@ -21,29 +21,29 @@
     <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
         <div class="flex flex-col md:flex-row items-end gap-5">
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Customer</label>
+                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">Customer</label>
                 <select id="filterCustomer" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Customers</option>
                 </select>
             </div>
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">Model</label>
+                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">Model</label>
                 <select id="filterModel" disabled class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Models</option>
                 </select>
             </div>
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest">EBD Bases (Export Only)</label>
+                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">EBD Bases (Export Only)</label>
                 <select id="filterEbdBase" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Bases</option>
                 </select>
             </div>
             <div class="flex items-center gap-3 ml-auto w-full md:w-auto mt-4 md:mt-0">
-                <button type="button" id="btnResetFilter" class="h-10 px-4 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all text-[10px] font-bold uppercase tracking-widest active:scale-95">
+                <button type="button" id="btnResetFilter" class="h-9 px-4 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:bg-slate-50 transition-all text-xs font-medium active:scale-95">
                     <i class="fa-solid fa-rotate-left mr-2"></i> Reset
                 </button>
                 <div class="hidden md:block h-8 w-px bg-slate-100 dark:bg-gray-700 mx-1"></div>
-                <button type="button" id="btnExportSummary" class="h-10 px-6 inline-flex items-center justify-center bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-xs transition-all gap-2 active:scale-95">
+                <button type="button" id="btnExportSummary" class="h-9 px-6 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xs transition-all gap-2 active:scale-95 shadow-sm">
                     <i class="fa-solid fa-file-excel text-sm"></i> Export Summary
                 </button>
             </div>
@@ -77,8 +77,8 @@
             </button>
             
             <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-slate-50/80 dark:bg-slate-900/50">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest" id="rfqModalTitle">Manage EBD (Engineering Breakdown)</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Define EBD parameters for VA/VE analysis</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white" id="rfqModalTitle">Manage EBD (Engineering Breakdown)</h3>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">Define EBD parameters for VA/VE analysis</p>
             </div>
 
             <form id="rfqForm" method="POST" class="flex flex-col flex-1 overflow-hidden">
@@ -260,10 +260,10 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-3 px-8 py-6 border-t border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/40">
-                    <button type="button" class="close-modal-button text-slate-500 bg-white hover:bg-slate-50 focus:outline-none rounded-xs border border-slate-200 text-[10px] font-bold uppercase tracking-widest px-8 py-3 transition-all active:scale-95">
+                    <button type="button" class="close-modal-button text-slate-500 bg-white hover:bg-slate-50 focus:outline-none rounded-xs border border-slate-200 text-xs font-medium px-8 py-2.5 transition-all active:scale-95 shadow-sm">
                         Cancel
                     </button>
-                    <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-bold rounded-xs text-[10px] uppercase tracking-widest px-8 py-3 text-center transition-all active:scale-95">
+                    <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-medium rounded-xs text-xs px-8 py-2.5 text-center transition-all active:scale-95 shadow-sm">
                         <i class="fa-solid fa-save mr-2"></i> Save EBD
                     </button>
                 </div>
@@ -458,10 +458,10 @@ $(function() {
                 orderable: false,
                 render: row => `
                     <div class="flex items-center justify-center gap-1.5">
-                        <button class="rfq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage EBD (Engineering Breakdown)">
+                        <button class="rfq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage EBD (Engineering Breakdown)">
                             <i class="fa-solid fa-pen-to-square btn-icon"></i> <span class="btn-text">EBD</span>
                         </button>
-                        <button class="compare-button h-8 px-4 inline-flex items-center justify-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] uppercase tracking-widest active:scale-95 min-w-[100px] ${!row.has_base ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_base ? 'disabled' : ''} title="VAVE Analysis Comparison">
+                        <button class="compare-button h-8 px-4 inline-flex items-center justify-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] active:scale-95 min-w-[100px] ${!row.has_base ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_base ? 'disabled' : ''} title="VAVE Analysis Comparison">
                             <i class="fa-solid fa-chart-line btn-icon"></i> <span class="btn-text">Analysis</span>
                         </button>
                     </div>`

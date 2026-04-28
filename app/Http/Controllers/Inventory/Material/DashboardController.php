@@ -226,6 +226,8 @@ class DashboardController extends Controller
                 's.code as maker',
                 'prod.part_no',
                 'rev.code as revision',
+                'm.name as model_name',
+                'c.code as customer_code',
                 'p.id as product_id',
                 'r.code as rank_code',
                 'r.process_type',
@@ -236,7 +238,7 @@ class DashboardController extends Controller
                 'u.name as unit_name',
                 DB::raw("SUM(t.qty) as usage_qty")
             ])
-            ->groupBy('s.code', 'prod.part_no', 'rev.code', 'p.id', 'r.code', 'r.process_type', 'r.limit_value', 'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name')
+            ->groupBy('s.code', 'prod.part_no', 'rev.code', 'm.name', 'c.code', 'p.id', 'r.code', 'r.process_type', 'r.limit_value', 'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name')
             ->get();
 
         $makerData = [];
@@ -264,6 +266,8 @@ class DashboardController extends Controller
             $usageTable[] = [
                 'part_no' => $item->part_no,
                 'revision' => $item->revision,
+                'model_name' => $item->model_name,
+                'customer_code' => $item->customer_code,
                 'supplier_name' => $item->maker,
                 'rank_display' => ($item->rank_code ?? '-') . ' ' . number_format($limit),
                 'out_trial' => $usagePcs,

@@ -138,7 +138,7 @@ class StoController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $validated['user_id'] = auth()->id();
+        $validated['user_id'] = auth()->user()->id;
         $validated['code'] = $this->generateEventCode($validated['period_start']);
         $validated['name'] = "STO Event - " . $validated['code']; 
         $validated['status'] = 'OPEN';

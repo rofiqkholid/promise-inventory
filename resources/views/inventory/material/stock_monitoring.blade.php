@@ -8,37 +8,37 @@
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter leading-none">Material Monitoring</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Real-time status of material balance and usage.</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Material Monitoring</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Real-time status of material balance and usage.</p>
         </div>
 
         {{-- Action Toolbar --}}
         <div class="flex items-center gap-2 mt-4 sm:mt-0 relative">
             {{-- Mode Switch --}}
             <div class="bg-slate-100 dark:bg-gray-900/50 p-1 rounded-xs flex items-center mr-2 border border-slate-200 dark:border-gray-700">
-                <button id="mode-balance" class="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-all duration-200 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm">Balance Stock</button>
-                <button id="mode-usage" class="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-all duration-200 text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200">Material Usage</button>
+                <button id="mode-balance" class="px-4 py-1.5 text-xs font-medium tracking-wider rounded-xs transition-all duration-200 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm">Balance Stock</button>
+                <button id="mode-usage" class="px-4 py-1.5 text-xs font-medium tracking-wider rounded-xs transition-all duration-200 text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200">Material Usage</button>
             </div>
 
-            <button id="btnToggleFilter" class="h-10 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Toggle Filters">
+            <button id="btnToggleFilter" class="h-9 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Toggle Filters">
                 <i class="fa-solid fa-filter text-sm mr-2.5"></i>
-                <span class="text-[11px] font-bold uppercase tracking-wider">Filters</span>
+                <span class="text-xs font-medium">Filters</span>
             </button>
 
-            <button id="btnExportExcel" class="h-10 px-4 rounded-xs bg-white dark:bg-gray-800 text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Export Excel">
+            <button id="btnExportExcel" class="h-9 px-4 rounded-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center justify-center transition-all duration-200 active:scale-95" title="Export Excel">
                 <i class="fa-solid fa-file-excel text-sm mr-2.5"></i>
-                <span class="text-[11px] font-bold uppercase tracking-wider">Export Excel</span>
+                <span class="text-xs font-medium">Export Excel</span>
             </button>
             
             <div class="relative">
-                <button id="toggleLegend" class="h-10 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Legend & Help">
+                <button id="toggleLegend" class="h-9 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Legend & Help">
                     <i class="fa-solid fa-circle-question text-sm mr-2.5"></i>
-                    <span class="text-[11px] font-bold uppercase tracking-wider">Legend</span>
+                    <span class="text-xs font-medium">Legend</span>
                 </button>
 
                 {{-- Legend Popover Content --}}
                 <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-6 z-50">
-                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-2">Stock Status</h4>
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-2">Stock Status</h4>
                     <div class="space-y-2 mb-4">
                         <div class="flex items-center text-xs">
                             <span class="w-2.5 h-2.5 rounded-full bg-primary-500 mr-2 flex-shrink-0"></span>
@@ -60,7 +60,7 @@
 
                     <div class="border-t border-gray-100 dark:border-gray-700 my-3"></div>
 
-                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs uppercase tracking-wider mb-3">Trial Material Usage</h4>
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-3">Trial Material Usage</h4>
                     <div class="space-y-2 mb-4">
                         <div class="flex items-center text-xs">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
@@ -90,7 +90,7 @@
 
                 <!-- Customer -->
                 <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Customer</label>
+                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Customer</label>
                     <div class="w-full">
                         <select id="filter_customer" class="select2 w-full">
                             <option value="">All Customers</option>
@@ -103,7 +103,7 @@
 
                 <!-- Model -->
                 <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Model</label>
+                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Model</label>
                     <div class="w-full">
                         <select id="filter_model" class="select2 w-full">
                             <option value="">All Models</option>
@@ -113,7 +113,7 @@
 
                 <!-- Status -->
                 <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Project Status</label>
+                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Project Status</label>
                     <div class="w-full">
                         <select id="filter_project_status" class="select2 w-full">
                             <option value="">All Status</option>
@@ -126,7 +126,7 @@
 
                 <!-- Stock Status -->
                 <div class="space-y-1.5" id="filter_status_container">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Stock Status</label>
+                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Stock Status</label>
                     <div class="w-full">
                         <select id="filter_status" class="select2 w-full">
                             <option value="">All Status</option>
@@ -140,7 +140,7 @@
 
                 <!-- Usage Status (Hidden by default) -->
                 <div class="space-y-1.5 hidden" id="filter_usage_status_container">
-                    <label class="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-tight">Usage Status</label>
+                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Usage Status</label>
                     <div class="w-full">
                         <select id="filter_usage_status" class="select2 w-full">
                             <option value="">All Status</option>
@@ -154,7 +154,7 @@
             </div>
 
             <div class="flex gap-2 pt-2 xl:pt-0">
-                <button type="button" id="reset_filters" class="flex items-center justify-center gap-2 h-10 px-6 w-full md:w-auto bg-slate-50 dark:bg-gray-700 text-slate-600 dark:text-gray-300 border border-slate-100 dark:border-gray-600 rounded-xs transition-all text-[10px] font-bold uppercase tracking-widest hover:bg-slate-100 active:scale-95">
+                <button type="button" id="reset_filters" class="h-9 px-4 flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-slate-500 hover:text-primary-600 border border-slate-200 dark:border-gray-700 rounded-xs transition-all text-xs font-medium active:scale-95 shadow-xs">
                     <i class="fa-solid fa-rotate-left"></i> Reset
                 </button>
             </div>
@@ -162,15 +162,15 @@
     </div>
     
     {{-- Individual KPI Cards - Forced Single Row --}}
-    <div id="kpi-balance" class="flex flex-nowrap gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+    <div id="kpi-balance" class="flex flex-nowrap gap-3 mb-4 overflow-x-auto scrollbar-hide">
         <!-- Total -->
         <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
             <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
                 <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Parts</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['total'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight mb-1">Total parts</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['total'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -180,8 +180,8 @@
                 <i class="fa-solid fa-circle-check"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1">Safe Stock</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['safe'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-emerald-600 dark:text-emerald-500 tracking-tight mb-1">Safe stock</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['safe'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -191,8 +191,8 @@
                 <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1">Warning</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['warning'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">Warning</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['warning'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -202,8 +202,8 @@
                 <i class="fa-solid fa-bell"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest mb-1">Critical</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['critical'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-red-600 dark:text-red-500 tracking-tight mb-1">Critical</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['critical'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -213,22 +213,22 @@
                 <i class="fa-solid fa-arrow-trend-up"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-primary-600 dark:text-primary-500 uppercase tracking-widest mb-1">Over Stock</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['over'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-primary-600 dark:text-primary-500 tracking-tight mb-1">Over stock</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['over'] ?? 0) }}</div>
             </div>
         </div>
     </div>
     
     {{-- Individual KPI Cards - Usage / Out Trial --}}
-    <div id="kpi-usage" class="hidden flex-nowrap gap-3 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+    <div id="kpi-usage" class="hidden flex-nowrap gap-3 mb-4 overflow-x-auto scrollbar-hide">
         <!-- Total Trial Parts -->
         <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
             <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
                 <i class="fa-solid fa-flask"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Total Trial Parts</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['total'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight mb-1">Total trial parts</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['total'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -238,8 +238,8 @@
                 <i class="fa-solid fa-piggy-bank"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest mb-1">On Budget</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['on_budget'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-emerald-600 dark:text-emerald-500 tracking-tight mb-1">On budget</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['on_budget'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -249,8 +249,8 @@
                 <i class="fa-solid fa-coins"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-1">Near Loss</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['near_loss'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">Near loss</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['near_loss'] ?? 0) }}</div>
             </div>
         </div>
 
@@ -260,8 +260,8 @@
                 <i class="fa-solid fa-arrow-trend-down"></i>
             </div>
             <div>
-                <div class="text-[9px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest mb-1">Loss</div>
-                <div class="text-xl font-black text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['loss'] ?? 0) }}</div>
+                <div class="text-sm font-bold text-red-600 dark:text-red-500 tracking-tight mb-1">Loss</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['loss'] ?? 0) }}</div>
             </div>
         </div>
     </div>
@@ -270,27 +270,27 @@
 
     {{-- DataTables Wrapper --}}
     <div id="balanceView">
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+        <div>
             <x-table id="stockMonitoringTable">
                 <thead>
                     <tr>
-                        <th rowspan="2" class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
-                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Model</th>
-                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
-                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Status</th>
-                        <th colspan="{{ 2 + max(1, $categories->count()) + 2 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/50">Current Balance & Movement</th>
-                        <th rowspan="2" class="w-20 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Action</th>
+                        <th rowspan="2" class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs">No</th>
+                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Model</th>
+                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Part information</th>
+                        <th rowspan="2" class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Status</th>
+                        <th colspan="{{ 2 + max(1, $categories->count()) + 2 }}" class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs bg-slate-50/50 dark:bg-slate-900/50">Current balance & movement</th>
+                        <th rowspan="2" class="w-20 border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs">Action</th>
                     </tr>
                     <tr>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Min Stock</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-slate-50/50 dark:bg-slate-900/30">Balance</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/30">Min stock</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/30">Balance</th>
 
                         @foreach($categories as $cat)
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] whitespace-nowrap">{{ $cat->code }}</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] whitespace-nowrap">{{ $cat->code }}</th>
                         @endforeach
                         
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-amber-50/30 dark:bg-amber-900/10">STO GAP</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-amber-50/30 dark:bg-amber-900/10">STO gap</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount</th>
 
                         @if($categories->count() === 0)
                         <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px]">-</th>
@@ -303,19 +303,19 @@
     </div>
 
     <div id="usageView" class="hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
+        <div >
             <x-table id="usageTable">
                 <thead>
                     <tr>
-                        <th class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">No</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Model</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Part Information</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Project Status</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-bold uppercase tracking-wider text-[10px]">Supplier</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Rank</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Out-Trial</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px] bg-amber-50/30 dark:bg-amber-900/10">Gap</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-wider text-[10px]">Status</th>
+                        <th class="w-12 border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs">No</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Model</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Part information</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Project status</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-left font-medium tracking-wider text-xs">Supplier</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs">Rank</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs">Out-trial</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs bg-amber-50/30 dark:bg-amber-900/10">Gap</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-xs">Status</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -361,7 +361,7 @@
             },
             { 
                 data: 'model_name',
-                className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                className: 'text-left font-medium text-slate-700 dark:text-gray-300 text-[10px] tracking-tight',
                 render: d => d || '-'
             },
             {
@@ -375,10 +375,10 @@
                                 <div class="hover-trigger cursor-pointer group/part relative pl-3 transition-all" data-details="${details}">
                                     <div class="absolute left-0 top-0 bottom-0 w-0.5 bg-primary-500 scale-y-0 group-hover/part:scale-y-100 transition-transform origin-center"></div>
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-slate-700 dark:text-slate-200 leading-none uppercase tracking-tight group-hover/part:text-primary-600 transition-colors">
+                                        <span class="font-bold text-slate-700 dark:text-slate-200 leading-none tracking-tight group-hover/part:text-primary-600 transition-colors">
                                             ${partNoDisplay}
                                         </span>
-                                        <span class="text-[9px] text-slate-400 font-medium uppercase truncate max-w-[180px] mt-1 group-hover/part:text-slate-500 transition-colors">
+                                        <span class="text-[10px] text-slate-400 font-medium truncate max-w-[180px] mt-1 group-hover/part:text-slate-500 transition-colors">
                                             ${row.part_name || ''}
                                         </span>
                                     </div>
@@ -387,8 +387,8 @@
                         }
                         return `
                             <div class="flex flex-col pl-3">
-                                <span class="font-bold text-slate-700 dark:text-slate-200 leading-none uppercase tracking-tight">${partNoDisplay}</span>
-                                <span class="text-[9px] text-slate-400 font-medium uppercase truncate max-w-[180px] mt-1">${row.part_name || ''}</span>
+                                <span class="font-bold text-slate-700 dark:text-slate-200 leading-none tracking-tight">${partNoDisplay}</span>
+                                <span class="text-[10px] text-slate-400 font-medium truncate max-w-[180px] mt-1">${row.part_name || ''}</span>
                             </div>
                         `;
                     }
@@ -409,12 +409,12 @@
                     else if (data === 'Under') colorClass = 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100 dark:bg-fuchsia-900/20 dark:text-fuchsia-400 dark:border-fuchsia-800/50';
                     else if (data === 'Other') colorClass = 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/20 dark:text-slate-400 dark:border-slate-800/50';
                     
-                    return `<span class="px-3 py-1.5 rounded-xs border ${colorClass} text-[10px] font-bold uppercase tracking-widest inline-block">${data}</span>`;
+                    return `<span class="px-3 py-1.5 rounded-xs border ${colorClass} text-[10px] font-medium tracking-wider inline-block">${data}</span>`;
                 }
             },
             {
                 data: 'min_stock',
-                className: 'text-center font-bold text-slate-500 text-[11px]',
+                className: 'text-center font-medium text-slate-500 text-[11px]',
                 render: (data) => data || '0'
             },
             {
@@ -447,9 +447,9 @@
                             <div class="flex flex-col items-center justify-center p-2" title="${breakdown}">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="w-2 h-2 rounded-full ${indicatorClass}"></span>
-                                    <span class="font-black ${textColorClass} text-xs tracking-tight">${data}</span>
+                                    <span class="font-bold ${textColorClass} text-xs tracking-tight">${data}</span>
                                 </div>
-                                <span class="text-[9px] text-gray-400 font-bold uppercase tracking-widest opacity-80">${row.balance_unit} (${row.current_qty})</span>
+                                <span class="text-[9px] text-gray-400 font-medium tracking-wider opacity-80">${row.balance_unit} (${row.current_qty})</span>
                             </div>
                         `;
                     }
@@ -460,7 +460,7 @@
 
         const amountColumnDef = {
             data: 'total_amount',
-            className: 'text-right font-mono text-[11px] font-bold text-slate-700 dark:text-slate-300',
+            className: 'text-right font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300',
             render: function(data) {
                 return data ? new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(data) : '0';
             }
@@ -479,7 +479,7 @@
                     
                     return `
                         <div class="sto-log-trigger cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-all group/gap" data-id="${row.id}">
-                            <span class="${colorClass} font-mono font-black text-[13px] tracking-tight transition-transform group-hover/gap:scale-110">${display}</span>
+                            <span class="${colorClass} font-mono font-bold text-[13px] tracking-tight transition-transform group-hover/gap:scale-110">${display}</span>
                             <i class="fa-solid fa-clock-rotate-left text-[9px] opacity-20 group-hover/gap:opacity-80 transition-opacity"></i>
                         </div>
                     `;
@@ -509,7 +509,7 @@
                                 if (row.trial_status === 'critical') badgeClass = 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50';
                                 else if (row.trial_status === 'warning') badgeClass = 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50';
 
-                                if (badgeClass) return `<span class="px-3 py-1.5 rounded-xs border ${badgeClass} text-[10px] font-bold uppercase tracking-widest inline-block">${data}</span>`;
+                                if (badgeClass) return `<span class="px-3 py-1.5 rounded-xs border ${badgeClass} text-[10px] font-medium tracking-wider inline-block">${data}</span>`;
                             }
                             return `<span class="text-[10px] font-medium text-gray-500">${data || '-'}</span>`;
                         }
@@ -587,17 +587,17 @@
             },
             {
                 data: 'rank_value',
-                className: 'text-center font-mono font-bold text-slate-600 dark:text-gray-300 text-[11px]',
+                className: 'text-center font-mono font-medium text-slate-600 dark:text-gray-300 text-[11px]',
                 render: d => d || '0'
             },
             {
                 data: 'out_trial_value',
-                className: 'text-center font-mono font-bold text-primary-600 dark:text-primary-400 text-[11px]',
+                className: 'text-center font-mono font-medium text-primary-600 dark:text-primary-400 text-[11px]',
                 render: d => d || '0'
             },
             {
                 data: 'gap',
-                className: 'text-center font-mono font-bold text-[11px]',
+                className: 'text-center font-mono font-medium text-[11px]',
                 render: function(data, type, row) {
                     let val = parseFloat(data) || 0;
                     let colorClass = val >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
@@ -613,7 +613,7 @@
                     else if (data === 'Near Loss') colorClass = 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50';
                     else if (data === 'On Budget') colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50';
                     
-                    return `<span class="px-2.5 py-1 rounded-xs border ${colorClass} text-[9px] font-bold uppercase tracking-widest inline-block">${data || '-'}</span>`;
+                    return `<span class="px-2.5 py-1 rounded-xs border ${colorClass} text-[10px] font-medium tracking-wider inline-block">${data || '-'}</span>`;
                 }
             }
         );

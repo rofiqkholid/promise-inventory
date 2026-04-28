@@ -9,9 +9,9 @@
     <div class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex-1">
             <div class="flex items-center gap-3 mb-2.5">
-                <a href="{{ route('inventory.sto.index') }}" class="h-10 px-3 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all" title="Back to STO Monitor">
+                <a href="{{ route('inventory.sto.index') }}" class="h-9 px-3 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all shadow-sm" title="Back to STO Monitor">
                     <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                    <span class="ml-2 text-[10px] font-black uppercase tracking-widest">Back</span>
+                    <span class="ml-2 text-xs font-medium">Back</span>
                 </a>
                 <span class="w-1 h-1 rounded-xs bg-gray-300 dark:bg-gray-700"></span>
                 @php
@@ -23,12 +23,12 @@
                     ];
                     $currentStatusClass = $statusClasses[$stoEvent->status] ?? $statusClasses['CLOSED'];
                 @endphp
-                <span class="px-2 py-1 text-xs rounded-xs font-black uppercase tracking-widest border {{ $currentStatusClass }}">
+                <span class="px-2 py-1 text-[10px] rounded-xs font-bold border {{ $currentStatusClass }}">
                     {{ str_replace('_', ' ', $stoEvent->status) }}
                 </span>
             </div>
 
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">{{ $stoEvent->name }}</h2>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">{{ $stoEvent->name }}</h2>
 
             <div class="mt-3 flex flex-wrap items-center gap-4 text-[11px] font-bold">
                 <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-xs border border-gray-100 dark:border-gray-700">
@@ -44,7 +44,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
-            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
                 <i class="fa-solid fa-file-excel text-sm"></i>
                 Export Result
             </a>
@@ -59,7 +59,7 @@
             @if($stoEvent->status === 'OPEN' && $isPic)
                 <form action="{{ route('inventory.sto.submitForCheck', $stoEvent->hash_id) }}" method="POST" id="submitForCheckForm" class="inline">
                     @csrf
-                    <button type="button" onclick="confirmSubmitForCheck()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                    <button type="button" onclick="confirmSubmitForCheck()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
                         <i class="fa-solid fa-paper-plane text-sm"></i>
                         Submit for Check
                     </button>
@@ -69,12 +69,12 @@
             @if($stoEvent->status === 'WAITING CHECK' && $isChecker)
                 <form action="{{ route('inventory.sto.verify', $stoEvent->hash_id) }}" method="POST" id="verifyForm" class="inline">
                     @csrf
-                    <button type="button" onclick="confirmVerify()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                    <button type="button" onclick="confirmVerify()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
                         <i class="fa-solid fa-check-double text-sm"></i>
                         Verify Data
                     </button>
                 </form>
-                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
                     <i class="fa-solid fa-xmark text-sm"></i>
                     Reject
                 </button>
@@ -83,12 +83,12 @@
             @if($stoEvent->status === 'WAITING APPROVAL' && $isApprover)
                 <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="inline">
                     @csrf
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold rounded-xs hover:bg-slate-800 transition-all uppercase tracking-widest active:scale-[0.98]">
+                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium rounded-xs hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm">
                         <i class="fa-solid fa-lock text-sm"></i>
                         Finalize & Adjust
                     </button>
                 </form>
-                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
                     <i class="fa-solid fa-xmark text-sm"></i>
                     Reject
                 </button>
@@ -97,7 +97,7 @@
             @if(($stoEvent->status === 'CLOSED' || $stoEvent->status === 'WAITING CHECK' || $stoEvent->status === 'WAITING APPROVAL') && $isApprover)
                 <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="inline">
                     @csrf
-                    <button type="button" onclick="confirmReopen()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
+                    <button type="button" onclick="confirmReopen()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
                         <i class="fa-solid fa-rotate-left text-sm"></i>
                         Reopen
                     </button>
@@ -240,8 +240,8 @@
                     </p>
                 </div>
             </div>
-            <button onclick="openRemainingModal()" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold rounded-xs transition-all uppercase tracking-widest active:scale-[0.98]">
-                VIEW MISSING
+            <button onclick="openRemainingModal()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
+                View Missing
             </button>
         </div>
     </div>
@@ -266,7 +266,7 @@
                     @endforeach
                 </select>
             </div>
-            <button id="btn-scan" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-700 dark:text-gray-100 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98]" title="Open Scanner Camera">
+            <button id="btn-scan" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 h-9 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98] shadow-sm" title="Open Scanner Camera">
                 <i class="fa-solid fa-camera text-sm"></i>
                 <span class="sm:hidden">Scan QR Code</span>
             </button>
@@ -305,7 +305,7 @@
                   </div>
                </div>
                <div class="mt-4 flex justify-center">
-                  <button type="button" onclick="addNewEntryRow()" class="flex items-center justify-center gap-2 px-6 py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]">
+                  <button type="button" onclick="addNewEntryRow()" class="flex items-center justify-center gap-2 px-4 h-8 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-bold transition-all active:scale-[0.98]">
                       <i class="fa-solid fa-plus text-sm"></i>
                       Add New
                   </button>
@@ -349,28 +349,28 @@
             <x-table id="stoDetailsTable" class="w-full">
                 <thead>
                     <tr>
-                        <th rowspan="2" class="text-center">No</th>
-                        <th rowspan="2" class="text-left">Model</th>
-                        <th rowspan="2" class="text-left">Material Information</th>
-                        <th rowspan="2" class="text-left">Auditor</th>
-                        <th colspan="2" class="text-center bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
-                        <th colspan="2" class="text-center bg-primary-50/30 dark:bg-primary-900/10">Real Count</th>
-                        <th colspan="2" class="text-center bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
-                        <th rowspan="2" class="text-left">Location</th>
-                        <th rowspan="2" class="text-left">Reason</th>
-                        <th rowspan="2" class="text-left">Remark</th>
-                        <th rowspan="2" class="text-left">Timestamp</th>
+                        <th rowspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Material Information</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Auditor</th>
+                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
+                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Real Count</th>
+                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Reason</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Remark</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Timestamp</th>
                         @if($stoEvent->status === 'OPEN')
-                        <th rowspan="2" class="w-[60px] text-center">Action</th>
+                        <th rowspan="2" class="px-6 py-4 w-[60px] text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
                         @endif
                     </tr>
                     <tr>
-                        <th class="text-center border-t border-gray-100 dark:border-gray-700">Qty</th>
-                        <th class="text-center border-t border-gray-100 dark:border-gray-700">Amount</th>
-                        <th class="text-center border-t border-gray-100 dark:border-gray-700">Qty</th>
-                        <th class="text-center border-t border-gray-100 dark:border-gray-700">Amount</th>
-                        <th class="text-center border-t border-gray-100 dark:border-gray-700">Qty</th>
-                        <th class="text-center border-t border-gray-100 dark:border-gray-700">Amount</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Qty</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Amount</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Qty</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Amount</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Qty</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Amount</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -400,10 +400,10 @@
                     placeholder="Provide clear reasons for rejection..."></textarea>
             </div>
             <div class="flex gap-3">
-                <button type="button" onclick="closeRejectModal()" class="flex-1 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-gray-800 rounded-xs transition-all">
+                <button type="button" onclick="closeRejectModal()" class="flex-1 py-2.5 text-xs font-medium text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xs transition-all shadow-sm">
                     Cancel
                 </button>
-                <button type="submit" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold rounded-xs transition-all active:scale-95 uppercase tracking-widest shadow-lg shadow-rose-100 dark:shadow-none">
+                <button type="submit" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium rounded-xs transition-all active:scale-95 shadow-sm">
                     Confirm Reject
                 </button>
             </div>
@@ -464,6 +464,8 @@
     const scanUrl = "{{ route('inventory.sto.scan', $stoEvent->hash_id) }}";
     const saveUrl = "{{ route('inventory.sto.saveCount', $stoEvent->hash_id) }}";
     const csrfToken = "{{ csrf_token() }}";
+    const stoReasons = @json($reasons);
+    const locations = @json($locations);
 
     // (Local formatCurrency remains as it is as it's simple and specific to this page)
     function formatCurrencyHtml(val, isDiff = false) {
@@ -1072,7 +1074,6 @@
     function createFormRow(entry = null) {
         const container = document.getElementById('entriesFormContainer');
         const rowId = 'row-' + Math.random().toString(36).substr(2, 9);
-        const locations = @json($locations);
 
         let locationOptions = '<option value="">-- No Location --</option>';
         locations.forEach(loc => {

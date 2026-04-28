@@ -5,40 +5,42 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Purchase Requisition</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">List of parts below minimum stock requiring procurement requisition.</p>
+    <div class="sm:flex sm:items-center sm:justify-between mb-4 gap-4">
+        <div class="flex-1">
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Purchase Requisition</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">List of parts below minimum stock requiring procurement requisition.</p>
         </div>
-    </div>
 
-    {{-- Stats Widgets --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white dark:bg-gray-800 p-5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-4 transition-all hover:shadow-sm">
-            <div class="w-12 h-12 rounded-xs bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50">
-                <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+        <div class="flex flex-wrap items-center gap-2">
+            {{-- Urgent (Critical) --}}
+            <div class="flex-none min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+                <div class="w-9 h-9 rounded-xs bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50">
+                    <i class="fa-solid fa-triangle-exclamation text-base"></i>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-none mb-1">Urgent (Critical)</p>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['critical']) }}</h3>
+                </div>
             </div>
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Urgent (Critical)</p>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white leading-none">{{ number_format($stats['critical']) }}</h3>
-            </div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 p-5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-4 transition-all hover:shadow-sm">
-            <div class="w-12 h-12 rounded-xs bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50">
-                <i class="fa-solid fa-circle-exclamation text-xl"></i>
-            </div>
-            <div>
-                <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1">Replenish (Warning)</p>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white leading-none">{{ number_format($stats['warning']) }}</h3>
+
+            {{-- Replenish (Warning) --}}
+            <div class="flex-none min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+                <div class="w-9 h-9 rounded-xs bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50">
+                    <i class="fa-solid fa-circle-exclamation text-base"></i>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-none mb-1">Replenish (Warning)</p>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['warning']) }}</h3>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Filter Bar --}}
-    <div class="mb-6 p-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
+    <div class="mb-4 p-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
         <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end">
             <div class="col-span-1">
-                <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Customer</label>
+                <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-500">Customer</label>
                 <select id="filterCustomer" class="select2-filter w-full">
                     <option value="">All Customers</option>
                     @foreach($customers as $c)
@@ -47,7 +49,7 @@
                 </select>
             </div>
             <div class="col-span-1">
-                <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Model</label>
+                <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-500">Model</label>
                 <select id="filterModel" class="select2-filter w-full">
                     <option value="">All Models</option>
                     @foreach($models as $m)
@@ -56,7 +58,7 @@
                 </select>
             </div>
             <div class="col-span-1">
-                <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Stock Status</label>
+                <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-500">Stock Status</label>
                 <select id="filterStatus" class="select2-filter w-full">
                     <option value="">All Problematic</option>
                     <option value="critical">Critical Only</option>
@@ -64,10 +66,10 @@
                 </select>
             </div>
             <div class="col-span-1 lg:col-span-2 flex items-center gap-3">
-                <button type="button" id="btnResetFilter" class="flex-1 h-10 px-4 text-[10px] font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-100 dark:border-gray-700 transition-all uppercase tracking-widest active:scale-95">
+                <button type="button" id="btnResetFilter" class="flex-1 h-9 px-4 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-200 dark:border-gray-700 transition-all active:scale-95">
                     <i class="fa-solid fa-rotate-left mr-1"></i> Reset
                 </button>
-                <button type="button" id="btnExport" class="flex-1 h-10 inline-flex items-center justify-center px-6 bg-emerald-600 border border-transparent text-white text-[10px] font-bold rounded-xs transition-all hover:bg-emerald-700 gap-2 uppercase tracking-widest">
+                <button type="button" id="btnExport" class="flex-1 h-9 inline-flex items-center justify-center px-4 bg-emerald-600 border border-transparent text-white text-xs font-medium rounded-xs transition-all hover:bg-emerald-700 gap-2">
                     <i class="fa-solid fa-file-excel"></i> Export PR Draft
                 </button>
             </div>
@@ -77,17 +79,17 @@
     {{-- Table Section --}}
     <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center">
+            <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center">
                 <i class="fa-solid fa-list-check mr-3 text-primary-600"></i> Part Shortage List
             </h3>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-200"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Critical</span>
+                    <span class="text-[10px] font-medium text-slate-600 dark:text-gray-400 uppercase tracking-tight">Critical</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-amber-500 shadow-sm shadow-amber-200"></span>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Warning</span>
+                    <span class="text-[10px] font-medium text-slate-600 dark:text-gray-400 uppercase tracking-tight">Warning</span>
                 </div>
             </div>
         </div>
@@ -95,15 +97,15 @@
             <x-table id="prTable">
                 <thead>
                     <tr>
-                        <th class="w-12 text-center text-xs font-bold uppercase tracking-wider">No</th>
-                        <th class="w-40 text-center text-xs font-bold uppercase tracking-wider">Model / Customer</th>
-                        <th class="text-left text-xs font-bold uppercase tracking-wider">Part Details</th>
-                        <th class="text-left text-xs font-bold uppercase tracking-wider">Specifications</th>
-                        <th class="w-24 text-center text-xs font-bold uppercase tracking-wider">Stock</th>
-                        <th class="w-24 text-center text-xs font-bold uppercase tracking-wider">Min Stock</th>
-                        <th class="w-24 text-center text-xs font-bold uppercase tracking-wider text-red-600">Shortage</th>
-                        <th class="w-32 text-center text-xs font-bold uppercase tracking-wider">Status</th>
-                        <th class="w-20 text-center text-xs font-bold uppercase tracking-wider">Action</th>
+                        <th class="px-6 py-4 w-12 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                        <th class="px-6 py-4 w-40 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model / Customer</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Part Details</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Specifications</th>
+                        <th class="px-6 py-4 w-24 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Stock</th>
+                        <th class="px-6 py-4 w-24 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min Stock</th>
+                        <th class="px-6 py-4 w-24 text-center text-xs font-bold text-red-600 border-b border-gray-200 dark:border-gray-700">Shortage</th>
+                        <th class="px-6 py-4 w-32 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
+                        <th class="px-6 py-4 w-20 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -118,7 +120,7 @@
         <div class="relative bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 overflow-hidden scale-in">
             <div class="px-6 py-5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
                 <div>
-                    <h3 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-circle-info text-primary-600"></i> Requirement Detail
                     </h3>
                 </div>
@@ -189,10 +191,10 @@
             </div>
 
             <div class="flex items-center gap-3 px-8 py-6 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-gray-700">
-                <button type="button" class="close-modal-button flex-1 h-11 px-6 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-gray-400 transition-all active:scale-95">
+                <button type="button" class="close-modal-button flex-1 h-10 px-6 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-600 rounded-xs text-xs font-medium text-slate-500 dark:text-gray-400 transition-all active:scale-95 shadow-sm">
                     Close
                 </button>
-                <button type="button" class="flex-1 h-11 px-6 bg-primary-600 hover:bg-primary-700 rounded-xs text-[10px] font-black uppercase tracking-widest text-white transition-all">
+                <button type="button" class="flex-1 h-10 px-6 bg-primary-600 hover:bg-primary-700 rounded-xs text-xs font-medium text-white transition-all shadow-sm active:scale-95">
                     <i class="fa-solid fa-file-signature mr-2"></i> Request PR
                 </button>
             </div>
@@ -228,7 +230,7 @@ $(function() {
                 className: 'text-center',
                 render: function(data, type, row) {
                     return `
-                        <div class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase leading-none mb-1.5">${row.model || '-'}</div>
+                        <div class="text-xs font-medium text-slate-700 dark:text-gray-300 uppercase leading-none mb-1.5">${row.model || '-'}</div>
                         <div class="text-[10px] font-medium text-slate-400 dark:text-gray-500 uppercase tracking-widest pl-1">${row.customer || '-'}</div>
                     `;
                 }
@@ -238,7 +240,7 @@ $(function() {
                 className: 'py-3 min-w-[180px]',
                 render: function(data, type, row) {
                     return `
-                        <div class="font-bold text-slate-800 dark:text-white leading-tight uppercase tracking-tight">${data}</div>
+                        <div class="font-medium text-slate-800 dark:text-white leading-tight uppercase tracking-tight">${data}</div>
                         <div class="text-[10px] text-slate-400 uppercase truncate max-w-[200px]">${row.part_name || '-'}</div>
                     `;
                 }
@@ -250,15 +252,15 @@ $(function() {
             },
             { 
                 data: 'current_stock', 
-                className: 'text-center font-bold text-slate-900 dark:text-white text-xs' 
+                className: 'text-center font-medium text-slate-900 dark:text-white text-xs' 
             },
             { 
                 data: 'min_stock', 
-                className: 'text-center font-bold text-slate-500 dark:text-gray-400 text-xs' 
+                className: 'text-center font-medium text-slate-500 dark:text-gray-400 text-xs' 
             },
             { 
                 data: 'shortage', 
-                className: 'text-center font-black text-red-600 dark:text-red-400 text-xs' 
+                className: 'text-center font-medium text-red-600 dark:text-red-400 text-xs' 
             },
             { 
                 data: 'status', 
@@ -272,7 +274,7 @@ $(function() {
                     const colorClass = config[data] || 'bg-gray-50 text-gray-600 border-gray-100';
                     const label = (data || '').toUpperCase();
                     
-                    return `<span class="px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-widest border ${colorClass}">${label}</span>`;
+                    return `<span class="px-3 py-1.5 rounded-xs text-[10px] font-medium border ${colorClass}">${label}</span>`;
                 }
             },
             {
@@ -328,9 +330,9 @@ $(function() {
         
         let statusHtml = '';
         if (data.status === 'critical') {
-            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-black rounded border-2 bg-red-50 text-red-700 border-red-200 uppercase tracking-widest italic">${data.status.toUpperCase()}</span>`;
+            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-bold rounded border-2 bg-red-50 text-red-700 border-red-200 italic">${data.status.toUpperCase()}</span>`;
         } else {
-            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-black rounded border-2 bg-amber-50 text-amber-700 border-amber-200 uppercase tracking-widest italic">${data.status.toUpperCase()}</span>`;
+            statusHtml = `<span class="px-4 py-1.5 text-[10px] font-bold rounded border-2 bg-amber-50 text-amber-700 border-amber-200 italic">${data.status.toUpperCase()}</span>`;
         }
         $('#det_status_badge').html(statusHtml);
 

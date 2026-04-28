@@ -7,19 +7,19 @@
 <div class="text-gray-900 dark:text-gray-100">
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Inventory Product</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage inventory product details.</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Inventory Product</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+            <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
             </button>
-            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
                 <i class="fa-solid fa-file-import"></i>
                 Import Excel
             </button>
-            <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+            <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
                 <i class="fa-solid fa-plus"></i>
                 Add New
             </button>
@@ -29,7 +29,7 @@
     {{-- FILTER BAR --}}
     <div class="mb-8 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <h3 class="text-[10px] font-bold text-gray-900 dark:text-white flex items-center gap-3 uppercase tracking-[0.15em]">
+            <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-3">
                 <i class="fa-solid fa-filter text-primary-600"></i> Product Filter
             </h3>
         </div>
@@ -37,7 +37,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
                 {{-- CUSTOMER --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Customer</label>
+                    <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Customer</label>
                     <select id="filterCustomer" class="select2-filter w-full">
                         <option value="">All Customers</option>
                         @foreach($filterCustomers as $c)
@@ -48,7 +48,7 @@
 
                 {{-- MODEL --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Model</label>
+                    <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Model</label>
                     <select id="filterModel" class="select2-filter w-full">
                         <option value="">All Models</option>
                         @foreach($filterModels as $m)
@@ -59,7 +59,7 @@
 
                 {{-- PART NUMBER (SELECT2 AJAX) --}}
                 <div class="w-full lg:col-span-1">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Part Number</label>
+                    <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Part Number</label>
                     <select id="filterPartNo" class="w-full">
                         <option value="">All Part Numbers</option>
                     </select>
@@ -67,7 +67,7 @@
 
                 {{-- DATA STATUS FILTER --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Data Status</label>
+                    <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Data Status</label>
                     <select id="filterDataStatus" class="select2-filter w-full">
                         <option value="">All Data</option>
                         <option value="incomplete">Incomplete Coil Data</option>
@@ -76,8 +76,8 @@
 
                 {{-- ACTIONS --}}
                 <div class="flex items-center w-full">
-                    <button type="button" id="btnResetFilter" class="w-full h-10 px-4 text-[10px] font-bold text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-100 dark:border-gray-700 transition-all uppercase tracking-widest active:scale-95">
-                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Filter
+                    <button type="button" id="btnResetFilter" class="h-9 px-4 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-200 dark:border-gray-700 transition-all active:scale-95 shadow-xs">
+                        <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset
                     </button>
                 </div>
             </div>
@@ -116,8 +116,8 @@
             </button>
             
             <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest" id="modalTitle">Add Inventory Product</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Enter product details and specifications</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white" id="modalTitle">Add Inventory Product</h3>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">Enter product details and specifications</p>
             </div>
 
             <form id="productForm" method="POST" class="flex flex-col h-full overflow-hidden min-h-0">
@@ -336,10 +336,10 @@
                 </div>
 
                 <div class="flex-none flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
-                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all">
+                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-xs font-medium px-6 py-2.5 transition-all active:scale-95 shadow-sm">
                         Cancel
                     </button>
-                    <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 rounded-xs text-[10px] uppercase tracking-widest px-6 py-3 text-center shadow-lg shadow-primary-500/10 transition-all">
+                    <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 rounded-xs text-xs font-medium px-6 py-2.5 text-center shadow-lg shadow-primary-500/10 transition-all active:scale-95">
                         <i class="fa-solid fa-save mr-1.5"></i> Save Product
                     </button>
                 </div>
@@ -358,8 +358,8 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white uppercase tracking-widest">Import Inventory Product</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">Upload Excel file to bulk import products.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Import Inventory Product</h3>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">Upload Excel file to bulk import products.</p>
             </div>
             <form id="importForm" method="POST" enctype="multipart/form-data" class="flex flex-col h-full overflow-hidden min-h-0">
                 @csrf
@@ -368,9 +368,9 @@
                         <div class="flex items-start gap-3">
                             <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
                             <div>
-                                <h4 class="text-[10px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-1">Standard Template</h4>
-                                <p class="text-[10px] text-blue-600/80 dark:text-blue-400/80 font-medium leading-relaxed">Please use the official excel template to ensure all data is correctly mapped. Download the latest version below:</p>
-                                <a href="{{ route('inventory.master.product.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest transition-all shadow-sm active:scale-95">
+                                <h4 class="text-[11px] font-bold text-blue-800 dark:text-blue-300 mb-1">Standard Template</h4>
+                                <p class="text-[10px] text-blue-600/80 dark:text-blue-400/80 font-normal leading-relaxed">Please use the official excel template to ensure all data is correctly mapped. Download the latest version below:</p>
+                                <a href="{{ route('inventory.master.product.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-xs font-bold text-blue-600 dark:text-blue-400 transition-all shadow-sm active:scale-95">
                                     <i class="fa-solid fa-download"></i> Download Template
                                 </a>
                             </div>
@@ -415,8 +415,8 @@
                     <div id="importResult" class="hidden text-[10px] font-medium p-4 rounded-xs border"></div>
                 </div>
                 <div class="flex-none flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
-                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-[10px] font-bold uppercase tracking-wider px-6 py-3 transition-all">Cancel</button>
-                    <button type="submit" id="btnSubmitImport" class="text-white bg-primary-600 hover:bg-primary-700 rounded-xs text-[10px] uppercase tracking-widest px-6 py-3 text-center shadow-lg shadow-primary-500/10 transition-all flex items-center gap-2">
+                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-xs font-medium px-6 py-2.5 transition-all active:scale-95 shadow-sm">Cancel</button>
+                    <button type="submit" id="btnSubmitImport" class="text-white bg-primary-600 hover:bg-primary-700 rounded-xs text-xs font-medium px-6 py-2.5 text-center shadow-lg shadow-primary-500/10 transition-all active:scale-95 flex items-center gap-2">
                         <i class="fa-solid fa-upload"></i> Process Import
                     </button>
                 </div>

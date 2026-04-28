@@ -7,8 +7,8 @@
 <div class="text-gray-900 dark:text-gray-100">
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Model Configuration</h2>
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Batch manage specific configuration / status per model (e.g., Project vs Regular).</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Model Configuration</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Batch manage specific configuration / status per model (e.g., Project vs Regular).</p>
         </div>
     </div>
 
@@ -16,10 +16,10 @@
     <x-table id="modelConfigTable">
         <thead class="bg-gray-50 dark:bg-gray-800/50">
             <tr>
-                <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
-                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
-                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-full">Model Name</th>
-                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">Project Status</th>
+                <th scope="col" class="px-6 py-4 w-16 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 w-full">Model Name</th>
+                <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 min-w-[150px]">Project Status</th>
             </tr>
         </thead>
         <tbody>
@@ -68,7 +68,7 @@
                                 <label class="relative inline-flex items-center cursor-pointer group" title="Toggle Project Status">
                                     <input type="checkbox" class="sr-only peer status-toggle" data-id="${row.hash_id}" ${isRegular ? 'checked' : ''}>
                                     <div class="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
-                                    <span class="ml-3 text-[10px] font-bold uppercase tracking-wider ${isRegular ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'} status-text">
+                                    <span class="ml-3 text-xs font-medium ${isRegular ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'} status-text">
                                         ${isRegular ? 'Regular' : 'Project'}
                                     </span>
                                 </label>

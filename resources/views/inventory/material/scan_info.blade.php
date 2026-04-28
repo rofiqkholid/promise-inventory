@@ -41,7 +41,7 @@
 
              <div class="flex items-center gap-2">
                 <i class="fa-solid fa-circle-user text-slate-400 text-sm"></i>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <span class="text-xs font-bold text-slate-400">
                     {{ Auth::check() ? Auth::user()->name : 'Guest' }}
                 </span>
                 <span class="w-1.5 h-1.5 rounded-full {{ Auth::check() ? 'bg-emerald-500' : 'bg-slate-300' }}"></span>
@@ -51,7 +51,7 @@
         <!-- Quick Actions -->
         <div class="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <a href="{{ route('inventory.transaction', ['product' => $product->hash_id]) }}" 
-               class="group h-14 bg-primary-600 text-white rounded-xs flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-primary-700 transition-all">
+               class="group h-14 bg-primary-600 text-white rounded-xs flex items-center justify-center gap-3 font-medium text-xs hover:bg-primary-700 transition-all shadow-sm active:scale-95">
                 <i class="fa-solid fa-plus-circle text-lg text-primary-200"></i>
                 <span>New Transaction</span>
                 @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
@@ -63,7 +63,7 @@
                     : route('inventory.sto.index');
             @endphp
             <a href="{{ $stoUrl }}" 
-               class="group h-14 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xs flex items-center justify-center gap-3 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+               class="group h-14 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xs flex items-center justify-center gap-3 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-95">
                 <i class="fa-solid fa-clipboard-check text-lg text-emerald-500"></i>
                 <span>Stock Opname</span>
                 @guest <i class="fa-solid fa-lock text-[10px] opacity-40"></i> @endguest
@@ -74,13 +74,13 @@
             
             <!-- Status Badge Area -->
             <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
-                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                <h1 class="text-xl xl:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                     {{ $product->part_no }}
                     @if($product->revision)
                     <span class="text-slate-400 font-light"> - {{ $product->revision }}</span>
                     @endif
                 </h1>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mt-1">{{ $product->part_name }}</p>
+                <p class="text-xs font-bold text-slate-400 mt-1">{{ $product->part_name }}</p>
             </div>
 
             <div class="p-8">
@@ -128,17 +128,17 @@
                     
                     <div class="w-full h-11 bg-gradient-to-r {{ $st['gradient'] }} {{ $st['text'] }} rounded-t-xs flex items-center justify-center gap-3 shadow-lg">
                         <i class="fa-solid {{ $st['icon'] }} text-sm"></i>
-                        <span class="font-black text-[11px] uppercase tracking-[0.3em]">{{ $st['label'] }}</span>
+                        <span class="font-bold text-[11px]">{{ $st['label'] }}</span>
                     </div>
 
                     <div class="bg-primary-50 dark:bg-primary-900/50 p-6 rounded-b-xs border-x border-b border-slate-100 dark:border-slate-800 transition-all text-center">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-3 text-center">Total Balance Available</span>
+                        <span class="text-xs font-bold text-slate-400 block mb-3 text-center">Total balance available</span>
                         
                         <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                             {{-- PCS Section --}}
                             <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black text-slate-900 dark:text-white leading-none">{{ $product->balance_pcs }}</span>
-                                <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">PCS</span>
+                                <span class="text-4xl font-bold text-slate-900 dark:text-white leading-none">{{ $product->balance_pcs }}</span>
+                                <span class="text-xs font-medium text-slate-400 tracking-tighter">PCS</span>
                             </div>
 
                             {{-- Separator --}}
@@ -151,8 +151,8 @@
                                 $u = $unitParts[1] ?? 'UNIT';
                             @endphp
                             <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black text-primary-600 dark:text-primary-400 leading-none">{{ $val }}</span>
-                                <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">{{ $u }}</span>
+                                <span class="text-4xl font-bold text-primary-600 dark:text-primary-400 leading-none">{{ $val }}</span>
+                                <span class="text-xs font-medium text-slate-400 tracking-tighter">{{ $u }}</span>
                             </div>
                         </div>
                     </div>
@@ -160,45 +160,45 @@
 
                 <!-- Detail List -->
                 <div class="space-y-4 mb-10">
-                    <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] px-1 mb-4 flex items-center gap-3">
+                    <h3 class="text-xs font-bold text-slate-400 tracking-wider px-1 mb-4 flex items-center gap-3">
                         Technical Specifications
                         <div class="flex-1 h-px bg-slate-100 dark:bg-slate-800"></div>
                     </h3>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 px-1">
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Model Series</span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Model series</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $product->model_name }}</span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Customer / Partner</span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Customer / partner</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $product->customer_code }}</span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dimensions</span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Dimensions</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">
                                 {{ $product->dimension }}
                                 <span class="text-[10px] text-slate-400 font-normal ml-1">{{ $product->dimension_label }}</span>
                             </span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Material Specification</span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Material specification</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $product->material }}</span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Project Status</span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Project status</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">
                                 {{ $product->product_status ?: $product->model_project_status }}
-                                @if($product->product_status) <span class="text-[9px] text-primary-500 font-bold ml-1 uppercase">(Override)</span> @endif
+                                @if($product->product_status) <span class="text-[9px] text-primary-500 font-bold ml-1">(Override)</span> @endif
                             </span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status Remark</span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Status remark</span>
                             <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">{{ $product->product_status_remark ?: '-' }}</span>
                         </div>
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Safety Stock Level</span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $product->min_stock }} <small class="text-[10px] uppercase ml-0.5">PCS</small></span>
+                            <span class="text-xs font-medium text-slate-400 tracking-wider">Safety stock level</span>
+                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">{{ $product->min_stock }} <small class="text-[10px] ml-0.5">PCS</small></span>
                         </div>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
             </div>
 
             <!-- Footer Meta -->
-            <div class="px-8 py-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+            <div class="px-8 py-5 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-slate-400 tracking-wider">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-clock opacity-60"></i>
                     Data as of {{ date('d M Y, H:i:s') }}
@@ -219,7 +219,7 @@
         </div>
 
         <div class="mt-8 text-center">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">PROMISE <span class="text-primary-600">INVENTORY</span> SYSTEM</p>
+            <p class="text-[10px] font-medium text-slate-400 tracking-[0.4em]">PROMISE <span class="text-primary-600">INVENTORY</span> SYSTEM</p>
         </div>
     </div>
 </body>

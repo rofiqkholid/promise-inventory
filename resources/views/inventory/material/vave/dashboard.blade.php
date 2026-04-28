@@ -55,8 +55,8 @@
     <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
         <!-- Title Section -->
         <div class="flex-none">
-            <h2 class="text-lg xl:text-xl font-bold text-gray-800 dark:text-white leading-none mb-1 uppercase tracking-tight">VAVE Analysis</h2>
-            <p class="text-[11px] xl:text-xs text-gray-500 dark:text-gray-400 leading-tight">Gap Benefit: (Plan - Act Kg) × Price × Qty In</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-white leading-tight mb-0.5 tracking-tight">Vave Analysis</h2>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 font-normal leading-tight">Gap Benefit: (Plan - Act Kg) × Price × Qty In</p>
         </div>
 
             <!-- KPI Grid & Filter Toggle -->
@@ -74,9 +74,9 @@
                         <i class="fa-solid {{ $stat['icon'] }}"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[10px] font-bold text-slate-600 dark:text-slate-400 tracking-widest leading-none mb-1 truncate">{{ $stat['label'] }}</p>
-                        <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
-                            {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-medium ml-0.5">{{ $stat['unit'] }}</span>
+                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 truncate">{{ $stat['label'] }}</p>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
+                            {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
                         </h3>
                     </div>
                 </div>
@@ -98,30 +98,30 @@
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Analysis Mode</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Analysis Mode</label>
                         <select id="filterMode" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                             <option value="monthly">Monthly View</option>
                             <option value="yearly">Yearly Trend</option>
                         </select>
                     </div>
                     <div class="space-y-1.5" id="divFilterPeriod">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Period</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Period</label>
                         <input type="month" id="filterPeriod" value="{{ date('Y-m') }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
                     <div class="space-y-1.5 hidden" id="divFilterYear">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Year</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Year</label>
                         <input type="number" id="filterYear" value="{{ date('Y') }}" min="2000" max="{{ date('Y') + 5 }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Customer</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Customer</label>
                         <select id="filterCustomer" class="select2-simple w-full"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-[10px] font-medium text-slate-700 dark:text-slate-200 uppercase tracking-widest">Model</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Model</label>
                         <select id="filterModel" class="select2-simple w-full" disabled></select>
                     </div>
                     <div class="flex gap-2 items-end">
-                        <button type="button" id="btnReset" class="h-[40px] px-6 bg-slate-600 hover:bg-slate-700 rounded-xs text-[10px] font-bold text-white uppercase tracking-widest transition-all shadow-sm">
+                        <button type="button" id="btnReset" class="h-10 px-6 bg-slate-600 hover:bg-slate-700 rounded-xs text-xs font-medium text-white transition-all shadow-sm active:scale-95">
                             <i class="fa-solid fa-rotate-left mr-2"></i> Reset Filters
                         </button>
                     </div>
@@ -139,7 +139,7 @@
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-money-bill-trend-up mr-2 text-emerald-500"></i> Benefit by Model
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">IDR</span>
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">IDR</span>
                     </h3>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
@@ -152,7 +152,7 @@
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-weight-hanging mr-2 text-blue-500"></i> Saving Weight by Model
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">KG</span>
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">KG</span>
                     </h3>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
@@ -168,7 +168,7 @@
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-chart-simple mr-2 text-primary-500"></i> Pareto Analysis
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Contribution</span>
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Contribution</span>
                     </h3>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
@@ -195,7 +195,7 @@
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis
                 </h3>
-                <button id="btnExportExcel" class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all">
+                <button id="btnExportExcel" class="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wider flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all">
                     <i class="fa-solid fa-file-excel"></i> Export CSV
                 </button>
             </div>
@@ -204,16 +204,16 @@
                 <table id="vaveDetailTable" class="w-full text-left">
                     <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                         <tr>
-                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 uppercase tracking-widest">Part No</th>
-                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 uppercase tracking-widest">Model</th>
-                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 uppercase tracking-widest">EBD Version</th>
-                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-center">Plan (Kg)</th>
-                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-center">Actual (Kg)</th>
-                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-center">Gap (Kg)</th>
-                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-center">IDR/Kg</th>
-                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-center">Qty In</th>
-                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-right">Benefit</th>
-                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 uppercase tracking-widest text-center">Status</th>
+                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Part No</th>
+                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Model</th>
+                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">EBD Version</th>
+                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Plan (Kg)</th>
+                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Actual (Kg)</th>
+                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Gap (Kg)</th>
+                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">IDR/Kg</th>
+                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Qty In</th>
+                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider text-right">Benefit</th>
+                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 dark:divide-gray-700">
