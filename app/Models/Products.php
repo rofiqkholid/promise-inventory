@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Customer;
 
 class Products extends Model
 {
@@ -23,6 +24,11 @@ class Products extends Model
     ];
 
     protected $table = 'products';
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 
     protected static function booted()
     {

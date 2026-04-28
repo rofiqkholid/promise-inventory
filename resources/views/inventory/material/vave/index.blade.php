@@ -663,6 +663,27 @@ $(function() {
         }
 
         const file = fileInput.files[0];
+
+        // Validate required fields before uploading
+        const customerId = $('#modal_import_customer_id').val();
+        const modelId = $('#modal_import_model_id').val();
+        const sheetName = $('#import_sheet_name').val();
+
+        if (!customerId) {
+            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html('<i class="fa-solid fa-circle-exclamation mr-2"></i> Please select a <strong>Customer</strong> before importing.');
+            $btn.prop('disabled', false).html(originalHtml);
+            return;
+        }
+        if (!modelId) {
+            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html('<i class="fa-solid fa-circle-exclamation mr-2"></i> Please select a <strong>Model</strong> before importing.');
+            $btn.prop('disabled', false).html(originalHtml);
+            return;
+        }
+        if (!sheetName) {
+            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html('<i class="fa-solid fa-circle-exclamation mr-2"></i> Please select a <strong>Sheet</strong> before importing.');
+            $btn.prop('disabled', false).html(originalHtml);
+            return;
+        }
         const reader = new FileReader();
         
         reader.onload = function(e) {
@@ -675,9 +696,9 @@ $(function() {
                 const chunkData = fullBase64.substring(index * chunkSize, (index + 1) * chunkSize);
                 
                 const payload = {
-                    sheet_name: $('#import_sheet_name').val(),
-                    customer_id: $('#modal_import_customer_id').val(),
-                    model_id: $('#modal_import_model_id').val(),
+                    sheet_name: sheetName,
+                    customer_id: customerId,
+                    model_id: modelId,
                     upload_id: uploadId,
                     chunk_index: index,
                     total_chunks: totalChunks,
@@ -701,16 +722,15 @@ $(function() {
                         if (index < totalChunks - 1) {
                             uploadChunk(index + 1);
                         } else {
-                            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-emerald-50 text-emerald-700 border-emerald-100').html(`<i class="fa-solid fa-circle-check mr-2"></i> ${res.message}`);
+                            $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-emerald-50 text-emerald-700 border-emerald-100').html(res.message);
                             
                             if (res.log) {
-                                if (res.log.created.length) res.log.created.forEach(l => $('#importLogs').append(`<div class="text-emerald-600 italic">[CREATED] ${l}</div>`));
-                                if (res.log.updated.length) res.log.updated.forEach(l => $('#importLogs').append(`<div class="text-amber-600 italic">[UPDATED] ${l}</div>`));
-                                $('#importLogs').append(`<div class="text-slate-400 mt-2">Unchanged items: ${res.log.unchangedCount}</div>`);
+                                if (res.log.created && res.log.created.length) res.log.created.forEach(l => $('#importLogs').append(`<div class="text-emerald-600 italic text-[11px] font-medium">[CREATED] ${l}</div>`));
+                                if (res.log.updated && res.log.updated.length) res.log.updated.forEach(l => $('#importLogs').append(`<div class="text-amber-600 italic text-[11px] font-medium">[UPDATED] ${l}</div>`));
                             }
                             
                             table.ajax.reload();
-                            refreshEbdBases();
+                            if (typeof refreshEbdBases === 'function') refreshEbdBases();
                             $btn.prop('disabled', false).html(originalHtml);
                         }
                     },
@@ -720,11 +740,8 @@ $(function() {
                         if (xhr.status === 413) {
                             msg = 'Error 413: File is too large for the server even with chunks.';
                         }
-                        $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html(`<i class="fa-solid fa-circle-exclamation mr-2"></i> ${msg}`);
+                        $('#importStatusBox').attr('class', 'p-4 rounded-xs border mb-4 bg-rose-50 text-rose-700 border-rose-100').html(msg);
                         
-                        if (res.errors) {
-                            res.errors.forEach(err => $('#importLogs').append(`<div class="text-rose-600 font-bold underline ">[ERROR] ${err}</div>`));
-                        }
                         $btn.prop('disabled', false).html(originalHtml);
                     }
                 });

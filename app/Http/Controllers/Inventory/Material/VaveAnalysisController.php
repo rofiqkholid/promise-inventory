@@ -643,6 +643,13 @@ class VaveAnalysisController extends Controller
         }
 
         try {
+            \Log::info('[VAVE Import] Request received', [
+                'customer_id' => $request->customer_id,
+                'model_id'    => $request->model_id,
+                'sheet_name'  => $request->sheet_name,
+                'chunk_index' => $request->chunk_index,
+            ]);
+
             $import = new VaveBaseImport(
                 $request->sheet_name,
                 $request->customer_id,
@@ -657,18 +664,67 @@ class VaveAnalysisController extends Controller
             $errors = $import->getErrors();
             $log = $import->getSuccessLog();
 
+            $totalCreated = count($log['created']);
+            $totalUpdated = count($log['updated']);
+            $unchanged = $log['unchangedCount'];
+            $totalProcessed = $totalCreated + $totalUpdated + $unchanged;
+
             if (!empty($errors)) {
+                $errorCount = count($errors);
+
+                if ($totalProcessed === 0) {
+                    // Nothing succeeded — full failure
+                    $errorMsg = "<div class='text-rose-600 font-bold mb-2 uppercase text-[10px]'><i class='fa-solid fa-triangle-exclamation mr-1'></i> Import blocked by {$errorCount} errors:</div>";
+                    $errorMsg .= "<ul class='list-inside space-y-1 text-gray-600 font-medium text-[11px]'>";
+                    foreach (array_slice($errors, 0, 15) as $err) {
+                        $errorMsg .= "<li>\u2022 {$err}</li>";
+                    }
+                    $errorMsg .= "</ul>";
+                    if ($errorCount > 15) {
+                        $errorMsg .= "<div class='mt-2 font-bold text-gray-400 italic text-[10px]'>... and " . ($errorCount - 15) . " more errors.</div>";
+                    }
+
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMsg,
+                        'errors' => $errors,
+                        'log' => $log
+                    ], 422);
+                }
+
+                // Partial success — some rows succeeded, some failed
+                $warnMsg = "<div class='mb-2 font-bold text-amber-700 uppercase text-[10px]'><i class='fa-solid fa-circle-exclamation mr-1'></i> Imported with {$errorCount} warnings</div>";
+                $warnMsg .= "<ul class='list-inside space-y-1 text-gray-600 font-medium text-[11px]'>";
+                foreach (array_slice($errors, 0, 10) as $err) {
+                    $warnMsg .= "<li>\u2022 {$err}</li>";
+                }
+                $warnMsg .= "</ul>";
+                if ($errorCount > 10) {
+                    $warnMsg .= "<div class='mt-1 text-gray-400 italic text-[10px]'>... and " . ($errorCount - 10) . " more.</div>";
+                }
+
                 return response()->json([
-                    'success' => false,
-                    'message' => 'Import completed with errors.',
+                    'success' => true,
+                    'message' => $warnMsg,
                     'errors' => $errors,
                     'log' => $log
-                ], 422);
+                ]);
+            }
+
+            $successMsg = "<div class='mb-3 font-bold text-emerald-700 uppercase drop-shadow-sm text-[11px]'><i class='fa-solid fa-circle-check mr-1.5'></i> Processed {$totalProcessed} EBD records!</div>";
+            
+            $summaryLines = [];
+            if ($totalCreated > 0) $summaryLines[] = "<span class='text-emerald-600 font-bold'>+ {$totalCreated} created</span>";
+            if ($totalUpdated > 0) $summaryLines[] = "<span class='text-amber-600 font-bold'>~ {$totalUpdated} updated</span>";
+            if ($unchanged > 0) $summaryLines[] = "<span class='text-gray-400'>{$unchanged} unchanged</span>";
+            
+            if (!empty($summaryLines)) {
+                $successMsg .= "<div class='flex gap-4 text-[10px] border-t border-emerald-100 pt-2 mt-2'>" . implode('', $summaryLines) . "</div>";
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Import successful.',
+                'message' => $successMsg,
                 'log' => $log
             ]);
 
