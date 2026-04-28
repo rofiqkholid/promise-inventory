@@ -90,8 +90,8 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                     $pitch = $this->parseNumeric($row[$col + 9] ?? 0);
                     $weightKg = $this->parseNumeric($row[$col + 10] ?? 0);
                     $netWeight = $this->parseNumeric($row[$col + 11] ?? 0);
-                    $pcsPerPitch = (int)($row[$col + 12] ?? 1);
-                    $pcsPerUnit = (int)($row[$col + 13] ?? 1);
+                    $pcsPerPitch = max(1, (int)($row[$col + 12] ?? 1));
+                    $pcsPerUnit = max(1, (int)($row[$col + 13] ?? 1));
                     $price = $this->parseNumeric($row[$col + 14] ?? 0);
                     $remark = trim($row[$col + 15] ?? '');
                     $weight = $weightKg;

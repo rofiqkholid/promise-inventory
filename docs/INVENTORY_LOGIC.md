@@ -126,12 +126,22 @@ Setiap kategori transaksi memiliki efek arah stok:
 
 Membandingkan data desain (**Baseline/EBD**) dengan kenyataan produksi (**Actual**) untuk audit penghematan material.
 
-### A. Status Efisiensi (Merit/Loss)
+### A. Perhitungan Berat Baseline (EBD Weight)
+
+Khusus pada modul VAVE, berat baseline dihitung dengan menyertakan faktor jumlah keping per unit/pitch untuk mendapatkan berat per part yang akurat.
+
+| Jenis Unit | Rumus Berat EBD (Baseline) |
+| :--- | :--- |
+| **SHEET** | `((t * w * l * density) / 1.000.000) / pcs_per_unit` |
+| **COIL** | `((t * w * pitch * density) / 1.000.000) / pcs_per_pitch` |
+| **TRAPEZOID** | `((t * w * ((l1 + l2) / 2) * density) / 1.000.000) / pcs_per_unit` |
+
+### B. Status Efisiensi (Merit/Loss)
 
 * **MERIT**: Jika `Baseline_Weight > Actual_Weight` (Terjadi penghematan).
 * **LOSS**: Jika `Baseline_Weight < Actual_Weight` (Terjadi pemborosan).
 
-### B. Budomari (Yield %)
+### C. Budomari (Yield %)
 
 Menampilkan persentasi pemakaian material yang menjadi barang jadi.
 
