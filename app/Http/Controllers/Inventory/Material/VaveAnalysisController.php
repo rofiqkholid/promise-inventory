@@ -231,6 +231,8 @@ class VaveAnalysisController extends Controller
             'length_2'            => 'nullable|numeric|min:0',
             'pitch'               => 'nullable|numeric|min:0',
             'density'             => 'required|numeric|min:0',
+            'pcs_per_unit'        => 'required|integer|min:1',
+            'pcs_per_pitch'       => 'required|integer|min:1',
             'weight_kg'           => 'required|numeric|min:0',
             'net_weight'          => 'nullable|numeric|min:0',
             'material_price'      => 'nullable|numeric|min:0',

@@ -71,8 +71,8 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                 }
 
                 $maxCols = $row->count();
-                // EBD data starts at Index 4 (Column E), block size is 14 columns
-                for ($col = 4; $col < $maxCols; $col += 14) {
+                // EBD data starts at Index 4 (Column E), block size is 16 columns
+                for ($col = 4; $col < $maxCols; $col += 16) {
                     $baseName = trim($row[$col] ?? '');
                     if (empty($baseName)) break;
 
@@ -90,20 +90,22 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                     $pitch = $this->parseNumeric($row[$col + 9] ?? 0);
                     $weightKg = $this->parseNumeric($row[$col + 10] ?? 0);
                     $netWeight = $this->parseNumeric($row[$col + 11] ?? 0);
-                    $price = $this->parseNumeric($row[$col + 12] ?? 0);
-                    $remark = trim($row[$col + 13] ?? '');
+                    $pcsPerPitch = (int)($row[$col + 12] ?? 1);
+                    $pcsPerUnit = (int)($row[$col + 13] ?? 1);
+                    $price = $this->parseNumeric($row[$col + 14] ?? 0);
+                    $remark = trim($row[$col + 15] ?? '');
                     $weight = $weightKg;
 
                     // Automatic Weight Calculation if zero or not provided (Mirroring JS logic in index.blade.php)
                     if ($weight <= 0) {
                         $unitLower = strtolower($unitName);
                         if (str_contains($unitLower, 'sheet')) {
-                            $weight = ($thickness * $width * $length * $density) / 1000000;
+                            $weight = (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
                         } elseif (str_contains($unitLower, 'coil')) {
                             $weight = ($thickness * $width * $pitch * $density) / 1000000;
                         } elseif (str_contains($unitLower, 'trapezoid')) {
                             $avgL = ($length + $length2) / 2;
-                            $weight = ($thickness * $width * $avgL * $density) / 1000000;
+                            $weight = (($thickness * $width * $avgL * $density) / 1000000) / $pcsPerUnit;
                         } else {
                             $weight = ($thickness * $width * $length * $density) / 1000000;
                         }
@@ -136,6 +138,8 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                         'length' => $length,
                         'length_2' => $length2,
                         'pitch' => $pitch,
+                        'pcs_per_unit' => $pcsPerUnit,
+                        'pcs_per_pitch' => $pcsPerPitch,
                         'weight_kg' => $weight,
                         'net_weight' => $netWeight,
                         'material_price' => $price,

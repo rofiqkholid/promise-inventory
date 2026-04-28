@@ -171,18 +171,18 @@
                         data: 'net_amount', 
                         className: 'text-center',
                         render: function(val) {
-                            if (val == 0) return '<span class="text-[11px] font-bold text-slate-300">0</span>';
+                            if (val == 0) return '<span class="text-xs font-medium text-slate-300">0</span>';
                             let prefix = val > 0 ? '+' : '-';
-                            return `<span class="text-[11px] font-bold text-red-600">${prefix}${Math.abs(val).toLocaleString()}</span>`;
+                            return `<span class="text-xs font-medium text-red-600">${prefix}${Math.abs(val).toLocaleString()}</span>`;
                         }
                     },
                     { 
                         data: 'net_pcs', 
                         className: 'text-center',
                         render: function(val) {
-                            if (val == 0) return '<span class="text-[11px] font-bold text-slate-300">0</span>';
+                            if (val == 0) return '<span class="text-xs font-medium text-slate-300">0</span>';
                             let prefix = val > 0 ? '+' : '-';
-                            return `<span class="text-[11px] font-bold text-red-600">${prefix}${Math.abs(val).toLocaleString()} <span class="text-[9px] opacity-70">Pcs</span></span>`;
+                            return `<span class="text-xs font-medium text-red-600">${prefix}${Math.abs(val).toLocaleString()} <span class="text-[9px] opacity-70">Pcs</span></span>`;
                         }
                     },
                     { 

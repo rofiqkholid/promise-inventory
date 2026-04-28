@@ -197,7 +197,7 @@
                                             <i class="fa-solid fa-calendar-xmark"></i> Effective To
                                         </label>
                                         <input type="number" name="effective_to" id="rfq_effective_to"
-                                            min="2000" max="2099" placeholder="Empty = Still active"
+                                            min="2000" max="2099" placeholder="2026"
                                             class="bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium rounded-xs focus:ring-amber-400 focus:border-amber-400 block w-full h-10 px-3 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300 transition-all">
                                     </div>
                                     <p class="col-span-2 text-[9px] text-slate-400 -mt-2">Specify the effective years for this EBD for dashboard analysis. Leave "Effective To" empty if it is still active.</p>
@@ -236,23 +236,33 @@
                                     </div>
                                 </div>
                                 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Density</label>
-                                    <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
-                                </div>
-                                <div>
-                                    <label class="block mb-2 text-[10px] font-medium text-primary-600 dark:text-primary-400 uppercase tracking-wider">Gross Weight (Kg)</label>
-                                    <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-medium rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed" placeholder="0.000">
-                                </div>
-                                <div>
-                                    <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Net Weight (Kg)</label>
-                                    <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
-                                </div>
-                                <div>
-                                    <label class="block mb-2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Price (Rp/Kg)</label>
-                                    <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all" placeholder="0.00">
-                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Density</label>
+                                        <input type="number" step="0.001" name="density" id="rfq_density" value="7.85" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="7.850">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Pcs / Pitch</label>
+                                            <input type="number" step="1" name="pcs_per_pitch" id="rfq_pcs_per_pitch" value="1" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="1">
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Pcs / Unit</label>
+                                            <input type="number" step="1" name="pcs_per_unit" id="rfq_pcs_per_unit" value="1" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="1">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block mb-2 text-[10px] font-medium text-primary-600 dark:text-primary-400 uppercase tracking-wider">Gross Weight (Kg)</label>
+                                        <input type="number" step="0.001" name="weight_kg" id="rfq_weight_kg" readonly class="bg-primary-50 border border-primary-100 text-primary-600 text-xs font-medium rounded-xs block w-full h-10 px-3 dark:bg-primary-900/20 dark:border-primary-800 dark:text-primary-300 cursor-not-allowed" placeholder="0.000">
+                                    </div>
+                                    <div>
+                                        <label class="block mb-2 text-[10px] font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wider">Net Weight (Kg)</label>
+                                        <input type="number" step="0.001" name="net_weight" id="rfq_net_weight" class="bg-white border border-slate-200 text-slate-800 text-xs font-medium rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all" placeholder="0.000">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label class="block mb-2 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Price (Rp/Kg)</label>
+                                        <input type="number" step="0.01" name="material_price" id="rfq_material_price" value="20000" class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-medium rounded-xs focus:ring-emerald-500 focus:border-emerald-500 block w-full h-10 px-3 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-200 transition-all" placeholder="0.00">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -818,19 +828,24 @@ $(function() {
         const t = parseFloat($('#rfq_thickness').val()) || 0;
         const w = parseFloat($('#rfq_width').val()) || 0;
         const density = parseFloat($('#rfq_density').val()) || 0;
+        const pcsPerUnit = parseInt($('#rfq_pcs_per_unit').val()) || 1;
+        const pcsPerPitch = parseInt($('#rfq_pcs_per_pitch').val()) || 1;
 
         let weight = 0;
         if (unitName.includes('sheet')) {
             const l = parseFloat($('#rfq_length').val()) || 0;
-            weight = (t * w * l * density) / 1000000;
+            // Formula: (t x w x l x d / 1,000,000) / pcs_per_unit
+            weight = ((t * w * l * density) / 1000000) / pcsPerUnit;
         } else if (unitName.includes('coil')) {
             const p = parseFloat($('#rfq_pitch').val()) || 0;
-            weight = (t * w * p * density) / 1000000;
+            // Formula: (t x w x pitch x d / 1,000,000) / pcs_per_pitch
+            weight = ((t * w * p * density) / 1000000) / pcsPerPitch;
         } else if (unitName.includes('trapezoid')) {
             const l = parseFloat($('#rfq_length').val()) || 0;
             const l2 = parseFloat($('#rfq_length_2').val()) || 0;
             const avgL = (l + l2) / 2;
-            weight = (t * w * avgL * density) / 1000000;
+            // Formula: (t x w x avgL x d / 1,000,000) / pcs_per_unit
+            weight = ((t * w * avgL * density) / 1000000) / pcsPerUnit;
         } else {
             const l = parseFloat($('#rfq_length').val()) || 0;
             weight = (t * w * l * density) / 1000000;
@@ -857,6 +872,8 @@ $(function() {
         $('#rfq_length_2').val('');
         $('#rfq_pitch').val('');
         $('#rfq_density').val(7.85); 
+        $('#rfq_pcs_per_unit').val(1);
+        $('#rfq_pcs_per_pitch').val(1);
         $('#rfq_net_weight').val('');
         $('#remark').val('');
         $('#rfq_effective_from').val('');
@@ -874,6 +891,12 @@ $(function() {
             }
             if (window.latestRevision.unit) {
                 $('#rfq_unit_id').val(window.latestRevision.unit.hash_id).trigger('change');
+            }
+            if (window.latestRevision.pcs_per_unit) {
+                $('#rfq_pcs_per_unit').val(parseInt(window.latestRevision.pcs_per_unit));
+            }
+            if (window.latestRevision.pcs_per_pitch) {
+                $('#rfq_pcs_per_pitch').val(parseInt(window.latestRevision.pcs_per_pitch));
             }
         }
         
@@ -913,6 +936,8 @@ $(function() {
         $('#rfq_length_2').val(parseFloat(data.length_2 || 0));
         $('#rfq_pitch').val(parseFloat(data.pitch || 0));
         $('#rfq_density').val(parseFloat(data.density || 7.85));
+        $('#rfq_pcs_per_unit').val(parseInt(data.pcs_per_unit || 1));
+        $('#rfq_pcs_per_pitch').val(parseInt(data.pcs_per_pitch || 1));
         $('#rfq_net_weight').val(parseFloat(data.net_weight || 0));
         $('#rfq_material_price').val(parseFloat(data.material_price || 20000));
         $('#remark').val(data.remark);
@@ -1400,6 +1425,8 @@ $(function() {
         
         html += buildSectionRow('Yield & Weight');
         html += buildComputedRow('Density', 'density', '', 3, true);
+        html += buildComputedRow('Pcs / Pitch', 'pcs_per_pitch', '', 0, true);
+        html += buildComputedRow('Pcs / Unit', 'pcs_per_unit', '', 0, true);
         html += buildComputedRow('Gross Weight (kg)', 'weight_kg', '', 3, false); 
         html += buildComputedRow('Net Weight/Part', 'net_weight', '', 3, false);
         html += buildComputedRow('Scrap (kg)', i => (parseFloat(i.weight_kg)||0) - (parseFloat(i.net_weight)||0), 'kg', 3, false); 
