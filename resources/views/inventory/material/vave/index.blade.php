@@ -390,6 +390,21 @@
                             </div>
                         </div>
                     </div>
+
+                    <div id="targetProductContainer" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300">
+                        <div>
+                            <label class="block mb-2 text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em]">3. Target Customer <span class="text-red-500">*</span></label>
+                            <select name="modal_customer_id" id="modal_import_customer_id" required class="select2-import w-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-3 transition-all">
+                                <option value="">Select Customer...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-[10px] font-black text-slate-500 dark:text-gray-400 uppercase tracking-[0.2em]">4. Target Model <span class="text-red-500">*</span></label>
+                            <select name="modal_model_id" id="modal_import_model_id" required disabled class="select2-import w-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white text-xs font-bold rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-3 transition-all">
+                                <option value="">Select Model...</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 <div class="flex items-center justify-end pt-4">
                     <div class="flex gap-2">
@@ -553,10 +568,43 @@ $(function() {
     $('#btnImportEbd').on('click', function() {
         $('#import_file').val('');
         $('#import_sheet_name').empty().append('<option value="">Please upload a file first...</option>').trigger('change');
-        $('#sheetSelectionContainer').addClass('hidden');
+        $('#modal_import_customer_id').val('').trigger('change');
+        $('#modal_import_model_id').val('').trigger('change').prop('disabled', true);
+        
         $('#importResult').addClass('hidden');
         $('#import_file').next('.file-name-display').remove(); 
+        $('#sheetSelectionContainer').addClass('hidden');
+        $('#targetProductContainer').addClass('hidden');
         $('#importEbdModal').removeClass('hidden').addClass('flex');
+        populateModalCustomers();
+    });
+
+    // Populate Import Modal Customers when modal opens
+    function populateModalCustomers() {
+        if ($('#modal_import_customer_id option').length <= 1) {
+            $.get('{{ route("inventory.master.product.getCustomers") }}', function(data) {
+                $('#modal_import_customer_id').empty().append('<option value="">Select Customer...</option>');
+                data.forEach(c => {
+                    $('#modal_import_customer_id').append(`<option value="${c.id}">${c.code}</option>`);
+                });
+            });
+        }
+    }
+
+    // Handle Import Customer Change
+    $('#modal_import_customer_id').on('change', function() {
+        const customerId = $(this).val();
+        $('#modal_import_model_id').empty().append('<option value="">Select Model...</option>');
+        if (customerId) {
+            $('#modal_import_model_id').prop('disabled', false);
+            $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: customerId }, function(data) {
+                data.forEach(m => {
+                    $('#modal_import_model_id').append(`<option value="${m.id}">${m.name}</option>`);
+                });
+            });
+        } else {
+            $('#modal_import_model_id').prop('disabled', true);
+        }
     });
 
     $('#import_file').on('change', function(e) {
@@ -565,6 +613,7 @@ $(function() {
 
         // Show loading state for sheet selection
         $('#sheetSelectionContainer').removeClass('hidden');
+        $('#targetProductContainer').removeClass('hidden');
         $('#sheetLoadingSpinner').removeClass('hidden');
         $('#import_sheet_name').empty().append('<option value="">Loading sheets...</option>').trigger('change').prop('disabled', true);
 
@@ -627,6 +676,8 @@ $(function() {
                 
                 const payload = {
                     sheet_name: $('#import_sheet_name').val(),
+                    customer_id: $('#modal_import_customer_id').val(),
+                    model_id: $('#modal_import_model_id').val(),
                     upload_id: uploadId,
                     chunk_index: index,
                     total_chunks: totalChunks,

@@ -643,7 +643,11 @@ class VaveAnalysisController extends Controller
         }
 
         try {
-            $import = new VaveBaseImport($request->sheet_name);
+            $import = new VaveBaseImport(
+                $request->sheet_name,
+                $request->customer_id,
+                $request->model_id
+            );
             Excel::import($import, $fileToImport);
 
             if ($tmpPath && file_exists($tmpPath)) {

@@ -17,6 +17,8 @@ use Exception;
 class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
 {
     private $sheetName;
+    private $customerId;
+    private $modelId;
     private $errors = [];
     private $successLog = [
         'created' => [],
@@ -24,9 +26,11 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
         'unchangedCount' => 0
     ];
 
-    public function __construct($sheetName)
+    public function __construct($sheetName, $customerId = null, $modelId = null)
     {
         $this->sheetName = strval($sheetName);
+        $this->customerId = $customerId;
+        $this->modelId = $modelId;
     }
 
     public function sheets(): array
@@ -62,8 +66,25 @@ class VaveBaseImport implements ToCollection, WithStartRow, WithMultipleSheets
                 $partNo = trim($row[2] ?? '');
                 if (empty($partNo)) continue;
 
-                // Resolve Product (Global Search)
-                $product = Products::where('part_no', $partNo)->first();
+                // Model: Index 0 (Column A)
+                $modelName = trim($row[0] ?? '');
+
+                // Resolve Product (Search by part_no, and strict filter by UI customer/model if available)
+                $productQuery = Products::where('part_no', $partNo);
+                
+                if (!empty($this->customerId)) {
+                    $productQuery->where('customer_id', $this->customerId);
+                }
+                if (!empty($this->modelId)) {
+                    $productQuery->where('model_id', $this->modelId);
+                } elseif (!empty($modelName)) {
+                    // Fallback to Excel Model column if UI filters were not set
+                    $productQuery->whereHas('model', function($q) use ($modelName) {
+                        $q->where('name', $modelName);
+                    });
+                }
+                
+                $product = $productQuery->first();
                 
                 if (!$product) {
                     $this->errors[] = "Row {$rowNum}: Part No '{$partNo}' not found in Product Master.";
