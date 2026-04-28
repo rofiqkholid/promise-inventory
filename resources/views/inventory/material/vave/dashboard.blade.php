@@ -431,7 +431,8 @@ $(function() {
             };
 
             res.models.labels.forEach((label, i) => {
-                if (res.models.idr[i] > 0) {
+                // Include any model that has some benefit data (even if loss)
+                if (Math.abs(res.models.idr[i]) > 0 || res.models.merit[i] > 0 || res.models.loss[i] > 0) {
                     meritModels.labels.push(label);
                     meritModels.idr.push(res.models.idr[i]);
                     meritModels.kg.push(res.models.kg[i]);
@@ -447,10 +448,8 @@ $(function() {
                 const trendKg = new Array(12).fill(0);
                 
                 res.trend.forEach(t => {
-                    if (parseFloat(t.gap_benefit_idr) > 0) {
-                        trendIdr[t.month_num - 1] = parseFloat(t.gap_benefit_idr);
-                        trendKg[t.month_num - 1] = parseFloat(t.gap_kg_total);
-                    }
+                    trendIdr[t.month_num - 1] = parseFloat(t.gap_benefit_idr);
+                    trendKg[t.month_num - 1] = parseFloat(t.gap_kg_total);
                 });
 
                 renderTrendChart('benefitModelChart', 'Benefit (IDR)', months, trendIdr, '#10b981', true);
@@ -461,7 +460,7 @@ $(function() {
             }
 
             renderEfficiencyChart(meritModels);
-            updateTable(res.items.filter(item => item.gap_benefit_idr > 0));
+            updateTable(res.items);
             btn.html('<i class="fa-solid fa-rotate-left mr-2"></i> Reset Filters').prop('disabled', false);
         });
 

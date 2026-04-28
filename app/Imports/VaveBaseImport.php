@@ -201,6 +201,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                         'material_price' => round($price, 4),
                         'remark' => $remark,
                         'is_active' => 1,
+                        'effective_from' => date('Y'),
                     ];
 
                     $existing = VaveBase::where(['product_id' => $product->id, 'base_name' => $baseName])->first();

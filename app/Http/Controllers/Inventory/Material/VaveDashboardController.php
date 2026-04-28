@@ -60,8 +60,8 @@ class VaveDashboardController extends Controller
         $trendData = (clone $baseQuery)
             ->select([
                 DB::raw('MONTH(t.transaction_date) as month_num'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
+                DB::raw('SUM(((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty) as gap_benefit_idr'),
+                DB::raw('SUM((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty) as gap_kg_total'),
                 DB::raw('SUM(t.qty) as qty_usage'),
             ])
             ->groupBy(DB::raw('MONTH(t.transaction_date)'))
@@ -83,8 +83,8 @@ class VaveDashboardController extends Controller
                 DB::raw('ISNULL(pd.weight_kg, 0) as actual_kg'),
                 DB::raw('ISNULL(vb.material_price, 0) as idr_per_kg'),
                 DB::raw('SUM(t.qty) as qty_usage'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
+                DB::raw('SUM(((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty) as gap_benefit_idr'),
+                DB::raw('SUM((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty) as gap_kg_total'),
                 DB::raw('SUM(ISNULL(vb.weight_kg, 0) * ISNULL(vb.material_price, 0) * t.qty) as plan_total_cost'),
                 DB::raw('COUNT(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN 1 END) as merit_count'),
                 DB::raw('COUNT(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) < 0 THEN 1 END) as loss_count')
@@ -93,7 +93,6 @@ class VaveDashboardController extends Controller
                 'p.part_no', 'p.part_name', 'm.name', 'c.code', 'vb.base_name',
                 'vb.weight_kg', 'pd.weight_kg', 'vb.material_price'
             )
-            ->whereRaw('(ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0')
             ->get();
 
         $kpiTotals = [
@@ -212,14 +211,13 @@ class VaveDashboardController extends Controller
                 DB::raw('ISNULL(pd.weight_kg, 0) as actual_kg'),
                 DB::raw('ISNULL(vb.material_price, 0) as idr_per_kg'),
                 DB::raw('SUM(t.qty) as qty_usage'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
+                DB::raw('SUM(((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty) as gap_benefit_idr'),
+                DB::raw('SUM((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty) as gap_kg_total'),
             ])
             ->groupBy(
                 'p.part_no', 'p.part_name', 'm.name', 'c.code',
                 'vb.weight_kg', 'pd.weight_kg', 'vb.material_price'
             )
-            ->whereRaw('(ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0')
             ->orderBy('gap_benefit_idr', 'desc')
             ->limit($limit)
             ->get();
