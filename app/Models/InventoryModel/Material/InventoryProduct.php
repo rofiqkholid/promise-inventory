@@ -195,7 +195,7 @@ class InventoryProduct extends Model
     /**
      * Logic to calculate weight in Kg.
      */
-    public static function calculateWeight($unitName, $thickness, $width, $length, $length2, $pitch, $density)
+    public static function calculateWeight($unitName, $thickness, $width, $length, $length2, $pitch, $density, $pcsPerUnit = 1, $pcsPerPitch = 1)
     {
         $unitNameLower = strtolower($unitName ?? '');
         $thickness = (float)$thickness;
@@ -204,16 +204,18 @@ class InventoryProduct extends Model
         $length2 = (float)$length2;
         $pitch = (float)$pitch;
         $density = (float)($density ?: 7.85);
+        $pcsPerUnit = max(1, (int)$pcsPerUnit);
+        $pcsPerPitch = max(1, (int)$pcsPerPitch);
 
         if (str_contains($unitNameLower, 'sheet')) {
-            return ($thickness * $width * $length * $density) / 1000000;
+            return (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
         } elseif (str_contains($unitNameLower, 'coil')) {
-            return ($thickness * $width * $pitch * $density) / 1000000;
+            return (($thickness * $width * $pitch * $density) / 1000000) / $pcsPerPitch;
         } elseif (str_contains($unitNameLower, 'trapezoid')) {
-            return ($thickness * $width * (($length + $length2) / 2) * $density) / 1000000;
+            return (($thickness * $width * (($length + $length2) / 2) * $density) / 1000000) / $pcsPerUnit;
         }
 
-        return ($thickness * $width * $length * $density) / 1000000;
+        return (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
     }
 
     /**

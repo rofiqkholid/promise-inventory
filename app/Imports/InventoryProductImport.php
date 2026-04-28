@@ -154,7 +154,9 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                             $length,
                             $length2,
                             $pitch,
-                            $density
+                            $density,
+                            $pcsPerUnit,
+                            $pcsPerPitch
                         );
                     }
 

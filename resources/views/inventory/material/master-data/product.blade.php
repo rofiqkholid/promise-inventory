@@ -741,7 +741,7 @@ $(function() {
             
             // Calculations
             $('#unit_per_car').on('input change', () => this.logic.calculateMinStock());
-            $('#thickness, #width, #length, #length_2, #pitch, #density').on('input change', () => this.logic.calculateWeight());
+            $('#thickness, #width, #length, #length_2, #pitch, #density, #pcs_per_unit, #pcs_per_pitch').on('input change', () => this.logic.calculateWeight());
             $('#thickness, #width, #density, #pitch, #pcs_per_pitch, #gross_coil, #top_coil, #end_coil').on('input change', () => this.logic.calculateNetCoil());
         },
 
@@ -1129,12 +1129,14 @@ $(function() {
                 const t = parseFloat($('#thickness').val()) || 0;
                 const w = parseFloat($('#width').val()) || 0;
                 const d = parseFloat($('#density').val()) || 0;
+                const ppu = parseInt($('#pcs_per_unit').val()) || 1;
+                const ppp = parseInt($('#pcs_per_pitch').val()) || 1;
                 let weight = 0;
 
-                if (name.includes('sheet')) weight = (t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000;
-                else if (name.includes('coil')) weight = (t * w * (parseFloat($('#pitch').val()) || 0) * d) / 1000000;
-                else if (name.includes('trapezoid')) weight = (t * w * (((parseFloat($('#length').val()) || 0) + (parseFloat($('#length_2').val()) || 0)) / 2) * d) / 1000000;
-                else weight = (t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000;
+                if (name.includes('sheet')) weight = ((t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000) / ppu;
+                else if (name.includes('coil')) weight = ((t * w * (parseFloat($('#pitch').val()) || 0) * d) / 1000000) / ppp;
+                else if (name.includes('trapezoid')) weight = ((t * w * (((parseFloat($('#length').val()) || 0) + (parseFloat($('#length_2').val()) || 0)) / 2) * d) / 1000000) / ppu;
+                else weight = ((t * w * (parseFloat($('#length').val()) || 0) * d) / 1000000) / ppu;
 
                 $('#weight_kg').val(weight > 0 ? weight.toFixed(2) : '');
             },
