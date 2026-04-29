@@ -200,6 +200,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                         'net_weight' => round($netWeight, 4),
                         'material_price' => round($price, 4),
                         'remark' => $remark,
+                        'effective_from' => (int) date('Y'),
                         'is_active' => 1,
                     ];
 
