@@ -19,47 +19,67 @@ class SyncStock extends Command
         $this->info("Starting synchronization for " . $products->count() . " products...");
 
         foreach ($products as $p) {
-            $in = DB::table('inv_t_inventory_transaction as t')
+            // 1. Find the latest ADJUSTED STO for this product
+            $latestSto = DB::table('inv_t_sto_detail')
+                ->where('product_detail_id', $p->id)
+                ->where('is_adjusted', 1)
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            $baseQty = 0;
+            $txQuery = DB::table('inv_t_inventory_transaction as t')
                 ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
-                ->where('t.product_detail_id', $p->id)
-                ->where('tc.effect', 1)
-                ->sum('t.qty');
+                ->where('t.product_detail_id', $p->id);
 
-            $out = DB::table('inv_t_inventory_transaction as t')
-                ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
-                ->where('t.product_detail_id', $p->id)
-                ->where('tc.effect', -1)
-                ->sum('t.qty');
+            if ($latestSto) {
+                // If STO exists, start from the physical count and only add transactions AFTER that STO
+                $baseQty = (float)$latestSto->real_qty_input;
+                $txQuery->where('t.created_at', '>', $latestSto->created_at);
+            }
 
-            $sto = DB::table('inv_t_sto_detail as sd')
-                ->join('inv_t_sto_event as e', 'e.id', '=', 'sd.event_id')
-                ->where('sd.product_detail_id', $p->id)
-                ->orderBy('e.created_at', 'desc')
-                ->value('sd.diff_qty') ?? 0;
+            $txBalance = $txQuery->select(DB::raw('SUM(t.qty * tc.effect) as balance'))->value('balance') ?? 0;
 
-            // Recalculate Trial Usage (is_trial = 1)
+            // 2. Total Current Stock = Physical STO + Post-STO Transactions
+            $newQty = $baseQty + (float)$txBalance;
+
+            // 3. Recalculate Trial Usage (Always cumulative from history as it's a budget tracker)
             $trialQty = DB::table('inv_t_inventory_transaction as t')
                 ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
                 ->where('t.product_detail_id', $p->id)
-                ->where('tc.is_trial', 1)
-                ->sum('t.qty');
+                ->where('tc.code', 'OUT-TRIAL')
+                ->sum('t.qty') ?? 0;
 
-            $newQty = $in - $out + $sto;
-            $needsSave = false;
-            
-            if (abs($p->current_stock_qty - $newQty) > 0.001) {
+            // 4. Calculate PCS
+            $unitName = DB::table('inv_m_unit')->where('id', $p->unit_id)->value('name');
+            $newPcs = InventoryProduct::calculatePcs($newQty, $p->weight_kg, $p->pcs_per_unit, $unitName, $p->top_coil, $p->end_coil, $p->pitch, $p->pcs_per_pitch, $p->gross_coil);
+            $trialPcs = InventoryProduct::calculatePcs($trialQty, $p->weight_kg, $p->pcs_per_unit, $unitName, $p->top_coil, $p->end_coil, $p->pitch, $p->pcs_per_pitch, $p->gross_coil);
+
+            $updated = false;
+            // Check if current stock needs update
+            if (abs((float)$p->current_stock_qty - (float)$newQty) > 0.0001) {
                 $p->current_stock_qty = $newQty;
-                $needsSave = true;
+                $updated = true;
             }
 
-            if (abs($p->trial_usage_qty - $trialQty) > 0.001) {
+            if ($p->current_stock_pcs != $newPcs) {
+                $p->current_stock_pcs = $newPcs;
+                $updated = true;
+            }
+
+            // Check if trial usage needs update
+            if (abs((float)$p->trial_usage_qty - (float)$trialQty) > 0.0001) {
                 $p->trial_usage_qty = $trialQty;
-                $needsSave = true;
+                $updated = true;
             }
 
-            if ($needsSave) {
+            if ($p->trial_usage_pcs != $trialPcs) {
+                $p->trial_usage_pcs = $trialPcs;
+                $updated = true;
+            }
+
+            if ($updated) {
                 $p->save();
-                $this->line("Product ID {$p->id}: Stock {$newQty}, Trial {$trialQty}");
+                $this->line("Product ID {$p->id}: Stock {$newQty} ({$newPcs} pcs), Trial {$trialQty} ({$trialPcs} pcs)");
                 $count++;
             }
         }

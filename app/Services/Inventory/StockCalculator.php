@@ -15,8 +15,16 @@ class StockCalculator
         $weightKg = (float)$weightKg;
         $unitName = strtolower($unitName ?? '');
 
-        // Standard logic for non-coil or missing critical data
-        if (strpos($unitName, 'coil') === false || $grossCoil <= 0 || $weightKg <= 0) {
+        // Safety check for Coils: If critical data (grossCoil or weightKg) is missing, 
+        // return 0 instead of falling back to KG-to-PCS 1:1 ratio which causes massive inaccuracy.
+        if (strpos($unitName, 'coil') !== false) {
+            if ($grossCoil <= 0 || $weightKg <= 0) {
+                return 0;
+            }
+        }
+
+        // Standard logic for non-coil
+        if (strpos($unitName, 'coil') === false) {
             return (int) floor($qty * (float)($pcsPerUnit ?: 1));
         }
 

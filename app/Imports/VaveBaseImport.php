@@ -212,6 +212,10 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                     }
 
                     if ($existing) {
+                        // Jika sudah ada, jangan timpa effective_from kecuali masih kosong
+                        if (!empty($existing->effective_from)) {
+                            unset($data['effective_from']);
+                        }
                         $existing->update($data);
                         $this->successLog['updated'][] = "{$partNo} [{$baseName}]";
                     } else {

@@ -272,13 +272,6 @@ class InventoryTransactionController extends Controller
                 'destination_id' => $request->destination_id,
             ]);
 
-            // Update Stock
-            $product = InventoryProduct::findOrFail($request->product_detail_id);
-            $stockChange = $request->qty * $category->effect;
-            
-            $product->current_stock_qty += $stockChange;
-            $product->save();
-
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Transaction saved successfully.']);
 
@@ -357,27 +350,20 @@ class InventoryTransactionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Get Products and Categories
             $oldProduct = InventoryProduct::findOrFail($transaction->product_detail_id);
             $oldCategory = TransactionCategory::findOrFail($transaction->transaction_category_id);
             $newProduct = InventoryProduct::findOrFail($request->product_detail_id);
             $newCategory = TransactionCategory::findOrFail($request->transaction_category_id);
 
-            // 1. Stock Balance Validation for the ADJUSTED state
-            // Logic: Revert old effect, apply new effect. Result must be >= 0.
             if ($oldProduct->id === $newProduct->id) {
-                // Same product: net stock change must be sustainable
                 $projectedStock = $oldProduct->current_stock_qty - ($transaction->qty * $oldCategory->effect) + ($request->qty * $newCategory->effect);
                 if ($projectedStock < 0) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient Stock: This adjustment would result in a negative balance ({$projectedStock}). Please check your quantities."
+                        'message' => "Insufficient Stock: This adjustment would result in a negative balance ({$projectedStock})."
                     ], 422);
                 }
             } else {
-                // Different product: both must be sustainable
-                // First, check if reverting the old one is okay (usually always okay since it's an 'undo')
-                // but applying the new one must be checked if it's an OUT activity.
                 if ($newCategory->effect == -1) {
                     if ($newProduct->current_stock_qty < $request->qty) {
                         return response()->json([
@@ -388,11 +374,6 @@ class InventoryTransactionController extends Controller
                 }
             }
 
-            // 2. Revert stock from old values
-            $oldProduct->current_stock_qty -= ($transaction->qty * $oldCategory->effect);
-            $oldProduct->save();
-
-            // 3. Update transaction
             $transaction->update([
                 'product_detail_id' => $request->product_detail_id,
                 'transaction_date' => $request->transaction_date,
@@ -403,10 +384,6 @@ class InventoryTransactionController extends Controller
                 'supplier_id' => $request->supplier_id,
                 'destination_id' => $request->destination_id,
             ]);
-
-            // 4. Apply new stock values
-            $newProduct->current_stock_qty += ($request->qty * $newCategory->effect);
-            $newProduct->save();
 
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Transaction updated successfully.']);
@@ -427,14 +404,7 @@ class InventoryTransactionController extends Controller
 
         DB::beginTransaction();
         try {
-            // Revert stock
-            $product = InventoryProduct::findOrFail($transaction->product_detail_id);
-            $category = TransactionCategory::findOrFail($transaction->transaction_category_id);
-            $product->current_stock_qty -= ($transaction->qty * $category->effect);
-            $product->save();
-
             $transaction->delete();
-
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Transaction deleted successfully.']);
         } catch (\Exception $e) {

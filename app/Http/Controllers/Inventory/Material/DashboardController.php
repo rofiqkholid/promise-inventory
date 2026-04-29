@@ -85,7 +85,7 @@ class DashboardController extends Controller
         $pcsSql = \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql('p.current_stock_qty', 'p', 'u.name');
         $amountSql = \App\Models\InventoryModel\Material\InventoryProduct::getAmountCalculationSql('p.current_stock_qty', 'p', 'u.name');
         
-        $totalStockPcs = (clone $stockQuery)->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
+        $totalStockPcs = (clone $stockQuery)->sum('p.current_stock_pcs') ?? 0;
         $totalStockAmount = (clone $stockQuery)->selectRaw("SUM({$amountSql}) as total")->value('total') ?? 0;
 
         // 2. Transaction Query Base
@@ -124,6 +124,7 @@ class DashboardController extends Controller
             'm.name as model_name', 
             'c.code as customer_code', 
             'p.current_stock_qty', 
+            'p.current_stock_pcs',
             'p.min_stock', 
             'p.product_status', 
             'ms.project_status',
@@ -140,11 +141,8 @@ class DashboardController extends Controller
                 $stockDataGrouped[$key] = ['critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0];
             }
 
-            // Convert to PCS for accurate comparison
-            $currentPcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
-                $prd->current_stock_qty, $prd->weight_kg, $prd->pcs_per_unit, $prd->unit_name, 
-                0, 0, 0, 1, $prd->gross_coil
-            );
+            // Use pre-calculated PCS for accurate comparison
+            $currentPcs = (int)$prd->current_stock_pcs;
 
             $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
                 $currentPcs, $prd->min_stock, $prd->project_status ?: $prd->product_status
@@ -286,21 +284,18 @@ class DashboardController extends Controller
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
             ->select(
                 'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
-                'm.name as model_name', 'p.current_stock_qty', 'p.min_stock',
+                'm.name as model_name', 'p.current_stock_qty', 'p.current_stock_pcs', 'p.min_stock',
                 'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'u.name as unit_name',
                 'ms.project_status', 'p.product_status'
             )
             ->limit(10)
             ->get()
             ->map(function ($item) {
-                 $currentPcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
-                    $item->current_stock_qty, $item->weight_kg, $item->pcs_per_unit, $item->unit_name, 
-                    0, 0, 0, 1, $item->gross_coil
-                 );
+                  $currentPcs = (int)$item->current_stock_pcs;
                  
-                 $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                    $currentPcs, $item->min_stock, $item->project_status ?: $item->product_status
-                 );
+                  $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                     $currentPcs, $item->min_stock, $item->project_status ?: $item->product_status
+                  );
 
                  $item->status = ucfirst($status);
                  return $item;

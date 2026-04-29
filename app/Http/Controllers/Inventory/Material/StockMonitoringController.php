@@ -50,17 +50,7 @@ class StockMonitoringController extends Controller
         ];
 
         foreach ($products as $p) {
-            $currentPCS = InventoryProduct::calculatePcs(
-                $p->current_stock_qty, 
-                $p->weight_kg, 
-                $p->pcs_per_unit, 
-                $p->unit_name,  // Use unit_name (e.g., 'COIL') NOT unit_code (e.g., 'KG')
-                $p->top_coil,
-                $p->end_coil,
-                $p->pitch,
-                $p->pcs_per_pitch,
-                $p->gross_coil
-            );
+            $currentPCS = $p->current_stock_pcs;
             $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status);
             if (isset($stats['balance'][$status])) {
                 $stats['balance'][$status]++;
@@ -74,18 +64,7 @@ class StockMonitoringController extends Controller
                 $p->pcs_per_unit
             );
 
-            $outTrialQty = abs((float)$p->usage_OUT_TRIAL);
-            $outTrialPcs = InventoryProduct::calculatePcs(
-                $outTrialQty, 
-                $p->weight_kg, 
-                $p->pcs_per_unit, 
-                $p->unit_name,
-                $p->top_coil,
-                $p->end_coil,
-                $p->pitch,
-                $p->pcs_per_pitch,
-                $p->gross_coil
-            );
+            $outTrialPcs = $p->trial_usage_pcs;
             $gap = $limitValue - $outTrialPcs;
             
             if ($gap < 0) {
@@ -186,6 +165,9 @@ class StockMonitoringController extends Controller
                 'products.part_no',
                 'products.part_name',
                 'inv_t_product_detail.current_stock_qty',
+                'inv_t_product_detail.current_stock_pcs',
+                'inv_t_product_detail.trial_usage_qty',
+                'inv_t_product_detail.trial_usage_pcs',
                 'inv_t_product_detail.pcs_per_unit',
                 'inv_t_product_detail.remark',
                 'u.code as unit_code',
@@ -312,9 +294,10 @@ class StockMonitoringController extends Controller
             $inQty = (float)($item->total_in_sum ?? 0);
             $outQty = (float)($item->total_out_sum ?? 0);
 
-            $balancePcsVal = InventoryProduct::calculatePcs($calculatedQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $balancePcsVal = (int)$item->current_stock_pcs;
             $inQtyPcsVal = InventoryProduct::calculatePcs($inQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
             $outQtyPcsVal = InventoryProduct::calculatePcs($outQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $outTrialPcs = (int)$item->trial_usage_pcs;
 
             $isCoil = str_contains(strtolower($item->unit_name ?? ''), 'coil') && floatval($item->weight_kg ?? 0) > 0;
             $weight = floatval($item->weight_kg ?? 0);
@@ -365,8 +348,7 @@ class StockMonitoringController extends Controller
                 'supplier_name' => $item->supplier_name ?? '-',
             ];
             // Gap and Out Trial logic
-            $outTrialQty = abs((float)($item->usage_OUT_TRIAL ?? 0));
-            $outTrialPcs = InventoryProduct::calculatePcs($outTrialQty, $item->weight_kg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
+            $outTrialPcs = (int)$item->trial_usage_pcs;
             
             // Adjusted Rank Value Logic
             $limitValue = $this->calculateAdjustedRank(

@@ -39,15 +39,14 @@ class VaveDashboardController extends Controller
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->join('models as m', 'm.id', '=', 'pd.model_id')
             ->join('customers as c', 'c.id', '=', 'p.customer_id')
-            ->leftJoin('inv_m_vave_base as vb', function ($join) use ($year) {
-                $join->on('vb.product_id', '=', 'p.id')
-                     // Match EBD where effective_from <= analysed year AND (effective_to IS NULL OR effective_to >= analysed year)
-                     ->whereRaw('vb.effective_from <= ?', [$year])
-                     ->where(function ($q) use ($year) {
-                         $q->whereNull('vb.effective_to')
-                           ->orWhereRaw('vb.effective_to >= ?', [$year]);
-                     });
-            })
+            ->leftJoin(DB::raw('(
+                SELECT product_id, MAX(id) as latest_id 
+                FROM inv_m_vave_base 
+                WHERE (effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
+                   OR (effective_from IS NULL AND effective_to IS NULL)
+                GROUP BY product_id
+            ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
+            ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
             ->where('tc.effect', 1)
             ->whereYear('t.transaction_date', $year)
             ->where('p.is_delete', 0)
@@ -186,14 +185,14 @@ class VaveDashboardController extends Controller
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->join('models as m', 'm.id', '=', 'pd.model_id')
             ->join('customers as c', 'c.id', '=', 'p.customer_id')
-            ->leftJoin('inv_m_vave_base as vb', function ($join) use ($year) {
-                $join->on('vb.product_id', '=', 'p.id')
-                     ->whereRaw('vb.effective_from <= ?', [$year])
-                     ->where(function ($q) use ($year) {
-                         $q->whereNull('vb.effective_to')
-                           ->orWhereRaw('vb.effective_to >= ?', [$year]);
-                     });
-            })
+            ->leftJoin(DB::raw('(
+                SELECT product_id, MAX(id) as latest_id 
+                FROM inv_m_vave_base 
+                WHERE (effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
+                   OR (effective_from IS NULL AND effective_to IS NULL)
+                GROUP BY product_id
+            ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
+            ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
             ->where('tc.effect', 1)
             ->whereYear('t.transaction_date', $year)
             ->where('p.is_delete', 0)

@@ -44,4 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e, $request) {
             return response()->view('errors.index', ['exception' => $e], $e->getStatusCode());
         });
+    })
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        $schedule->command('inventory:sync-stock')->dailyAt('01:00');
     })->create();

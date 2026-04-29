@@ -196,6 +196,13 @@ class StoController extends Controller
     {
         $event = StoEvent::findByHashOrFail($id);
         
+        if ($event->status === 'CLOSED') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete a CLOSED STO event. You must REOPEN it first to revert the stock adjustments before deleting the event.'
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             // Delete all details first
@@ -841,18 +848,9 @@ class StoController extends Controller
                     continue;
                 }
 
-                $product = InventoryProduct::find($detail->product_detail_id);
-                if ($product) {
-                    $product->current_stock_qty += $diff;
-                    $product->save();
-                    
-                    $detail->is_adjusted = true;
-                    $detail->save();
-                    
-                    $count++;
-                } else {
-                    $errors[] = "Product ID {$detail->product_detail_id} not found";
-                }
+                $detail->is_adjusted = true;
+                $detail->save();
+                $count++;
             }
 
             DB::commit();
@@ -891,14 +889,6 @@ class StoController extends Controller
                     ->get();
 
                 foreach ($details as $detail) {
-                    $diff = $detail->diff_qty;
-                    if ($diff != 0) {
-                        $product = InventoryProduct::find($detail->product_detail_id);
-                        if ($product) {
-                            $product->current_stock_qty -= $diff;
-                            $product->save();
-                        }
-                    }
                     $detail->is_adjusted = false;
                     $detail->save();
                 }
