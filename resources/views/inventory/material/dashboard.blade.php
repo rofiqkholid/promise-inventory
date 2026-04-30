@@ -30,7 +30,7 @@
                         <i class="fa-solid {{ $stat['icon'] }}"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
                             {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
                         </h3>
@@ -223,7 +223,7 @@
 {{-- Drilldown Modal --}}
 <div id="drilldownModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
     <div class="absolute inset-0 bg-black/40" onclick="closeDrilldownModal()"></div>
-    <div class="absolute right-0 top-0 bottom-0 w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="drilldownPanel">
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="drilldownPanel">
         {{-- Header --}}
         <div class="flex-none flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div>
@@ -368,9 +368,12 @@
         };
 
         const commonDataLabels = {
-            color: isDark ? '#94a3b8' : '#64748b',
-            font: { weight: '500', size: 13 },
+            backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+            borderRadius: 1,
+            color: isDark ? '#f8fafc' : '#1e293b',
+            font: { weight: 'bold', size: 10 },
             formatter: (value) => value > 0 ? new Intl.NumberFormat().format(value) : '',
+            padding: { top: 2, bottom: 0, left: 4, right: 4 },
             anchor: 'center',
             align: 'center',
             display: (context) => context.dataset.data[context.dataIndex] > 0 ? 'auto' : false,
@@ -767,21 +770,35 @@
                      'Safe': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
                  };
                  const colorClass = statusColors[row.status] || statusColors['Safe'];
-                 let partName = row.part_no + (row.revision ? ' - ' + row.revision : '');
+                 
+                 let actionIcon = '';
+                 if (row.status === 'Critical' || row.status === 'Warning') {
+                     if (row.action_status === 'Process') {
+                         actionIcon = '<i class="fa-solid fa-clock text-amber-500 ml-1.5" title="In Process"></i>';
+                     } else if (row.action_status === 'Ordered') {
+                         actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 ml-1.5" title="Ordered"></i>';
+                     } else {
+                         actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 ml-1.5" title="Need Action"></i>';
+                     }
+                 }
+
                   return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
                         <td class="py-1.5 px-3">
-                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
+                            <div class="flex items-center">
+                                <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                                ${actionIcon}
+                            </div>
+                            <p class="text-[9px] text-slate-400 tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
                         </td>
                         <td class="py-1.5 px-2 text-right">
                             <div class="text-[11px] font-medium text-slate-500 font-mono">${new Intl.NumberFormat().format(row.min_stock)}</div>
                         </td>
                         <td class="py-1.5 px-2 text-right">
-                            <div class="text-[11px] font-medium text-slate-800 dark:text-white font-mono">${new Intl.NumberFormat().format(row.current_stock_qty)}</div>
+                            <div class="text-[11px] font-medium text-slate-800 dark:text-white font-mono">${new Intl.NumberFormat().format(row.current_stock_pcs)}</div>
                         </td>
                         <td class="py-1.5 px-3 text-right">
-                            <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[9px] font-medium ${colorClass} border uppercase leading-none">${row.status}</span>
+                            <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[9px] font-medium ${colorClass} border leading-none">${row.status}</span>
                         </td>
                     </tr>
                  `;
@@ -791,14 +808,14 @@
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
                         <td class="py-1.5 px-3">
-                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
+                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                            <p class="text-[9px] text-slate-400 tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
                         </td>
-                        <td class="py-1.5 px-2 text-[10px] text-slate-500 dark:text-slate-400 uppercase truncate max-w-[80px]">${row.supplier_name || '-'}</td>
+                        <td class="py-1.5 px-2 text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[80px]">${row.supplier_name || '-'}</td>
                         <td class="py-1.5 px-2 text-[11px] font-medium text-slate-800 dark:text-white text-right font-mono">${new Intl.NumberFormat().format(row.out_trial)}</td>
-                        <td class="py-1.5 px-2 text-[11px] font-medium ${row.gap < 0 ? 'text-red-500' : 'text-emerald-500'} text-right font-mono">${new Intl.NumberFormat().format(row.gap)}</td>
+                        <td class="py-1.5 px-2 text-[11px] font-medium ${row.gap < 0 ? 'text-red-500' : 'text-slate-500'} text-right font-mono">${new Intl.NumberFormat().format(row.gap)}</td>
                         <td class="py-1.5 px-3 text-right">
-                            <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[9px] font-medium bg-${color}-50 text-${color}-600 dark:bg-${color}-900/30 dark:text-${color}-400 border border-${color}-100 dark:border-${color}-800 uppercase leading-none">${row.status}</span>
+                            <span class="inline-flex px-1.5 py-0.5 rounded-xs text-[9px] font-medium bg-${color}-50 text-${color}-600 dark:bg-${color}-900/30 dark:text-${color}-400 border border-${color}-100 dark:border-${color}-800 leading-none">${row.status}</span>
                         </td>
                     </tr>
                 `;
@@ -821,17 +838,28 @@
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
                         <td class="py-1.5 px-3">
-                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight uppercase">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
-                            <p class="text-[9px] text-slate-400 uppercase tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
+                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                            <p class="text-[9px] text-slate-400 tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
                         </td>
                         <td class="py-1.5 px-2 text-center">
-                            <span class="px-1.5 py-0.5 rounded-xs text-[9px] font-bold border uppercase whitespace-nowrap ${badgeClass}">${row.category}</span>
+                            <span class="px-1.5 py-0.5 rounded-xs text-[9px] font-bold border whitespace-nowrap ${badgeClass}">${row.category}</span>
                         </td>
                         <td class="py-1.5 px-2 text-center whitespace-nowrap">
                             <div class="text-[10px] text-slate-500 dark:text-slate-400">${dateStr} <span class="text-[9px] text-slate-400 font-mono ml-1">${timeStr}</span></div>
                         </td>
                         <td class="py-1.5 px-3 text-right">
-                            <div class="text-[11px] font-medium text-slate-800 dark:text-white font-mono">${new Intl.NumberFormat().format(row.qty_pcs)}</div>
+                            <div class="text-[11px] font-medium text-slate-800 dark:text-white font-mono">
+                                ${new Intl.NumberFormat().format(row.qty)} 
+                                <span class="text-[9px] text-slate-400 font-normal uppercase">
+                                    ${(row.unit_name || '').toUpperCase() === 'COIL' ? 'KG' : ((row.unit_name || '').toUpperCase() === 'TRAPEZOID' ? 'SHEET' : (row.unit_name || 'UNIT'))}
+                                </span>
+                            </div>
+                            <div class="text-[9px] text-slate-500 font-mono">
+                                ${new Intl.NumberFormat().format(row.qty_pcs)} 
+                                <span class="text-[8px] opacity-70 uppercase">
+                                    ${(row.unit_name || '').toUpperCase() === 'COIL' ? 'KG' : ((row.unit_name || '').toUpperCase() === 'TRAPEZOID' ? 'SHEET' : 'PCS')}
+                                </span>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -1215,6 +1243,7 @@
             { key: 'min_stock', label: 'Min',           cls: 'text-right py-2 px-2' },
             { key: 'unit',      label: 'Unit',          cls: 'text-center py-2 px-2' },
             { key: 'status',    label: 'Status',        cls: 'text-center py-2 px-3' },
+            { key: 'action_status', label: 'Action',    cls: 'text-center py-2 px-3' },
         ],
         usage_model: [
             { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
@@ -1320,11 +1349,71 @@
             } else {
                 tbody.innerHTML = res.data.map(row => {
                     return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
+                        if (c.key === 'action_status') {
+                            const isCritical = row.status === 'Critical' || row.status === 'Warning';
+                            if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
+
+                            const current = row[c.key] || '';
+                            const statusMap = {
+                                '': { label: 'NEED ACTION', cls: 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400' },
+                                'Process': { label: 'IN PROCESS', cls: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400' },
+                                'Ordered': { label: 'ORDERED', cls: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400' }
+                            };
+                            const st = statusMap[current] || statusMap[''];
+
+                            let actionIcon = '';
+                            if (row.status === 'Critical' || row.status === 'Warning') {
+                                if (row.action_status === 'Process') {
+                                    actionIcon = '<i class="fa-solid fa-clock text-amber-500 ml-1.5" title="In Process"></i>';
+                                } else if (row.action_status === 'Ordered') {
+                                    actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 ml-1.5" title="Ordered"></i>';
+                                } else {
+                                    actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 ml-1.5" title="Need Action"></i>';
+                                }
+                            }
+                            
+                            return `<td class="${c.cls}">
+                                <div class="relative inline-block text-left dropdown-action-container">
+                                    <div class="flex items-center">
+                                        <button onclick="toggleStatusDropdown(event, '${row.id}')" 
+                                            class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-bold border transition-all hover:bg-slate-50 dark:hover:bg-gray-700 ${st.cls}">
+                                            <span class="w-1 h-1 rounded-full bg-current mr-1"></span>
+                                            ${st.label}
+                                            <i class="fa-solid fa-chevron-down ml-1 opacity-50 text-[6px]"></i>
+                                        </button>
+                                        ${actionIcon}
+                                    </div>
+                                    <div id="dropdown-${row.id}" class="hidden absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-xs shadow-xl border border-slate-200 dark:border-gray-700 z-[100] overflow-hidden">
+                                        <div class="py-1">
+                                            <button onclick="updateActionStatus('${row.id}', '')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> NEED ACTION
+                                            </button>
+                                            <button onclick="updateActionStatus('${row.id}', 'Process')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span> IN PROCESS
+                                            </button>
+                                            <button onclick="updateActionStatus('${row.id}', 'Ordered')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> ORDERED
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>`;
+                        }
+
                         const val = row[c.key] ?? '-';
                         const badgeCls = (c.key === 'status' || c.key === 'category') ? STATUS_BADGE[val] : null;
+
+                        let displayVal = val;
+                        if (c.key === 'unit') {
+                            const u = (val || '').toUpperCase();
+                            displayVal = (u === 'COIL') ? 'KG' : (u === 'TRAPEZOID' ? 'SHEET' : val);
+                        }
+
                         const cell = badgeCls
-                            ? `<span class="inline-block px-1.5 py-0.5 rounded-xs text-[9px] font-bold uppercase ${badgeCls}">${val}</span>`
-                            : `<span class="${c.key === 'part_no' ? 'font-medium text-slate-700 dark:text-gray-200' : 'text-slate-500 dark:text-slate-400'}">${val}</span>`;
+                            ? `<div class="flex items-center justify-center">
+                                <span class="inline-block px-1.5 py-0.5 rounded-xs text-[9px] font-bold ${badgeCls}">${val}</span>
+                               </div>`
+                            : `<span class="${c.key === 'part_no' ? 'font-medium text-slate-700 dark:text-gray-200' : 'text-slate-500 dark:text-slate-400'}">${displayVal}</span>`;
                         return `<td class="${c.cls}">${cell}</td>`;
                     }).join('') + '</tr>';
                 }).join('');
@@ -1420,6 +1509,53 @@
         const panel = document.getElementById('drilldownPanel');
         panel.classList.add('translate-x-full');
         setTimeout(() => document.getElementById('drilldownModal').classList.add('hidden'), 300);
+    };
+
+    window.toggleStatusDropdown = function(event, id) {
+        event.stopPropagation();
+        const dropdown = document.getElementById(`dropdown-${id}`);
+        const isHidden = dropdown.classList.contains('hidden');
+        
+        // Close all other dropdowns
+        document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+        
+        if (isHidden) {
+            dropdown.classList.remove('hidden');
+        }
+    };
+
+    // Global click listener to close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!event.target.closest('.dropdown-action-container')) {
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+        }
+    });
+
+    window.updateActionStatus = function(id, status) {
+        // Close dropdown immediately
+        const dropdown = document.getElementById(`dropdown-${id}`);
+        if (dropdown) dropdown.classList.add('hidden');
+
+        const url = '{{ route("inventory.master.product.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
+        
+        $.post(url, {
+            _token: '{{ csrf_token() }}',
+            action_status: status
+        })
+        .done(function(res) {
+            if (res.success) {
+                // Refresh drilldown data to show new status badge
+                fetchDrilldownData();
+            }
+        })
+        .fail(function() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: 'Could not update status. Please try again.',
+                customClass: { popup: 'rounded-xs' }
+            });
+        });
     };
 
     // Close on Escape key

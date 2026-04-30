@@ -107,6 +107,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/product/get-model', [InventoryProductController::class, 'getModels'])->name('product.getModels');
             Route::get('/product/latest-revision/{productId}', [InventoryProductController::class, 'getLatestRevision'])->name('product.latestRevision');
             Route::get('/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('product.print');
+            Route::post('/product/update-action-status/{id}', [InventoryProductController::class, 'updateActionStatus'])->name('product.updateActionStatus');
             Route::resource('product', InventoryProductController::class)->names('product')->parameters(['product' => 'inventoryProduct'])->except(['create', 'edit', 'index']);
 
             // Coil Center

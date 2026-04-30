@@ -211,7 +211,7 @@ select {
 .select2-container .select2-selection--single .select2-selection__rendered {
     padding-left: 0.75rem !important;
     font-size: 0.75rem !important;
-    font-weight: 500 !important;
+    font-weight: 400;
     color: #1e293b !important;
 }
 

@@ -283,12 +283,11 @@ class DashboardController extends Controller
         $balanceStatusTable = (clone $stockQuery)
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
             ->select(
-                'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
+                'p.id', 'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
                 'm.name as model_name', 'p.current_stock_qty', 'p.current_stock_pcs', 'p.min_stock',
                 'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'u.name as unit_name',
-                'ms.project_status', 'p.product_status'
+                'ms.project_status', 'p.product_status', 'p.action_status'
             )
-            ->limit(10)
             ->get()
             ->map(function ($item) {
                   $currentPcs = (int)$item->current_stock_pcs;
@@ -299,7 +298,13 @@ class DashboardController extends Controller
 
                  $item->status = ucfirst($status);
                  return $item;
-            });
+            })
+            ->filter(function($item) {
+                // Only show Critical and Warning in the Balance Warnings table
+                return in_array($item->status, ['Critical', 'Warning']);
+            })
+            ->values()
+            ->take(15);
 
         $usageStatusTable = (clone $balanceStatusTable);
 
@@ -449,12 +454,12 @@ class DashboardController extends Controller
             }
 
             $items = $query->select(
-                    'prod.part_no', 'rev.code as revision',
+                    'p.id', 'prod.part_no', 'rev.code as revision',
                     'm.name as model_name', 'c.code as customer_code',
                     'p.current_stock_qty', 'p.min_stock',
                     'u.name as unit_name', 'p.pcs_per_unit',
                     'p.weight_kg', 'p.gross_coil',
-                    'p.product_status', 'ms.project_status'
+                    'p.product_status', 'ms.project_status', 'p.action_status'
                 )
                 ->orderBy('prod.part_no')
                 ->get();
@@ -476,6 +481,7 @@ class DashboardController extends Controller
                 }
 
                 $processed[] = [
+                    'id'            => \App\Models\InventoryModel\Material\InventoryProduct::encodeHash($row->id),
                     'part_no'       => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
                     'model'         => $row->model_name ?? '-',
                     'customer'      => $row->customer_code ?? '-',
@@ -483,6 +489,7 @@ class DashboardController extends Controller
                     'min_stock'     => number_format($row->min_stock) . ' PCS',
                     'unit'          => $row->unit_name ?? '-',
                     'status'        => ucfirst($statusRaw),
+                    'action_status' => $row->action_status,
                 ];
             }
             $total = count($processed);

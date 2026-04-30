@@ -718,13 +718,16 @@ $(function() {
             $('#import_customer_id').on('change', function() {
                 const cid = $(this).val();
                 const $model = $('#import_model_id');
-                $model.prop('disabled', true).empty().append('<option value="">Select Model...</option>').trigger('change');
-                if(!cid) return;
                 
-                $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: cid }, function(models) {
-                    models.forEach(m => $model.append(new Option(m.name, m.id)));
-                    $model.prop('disabled', false).trigger('change');
-                });
+                // Clear selection
+                $model.val(null).trigger('change');
+
+                if (cid) {
+                    // Enable immediately for Lazy Loading
+                    $model.prop('disabled', false);
+                } else {
+                    $model.prop('disabled', true);
+                }
             });
 
             $('#importForm').on('submit', (e) => this.handleImportFormSubmit(e));
@@ -1019,7 +1022,7 @@ $(function() {
                 // so the server doesn't have to use regex on a massive string.
                 const base64Only = fullBase64.split(',')[1]; 
                 
-                const chunkSize = 256 * 1024; // Increased to 256KB for better speed while still being safe for most WAFs
+                const chunkSize = 1024 * 1024; // Increased to 1MB for faster uploads (safe for most servers)
                 const totalChunks = Math.ceil(base64Only.length / chunkSize);
                 const uploadId = 'UP-' + Date.now().toString() + '-' + Math.floor(Math.random() * 10000);
                 
@@ -1318,6 +1321,38 @@ $(function() {
                 // Default fallback: Restore previous selection if it's still valid
                 if (currentSelectedId) $rev.val(currentSelectedId).trigger('change.select2');
             }
+        },
+
+        initImportSelect2: function() {
+            $('.select2-import').select2({
+                dropdownParent: $('#importModal'),
+                width: '100%',
+                placeholder: 'Select...'
+            });
+
+            // Initialize Model with AJAX (Lazy Loading)
+            $('#import_model_id').select2({
+                dropdownParent: $('#importModal'),
+                width: '100%',
+                placeholder: 'Select Model...',
+                ajax: {
+                    url: this.config.routes.models,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            customer_id: $('#import_customer_id').val(),
+                            q: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.map(m => ({ id: m.id, text: m.name }))
+                        };
+                    },
+                    cache: true
+                }
+            });
         }
     };
 

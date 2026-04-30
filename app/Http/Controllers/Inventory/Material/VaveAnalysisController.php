@@ -714,12 +714,12 @@ class VaveAnalysisController extends Controller
             $successMsg = "<div class='mb-3 font-bold text-emerald-700 uppercase drop-shadow-sm text-[11px]'><i class='fa-solid fa-circle-check mr-1.5'></i> Processed {$totalProcessed} EBD records!</div>";
             
             $summaryLines = [];
-            if ($totalCreated > 0) $summaryLines[] = "<span class='text-emerald-600 font-bold'>+ {$totalCreated} created</span>";
-            if ($totalUpdated > 0) $summaryLines[] = "<span class='text-amber-600 font-bold'>~ {$totalUpdated} updated</span>";
-            if ($unchanged > 0) $summaryLines[] = "<span class='text-gray-400'>{$unchanged} unchanged</span>";
+            if ($totalCreated > 0) $summaryLines[] = "<div class='text-emerald-600 font-bold text-[10px]'><i class='fa-solid fa-plus-circle mr-1'></i> {$totalCreated} new EBD versions created</div>";
+            if ($totalUpdated > 0) $summaryLines[] = "<div class='text-amber-600 font-bold text-[10px]'><i class='fa-solid fa-pen-to-square mr-1'></i> {$totalUpdated} EBD versions updated</div>";
+            if ($unchanged > 0) $summaryLines[] = "<div class='text-gray-500 italic text-[10px]'><i class='fa-solid fa-check-double mr-1'></i> {$unchanged} other EBD versions already up-to-date (no changes needed)</div>";
             
             if (!empty($summaryLines)) {
-                $successMsg .= "<div class='flex gap-4 text-[10px] border-t border-emerald-100 pt-2 mt-2'>" . implode('', $summaryLines) . "</div>";
+                $successMsg .= "<div class='space-y-1 border-t border-emerald-100 pt-2 mt-2'>" . implode('', $summaryLines) . "</div>";
             }
 
             return response()->json([

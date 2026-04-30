@@ -64,6 +64,12 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
 
     public function collection(Collection $rows)
     {
+        // 0. Pre-fetch Metadata to avoid N+1 queries
+        $allRanks = Rank::all()->keyBy(fn($i) => strtoupper($i->code));
+        $allRevisions = Revision::where('is_active', 1)->get()->keyBy(fn($i) => strtoupper($i->code));
+        $allSpecs = MaterialSpec::all()->keyBy(fn($i) => strtoupper($i->spec_name));
+        $allUnits = Unit::all();
+
         DB::beginTransaction();
         try {
             foreach ($rows as $index => $row) {
@@ -79,11 +85,10 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                 $rowErrors = [];
 
                 // Rank: Index 5 (Column F) - This rank applies to all revisions in this row
-                $rankName = trim($row[5] ?? '');
-                $rank = null;
-                if (!empty($rankName)) {
-                    $rank = Rank::whereRaw('UPPER(code) = ?', [strtoupper($rankName)])->first();
-                    if (!$rank) $rowErrors[] = "Rank '{$rankName}' not found.";
+                $rankName = strtoupper(trim($row[5] ?? ''));
+                $rank = $rankName ? ($allRanks[$rankName] ?? null) : null;
+                if (!empty($rankName) && !$rank) {
+                    $rowErrors[] = "Rank '{$rankName}' not found.";
                 }
 
                 // Resolve Product Base (Strict Check)
@@ -98,22 +103,19 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
 
                 $maxCols = $row->count();
                 for ($col = 8; $col < $maxCols; $col += 17) {
-                    $revisionCode = trim($row[$col] ?? '');
+                    $revisionCode = strtoupper(trim($row[$col] ?? ''));
                     if (empty($revisionCode)) break;
 
                     $revErrors = [];
 
-                    // 1. Resolve Revision ID
-                    $revision = Revision::whereRaw('UPPER(code) = ?', [strtoupper($revisionCode)])
-                        ->where('is_active', 1)
-                        ->first();
-                    
+                    // 1. Resolve Revision ID from cache
+                    $revision = $allRevisions[$revisionCode] ?? null;
                     if (!$revision) {
                         $revErrors[] = "Revision '{$revisionCode}' not found.";
                     }
 
                     // 2. Map Column Values
-                    $msName = trim($row[$col + 1] ?? '');
+                    $msName = strtoupper(trim($row[$col + 1] ?? ''));
                     $unitName = trim($row[$col + 2] ?? '');
                     $density = $this->parseNumeric($row[$col + 3] ?? 7.85);
                     $thickness = $this->parseNumeric($row[$col + 4] ?? 0);
@@ -130,12 +132,17 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                     $priceInput = $this->parseNumeric($row[$col + 15] ?? 0);
                     $remark = trim($row[$col + 16] ?? '');
 
-                    // 3. Resolve Relationships
-                    $ms = !empty($msName) ? MaterialSpec::where('spec_name', $msName)->first() : null;
+                    // 3. Resolve Relationships from cache
+                    $ms = !empty($msName) ? ($allSpecs[$msName] ?? null) : null;
                     if (!empty($msName) && !$ms) $revErrors[] = "Material Spec '{$msName}' not found.";
 
-                    $unit = !empty($unitName) ? Unit::where('name', 'like', "%{$unitName}%")->first() : null;
-                    if (!empty($unitName) && !$unit) $revErrors[] = "Unit '{$unitName}' (or similar) not found.";
+                    $unit = null;
+                    if (!empty($unitName)) {
+                        $unit = $allUnits->first(function($u) use ($unitName) {
+                            return stripos($u->name, $unitName) !== false || stripos($u->code, $unitName) !== false;
+                        });
+                        if (!$unit) $revErrors[] = "Unit '{$unitName}' not found.";
+                    }
 
                     // If there are errors for this specific revision, collect them and skip processing this revision
                     if (!empty($rowErrors) || !empty($revErrors)) {
@@ -204,7 +211,14 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                         // Detect what changed
                         $changes = [];
                         foreach ($data as $key => $value) {
-                            if ($existing->{$key} != $value) {
+                            $oldVal = $existing->{$key};
+                            
+                            // Specific check for numeric fields to handle precision
+                            if (is_numeric($value) && is_numeric($oldVal)) {
+                                if (round((float)$oldVal, 4) != round((float)$value, 4)) {
+                                    $changes[] = $key;
+                                }
+                            } else if ($oldVal != $value) {
                                 $changes[] = $key;
                             }
                         }

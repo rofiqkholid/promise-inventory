@@ -338,31 +338,38 @@ class InventoryProductController extends Controller
                 'message' => $errorMsg
             ], 422);
         }
-
         $log = $import->getSuccessLog();
         $totalCreated = count($log['created']);
         $totalUpdated = count($log['updated']);
         $unchanged = $log['unchangedCount'];
         $totalProcessed = $totalCreated + $totalUpdated + $unchanged;
         
-        $successMsg = "<div class='mb-3 font-bold text-emerald-700 uppercase drop-shadow-sm'><i class='fa-solid fa-circle-check mr-1.5'></i> Processed {$totalProcessed} revisions!</div>";
+        $successMsg = "<div class='mb-3 font-bold text-emerald-700 uppercase drop-shadow-sm text-[11px]'><i class='fa-solid fa-circle-check mr-1.5'></i> Processed {$totalProcessed} revisions!</div>";
         
+        $summaryLines = [];
         if ($totalCreated > 0) {
-            $successMsg .= "<div class='mb-3'><span class='inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-px text-[9px] font-bold mr-2 uppercase'>New Data ({$totalCreated})</span>";
-            $successMsg .= "<div class='mt-1 text-gray-600 font-medium pl-2 leading-relaxed'>" . implode(', ', array_slice($log['created'], 0, 30)) . ($totalCreated > 30 ? '...' : '') . "</div></div>";
+            $summaryLines[] = "<div class='text-emerald-600 font-bold text-[10px]'><i class='fa-solid fa-plus-circle mr-1'></i> {$totalCreated} new revisions created</div>";
         }
         
         if ($totalUpdated > 0) {
-            $successMsg .= "<div class='mb-3'><span class='inline-block px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded-px text-[9px] font-bold mr-2 uppercase'>Updated ({$totalUpdated})</span>";
-            $successMsg .= "<ul class='mt-1 text-gray-600 font-medium pl-4 list-disc list-outside space-y-0.5 max-h-48 overflow-y-auto custom-scrollbar'>";
-            foreach ($log['updated'] as $item) {
-                $successMsg .= "<li>{$item}</li>";
+            $summaryLines[] = "<div class='text-amber-600 font-bold text-[10px]'><i class='fa-solid fa-pen-to-square mr-1'></i> {$totalUpdated} revisions updated</div>";
+            // Show first 10 updates as details
+            $updateDetails = array_slice($log['updated'], 0, 10);
+            $updateList = "<ul class='mt-1 text-[9px] text-gray-500 pl-4 list-disc space-y-0.5'>";
+            foreach ($updateDetails as $item) {
+                $updateList .= "<li>{$item}</li>";
             }
-            $successMsg .= "</ul></div>";
+            if (count($log['updated']) > 10) $updateList .= "<li class='italic'>... and " . (count($log['updated']) - 10) . " more.</li>";
+            $updateList .= "</ul>";
+            $summaryLines[] = $updateList;
         }
 
         if ($unchanged > 0) {
-            $successMsg .= "<div class='text-[10px] text-gray-400 font-bold italic'><i class='fa-solid fa-info-circle mr-1'></i> {$unchanged} other revisions already up-to-date (no changes needed).</div>";
+            $summaryLines[] = "<div class='text-gray-500 italic text-[10px]'><i class='fa-solid fa-check-double mr-1'></i> {$unchanged} other revisions already up-to-date (no changes needed)</div>";
+        }
+
+        if (!empty($summaryLines)) {
+            $successMsg .= "<div class='space-y-1 border-t border-emerald-100 pt-2 mt-2'>" . implode('', $summaryLines) . "</div>";
         }
 
         return response()->json([
@@ -498,6 +505,21 @@ class InventoryProductController extends Controller
 
         $inventoryProduct->delete();
         return response()->json(['success' => true, 'message' => 'Inventory Product deleted successfully.']);
+    }
+
+    /**
+     * Update the action status of a product (for dashboard follow-up).
+     */
+    public function updateActionStatus(Request $request, $id)
+    {
+        $product = InventoryProduct::findByHashOrFail($id);
+        $status = $request->action_status;
+        
+        $product->update([
+            'action_status' => ($status === '' || $status === 'NULL') ? null : $status
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Status updated.']);
     }
 
     /**

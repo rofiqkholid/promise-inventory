@@ -206,19 +206,40 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
 
                     $existing = VaveBase::where(['product_id' => $product->id, 'base_name' => $baseName])->first();
 
-                    if (!in_array($product->id, $this->processedProducts)) {
-                        VaveBase::where('product_id', $product->id)->update(['is_active' => 0]);
-                        $this->processedProducts[] = $product->id;
-                    }
-
                     if ($existing) {
-                        // Jika sudah ada, jangan timpa effective_from kecuali masih kosong
-                        if (!empty($existing->effective_from)) {
-                            unset($data['effective_from']);
+                        // Detect what changed (exclude is_active and effective_from from smart comparison)
+                        $changes = [];
+                        $comparableFields = array_diff_key($data, array_flip(['is_active', 'effective_from']));
+                        
+                        foreach ($comparableFields as $key => $value) {
+                            $oldVal = $existing->{$key};
+                            
+                            // Specific check for numeric fields to handle precision
+                            if (is_numeric($value) && is_numeric($oldVal)) {
+                                if (round((float)$oldVal, 4) != round((float)$value, 4)) {
+                                    $changes[] = $key;
+                                }
+                            } else if ($oldVal != $value) {
+                                $changes[] = $key;
+                            }
                         }
-                        $existing->update($data);
-                        $this->successLog['updated'][] = "{$partNo} [{$baseName}]";
+
+                        if (!empty($changes)) {
+                            // Jika sudah ada, jangan timpa effective_from kecuali masih kosong
+                            if (!empty($existing->effective_from)) {
+                                unset($data['effective_from']);
+                            }
+
+                            // Jangan ubah status is_active yang sudah ada saat update
+                            unset($data['is_active']);
+
+                            $existing->update($data);
+                            $this->successLog['updated'][] = "{$partNo} [{$baseName}] (Updated: " . implode(', ', $changes) . ")";
+                        } else {
+                            $this->successLog['unchangedCount']++;
+                        }
                     } else {
+                        // Data baru tetap dibuat aktif secara default
                         VaveBase::create($data);
                         $this->successLog['created'][] = "{$partNo} [{$baseName}]";
                     }
