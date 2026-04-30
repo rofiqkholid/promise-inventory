@@ -118,8 +118,8 @@ class InventoryProduct extends Model
             CASE 
                 WHEN LOWER({$unitCheck}) LIKE '%coil%' 
                      AND ISNULL({$alias}gross_coil, 0) > 0 
-                THEN ({$qtyColumn} / {$alias}gross_coil) * COALESCE({$alias}pcs_per_unit, 1) 
-                ELSE ({$qtyColumn}) * COALESCE({$alias}pcs_per_unit, 1) 
+                THEN ({$qtyColumn} / {$alias}gross_coil) * COALESCE(NULLIF({$alias}pcs_per_unit, 0), 1) 
+                ELSE ({$qtyColumn}) * COALESCE(NULLIF({$alias}pcs_per_unit, 0), 1) 
             END
         ";
     }
@@ -137,7 +137,7 @@ class InventoryProduct extends Model
             CASE 
                 WHEN LOWER({$unitCheck}) LIKE '%coil%' 
                 THEN ({$qtyColumn} * ISNULL({$alias}material_price, 0)) 
-                ELSE ({$qtyColumn} * COALESCE({$alias}pcs_per_unit, 1) * ISNULL({$alias}weight_kg, 0) * ISNULL({$alias}material_price, 0)) 
+                ELSE ({$qtyColumn} * COALESCE(NULLIF({$alias}pcs_per_unit, 0), 1) * ISNULL({$alias}weight_kg, 0) * ISNULL({$alias}material_price, 0)) 
             END
         ";
     }

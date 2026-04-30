@@ -124,7 +124,7 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                     $weightInput = $this->parseNumeric($row[$col + 9] ?? 0);
                     $netWeight = $this->parseNumeric($row[$col + 10] ?? 0);
                     $pcsPerPitch = (int)($row[$col + 11] ?? 0);
-                    $pcsPerUnit = (int)($row[$col + 12] ?? 1);
+                    $pcsPerUnit = (int)($row[$col + 12] ?? 0);
                     $unitPerCar = (int)($row[$col + 13] ?? 1);
                     $minStockInput = (int)($row[$col + 14] ?? 0);
                     $priceInput = $this->parseNumeric($row[$col + 15] ?? 0);
@@ -186,7 +186,7 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                         'weight_kg' => round($finalWeight, 4),
                         'net_weight' => round($netWeight, 4),
                         'pcs_per_pitch' => $pcsPerPitch,
-                        'pcs_per_unit' => $pcsPerUnit ?: 1,
+                        'pcs_per_unit' => $pcsPerUnit,
                         'unit_per_car' => $unitPerCar ?: 1,
                         'min_stock' => $finalMinStock,
                         'material_price' => $finalPrice,

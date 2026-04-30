@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class SyncStock extends Command
 {
-    protected $signature = 'inventory:sync-stock';
+    protected $signature = 'sync:stock';
     protected $description = 'Synchronize current_stock_qty with Transaction History and STO Gap';
 
     public function handle()

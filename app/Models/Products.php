@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Customer;
+use App\Models\Customers;
 
 class Products extends Model
 {
@@ -27,7 +27,7 @@ class Products extends Model
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Customers::class, 'customer_id');
     }
 
     protected static function booted()

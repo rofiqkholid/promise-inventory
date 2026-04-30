@@ -144,8 +144,8 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                     $pitch = $this->parseNumeric($row[$col + 9] ?? 0);
                     $weightKg = $this->parseNumeric($row[$col + 10] ?? 0);
                     $netWeight = $this->parseNumeric($row[$col + 11] ?? 0);
-                    $pcsPerPitch = max(1, (int)($row[$col + 12] ?? 1));
-                    $pcsPerUnit = max(1, (int)($row[$col + 13] ?? 1));
+                    $pcsPerPitch = (int)($row[$col + 12] ?? 0);
+                    $pcsPerUnit = (int)($row[$col + 13] ?? 0);
                     $price = $this->parseNumeric($row[$col + 14] ?? 0);
                     $remark = trim($row[$col + 15] ?? '');
                     $weight = $weightKg;
@@ -154,14 +154,14 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                     if ($weight <= 0) {
                         $unitLower = strtolower($unitName);
                         if (str_contains($unitLower, 'sheet')) {
-                            $weight = (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
+                            $weight = (($thickness * $width * $length * $density) / 1000000) / max(1, $pcsPerUnit);
                         } elseif (str_contains($unitLower, 'coil')) {
-                            $weight = (($thickness * $width * $pitch * $density) / 1000000) / $pcsPerPitch;
+                            $weight = (($thickness * $width * $pitch * $density) / 1000000) / max(1, $pcsPerPitch);
                         } elseif (str_contains($unitLower, 'trapezoid')) {
                             $avgL = ($length + $length2) / 2;
-                            $weight = (($thickness * $width * $avgL * $density) / 1000000) / $pcsPerUnit;
+                            $weight = (($thickness * $width * $avgL * $density) / 1000000) / max(1, $pcsPerUnit);
                         } else {
-                            $weight = (($thickness * $width * $length * $density) / 1000000) / $pcsPerUnit;
+                            $weight = (($thickness * $width * $length * $density) / 1000000) / max(1, $pcsPerUnit);
                         }
                     }
 
