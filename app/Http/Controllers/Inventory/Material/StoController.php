@@ -143,6 +143,13 @@ class StoController extends Controller
         $validated['name'] = "STO Event - " . $validated['code']; 
         $validated['status'] = 'OPEN';
 
+        // Check for any active STO event
+        $activeEvent = StoEvent::whereIn('status', ['OPEN', 'WAITING CHECK', 'WAITING APPROVAL'])->first();
+        
+        if ($activeEvent) {
+            return back()->with('error', "Cannot create a new STO Event because event {$activeEvent->code} is still active. Please close it first.");
+        }
+
         StoEvent::create($validated);
 
         return redirect()->route('inventory.sto.index')->with('success', 'STO Event created successfully.');
@@ -364,6 +371,9 @@ class StoController extends Controller
             $query->orderBy('inv_t_sto_detail.updated_at', 'desc');
         }
 
+        // Add deterministic secondary sort to prevent sub-rows from swapping positions on update
+        $query->orderBy('inv_t_sto_detail.id', 'asc');
+
         $recordsTotal = StoDetail::where('event_id', $stoEvent->id)->count();
         $recordsFiltered = $query->count();
 
@@ -389,16 +399,27 @@ class StoController extends Controller
             ->groupBy('product_detail_id')
             ->pluck('min_id', 'product_detail_id');
 
-        // 3. Check which products already have at least one reason set
-        $reasonsProvided = DB::table('inv_t_sto_detail')
+        // 3. Get the group-level reason and remark
+        $groupReasons = DB::table('inv_t_sto_detail')
             ->where('event_id', $stoEvent->id)
             ->whereIn('product_detail_id', $productIds)
             ->whereNotNull('reason_id')
+            ->select('product_detail_id', DB::raw('MAX(reason_id) as reason_id'))
             ->groupBy('product_detail_id')
-            ->pluck('product_detail_id')
+            ->pluck('reason_id', 'product_detail_id')
             ->toArray();
 
-        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline, $primaryEntries, $reasonsProvided) {
+        $groupRemarks = DB::table('inv_t_sto_detail')
+            ->where('event_id', $stoEvent->id)
+            ->whereIn('product_detail_id', $productIds)
+            ->whereNotNull('remark')
+            ->where('remark', '!=', '')
+            ->select('product_detail_id', DB::raw('MAX(remark) as remark'))
+            ->groupBy('product_detail_id')
+            ->pluck('remark', 'product_detail_id')
+            ->toArray();
+
+        $transformedData = $data->map(function ($detail) use ($stoEvent, &$rowNumber, $canEditInline, $primaryEntries, $groupReasons, $groupRemarks) {
             $pcsPerUnit = $detail->product->pcs_per_unit ?? 1;
             $unitCode = $detail->product->unit->name ?? 'PCS';
             $unitDisplayCode = $detail->product->unit->code ?? 'PCS';
@@ -454,15 +475,15 @@ class StoController extends Controller
                 'unit_code' => $unitCode,
                 'unit_display' => $unitDisplayCode,
                 'location_name' => $detail->location_name,
-                'reason_id' => $detail->reason_id,
+                'reason_id' => $groupReasons[$detail->product_detail_id] ?? $detail->reason_id,
                 'reason_name' => $detail->reason_name,
                 'category' => $totalDiff < 0 ? 'SHORTAGE' : 'EXCESS',
-                'remark' => $detail->remark,
+                'remark' => $groupRemarks[$detail->product_detail_id] ?? $detail->remark,
                 'can_edit_inline' => $canEditInline,
                 'status' => $stoEvent->status,
                 'product_hash_id' => $detail->product->hash_id,
                 'is_primary' => $detail->id == ($primaryEntries[$detail->product_detail_id] ?? null),
-                'group_has_reason' => in_array($detail->product_detail_id, $reasonsProvided),
+                'group_has_reason' => isset($groupReasons[$detail->product_detail_id]),
                 // Aggregates for grouping
                 'total_real_qty' => $totalReal,
                 'total_system_qty' => $totalSystem,
@@ -635,11 +656,16 @@ class StoController extends Controller
             if ($request->has('location_id')) {
                 $detail->location_id = $request->location_id;
             }
+            
+            // Apply reason and remark to ALL records of this product in this event
+            $updateGlobal = [];
             if ($request->has('remark')) {
                 $detail->remark = $request->remark;
+                $updateGlobal['remark'] = $request->remark;
             }
             if ($request->has('reason_id')) {
                 $detail->reason_id = $request->reason_id;
+                $updateGlobal['reason_id'] = $request->reason_id;
             }
             
             $detail->diff_qty = (float)$detail->real_qty_input - (float)$detail->system_qty_snapshot;
@@ -650,6 +676,14 @@ class StoController extends Controller
             }
             
             $detail->save();
+
+            // Synchronize reason & remark across same product group
+            if (!empty($updateGlobal) && $detailId) {
+                StoDetail::where('event_id', $stoEvent->id)
+                    ->where('product_detail_id', $productId)
+                    ->where('id', '!=', $detail->id)
+                    ->update($updateGlobal);
+            }
 
             return response()->json([
                 'success' => true, 

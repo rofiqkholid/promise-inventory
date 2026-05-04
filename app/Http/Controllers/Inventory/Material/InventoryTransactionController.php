@@ -244,6 +244,20 @@ class InventoryTransactionController extends Controller
             }
         }
 
+        // Check STO Lock
+        $isLocked = \DB::table('inv_t_sto_detail')
+            ->join('inv_t_sto_event', 'inv_t_sto_event.id', '=', 'inv_t_sto_detail.event_id')
+            ->where('inv_t_sto_detail.product_detail_id', $request->product_detail_id)
+            ->whereIn('inv_t_sto_event.status', ['OPEN', 'WAITING CHECK', 'WAITING APPROVAL'])
+            ->exists();
+
+        if ($isLocked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction Blocked: This product is currently locked because it is being processed in an active STO (Stock Take). Please wait until the STO is CLOSED.'
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             // Get Category Effect
@@ -348,6 +362,26 @@ class InventoryTransactionController extends Controller
             'remark' => 'nullable|string',
         ]);
 
+        // Check STO Lock
+        $isLockedNew = \DB::table('inv_t_sto_detail')
+            ->join('inv_t_sto_event', 'inv_t_sto_event.id', '=', 'inv_t_sto_detail.event_id')
+            ->where('inv_t_sto_detail.product_detail_id', $request->product_detail_id)
+            ->whereIn('inv_t_sto_event.status', ['OPEN', 'WAITING CHECK', 'WAITING APPROVAL'])
+            ->exists();
+
+        $isLockedOld = \DB::table('inv_t_sto_detail')
+            ->join('inv_t_sto_event', 'inv_t_sto_event.id', '=', 'inv_t_sto_detail.event_id')
+            ->where('inv_t_sto_detail.product_detail_id', $transaction->product_detail_id)
+            ->whereIn('inv_t_sto_event.status', ['OPEN', 'WAITING CHECK', 'WAITING APPROVAL'])
+            ->exists();
+
+        if ($isLockedNew || $isLockedOld) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction Blocked: This product is currently locked because it is being processed in an active STO (Stock Take). Please wait until the STO is CLOSED.'
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             $oldProduct = InventoryProduct::findOrFail($transaction->product_detail_id);
@@ -401,6 +435,20 @@ class InventoryTransactionController extends Controller
 
         $decodedId = InventoryTransaction::decodeHash($id);
         $transaction = InventoryTransaction::findOrFail($decodedId);
+
+        // Check STO Lock
+        $isLocked = \DB::table('inv_t_sto_detail')
+            ->join('inv_t_sto_event', 'inv_t_sto_event.id', '=', 'inv_t_sto_detail.event_id')
+            ->where('inv_t_sto_detail.product_detail_id', $transaction->product_detail_id)
+            ->whereIn('inv_t_sto_event.status', ['OPEN', 'WAITING CHECK', 'WAITING APPROVAL'])
+            ->exists();
+
+        if ($isLocked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction Blocked: This product is currently locked because it is being processed in an active STO (Stock Take). Please wait until the STO is CLOSED.'
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {

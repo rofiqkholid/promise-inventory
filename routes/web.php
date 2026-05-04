@@ -15,6 +15,7 @@ use App\Http\Controllers\Inventory\Material\PurchaseRequisitionController;
 use App\Http\Controllers\Inventory\Material\ModelConfigController;
 use App\Http\Controllers\Inventory\Material\DashboardController;
 use App\Http\Controllers\Inventory\Material\StoController;
+use App\Http\Controllers\Inventory\Material\StoDashboardController;
 use App\Http\Controllers\Inventory\Material\VaveAnalysisController;
 use App\Http\Controllers\Inventory\Material\VaveDashboardController;
 use App\Http\Controllers\Inventory\Material\RevisionController;
@@ -271,9 +272,16 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::get('/inventory/stock-monitoring/{inventoryProduct}/print-balance', [StockMonitoringController::class, 'printBalanceLabel'])->name('inventory.stockMonitoring.printBalance');
 
     // Stock Opname (STO) (Admin, Approver, Checker, Operator)
-    Route::middleware(['inventory.role:admin,approver,checker,operator,pic'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
+    Route::middleware(['inventory.role:admin,approver,checker,operator,pic,viewer'])->prefix('inventory/sto')->name('inventory.sto.')->group(function () {
         Route::get('/', [StoController::class, 'index'])->name('index');
         Route::get('/get-preview-code', [StoController::class, 'previewCode'])->name('previewCode');
+        
+        // STO Dashboard (aggregate analytics) - Must be above /{id} to avoid collision
+        Route::get('/dashboard', [StoDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/event-trend', [StoDashboardController::class, 'eventTrendData'])->name('dashboard.eventTrend');
+        Route::get('/dashboard/correction-log', [StoDashboardController::class, 'correctionLogByModel'])->name('dashboard.correctionLog');
+        Route::get('/dashboard/correction-log/{modelName}', [StoDashboardController::class, 'correctionLogDetail'])->name('dashboard.correctionLogDetail');
+
         Route::post('/', [StoController::class, 'store'])->name('store');
         Route::get('/{id}', [StoController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [StoController::class, 'edit'])->name('edit');
@@ -289,6 +297,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::post('/{id}/finalize', [StoController::class, 'finalize'])->name('finalize');
         Route::post('/{id}/reopen', [StoController::class, 'reopen'])->name('reopen');
         Route::get('/{id}/export-excel', [StoController::class, 'exportExcel'])->name('exportExcel');
+        Route::get('/{id}/pareto-by-model', [StoDashboardController::class, 'paretoByModel'])->name('dashboard.paretoByModel');
     });
 
     // VAVE Analysis (Admin, Approver, Checker, Viewer)

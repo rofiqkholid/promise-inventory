@@ -106,9 +106,24 @@
         </div>
     </div>
 
-    <!-- Statistics Dashboard -->
-    <div class="mb-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden relative">
-        <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
+    <!-- Main Content Flex Container for Mobile Reordering -->
+    <div class="flex flex-col-reverse lg:flex-col gap-6 mb-6">
+        <!-- Top Section: Stats & Alerts -->
+        <div class="flex flex-col gap-6">
+            <!-- Statistics Dashboard -->
+            <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden relative">
+                <!-- Toggle Header -->
+                <button type="button" class="w-full px-4 py-2.5 flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors border-b border-slate-200 dark:border-gray-700" onclick="$('#stats-content').slideToggle(); $('#stats-chevron').toggleClass('rotate-180');">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-primary-600"></i>
+                        <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Event Statistics</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-up text-gray-400 transition-transform duration-300" id="stats-chevron"></i>
+                </button>
+
+                <!-- Collapsible Content -->
+                <div id="stats-content" style="display: block;">
+                    <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
             <div class="p-4 flex flex-col items-center text-center group">
                 <div class="w-10 h-10 mb-2 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
                     <i class="fa-solid fa-boxes-stacked"></i>
@@ -201,11 +216,12 @@
                 <span id="stat-total-matched" class="text-lg font-bold text-slate-900 dark:text-white leading-none">{{ $stats['total_matched'] }}</span>
                 <span class="text-[9px] font-medium text-slate-400 mt-1 lowercase">items found match</span>
             </div>
+            </div>
         </div>
     </div>
 
     @if($stoEvent->status === 'OPEN' && $stoEvent->rejection_note)
-    <div class="bg-rose-50 dark:bg-rose-900/20 border-l-4 border-rose-500 p-4 mb-6 rounded-xs shadow-sm animate-pulse-once">
+    <div class="bg-rose-50 dark:bg-rose-900/20 border-l-4 border-rose-500 p-4 rounded-xs shadow-sm animate-pulse-once">
         <div class="flex items-start gap-4">
             <div class="p-2 bg-rose-100 dark:bg-rose-900/40 rounded-xs text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
                 <i class="fa-solid fa-circle-exclamation text-xl"></i>
@@ -227,7 +243,7 @@
 
     @if($stoEvent->status === 'OPEN')
     <!-- ATTENTION BANNER -->
-    <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 mb-6 rounded-xs shadow-sm">
+    <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 rounded-xs shadow-sm">
         <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-4">
                 <div class="flex-shrink-0 w-8 h-8 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -245,9 +261,12 @@
             </button>
         </div>
     </div>
+    @endif
+        </div> <!-- End Top Section -->
 
+    @if($stoEvent->status === 'OPEN')
     <!-- SCANNER SECTION -->
-    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs p-5 mb-6">
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs p-5">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-xs flex items-center gap-2">
                 <i class="fa-solid fa-barcode text-primary-600"></i> Count Entry
@@ -266,9 +285,9 @@
                     @endforeach
                 </select>
             </div>
-            <button id="btn-scan" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 h-9 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-700 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.98] shadow-sm" title="Open Scanner Camera">
-                <i class="fa-solid fa-camera text-sm"></i>
-                <span class="sm:hidden">Scan QR Code</span>
+            <button id="btn-scan" class="w-full sm:w-auto md:flex-none inline-flex items-center justify-center gap-2 px-6 h-[42px] bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-xs text-xs font-bold transition-all active:scale-[0.98] shadow-sm" title="Open Scanner Camera">
+                <i class="fa-solid fa-qrcode text-base"></i>
+                <span>Scan QR Code</span>
             </button>
         </div>
 
@@ -317,6 +336,7 @@
         </div>
     </div>
     @endif
+    </div> <!-- End Main Content Flex Container -->
 
     @include('components.scanner-modal')
 
@@ -348,29 +368,28 @@
         <div class="overflow-x-auto w-full custom-scrollbar">
             <x-table id="stoDetailsTable" class="w-full">
                 <thead>
-                    <tr>
-                        <th rowspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Material Information</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Auditor</th>
-                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
-                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Real Count</th>
-                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Reason</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Remark</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Timestamp</th>
+                        <th rowspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">No</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Model</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Material Information</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Auditor</th>
+                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
+                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Real Count</th>
+                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Location</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Reason</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Remark</th>
+                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Timestamp</th>
                         @if($stoEvent->status === 'OPEN')
-                        <th rowspan="2" class="px-6 py-4 w-[60px] text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
+                        <th rowspan="2" class="px-6 py-4 w-[60px] text-center font-bold text-gray-500 dark:text-gray-400 border-b border-slate-200 dark:border-gray-700">Action</th>
                         @endif
                     </tr>
                     <tr>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Qty</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Amount</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Qty</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Amount</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Qty</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Amount</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Qty</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Amount</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Qty</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Amount</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Qty</th>
+                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Amount</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -640,10 +659,10 @@
                     type: 'GET'
                 },
                 columns: [
-                    { data: 'row_number', className: 'text-center font-bold text-gray-500', orderable: false, searchable: false },
+                    { data: 'row_number', className: 'text-center font-medium text-gray-500', orderable: false, searchable: false },
                     {
                         data: 'model_name',
-                        className: 'text-left font-bold text-slate-700 dark:text-gray-300 uppercase text-[10px] tracking-tight',
+                        className: 'text-left font-medium text-slate-700 dark:text-gray-300 text-[10px] tracking-tight',
                         render: d => d || '-'
                     },
                     {
@@ -652,15 +671,15 @@
                         render: function(data) {
                             return `
                                 <div class="flex flex-col">
-                                    <span class="text-sm font-black text-gray-800 dark:text-gray-200">${data.part_no} - ${data.revision}</span>
-                                    <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight uppercase">${data.part_name}</span>
+                                    <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">${data.part_no} - ${data.revision}</span>
+                                    <span class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight">${data.part_name}</span>
                                 </div>`;
                         }
                     },
-                    { data: 'auditor', className: 'text-xs font-semibold text-primary-600 dark:text-primary-400' },
+                    { data: 'auditor', className: 'text-xs font-medium text-primary-600 dark:text-primary-400' },
                     {
                         data: null,
-                        className: 'text-center font-mono text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
+                        className: 'text-center text-sm group-hover:bg-gray-50 dark:group-hover:bg-gray-800 bg-slate-50/20',
                         render: function(data) {
                             return InventoryHelper.formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil);
                         }
@@ -679,20 +698,21 @@
                                     <div class="flex flex-col items-center justify-center gap-1">
                                         <div class="flex items-center gap-1">
                                             <input type="number" step="any"
-                                                class="qty-input text-center font-bold text-sm px-2 py-1 border border-primary-200 dark:border-primary-800 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-300"
+                                                class="qty-input text-center font-medium text-sm px-2 py-1 border border-primary-200 dark:border-primary-800 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-primary-700 dark:text-primary-300"
                                                 style="width: 80px; min-width: 80px;"
                                                 data-detail-id="${data.hash_id}"
                                                 data-product-id="${data.product_hash_id}"
+                                                data-original-value="${data.real_qty_input}"
                                                 value="${data.real_qty_input}"
                                                 placeholder="Qty" />
-                                            <span class="text-[9px] font-bold text-gray-400 uppercase">${data.unit_code.toLowerCase().includes('coil') ? 'KG' : (data.unit_display || data.unit_code).toUpperCase()}</span>
+                                            <span class="text-[9px] text-gray-400 uppercase">${data.unit_code.toLowerCase().includes('coil') ? 'KG' : (data.unit_display || data.unit_code).toUpperCase()}</span>
                                         </div>
-                                        <div class="text-[9px] font-bold text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
+                                        <div class="text-[9px] font-medium text-gray-400 tracking-tighter uppercase pcs-preview" data-pcs-per-unit="${data.pcs_per_unit}" data-gross-coil="${data.gross_coil}" data-unit="${data.unit_code}">
                                             ${Math.abs(InventoryHelper.calculatePcs(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.gross_coil)).toLocaleString(undefined, {maximumFractionDigits:0})} PCS
                                         </div>
                                     </div>`;
                             }
-                            return `<div class="text-primary-600 dark:text-primary-400 font-bold">${InventoryHelper.formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)}</div>`;
+                            return `<div class="text-primary-600 dark:text-primary-400 font-medium">${InventoryHelper.formatQtyHtml(data.real_qty_input, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)}</div>`;
                         }
                     },
                     {
@@ -704,7 +724,7 @@
                         data: null,
                         className: 'text-center font-bold bg-slate-50/20',
                         render: function(data) {
-                            if (Math.abs(data.diff_qty) < 0.0001) return `<span class="text-sm font-bold text-emerald-600">0</span>`;
+                            if (Math.abs(data.diff_qty) < 0.0001) return `<span class="text-sm font-medium text-emerald-600">0</span>`;
                             const prefix = data.diff_qty > 0 ? '+' : '-';
                             return `<div class="text-red-600 font-medium">${InventoryHelper.formatQtyHtml(Math.abs(data.diff_qty), data.pcs_per_unit, data.unit_code, data.weight_kg, prefix, data.gross_coil)}</div>`;
                         }
@@ -762,12 +782,13 @@
                         className: 'text-xs text-gray-500 italic',
                         render: function(data) {
                             if (data.can_edit_inline) {
-                                return `<input type="text"
-                                    class="remark-input text-xs px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                                    style="width: 180px; min-width: 180px;"
+                                return `<textarea class="remark-input text-xs px-2 py-1 border border-slate-200 dark:border-gray-700 rounded-xs focus:ring-0 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 custom-scrollbar"
+                                    style="width: 180px; min-width: 180px; resize: none;"
+                                    rows="2"
+                                    maxlength="100"
                                     data-detail-id="${data.hash_id}"
-                                    value="${data.remark || ''}"
-                                    placeholder="Add note..." />`;
+                                    data-original-value="${data.remark || ''}"
+                                    placeholder="Add note...">${data.remark || ''}</textarea>`;
                             }
                             return data.remark || '-';
                         }
@@ -794,7 +815,8 @@
                 order: [[2, 'asc']], // Order by Part No primarily for grouping
                 autoWidth: true,
                 columnDefs: [
-                    { targets: '_all', className: 'whitespace-nowrap px-4 py-3' }
+                    { targets: '_all', className: 'whitespace-nowrap px-4 py-3 border-r border-slate-200 dark:border-slate-700' },
+                    { targets: -1, className: 'whitespace-nowrap px-4 py-3' } // Remove right border from last column
                 ],
                 drawCallback: function(settings) {
                     const api = this.api();
@@ -804,7 +826,7 @@
                     let startIdx = settings._iDisplayStart;
 
                     // 1. First pass: Count items per product group on the current page
-                    api.column(1, { page: 'current' }).data().each(function(data, i) {
+                    api.rows({ page: 'current' }).data().each(function(data, i) {
                         const productHash = data.product_hash_id;
                         productCounts[productHash] = (productCounts[productHash] || 0) + 1;
                     });
@@ -812,7 +834,7 @@
                     let groupCounter = 1;
 
                     // 2. Second pass: Apply rowspan and hide redundant cells
-                    api.column(1, { page: 'current' }).data().each(function(data, i) {
+                    api.rows({ page: 'current' }).data().each(function(data, i) {
                         const productHash = data.product_hash_id;
                         const $row = $(rows).eq(i);
 
@@ -823,8 +845,8 @@
                             const diffClass = diffQty > 0 ? 'text-rose-600' : (diffQty < 0 ? 'text-rose-600' : 'text-emerald-600');
                             const diffIcon = diffQty > 0 ? '+' : '';
 
-                            // Apply rowspans (No, Model, Material Info, System Status Qty/Amount, Var Qty/Amount)
-                            const mergeIndices = [0, 1, 2, 4, 5, 8, 9];
+                            // Apply rowspans (No, Model, Material Info, System Status Qty/Amount, Var Qty/Amount, Reason, Remark)
+                            const mergeIndices = [0, 1, 2, 4, 5, 8, 9, 11, 12];
                             mergeIndices.forEach(idx => {
                                 const $td = $row.find(`td:eq(${idx})`);
                                 $td.attr('rowspan', rowCount).css({
@@ -846,10 +868,13 @@
                             lastProduct = productHash;
                         } else {
                             // SUBSEQUENT ROWS - hide merged cells
-                            const mergeIndices = [0, 1, 2, 4, 5, 8, 9];
+                            const mergeIndices = [0, 1, 2, 4, 5, 8, 9, 11, 12];
                             mergeIndices.forEach(idx => {
                                 $row.find(`td:eq(${idx})`).css('display', 'none');
                             });
+                            
+                            // Add subtle separator for unmerged cells (like Location, Real Qty) within the same group
+                            $row.find('td').not('[style*="display: none"]').addClass('border-t border-dashed border-slate-200 dark:border-slate-700');
                         }
 
                         $row.addClass('hover:bg-primary-50/5 transition-colors');
@@ -865,7 +890,7 @@
                 const newQty = $input.val();
                 const originalQty = $input.data('original-value');
 
-                if (newQty === originalQty || !newQty || newQty === '') return;
+                if (parseFloat(newQty) === parseFloat(originalQty) || !newQty || newQty === '') return;
 
                 const $row = $input.closest('tr');
                 const existingRemark = $row.find('.remark-input').val();
@@ -1315,9 +1340,14 @@
         @if(session('success'))
             if (window.toast) window.toast('success', 'Success', '{{ session('success') }}');
         @endif
+
+        // Auto-collapse statistics on mobile
+        if (window.innerWidth < 1024) {
+            $('#stats-content').hide();
+            $('#stats-chevron').addClass('rotate-180');
+        }
     });
 </script>
-
 @endpush
 @endsection
 

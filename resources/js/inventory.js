@@ -27,6 +27,7 @@ window.InventoryHelper = {
      * Generate HTML display for quantities with secondary UoM (Pcs).
      */
     formatQtyHtml: function(qty, pcsPerUnit, unitCode, weightKg, prefix = '', grossCoil = 0) {
+        qty = parseFloat(qty || 0);
         let pcs = this.calculatePcs(qty, pcsPerUnit, unitCode, grossCoil);
 
         let pcsDisplay = Math.abs(pcs).toLocaleString(undefined, { maximumFractionDigits: 0 });
@@ -39,13 +40,13 @@ window.InventoryHelper = {
 
         // If it's a 1:1 ratio and not a coil, just show the number
         if (pcsPerUnit == 1 && !unitCode.toLowerCase().includes('coil')) {
-            return `<span class='font-bold'>${prefix}${pcsDisplay}</span>`;
+            return `<span class='font-medium'>${prefix}${pcsDisplay}</span>`;
         }
 
         return `
             <div class='flex flex-col items-center justify-center'>
-                <span class='font-bold text-gray-900 dark:text-white'>${prefix}${unitDisplay} ${unitLabel}</span>
-                <span class='text-[10px] text-gray-400 leading-none mt-1 uppercase font-bold tracking-tighter'>${pcsDisplay} PCS</span>
+                <span class='font-medium text-gray-800 dark:text-gray-200'>${prefix}${unitDisplay} <span class="text-[10px] text-gray-500">${unitLabel}</span></span>
+                <span class='text-[10px] text-gray-400 leading-none mt-1 uppercase font-medium tracking-tighter'>${pcsDisplay} PCS</span>
             </div>`;
     }
 };

@@ -59,7 +59,17 @@ class InventoryMenuSeeder extends Seeder
                     ['title' => 'Transaction History', 'route' => 'transactionHistory', 'icon' => 'fa-solid fa-clock-rotate-left', 'order' => 3, 'roles' => ['admin', 'approver', 'checker']],
                     ['title' => 'Material Monitoring', 'route' => 'inventory.stockMonitoring', 'icon' => 'fa-solid fa-cubes', 'order' => 4, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']],
                     ['title' => 'Purchase Requisition', 'route' => 'inventory.purchaseRequisition.index', 'icon' => 'fa-solid fa-receipt', 'order' => 5, 'roles' => ['admin', 'approver', 'checker']],
-                    ['title' => 'Stock Opname', 'route' => 'inventory.sto.index', 'icon' => 'fa-solid fa-clipboard-check', 'order' => 6, 'roles' => ['admin', 'approver', 'checker', 'operator']],
+                    [
+                        'title' => 'Stock Opname',
+                        'route' => '#',
+                        'icon'  => 'fa-solid fa-clipboard-check',
+                        'order' => 6,
+                        'roles' => ['admin', 'approver', 'checker', 'operator', 'pic', 'viewer'],
+                        'children' => [
+                            ['title' => 'STO Dashboard', 'route' => 'inventory.sto.dashboard', 'icon' => 'fa-solid fa-chart-pie', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'viewer', 'pic', 'operator']],
+                            ['title' => 'STO Events', 'route' => 'inventory.sto.index', 'icon' => 'fa-solid fa-list-check', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'operator', 'pic']],
+                        ]
+                    ],
                     [
                         'title' => 'VA/VE',
                         'route' => '#',

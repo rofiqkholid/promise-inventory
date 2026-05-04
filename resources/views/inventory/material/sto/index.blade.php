@@ -147,6 +147,18 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        @if(session('error'))
+            if (typeof window.showToast === 'function') {
+                window.showToast("{!! addslashes(session('error')) !!}", 'error');
+            }
+        @endif
+
+        @if(session('success'))
+            if (typeof window.showToast === 'function') {
+                window.showToast("{!! addslashes(session('success')) !!}", 'success');
+            }
+        @endif
+
         if (window.defaultDataTable) {
             window.stoTable = window.defaultDataTable('#stoEventsTable', {
                 serverSide: true,

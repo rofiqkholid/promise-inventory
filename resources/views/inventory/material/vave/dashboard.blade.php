@@ -102,6 +102,7 @@
                         <select id="filterMode" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                             <option value="monthly">Monthly View</option>
                             <option value="yearly">Yearly Trend</option>
+                            <option value="comparison">Yearly Comparison</option>
                         </select>
                     </div>
                     <div class="space-y-1.5" id="divFilterPeriod">
@@ -292,6 +293,18 @@ $(function() {
         }
     };
 
+    const commonDataLabels = {
+        backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+        borderRadius: 1,
+        color: isDark ? '#f8fafc' : '#1e293b',
+        font: { weight: 'bold', size: 10 },
+        padding: { top: 2, bottom: 0, left: 4, right: 4 },
+        anchor: 'center',
+        align: 'center',
+        clip: false,
+        display: (context) => context.dataset.data[context.dataIndex] !== 0 ? 'auto' : false
+    };
+
     const commonLegend = { 
         position: 'bottom', 
         labels: { 
@@ -348,7 +361,7 @@ $(function() {
 
         $('#filterMode').on('change', function() {
             const mode = $(this).val();
-            if (mode === 'yearly') {
+            if (mode === 'yearly' || mode === 'comparison') {
                 $('#divFilterPeriod').addClass('hidden');
                 $('#divFilterYear').removeClass('hidden');
             } else {
@@ -374,7 +387,7 @@ $(function() {
         const mode = $('#filterMode').val();
         let year, month;
 
-        if (mode === 'yearly') {
+        if (mode === 'yearly' || mode === 'comparison') {
             year = $('#filterYear').val();
             month = null;
         } else {
@@ -385,6 +398,7 @@ $(function() {
         }
 
         const params = {
+            mode: mode,
             year: year,
             month: month,
             customer_id: $('#filterCustomer').val(),
@@ -399,23 +413,24 @@ $(function() {
         };
 
         // Update UI Titles
-        if (mode === 'yearly') {
-            $('#labelPeriod').text('Target Year');
-            $('.chart-card h3').each(function() {
-                const h3 = $(this);
-                if (h3.text().includes('by Model')) {
-                    h3.html(h3.html().replace('by Model', 'Trend (12 Mo)'));
-                }
-            });
-        } else {
-            $('#labelPeriod').text('Period');
-            $('.chart-card h3').each(function() {
-                const h3 = $(this);
-                if (h3.text().includes('Trend (12 Mo)')) {
-                    h3.html(h3.html().replace('Trend (12 Mo)', 'by Model'));
-                }
-            });
-        }
+        const titlesMap = {
+            'monthly': 'by Model',
+            'yearly': 'Trend (12 Mo)',
+            'comparison': 'Trend (5 Yr)'
+        };
+        const targetSuffix = titlesMap[mode] || 'by Model';
+
+        $('#labelPeriod').text(mode === 'monthly' ? 'Period' : (mode === 'yearly' ? 'Target Year' : 'End Year (Last 5Y)'));
+        
+        $('.chart-card h3').each(function() {
+            const h3 = $(this);
+            let html = h3.html();
+            const currentSuffix = ['by Model', 'Trend (12 Mo)', 'Trend (5 Yr)'].find(s => html.includes(s));
+            
+            if (currentSuffix) {
+                h3.html(html.replace(currentSuffix, targetSuffix));
+            }
+        });
 
         $.get('{{ route("inventory.vaveDashboard.chartData") }}', params, function(res) {
             updateKPIs(res.kpi);
@@ -441,7 +456,14 @@ $(function() {
                 }
             });
 
-            if (mode === 'yearly' && res.trend) {
+            if (mode === 'comparison' && res.comparison) {
+                const years = res.comparison.map(c => c.year);
+                const compIdr = res.comparison.map(c => c.gap_benefit_idr);
+                const compKg = res.comparison.map(c => c.gap_kg_total);
+                
+                renderTrendChart('benefitModelChart', 'Benefit (IDR)', years, compIdr, '#10b981', true);
+                renderTrendChart('weightModelChart', 'Saving Weight (Kg)', years, compKg, '#3b82f6', false);
+            } else if (mode === 'yearly' && res.trend) {
                 const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 const trendIdr = new Array(12).fill(0);
                 const trendKg = new Array(12).fill(0);
@@ -498,11 +520,10 @@ $(function() {
                     pointBorderColor: color,
                     pointBorderWidth: 2,
                     datalabels: { 
-                        display: true,
-                        align: 'top', 
-                        anchor: 'end', 
-                        offset: 4, 
-                        font: { size: 13, weight: '500' }, 
+                        ...commonDataLabels,
+                        anchor: 'end',
+                        align: 'top',
+                        offset: 4,
                         formatter: (v) => v === 0 ? '' : (isCurrency ? (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k') : v.toFixed(1))
                     }
                 }]
@@ -572,10 +593,10 @@ $(function() {
                         pointRadius: 4,
                         pointHoverRadius: 6,
                         datalabels: { 
-                            align: 'top', 
-                            anchor: 'end', 
-                            offset: 8, 
-                            font: { size: 13, weight: '500' }, 
+                            ...commonDataLabels,
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 8,
                             formatter: (v) => v.toFixed(0) + '%' 
                         }
                     },
@@ -586,11 +607,7 @@ $(function() {
                         yAxisID: 'y',
                         borderRadius: 2,
                         datalabels: { 
-                            display: true,
-                            align: 'top',
-                            anchor: 'end',
-                            offset: 2,
-                            font: { size: 13, weight: '500' },
+                            ...commonDataLabels,
                             formatter: (v) => v === 0 ? '' : (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k')
                         }
                     }
@@ -631,8 +648,7 @@ $(function() {
                 },
                 plugins: {
                     legend: commonLegend,
-                    tooltip: commonTooltip,
-                    datalabels: { color: chartColors.slate }
+                    tooltip: commonTooltip
                 }
             }
         });
@@ -655,11 +671,7 @@ $(function() {
                     },
                     borderRadius: 2,
                     datalabels: { 
-                        display: true,
-                        align: 'top', 
-                        anchor: 'end', 
-                        offset: 2, 
-                        font: { size: 13, weight: '500' }, 
+                        ...commonDataLabels,
                         formatter: (v) => v === 0 ? '' : (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k') 
                     }
                 }]
@@ -697,7 +709,10 @@ $(function() {
                     data: models.kg,
                     backgroundColor: '#3b82f6',
                     borderRadius: 2,
-                    datalabels: { align: 'end', anchor: 'end', offset: 2, font: { size: 13, weight: '500' }, formatter: (v) => v === 0 ? '' : v.toFixed(1) }
+                    datalabels: { 
+                        ...commonDataLabels,
+                        formatter: (v) => v === 0 ? '' : v.toFixed(1) 
+                    }
                 }]
             },
             options: {
@@ -738,10 +753,7 @@ $(function() {
                         backgroundColor: chartColors.amber, 
                         borderRadius: 2, 
                         datalabels: { 
-                            align: 'end',
-                            anchor: 'end',
-                            color: Chart.defaults.color, 
-                            font: { weight: '600', size: 12 },
+                            ...commonDataLabels,
                             formatter: (v) => v.toFixed(1) + '%'
                         } 
                     }

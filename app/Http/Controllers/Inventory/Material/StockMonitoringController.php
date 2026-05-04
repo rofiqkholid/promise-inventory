@@ -154,10 +154,11 @@ class StockMonitoringController extends Controller
             // Join latest out transaction for supplier name
             ->leftJoinSub($latestOutTxSubquery, 'latest_out', 'latest_out.product_detail_id', '=', 'inv_t_product_detail.id')
             // Latest STO Join
-            ->leftJoin(DB::raw("(SELECT sd.product_detail_id, sd.diff_qty as sto_gap 
+            ->leftJoin(DB::raw("(SELECT sd.product_detail_id, SUM(sd.diff_qty) as sto_gap 
                          FROM inv_t_sto_detail sd 
                          WHERE sd.event_id = (SELECT TOP 1 id FROM inv_t_sto_event ORDER BY created_at DESC)
                          AND sd.is_adjusted = 1
+                         GROUP BY sd.product_detail_id
                         ) as latest_sto"), 'latest_sto.product_detail_id', '=', 'inv_t_product_detail.id')
             // Selects
             ->select([
@@ -681,10 +682,11 @@ class StockMonitoringController extends Controller
             ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'inv_t_product_detail.revision_id')
             ->leftJoinSub($txSubquery, 'tx', 'tx.product_detail_id', '=', 'inv_t_product_detail.id')
             ->leftJoinSub($latestOutTxSubquery, 'latest_out', 'latest_out.product_detail_id', '=', 'inv_t_product_detail.id')
-            ->leftJoin(DB::raw("(SELECT sd.product_detail_id, sd.diff_qty as sto_gap 
+            ->leftJoin(DB::raw("(SELECT sd.product_detail_id, SUM(sd.diff_qty) as sto_gap 
                          FROM inv_t_sto_detail sd 
                          WHERE sd.event_id = (SELECT TOP 1 id FROM inv_t_sto_event ORDER BY created_at DESC)
                          AND sd.is_adjusted = 1
+                         GROUP BY sd.product_detail_id
                         ) as latest_sto"), 'latest_sto.product_detail_id', '=', 'inv_t_product_detail.id')
             ->select([
                 'inv_t_product_detail.*',

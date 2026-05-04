@@ -27,10 +27,51 @@ class VaveDashboardController extends Controller
      */
     public function chartData(Request $request)
     {
-        $year       = $request->input('year', date('Y'));
-        $month      = $request->input('month'); // New filter
+        $mode       = $request->input('mode', 'monthly');
+        $year       = (int) $request->input('year', date('Y'));
+        $month      = $request->input('month'); 
         $customerId = $request->input('customer_id');
         $modelId    = $request->input('model_id');
+
+        $comparisonTrend = [];
+        if ($mode === 'comparison') {
+            $startYear = $year - 4;
+            $endYear = $year;
+            
+            for ($y = $startYear; $y <= $endYear; $y++) {
+                $yearlyBenefit = DB::table('inv_t_inventory_transaction as t')
+                    ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
+                    ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
+                    ->join('products as p', 'p.id', '=', 'pd.product_id')
+                    ->leftJoin(DB::raw('(
+                        SELECT product_id, MAX(id) as latest_id 
+                        FROM inv_m_vave_base 
+                        WHERE (effective_from <= ' . $y . ' AND (effective_to IS NULL OR effective_to >= ' . $y . '))
+                           OR (effective_from IS NULL AND effective_to IS NULL)
+                        GROUP BY product_id
+                    ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
+                    ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
+                    ->where('tc.effect', 1)
+                    ->whereYear('t.transaction_date', $y)
+                    ->where('p.is_delete', 0)
+                    ->whereNotNull('vb.id');
+
+                if ($customerId) $yearlyBenefit->where('p.customer_id', $customerId);
+                if ($modelId)    $yearlyBenefit->where('pd.model_id', $modelId);
+
+                $res = $yearlyBenefit->select([
+                    DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
+                    DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
+                ])->first();
+
+                $comparisonTrend[] = [
+                    'year' => $y,
+                    'gap_benefit_idr' => (float) ($res->gap_benefit_idr ?? 0),
+                    'gap_kg_total' => (float) ($res->gap_kg_total ?? 0),
+                ];
+            }
+            // Use the target year for the rest of the data (KPIs, Models, Items)
+        }
 
         // Base Query — join EBD using year-range instead of is_active
         $baseQuery = DB::table('inv_t_inventory_transaction as t')
@@ -42,7 +83,7 @@ class VaveDashboardController extends Controller
             ->leftJoin(DB::raw('(
                 SELECT product_id, MAX(id) as latest_id 
                 FROM inv_m_vave_base 
-                WHERE (effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
+                WHERE (effective_from <= ' . $year . ' AND (effective_to IS NULL OR effective_to >= ' . $year . '))
                    OR (effective_from IS NULL AND effective_to IS NULL)
                 GROUP BY product_id
             ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
@@ -164,10 +205,11 @@ class VaveDashboardController extends Controller
             : 0;
 
         return response()->json([
-            'kpi'     => $kpiTotals,
-            'models'  => $chartModels,
-            'items'   => $itemData,
-            'trend'   => $trendData
+            'kpi'        => $kpiTotals,
+            'models'     => $chartModels,
+            'items'      => $itemData,
+            'trend'      => $trendData,
+            'comparison' => $comparisonTrend
         ]);
     }
 
