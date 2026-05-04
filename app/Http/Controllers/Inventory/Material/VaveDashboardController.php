@@ -110,7 +110,7 @@ class VaveDashboardController extends Controller
         // DATA FOR MODELS (KPIs, Table, & Charts)
         $periodQuery = clone $baseQuery;
         if ($month) {
-            $periodQuery->whereMonth('t.transaction_date', $month);
+            $periodQuery->whereMonth('t.transaction_date', '<=', $month);
         }
 
         $rawData = $periodQuery->select([
@@ -240,26 +240,19 @@ class VaveDashboardController extends Controller
             ->where('p.is_delete', 0)
             ->whereNotNull('vb.id');
 
-        if ($month)      $query->whereMonth('t.transaction_date', $month);
+        if ($month)      $query->whereMonth('t.transaction_date', '<=', $month);
         if ($customerId) $query->where('p.customer_id', $customerId);
         if ($modelId)    $query->where('pd.model_id', $modelId);
 
+        // Define label column and grouping level based on model filter
+        $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
+
         $data = $query->select([
-                'p.part_no',
-                'p.part_name',
-                'm.name as model_name',
-                'c.code as customer_code',
-                DB::raw('ISNULL(vb.weight_kg, 0) as plan_kg'),
-                DB::raw('ISNULL(pd.weight_kg, 0) as actual_kg'),
-                DB::raw('ISNULL(vb.material_price, 0) as idr_per_kg'),
-                DB::raw('SUM(t.qty) as qty_usage'),
+                DB::raw("$labelColumn as label_name"),
                 DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
                 DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
             ])
-            ->groupBy(
-                'p.part_no', 'p.part_name', 'm.name', 'c.code',
-                'vb.weight_kg', 'pd.weight_kg', 'vb.material_price'
-            )
+            ->groupBy(DB::raw($labelColumn))
             ->whereRaw('(ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0')
             ->orderBy('gap_benefit_idr', 'desc')
             ->limit($limit)
@@ -270,14 +263,11 @@ class VaveDashboardController extends Controller
         $result = $data->map(function ($row) use (&$cumulative, $totalAbs) {
             $val = (float) $row->gap_benefit_idr;
             $cumulative += abs($val);
-            $cumPct = $totalAbs > 0 ? round(($cumulative / $totalAbs) * 100, 1) : 0;
             return [
-                'label'           => $row->part_no . ' (' . $row->model_name . ')',
-                'part_no'         => $row->part_no,
-                'model_name'      => $row->model_name,
+                'label'           => $row->label_name,
                 'gap_kg_total'    => (float) $row->gap_kg_total,
                 'gap_benefit_idr' => $val,
-                'cumulative_pct'  => $cumPct,
+                'cumulative_pct'  => $totalAbs > 0 ? round(($cumulative / $totalAbs) * 100, 1) : 0,
             ];
         });
 

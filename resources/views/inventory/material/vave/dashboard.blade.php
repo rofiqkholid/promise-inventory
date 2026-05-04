@@ -133,39 +133,28 @@
 
     {{-- Dashboard Content Area --}}
     <div class="flex flex-col gap-3 flex-1">
-        {{-- Charts Row 1 --}}
+        {{-- Charts Row --}}
         <div class="flex flex-col lg:flex-row gap-3">
-            {{-- Benefit Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative flex-1 min-w-0 h-[320px]">
-                <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
-                        <i class="fa-solid fa-money-bill-trend-up mr-2 text-emerald-500"></i> Benefit by Model
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">IDR</span>
+            {{-- Combined Chart --}}
+            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[360px]">
+                <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-1">
+                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight" id="combinedChartTitle">
+                        <i class="fa-solid fa-money-bill-trend-up mr-2 text-emerald-500" id="combinedChartIcon"></i> <span id="combinedChartText">Benefit by Model</span>
+                        <span id="combinedChartUnit" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">IDR</span>
                     </h3>
+                    <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-xs p-0.5 shrink-0">
+                        <button type="button" class="combined-chart-switch active px-2.5 py-1 text-[10px] font-bold rounded-xs transition-all bg-white dark:bg-gray-600 shadow-sm text-emerald-600 dark:text-emerald-400" data-type="benefit" data-color="emerald">Benefit</button>
+                        <button type="button" class="combined-chart-switch px-2.5 py-1 text-[10px] font-bold rounded-xs transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" data-type="weight" data-color="blue">Weight</button>
+                        <button type="button" class="combined-chart-switch px-2.5 py-1 text-[10px] font-bold rounded-xs transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" data-type="efficiency" data-color="amber">Efficiency</button>
+                    </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
-                    <canvas id="benefitModelChart"></canvas>
+                    <canvas id="combinedModelChart"></canvas>
                 </div>
             </div>
 
-            {{-- Weight Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative flex-1 min-w-0 h-[320px]">
-                <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
-                        <i class="fa-solid fa-weight-hanging mr-2 text-blue-500"></i> Saving Weight by Model
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">KG</span>
-                    </h3>
-                </div>
-                <div class="relative w-full flex-1 min-h-0">
-                    <canvas id="weightModelChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        {{-- Row 2: Pareto (8/12) & Status (4/12) --}}
-        <div class="flex flex-col lg:flex-row gap-3">
             {{-- Pareto Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:flex-[8] min-w-0 h-[360px]">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[360px]">
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-chart-simple mr-2 text-primary-500"></i> Pareto Analysis
@@ -174,18 +163,6 @@
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
                     <canvas id="paretoChart"></canvas>
-                </div>
-            </div>
-
-            {{-- Status Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:flex-[4] min-w-0 h-[360px]">
-                <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
-                        <i class="fa-solid fa-percent mr-2 text-amber-500"></i> Saving Efficiency by Model
-                    </h3>
-                </div>
-                <div class="relative w-full flex-1 min-h-0">
-                    <canvas id="statusModelChart"></canvas>
                 </div>
             </div>
         </div>
@@ -230,8 +207,19 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
 $(function() {
-    let paretoChart, benefitChart, weightChart, statusChart;
+    let paretoChart, combinedModelChart;
     let mainTable = null;
+    let currentChartType = 'benefit';
+    let currentChartMode = 'monthly';
+    let currentChartData = {
+        meritModels: null,
+        trendIdr: null,
+        trendKg: null,
+        trendLabels: null,
+        compIdr: null,
+        compKg: null,
+        compLabels: null
+    };
 
     Chart.register(ChartDataLabels);
 
@@ -412,7 +400,9 @@ $(function() {
             btn.html('<i class="fa-solid fa-rotate-left mr-2"></i> Reset Filters').prop('disabled', false);
         };
 
-        // Update UI Titles
+        currentChartMode = mode;
+
+        // Update UI Titles (except combined chart which handles its own title)
         const titlesMap = {
             'monthly': 'by Model',
             'yearly': 'Trend (12 Mo)',
@@ -422,7 +412,7 @@ $(function() {
 
         $('#labelPeriod').text(mode === 'monthly' ? 'Period' : (mode === 'yearly' ? 'Target Year' : 'End Year (Last 5Y)'));
         
-        $('.chart-card h3').each(function() {
+        $('.chart-card h3').not('#combinedChartTitle').each(function() {
             const h3 = $(this);
             let html = h3.html();
             const currentSuffix = ['by Model', 'Trend (12 Mo)', 'Trend (5 Yr)'].find(s => html.includes(s));
@@ -456,15 +446,14 @@ $(function() {
                 }
             });
 
+            currentChartData.meritModels = meritModels;
+
             if (mode === 'comparison' && res.comparison) {
-                const years = res.comparison.map(c => c.year);
-                const compIdr = res.comparison.map(c => c.gap_benefit_idr);
-                const compKg = res.comparison.map(c => c.gap_kg_total);
-                
-                renderTrendChart('benefitModelChart', 'Benefit (IDR)', years, compIdr, '#10b981', true);
-                renderTrendChart('weightModelChart', 'Saving Weight (Kg)', years, compKg, '#3b82f6', false);
+                currentChartData.compLabels = res.comparison.map(c => c.year);
+                currentChartData.compIdr = res.comparison.map(c => c.gap_benefit_idr);
+                currentChartData.compKg = res.comparison.map(c => c.gap_kg_total);
             } else if (mode === 'yearly' && res.trend) {
-                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                currentChartData.trendLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
                 const trendIdr = new Array(12).fill(0);
                 const trendKg = new Array(12).fill(0);
                 
@@ -475,16 +464,15 @@ $(function() {
                     }
                 });
 
-                renderTrendChart('benefitModelChart', 'Benefit (IDR)', months, trendIdr, '#10b981', true);
-                renderTrendChart('weightModelChart', 'Saving Weight (Kg)', months, trendKg, '#3b82f6', false);
-            } else {
-                renderBenefitChart(meritModels);
-                renderWeightChart(meritModels);
+                currentChartData.trendIdr = trendIdr;
+                currentChartData.trendKg = trendKg;
             }
 
-            renderEfficiencyChart(meritModels);
+            renderCombinedChart();
             updateTable(res.items.filter(item => item.gap_benefit_idr > 0));
-            btn.html('<i class="fa-solid fa-rotate-left mr-2"></i> Reset Filters').prop('disabled', false);
+            restoreBtn();
+        }).fail(function() {
+            restoreBtn();
         });
 
         $.get('{{ route("inventory.vaveDashboard.paretoData") }}', params, function(res) {
@@ -493,61 +481,20 @@ $(function() {
         });
     }
 
-    function renderTrendChart(canvasId, label, labels, data, color, isCurrency) {
-        const chartVar = canvasId === 'benefitModelChart' ? 'benefitChart' : 'weightChart';
-        if (chartVar === 'benefitChart' && benefitChart) benefitChart.destroy();
-        if (chartVar === 'weightChart' && weightChart) weightChart.destroy();
+    $('.combined-chart-switch').on('click', function() {
+        const type = $(this).data('type');
+        const color = $(this).data('color');
         
-        const ctx = document.getElementById(canvasId).getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-        gradient.addColorStop(0, color + '40');
-        gradient.addColorStop(1, color + '00');
+        currentChartType = type;
 
-        const newChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: label,
-                    data: data,
-                    borderColor: color,
-                    backgroundColor: gradient,
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: color,
-                    pointBorderWidth: 2,
-                    datalabels: { 
-                        ...commonDataLabels,
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: (v) => v === 0 ? '' : (isCurrency ? (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k') : v.toFixed(1))
-                    }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: commonInteraction,
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        grace: '20%',
-                        grid: { borderDash: [5, 5], drawBorder: false },
-                        ticks: { color: Chart.defaults.color, font: { size: 12 }, callback: (val) => isCurrency ? val.toLocaleString() : val } 
-                    },
-                    x: { grid: { display: false }, ticks: { color: Chart.defaults.color, font: { size: 12 } } }
-                },
-                plugins: { legend: { display: false }, tooltip: commonTooltip }
-            }
-        });
+        $('.combined-chart-switch').removeClass('active bg-white dark:bg-gray-600 shadow-sm text-emerald-600 dark:text-emerald-400 text-blue-600 dark:text-blue-400 text-amber-600 dark:text-amber-400')
+            .addClass('text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200');
+        
+        $(this).removeClass('text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200')
+            .addClass(`active bg-white dark:bg-gray-600 shadow-sm text-${color}-600 dark:text-${color}-400`);
 
-        if (chartVar === 'benefitChart') benefitChart = newChart;
-        else weightChart = newChart;
-    }
+        renderCombinedChart();
+    });
 
     function updateKPIs(kpi) {
         // Update Benefit
@@ -654,68 +601,162 @@ $(function() {
         });
     }
 
-    function renderBenefitChart(models) {
-        if (benefitChart) benefitChart.destroy();
-        const ctx = document.getElementById('benefitModelChart').getContext('2d');
-        
-        benefitChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: models.labels,
-                datasets: [{
-                    label: 'Benefit (IDR)',
-                    data: models.idr,
-                    backgroundColor: (context) => {
-                        const val = context.dataset.data[context.dataIndex];
-                        return val >= 0 ? '#10b981' : '#ef4444';
-                    },
-                    borderRadius: 2,
-                    datalabels: { 
-                        ...commonDataLabels,
-                        formatter: (v) => v === 0 ? '' : (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k') 
-                    }
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: commonInteraction,
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        grace: '20%', // Provide space at top
-                        grid: { borderDash: [5, 5], drawBorder: false },
-                        ticks: { color: Chart.defaults.color, font: { size: 12 }, maxTicksLimit: 6, callback: (val) => val.toLocaleString() } 
-                    },
-                    x: { grid: { display: false }, ticks: { color: Chart.defaults.color, font: { size: 12 }, maxTicksLimit: 10 } }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: commonTooltip
-                }
-            }
-        });
-    }
+    function renderCombinedChart() {
+        if (!currentChartData.meritModels) return;
 
-    function renderWeightChart(models) {
-        if (weightChart) weightChart.destroy();
-        const ctx = document.getElementById('weightModelChart').getContext('2d');
-        weightChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: models.labels,
-                datasets: [{
-                    label: 'Saving Weight (Kg)',
-                    data: models.kg,
-                    backgroundColor: '#3b82f6',
-                    borderRadius: 2,
-                    datalabels: { 
-                        ...commonDataLabels,
-                        formatter: (v) => v === 0 ? '' : v.toFixed(1) 
-                    }
-                }]
-            },
-            options: {
+        let labels, data, color, isCurrency, chartType, labelName;
+
+        if (currentChartType === 'benefit') {
+            color = chartColors.emerald;
+            isCurrency = true;
+            chartType = currentChartMode === 'monthly' ? 'bar' : 'line';
+            labelName = 'Benefit (IDR)';
+
+            if (currentChartMode === 'monthly') {
+                labels = currentChartData.meritModels.labels;
+                data = currentChartData.meritModels.idr;
+            } else if (currentChartMode === 'yearly') {
+                labels = currentChartData.trendLabels;
+                data = currentChartData.trendIdr;
+            } else {
+                labels = currentChartData.compLabels;
+                data = currentChartData.compIdr;
+            }
+        } else if (currentChartType === 'weight') {
+            color = chartColors.blue;
+            isCurrency = false;
+            chartType = currentChartMode === 'monthly' ? 'bar' : 'line';
+            labelName = 'Saving Weight (Kg)';
+
+            if (currentChartMode === 'monthly') {
+                labels = currentChartData.meritModels.labels;
+                data = currentChartData.meritModels.kg;
+            } else if (currentChartMode === 'yearly') {
+                labels = currentChartData.trendLabels;
+                data = currentChartData.trendKg;
+            } else {
+                labels = currentChartData.compLabels;
+                data = currentChartData.compKg;
+            }
+        } else if (currentChartType === 'efficiency') {
+            color = chartColors.amber;
+            isCurrency = false;
+            chartType = 'bar'; // Efficiency always bar
+            labelName = 'Efficiency %';
+            
+            labels = currentChartData.meritModels.labels;
+            data = currentChartData.meritModels.idr.map((idr, i) => {
+                const planCost = currentChartData.meritModels.plan_cost[i] || 1;
+                return (idr / planCost) * 100;
+            });
+        }
+
+        // Update UI Titles and Icons
+        const iconMap = {
+            'benefit': 'fa-money-bill-trend-up',
+            'weight': 'fa-weight-hanging',
+            'efficiency': 'fa-percent'
+        };
+        const colorClassMap = {
+            'benefit': 'text-emerald-500',
+            'weight': 'text-blue-500',
+            'efficiency': 'text-amber-500'
+        };
+        const textMap = {
+            'benefit': 'Benefit',
+            'weight': 'Saving Weight',
+            'efficiency': 'Saving Efficiency'
+        };
+        const unitMap = {
+            'benefit': 'IDR',
+            'weight': 'KG',
+            'efficiency': '%'
+        };
+
+        const titlesMap = {
+            'monthly': 'by Model',
+            'yearly': 'Trend (12 Mo)',
+            'comparison': 'Trend (5 Yr)'
+        };
+        let targetSuffix = titlesMap[currentChartMode] || 'by Model';
+        if (currentChartType === 'efficiency') targetSuffix = 'by Model';
+
+        $('#combinedChartIcon').attr('class', `fa-solid ${iconMap[currentChartType]} mr-2 ${colorClassMap[currentChartType]}`);
+        $('#combinedChartText').text(`${textMap[currentChartType]} ${targetSuffix}`);
+        if (currentChartType === 'efficiency') {
+            $('#combinedChartUnit').hide();
+        } else {
+            $('#combinedChartUnit').text(unitMap[currentChartType]).show();
+        }
+
+        if (combinedModelChart) combinedModelChart.destroy();
+        const ctx = document.getElementById('combinedModelChart').getContext('2d');
+
+        if (chartType === 'line') {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, color + '40');
+            gradient.addColorStop(1, color + '00');
+
+            combinedModelChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: labelName,
+                        data: data,
+                        borderColor: color,
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: color,
+                        pointBorderWidth: 2,
+                        datalabels: { 
+                            ...commonDataLabels,
+                            anchor: 'end',
+                            align: 'top',
+                            offset: 4,
+                            formatter: (v) => v === 0 ? '' : (isCurrency ? (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k') : v.toFixed(1))
+                        }
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: commonInteraction,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grace: '20%',
+                            grid: { borderDash: [5, 5], drawBorder: false },
+                            ticks: { color: Chart.defaults.color, font: { size: 12 }, callback: (val) => isCurrency ? val.toLocaleString() : val } 
+                        },
+                        x: { grid: { display: false }, ticks: { color: Chart.defaults.color, font: { size: 12 } } }
+                    },
+                    plugins: { legend: { display: false }, tooltip: commonTooltip }
+                }
+            });
+        } else {
+            let bgColors = color;
+            if (currentChartType === 'benefit') {
+                bgColors = (context) => {
+                    const val = context.dataset.data[context.dataIndex];
+                    return val >= 0 ? chartColors.emerald : chartColors.rose;
+                };
+            }
+            
+            let formatFn;
+            if (currentChartType === 'benefit') {
+                formatFn = (v) => v === 0 ? '' : (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k');
+            } else if (currentChartType === 'weight') {
+                formatFn = (v) => v === 0 ? '' : v.toFixed(1);
+            } else {
+                formatFn = (v) => v.toFixed(1) + '%';
+            }
+
+            const options = {
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: commonInteraction,
@@ -723,74 +764,58 @@ $(function() {
                     y: { 
                         beginAtZero: true, 
                         grace: '20%',
-                        grid: { borderDash: [5, 5], drawBorder: false }, 
-                        ticks: { color: Chart.defaults.color, font: { size: 12 }, maxTicksLimit: 6 } 
+                        grid: { borderDash: [5, 5], drawBorder: false },
+                        ticks: { color: Chart.defaults.color, font: { size: 12 }, maxTicksLimit: 6, callback: (val) => isCurrency ? val.toLocaleString() : val } 
                     },
                     x: { grid: { display: false }, ticks: { color: Chart.defaults.color, font: { size: 12 }, maxTicksLimit: 10 } }
                 },
-                plugins: { legend: { display: false }, tooltip: commonTooltip }
-            }
-        });
-    }
-
-    function renderEfficiencyChart(models) {
-        if (statusChart) statusChart.destroy();
-        const ctx = document.getElementById('statusModelChart').getContext('2d');
-        
-        const efficiencyData = models.idr.map((idr, i) => {
-            const planCost = models.plan_cost[i] || 1;
-            return (idr / planCost) * 100;
-        });
-
-        statusChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: models.labels,
-                datasets: [
-                    { 
-                        label: 'Efficiency %', 
-                        data: efficiencyData, 
-                        backgroundColor: chartColors.amber, 
-                        borderRadius: 2, 
-                        datalabels: { 
-                            ...commonDataLabels,
-                            formatter: (v) => v.toFixed(1) + '%'
-                        } 
-                    }
-                ]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: commonInteraction,
-                scales: { 
-                    x: { 
-                        beginAtZero: true, 
-                        grace: '15%',
-                        grid: { borderDash: [5, 5], drawBorder: false }, 
-                        ticks: { 
-                            color: Chart.defaults.color, 
-                            font: { size: 11 },
-                            callback: (v) => v + '%'
-                        } 
-                    }, 
-                    y: { 
-                        grid: { display: false },
-                        ticks: { color: Chart.defaults.color, font: { size: 11 } } 
-                    } 
-                },
-                plugins: { 
-                    legend: { display: false }, 
-                    tooltip: {
+                plugins: {
+                    legend: { display: false },
+                    tooltip: currentChartType === 'efficiency' ? {
                         ...commonTooltip,
                         callbacks: {
                             label: (ctx) => `Efficiency: ${ctx.raw.toFixed(2)}%`
                         }
-                    }
+                    } : commonTooltip
                 }
+            };
+
+            if (currentChartType === 'efficiency') {
+                options.indexAxis = 'y';
+                options.scales.x = { 
+                    beginAtZero: true, 
+                    grace: '15%',
+                    grid: { borderDash: [5, 5], drawBorder: false }, 
+                    ticks: { 
+                        color: Chart.defaults.color, 
+                        font: { size: 11 },
+                        callback: (v) => v + '%'
+                    } 
+                };
+                options.scales.y = { 
+                    grid: { display: false },
+                    ticks: { color: Chart.defaults.color, font: { size: 11 } } 
+                };
             }
-        });
+
+            combinedModelChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: labelName,
+                        data: data,
+                        backgroundColor: bgColors,
+                        borderRadius: 2,
+                        datalabels: { 
+                            ...commonDataLabels,
+                            formatter: formatFn
+                        }
+                    }]
+                },
+                options: options
+            });
+        }
     }
 
     function updateTable(items) {
