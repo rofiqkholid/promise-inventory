@@ -193,7 +193,7 @@ class DashboardController extends Controller
             ->select(
                 DB::raw("MONTH(t.transaction_date) as month_num"), 
                 'tc.code as category', 
-                DB::raw("COUNT(DISTINCT p.id) as total")
+                DB::raw("COUNT(DISTINCT CONCAT(p.id, '-', t.transaction_date, '-', tc.code)) as total")
             )
             ->groupBy(DB::raw("MONTH(t.transaction_date)"), 'tc.code')
             ->get();
@@ -286,7 +286,7 @@ class DashboardController extends Controller
                 'p.id', 'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
                 'm.name as model_name', 'p.current_stock_qty', 'p.current_stock_pcs', 'p.min_stock',
                 'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'u.name as unit_name',
-                'ms.project_status', 'p.product_status', 'p.action_status'
+                'ms.project_status', 'p.product_status', 'p.action_status', 'p.action_remark'
             )
             ->get()
             ->map(function ($item) {
@@ -459,7 +459,7 @@ class DashboardController extends Controller
                     'p.current_stock_qty', 'p.min_stock',
                     'u.name as unit_name', 'p.pcs_per_unit',
                     'p.weight_kg', 'p.gross_coil',
-                    'p.product_status', 'ms.project_status', 'p.action_status'
+                    'p.product_status', 'ms.project_status', 'p.action_status', 'p.action_remark'
                 )
                 ->orderBy('prod.part_no')
                 ->get();
@@ -482,7 +482,7 @@ class DashboardController extends Controller
 
                 $processed[] = [
                     'id'            => \App\Models\InventoryModel\Material\InventoryProduct::encodeHash($row->id),
-                    'part_no'       => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'part_no'       => $row->part_no . ($row->revision ? '-' . $row->revision : ''),
                     'model'         => $row->model_name ?? '-',
                     'customer'      => $row->customer_code ?? '-',
                     'stock'         => number_format($currentPcs) . ' PCS',
@@ -490,6 +490,7 @@ class DashboardController extends Controller
                     'unit'          => $row->unit_name ?? '-',
                     'status'        => ucfirst($statusRaw),
                     'action_status' => $row->action_status,
+                    'action_remark' => $row->action_remark,
                 ];
             }
             $total = count($processed);
@@ -521,25 +522,35 @@ class DashboardController extends Controller
                 });
             }
 
-            $total = (clone $query)->distinct()->count(DB::raw("CONCAT(prod.part_no, ISNULL(rev.code,''), tc.code, CAST(t.transaction_date AS NVARCHAR))"));
+            $totalQuery = clone $query;
+            $total = $totalQuery->distinct()->count(DB::raw("CONCAT(prod.part_no, ISNULL(rev.code,''), tc.code, CAST(t.transaction_date AS NVARCHAR))"));
             
-            $items = $query->select(
+            $itemsQuery = clone $query;
+            $items = $itemsQuery->leftJoin('inv_m_coil_center as cc', 'cc.id', '=', 't.coil_center_id')
+                ->leftJoin('inv_m_supplier as dest', 'dest.id', '=', 't.destination_id')
+                ->select(
                     'prod.part_no', 'rev.code as revision',
                     'tc.code as category',
+                    DB::raw('SUM(t.qty) as qty'),
+                    'u.name as unit_name',
                     DB::raw('SUM(t.qty * ISNULL(p.pcs_per_unit, 1)) as qty_pcs'),
-                    't.transaction_date'
+                    't.transaction_date',
+                    DB::raw("LTRIM(RTRIM(ISNULL(cc.code, '') + ' ' + ISNULL(s.code, '') + ' ' + CASE WHEN dest.code IS NOT NULL THEN '(To: ' + dest.code + ')' ELSE '' END)) as origin_destination")
                 )
-                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date')
+                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date', 'cc.code', 's.code', 'dest.code', 'u.name')
                 ->orderBy('t.transaction_date', 'desc')
                 ->offset($offset)->limit($pageSize)
                 ->get();
 
             foreach ($items as $row) {
                 $result[] = [
-                    'part_no'   => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'part_no'   => $row->part_no . ($row->revision ? '-' . $row->revision : ''),
                     'category'  => $row->category,
-                    'qty_pcs'   => number_format($row->qty_pcs),
+                    'qty'       => (float)$row->qty,
+                    'unit'      => $row->unit_name,
+                    'qty_pcs'   => (float)$row->qty_pcs,
                     'date'      => $row->transaction_date,
+                    'origin_destination' => $row->origin_destination ?: '-',
                 ];
             }
 
@@ -570,19 +581,23 @@ class DashboardController extends Controller
             $items = $query->select(
                     'prod.part_no', 'rev.code as revision',
                     'tc.code as category',
+                    DB::raw('SUM(t.qty) as qty'),
+                    'u.name as unit_name',
                     DB::raw('SUM(t.qty * ISNULL(p.pcs_per_unit, 1)) as qty_pcs'),
                     't.transaction_date'
                 )
-                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date')
+                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date', 'u.name')
                 ->orderBy('t.transaction_date', 'desc')
                 ->offset($offset)->limit($pageSize)
                 ->get();
 
             foreach ($items as $row) {
                 $result[] = [
-                    'part_no'   => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'part_no'   => $row->part_no . ($row->revision ? '-' . $row->revision : ''),
                     'category'  => $row->category,
-                    'qty_pcs'   => number_format($row->qty_pcs),
+                    'qty'       => (float)$row->qty,
+                    'unit'      => $row->unit_name,
+                    'qty_pcs'   => (float)$row->qty_pcs,
                     'date'      => $row->transaction_date,
                 ];
             }
@@ -629,12 +644,13 @@ class DashboardController extends Controller
                 if ($statusFilter && $status !== $statusFilter) continue;
 
                 $processed[] = [
-                    'part_no'   => $row->part_no . ($row->revision ? ' - ' . $row->revision : ''),
+                    'part_no'   => $row->part_no . ($row->revision ? '-' . $row->revision : ''),
                     'model'     => $row->model_name ?? '-',
                     'customer'  => $row->customer_code ?? '-',
-                    'rank'      => ($row->rank_code ?? '-') . ' ' . number_format($limit),
-                    'usage'     => number_format($usagePcs),
-                    'gap'       => number_format($gap),
+                    'qty'       => (float)$row->usage_qty,
+                    'unit'      => $row->unit_name,
+                    'qty_pcs'   => (float)$usagePcs,
+                    'gap'       => (float)$gap,
                     'status'    => $status,
                 ];
             }

@@ -176,7 +176,7 @@ class InventoryTransactionController extends Controller
             return [
                 'id' => $item->hash_id,
                 'transaction_date' => $item->transaction_date ? $item->transaction_date->format('Y-m-d') : '-',
-                'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? ' - ' . $item->product->revision->code : ''),
+                'part_no' => ($item->product->product->part_no ?? '-') . ($item->product->revision ? '-' . $item->product->revision->code : ''),
                 'model_name' => $item->product->model->name ?? 'No Model',
                 'product_name' => $item->product->product->part_name ?? '-',
                 'category' => $item->transactionCategory->code ?? '-',

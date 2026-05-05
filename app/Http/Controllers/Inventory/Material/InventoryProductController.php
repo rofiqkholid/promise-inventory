@@ -90,12 +90,13 @@ class InventoryProductController extends Controller
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('prod.part_no', 'like', "%{$searchValue}%")
+                  ->orWhere('p.partno_epicor', 'like', "%{$searchValue}%")
                   ->orWhere('prod.part_name', 'like', "%{$searchValue}%")
                   ->orWhere('cust.code', 'like', "%{$searchValue}%")
                   ->orWhere('model.name', 'like', "%{$searchValue}%")
                   ->orWhere('ms.spec_name', 'like', "%{$searchValue}%")
                   ->orWhere('r.code', 'like', "%{$searchValue}%")
-                  ->orWhereRaw("(prod.part_no + ' - ' + ISNULL(r_master.code, '')) LIKE ?", ['%' . $searchValue . '%']);
+                  ->orWhereRaw("(prod.part_no + '-' + ISNULL(r_master.code, '')) LIKE ?", ['%' . $searchValue . '%']);
             });
         }
 
@@ -134,7 +135,8 @@ class InventoryProductController extends Controller
             ->map(fn($r) => [
                 'id' => InventoryProduct::encodeHash($r->id),
                 'product_id' => $r->product_id,
-                'part_no' => $r->part_no . ($r->revision_code ? ' - ' . $r->revision_code : ''),
+                'part_no' => $r->part_no . ($r->revision_code ? '-' . $r->revision_code : ''),
+                'partno_epicor' => $r->partno_epicor ?? '-',
                 'part_name' => $r->part_name,
                 'customer' => $r->customer_code,
                 'model' => $r->model_name,
@@ -199,6 +201,7 @@ class InventoryProductController extends Controller
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('prod.part_no', 'like', "%{$searchValue}%")
+                  ->orWhere('p.partno_epicor', 'like', "%{$searchValue}%")
                   ->orWhere('prod.part_name', 'like', "%{$searchValue}%")
                   ->orWhere('cust.code', 'like', "%{$searchValue}%")
                   ->orWhere('model.name', 'like', "%{$searchValue}%")
@@ -514,12 +517,21 @@ class InventoryProductController extends Controller
     {
         $product = InventoryProduct::findByHashOrFail($id);
         $status = $request->action_status;
+        $remark = $request->action_remark;
         
-        $product->update([
-            'action_status' => ($status === '' || $status === 'NULL') ? null : $status
-        ]);
+        $updateData = [];
+        if ($request->has('action_status')) {
+            $updateData['action_status'] = ($status === '' || $status === 'NULL') ? null : $status;
+        }
+        if ($request->has('action_remark')) {
+            $updateData['action_remark'] = $remark;
+        }
 
-        return response()->json(['success' => true, 'message' => 'Status updated.']);
+        if (!empty($updateData)) {
+            $product->update($updateData);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Action information updated.']);
     }
 
     /**
@@ -696,6 +708,7 @@ class InventoryProductController extends Controller
     {
         return [
             'product_id' => 'required|exists:products,id',
+            'partno_epicor' => 'nullable|string|max:20',
             'model_id' => 'required|exists:models,id',
             'material_spec_id' => 'nullable|exists:inv_m_material_spec,id',
             'unit_id' => 'nullable|exists:inv_m_unit,id',

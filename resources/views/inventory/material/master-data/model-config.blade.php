@@ -10,6 +10,14 @@
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Model Configuration</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Batch manage specific configuration / status per model (e.g., Project vs Regular).</p>
         </div>
+        <div class="mt-4 sm:mt-0 flex gap-2">
+            <a href="{{ route('inventory.projectVaveDashboard.index') }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xs transition-all shadow-sm active:scale-95">
+                <i class="fa-solid fa-chart-line mr-2"></i> Project VAVE
+            </a>
+            <a href="{{ route('inventory.regularVaveDashboard.index') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xs transition-all shadow-sm active:scale-95">
+                <i class="fa-solid fa-chart-line mr-2"></i> Regular VAVE
+            </a>
+        </div>
     </div>
 
     <!-- Data Table -->

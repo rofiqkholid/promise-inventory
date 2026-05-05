@@ -6,24 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class VaveDashboardController extends Controller
+class ProjectVaveDashboardController extends Controller
 {
     /**
-     * Render the VAVE Analysis Dashboard view.
+     * Render the Project Model VAVE Analysis Dashboard view.
      */
     public function index()
     {
-        return view('inventory.material.vave.dashboard');
+        return view('inventory.material.vave.project-dashboard');
     }
 
     /**
-     * Get monthly Gap Benefit chart data.
-     *
-     * Formula: Gap Benefit (IDR) = (Plan_Kg - Act_Kg) × IDR/Kg × Qty_Usage
-     *   Plan    = inv_m_vave_base.weight_kg  (EBD / Budget Yearly, is_active = 1)
-     *   Actual  = inv_t_product_detail.weight_kg (revision aktif per item)
-     *   IDR/Kg  = inv_m_vave_base.material_price (from EBD baseline)
-     *   Qty     = SUM of transaction IN qty (per month)
+     * Get monthly Gap Benefit chart data specifically for Project Models.
      */
     public function chartData(Request $request)
     {
@@ -43,6 +37,8 @@ class VaveDashboardController extends Controller
                     ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
                     ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
                     ->join('products as p', 'p.id', '=', 'pd.product_id')
+                    ->join('models as m', 'm.id', '=', 'pd.model_id')
+                    ->leftJoin('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Left join status table
                     ->leftJoin(DB::raw('(
                         SELECT product_id, MAX(id) as latest_id 
                         FROM inv_m_vave_base 
@@ -54,6 +50,10 @@ class VaveDashboardController extends Controller
                     ->where('tc.effect', 1)
                     ->whereYear('t.transaction_date', $y)
                     ->where('p.is_delete', 0)
+                    ->where(function($q) {
+                        $q->where('ms.project_status', 'Project')
+                          ->orWhereNull('ms.project_status');
+                    })
                     ->whereNotNull('vb.id');
 
                 if ($customerId) $yearlyBenefit->where('p.customer_id', $customerId);
@@ -70,15 +70,15 @@ class VaveDashboardController extends Controller
                     'gap_kg_total' => (float) ($res->gap_kg_total ?? 0),
                 ];
             }
-            // Use the target year for the rest of the data (KPIs, Models, Items)
         }
 
-        // Base Query — join EBD using year-range instead of is_active
+        // Base Query
         $baseQuery = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->join('models as m', 'm.id', '=', 'pd.model_id')
+            ->leftJoin('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Left join status table
             ->join('customers as c', 'c.id', '=', 'p.customer_id')
             ->leftJoin(DB::raw('(
                 SELECT product_id, MAX(id) as latest_id 
@@ -91,12 +91,16 @@ class VaveDashboardController extends Controller
             ->where('tc.effect', 1)
             ->whereYear('t.transaction_date', $year)
             ->where('p.is_delete', 0)
+            ->where(function($q) {
+                $q->where('ms.project_status', 'Project')
+                  ->orWhereNull('ms.project_status');
+            })
             ->whereNotNull('vb.id');
 
         if ($customerId) $baseQuery->where('p.customer_id', $customerId);
         if ($modelId)    $baseQuery->where('pd.model_id', $modelId);
 
-        // 1. DATA FOR TREND (Whole Year)
+        // 1. DATA FOR TREND
         $trendData = (clone $baseQuery)
             ->select([
                 DB::raw('MONTH(t.transaction_date) as month_num'),
@@ -107,7 +111,7 @@ class VaveDashboardController extends Controller
             ->groupBy(DB::raw('MONTH(t.transaction_date)'))
             ->get();
 
-        // DATA FOR MODELS (KPIs, Table, & Charts)
+        // DATA FOR MODELS
         $periodQuery = clone $baseQuery;
         if ($month) {
             $periodQuery->whereMonth('t.transaction_date', '<=', $month);
@@ -159,15 +163,8 @@ class VaveDashboardController extends Controller
             $kpiTotals['loss_count']      += (int) $row->loss_count;
             $kpiTotals['plan_total_cost'] += (float) $row->plan_total_cost;
 
-            // Aggregate by Model
             if (!isset($modelAgg[$row->model_name])) {
-                $modelAgg[$row->model_name] = [
-                    'kg'    => 0,
-                    'idr'   => 0,
-                    'merit' => 0,
-                    'loss'  => 0,
-                    'plan_cost' => 0
-                ];
+                $modelAgg[$row->model_name] = ['kg' => 0, 'idr' => 0, 'merit' => 0, 'loss' => 0, 'plan_cost' => 0];
             }
             $modelAgg[$row->model_name]['kg']    += $gapKg;
             $modelAgg[$row->model_name]['idr']   += $gapIdr;
@@ -190,7 +187,6 @@ class VaveDashboardController extends Controller
             ];
         }
 
-        // Prepare chart data structure
         $chartModels = [
             'labels' => array_keys($modelAgg),
             'idr'    => array_column(array_values($modelAgg), 'idr'),
@@ -226,6 +222,7 @@ class VaveDashboardController extends Controller
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->join('models as m', 'm.id', '=', 'pd.model_id')
+            ->leftJoin('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Left join status table
             ->join('customers as c', 'c.id', '=', 'p.customer_id')
             ->leftJoin(DB::raw('(
                 SELECT product_id, MAX(id) as latest_id 
@@ -238,13 +235,16 @@ class VaveDashboardController extends Controller
             ->where('tc.effect', 1)
             ->whereYear('t.transaction_date', $year)
             ->where('p.is_delete', 0)
+            ->where(function($q) {
+                $q->where('ms.project_status', 'Project')
+                  ->orWhereNull('ms.project_status');
+            })
             ->whereNotNull('vb.id');
 
         if ($month)      $query->whereMonth('t.transaction_date', '<=', $month);
         if ($customerId) $query->where('p.customer_id', $customerId);
         if ($modelId)    $query->where('pd.model_id', $modelId);
 
-        // Define label column and grouping level based on model filter
         $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
 
         $data = $query->select([

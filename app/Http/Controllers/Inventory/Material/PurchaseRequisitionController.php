@@ -168,7 +168,7 @@ class PurchaseRequisitionController extends Controller
             
             return [
                 'id' => $item->id,
-                'part_no' => $item->part_no . ($item->revision ? ' - ' . $item->revision : ''),
+                'part_no' => $item->part_no . ($item->revision ? '-' . $item->revision : ''),
                 'part_name' => $item->part_name,
                 'customer' => $item->customer_code,
                 'model' => $item->model_name,

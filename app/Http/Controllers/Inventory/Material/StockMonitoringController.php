@@ -287,9 +287,9 @@ class StockMonitoringController extends Controller
             if ($p > 0) $sizeFormatted .= ' (P: ' . $p . ')';
             if ($weight > 0) $sizeFormatted .= ' (Wt: ' . $weight . ' kg)';
 
-            $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
+            $partNoDisplay = $item->part_no . ($item->revision ? '-' . $item->revision : '');
 
-            $partNoDisplay = $item->part_no . ($item->revision ? ' - ' . $item->revision : '');
+            $partNoDisplay = $item->part_no . ($item->revision ? '-' . $item->revision : '');
 
             $calculatedQty = (float)$item->current_stock_qty;
             $inQty = (float)($item->total_in_sum ?? 0);
@@ -515,7 +515,7 @@ class StockMonitoringController extends Controller
 
         $product = (object) [
             'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
-            'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
+            'item_no' => $data->part_no . ($data->revision ? '-' . $data->revision : ''),
             'item_name' => $data->part_name,
             'model_name' => $data->model_name ?? '-',
             'partner_code' => $data->customer_code ?? '-',
@@ -777,7 +777,7 @@ class StockMonitoringController extends Controller
                 $q->where('products.part_no', 'like', '%' . $searchValue . '%')
                     ->orWhere('inv_m_material_spec.spec_name', 'like', '%' . $searchValue . '%')
                     ->orWhere('models.name', 'like', '%' . $searchValue . '%')
-                    ->orWhereRaw("(products.part_no + ' - ' + ISNULL(rank.code, '')) LIKE ?", ['%' . $searchValue . '%']);
+                    ->orWhereRaw("(products.part_no + '-' + ISNULL(rev.code, '')) LIKE ?", ['%' . $searchValue . '%']);
             });
         }
 

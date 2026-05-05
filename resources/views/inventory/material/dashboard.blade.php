@@ -223,7 +223,7 @@
 {{-- Drilldown Modal --}}
 <div id="drilldownModal" class="fixed inset-0 z-50 hidden" aria-modal="true">
     <div class="absolute inset-0 bg-black/40" onclick="closeDrilldownModal()"></div>
-    <div class="absolute right-0 top-0 bottom-0 w-full max-w-xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="drilldownPanel">
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-4xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="drilldownPanel">
         {{-- Header --}}
         <div class="flex-none flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div>
@@ -231,7 +231,7 @@
                     <p class="text-xs font-medium text-primary-500 tracking-wider">Detail Explorer</p>
                     <span id="drilldownCountBadge" class="px-1.5 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-[9px] font-bold">0</span>
                 </div>
-                <h2 id="drilldownTitle" class="text-base font-bold text-gray-800 dark:text-gray-100 truncate max-w-[300px]">Loading...</h2>
+                <h2 id="drilldownTitle" class="text-base font-bold text-gray-800 dark:text-gray-100 truncate max-w-[600px]">Loading...</h2>
             </div>
             <button onclick="closeDrilldownModal()" class="w-8 h-8 flex items-center justify-center rounded-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
                 <i class="fa-solid fa-xmark text-sm"></i>
@@ -790,6 +790,7 @@
                                 ${actionIcon}
                             </div>
                             <p class="text-[9px] text-slate-400 tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
+                            ${row.action_remark ? `<p class="text-[8px] text-primary-500 italic mt-0.5"><i class="fa-solid fa-message mr-1 opacity-70"></i>${row.action_remark}</p>` : ''}
                         </td>
                         <td class="py-1.5 px-2 text-right">
                             <div class="text-[11px] font-medium text-slate-500 font-mono">${new Intl.NumberFormat().format(row.min_stock)}</div>
@@ -1244,26 +1245,27 @@
             { key: 'unit',      label: 'Unit',          cls: 'text-center py-2 px-2' },
             { key: 'status',    label: 'Status',        cls: 'text-center py-2 px-3' },
             { key: 'action_status', label: 'Action',    cls: 'text-center py-2 px-3' },
+            { key: 'action_remark', label: 'Note',      cls: 'text-left py-2 px-3 max-w-[200px]' },
         ],
         usage_model: [
             { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
             { key: 'category',  label: 'Category',      cls: 'text-center py-2 px-2' },
-            { key: 'qty_pcs',   label: 'Qty (pcs)',     cls: 'text-right py-2 px-2' },
-            { key: 'date',      label: 'Date',          cls: 'text-center py-2 px-3' },
+            { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 font-mono whitespace-nowrap' },
+            { key: 'date',      label: 'Date',          cls: 'text-right py-2 px-3' }
         ],
         maker: [
-            { key: 'part_no', label: 'Part Number', cls: 'py-2 px-3' },
-            { key: 'model', label: 'Model', cls: 'py-2 px-2' },
-            { key: 'rank', label: 'Rank', cls: 'py-2 px-2 text-center' },
-            { key: 'usage', label: 'Usage (PCS)', cls: 'py-2 px-2 text-right' },
-            { key: 'gap', label: 'Gap', cls: 'py-2 px-2 text-right' },
-            { key: 'status', label: 'Status', cls: 'py-2 px-3 text-right' }
+            { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
+            { key: 'model',     label: 'Model/Cust',    cls: 'text-left py-2 px-2 text-[10px]' },
+            { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 font-mono whitespace-nowrap' },
+            { key: 'gap',       label: 'Gap',           cls: 'text-right py-2 px-3 font-mono' },
+            { key: 'status',    label: 'Status',        cls: 'py-2 px-3 text-right' }
         ],
         trendline: [
-            { key: 'part_no', label: 'Part Number', cls: 'py-2 px-3' },
-            { key: 'category', label: 'Category', cls: 'py-2 px-2 text-center' },
-            { key: 'qty_pcs', label: 'Quantity (PCS)', cls: 'py-2 px-3 text-right font-mono' },
-            { key: 'date', label: 'Date', cls: 'py-2 px-3 text-right' }
+            { key: 'part_no',           label: 'Part Number',           cls: 'py-2 px-3' },
+            { key: 'category',          label: 'Category',              cls: 'py-2 px-2 text-center' },
+            { key: 'origin_destination', label: 'Origin / Destination', cls: 'py-2 px-3 text-left' },
+            { key: 'quantity',          label: 'Quantity',              cls: 'py-2 px-3 text-right font-mono whitespace-nowrap' },
+            { key: 'date',              label: 'Date',                  cls: 'py-2 px-3 text-right' }
         ]
     };
 
@@ -1400,13 +1402,68 @@
                             </td>`;
                         }
 
-                        const val = row[c.key] ?? '-';
+                        const val = row[c.key] ?? '';
                         const badgeCls = (c.key === 'status' || c.key === 'category') ? STATUS_BADGE[val] : null;
 
                         let displayVal = val;
                         if (c.key === 'unit') {
                             const u = (val || '').toUpperCase();
                             displayVal = (u === 'COIL') ? 'KG' : (u === 'TRAPEZOID' ? 'SHEET' : val);
+                        }
+                        if (c.key === 'quantity') {
+                            const unit = (row.unit || '').toUpperCase();
+                            const unitLabel = (unit === 'COIL') ? 'KG' : (unit === 'TRAPEZOID' ? 'SHEET' : unit);
+                            
+                            // Format unit quantity: SHEET is integer, others have 2 decimals
+                            let unitQtyFormatted;
+                            const rawQty = parseFloat(row.qty) || 0;
+                            if (unitLabel === 'SHEET') {
+                                unitQtyFormatted = Math.round(rawQty).toLocaleString();
+                            } else {
+                                unitQtyFormatted = rawQty.toLocaleString(undefined, { 
+                                    minimumFractionDigits: 2, 
+                                    maximumFractionDigits: 2 
+                                });
+                            }
+                            
+                            const pcsQty = Math.round(parseFloat(row.qty_pcs) || 0).toLocaleString();
+                            displayVal = `<span class="text-slate-800 dark:text-white">${unitQtyFormatted}</span> <span class="text-[8px] opacity-60">${unitLabel}</span> <span class="mx-1 text-slate-300">/</span> <span class="text-slate-600 dark:text-slate-400">${pcsQty}</span> <span class="text-[8px] opacity-60">PCS</span>`;
+                        }
+
+                        if (c.key === 'gap') {
+                            displayVal = Math.round(parseFloat(val) || 0).toLocaleString() + ' PCS';
+                        }
+
+                        if (c.key === 'action_remark') {
+                            const isCritical = row.status === 'Critical' || row.status === 'Warning';
+                            if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
+                            
+                            const displayNote = val || 'Add note...';
+                            const noteCls = val ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300 italic';
+
+                            return `<td class="${c.cls}">
+                                <div class="relative w-full dropdown-note-container">
+                                    <button onclick="toggleNoteDropdown(event, '${row.id}')" 
+                                        class="group flex items-start gap-1.5 w-full p-1.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-700 text-left">
+                                        <i class="fa-solid fa-pen-to-square text-[9px] mt-0.5 opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+                                        <span class="text-[10px] ${noteCls} break-words line-clamp-2 leading-snug">${displayNote}</span>
+                                    </button>
+                                    
+                                    <div id="note-dropdown-${row.id}" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 z-[110] p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Action Remark</p>
+                                            <i class="fa-solid fa-message text-primary-500/50 text-[10px]"></i>
+                                        </div>
+                                        <textarea id="note-input-${row.id}" 
+                                            class="w-full h-24 p-2.5 bg-slate-50 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-700 rounded-xs text-[11px] focus:outline-none focus:ring-1 focus:ring-primary-500 placeholder:text-slate-300 mb-3"
+                                            placeholder="Type follow-up note here...">${val}</textarea>
+                                        <div class="flex justify-end gap-2">
+                                            <button onclick="closeAllNoteDropdowns()" class="px-3 py-1.5 text-[10px] font-medium text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                                            <button onclick="saveActionNote('${row.id}')" class="px-4 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-[10px] font-bold rounded-xs shadow-sm transition-all active:scale-95">Save Changes</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>`;
                         }
 
                         const cell = badgeCls
@@ -1557,6 +1614,67 @@
             });
         });
     };
+
+    window.updateActionRemark = function(id, remark) {
+        const url = '{{ route("inventory.master.product.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
+        
+        $.post(url, {
+            _token: '{{ csrf_token() }}',
+            action_remark: remark
+        })
+        .done(function(res) {
+            if (res.success) {
+                // No need to refresh everything for just a remark update
+                // Unless we want to show a toast
+                console.log('Remark updated');
+            }
+        });
+    };
+
+    window.toggleNoteDropdown = function(e, id) {
+        e.stopPropagation();
+        const dropdown = document.getElementById(`note-dropdown-${id}`);
+        const isHidden = dropdown.classList.contains('hidden');
+        
+        closeAllNoteDropdowns();
+        
+        if (isHidden) {
+            dropdown.classList.remove('hidden');
+            const input = document.getElementById(`note-input-${id}`);
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+    };
+
+    window.closeAllNoteDropdowns = function() {
+        document.querySelectorAll('[id^="note-dropdown-"]').forEach(el => el.classList.add('hidden'));
+    };
+
+    window.saveActionNote = function(id) {
+        const val = document.getElementById(`note-input-${id}`).value;
+        const url = '{{ route("inventory.master.product.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
+        
+        $.post(url, {
+            _token: '{{ csrf_token() }}',
+            action_remark: val
+        })
+        .done(function(res) {
+            if (res.success) {
+                closeAllNoteDropdowns();
+                fetchDrilldownData(); // Refresh to show new text in column
+            }
+        });
+    };
+
+    // Close on click outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-note-container')) {
+            closeAllNoteDropdowns();
+        }
+        if (!e.target.closest('.dropdown-action-container')) {
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+        }
+    });
 
     // Close on Escape key
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrilldownModal(); });

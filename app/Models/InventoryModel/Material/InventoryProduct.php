@@ -16,6 +16,7 @@ class InventoryProduct extends Model
 
     protected $fillable = [
         'product_id',
+        'partno_epicor',
         'model_id',
         'material_spec_id',
         'unit_id',
@@ -47,6 +48,7 @@ class InventoryProduct extends Model
         'product_status',
         'product_status_remark',
         'action_status',
+        'action_remark',
     ];
 
     protected $casts = [

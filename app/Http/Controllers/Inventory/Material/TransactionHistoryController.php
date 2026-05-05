@@ -175,7 +175,7 @@ class TransactionHistoryController extends Controller
             'id' => $item->hash_id,
             'transaction_date' => optional($item->transaction_date)->format('Y-m-d'),
             'part_no' => ($item->product->product->part_no ?? '-') .
-                         ($item->product->revision ? ' - '.$item->product->revision->code : ''),
+                         ($item->product->revision ? '-'.$item->product->revision->code : ''),
             'model_name' => $item->product->model->name ?? 'No Model',
             'product_name' => $item->product->product->part_name ?? '-',
             'category' => $item->transactionCategory->code ?? '-',
@@ -216,7 +216,7 @@ class TransactionHistoryController extends Controller
             'id' => $transaction->hash_id,
             'transaction_date' => $transaction->transaction_date ? $transaction->transaction_date->format('Y-m-d') : null,
             'product_detail_id' => $transaction->product->hash_id,
-            'part_no' => ($transaction->product->product->part_no ?? null) . ($transaction->product->revision ? ' - ' . $transaction->product->revision->code : ''),
+            'part_no' => ($transaction->product->product->part_no ?? null) . ($transaction->product->revision ? '-' . $transaction->product->revision->code : ''),
             'product_name' => $transaction->product->product->part_name ?? null,
             'transaction_category_id' => $transaction->transactionCategory->hash_id,
             'qty' => $transaction->qty,

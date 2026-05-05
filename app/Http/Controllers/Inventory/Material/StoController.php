@@ -569,7 +569,7 @@ class StoController extends Controller
             'success' => true,
             'data' => [
                 'product_id_hash' => $product->hash_id,
-                'part_no' => '[' . ($product->model->name ?? 'No Model') . '] ' . ($product->product->part_no ?? '-') . ($product->revision ? ' - ' . $product->revision->code : ''),
+                'part_no' => '[' . ($product->model->name ?? 'No Model') . '] ' . ($product->product->part_no ?? '-') . ($product->revision ? '-' . $product->revision->code : ''),
                 'part_name' => $product->product->part_name ?? '-',
                 'unit' => $product->unit->name ?? 'PCS',
                 'unit_display' => $product->unit->code ?? 'PCS',
