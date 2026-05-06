@@ -19,8 +19,12 @@ use App\Http\Controllers\Inventory\Material\StoDashboardController;
 use App\Http\Controllers\Inventory\Material\VaveAnalysisController;
 use App\Http\Controllers\Inventory\Material\ProjectVaveDashboardController;
 use App\Http\Controllers\Inventory\Material\RegularVaveDashboardController;
+use App\Http\Controllers\Inventory\Material\ProjectVaveAnalysisController;
+use App\Http\Controllers\Inventory\Material\RegularVaveAnalysisController;
 use App\Http\Controllers\Inventory\Material\RevisionController;
 use App\Http\Controllers\Inventory\Material\VaveBaseSuffixController;
+use App\Http\Controllers\Inventory\Material\DebugEpicorController;
+
 
 use App\Http\Controllers\Inventory\Tool\ToolDashboardController;
 use App\Http\Controllers\Inventory\Tool\ToolCategoryController;
@@ -301,7 +305,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/{id}/pareto-by-model', [StoDashboardController::class, 'paretoByModel'])->name('dashboard.paretoByModel');
     });
 
-    // VAVE Analysis (Admin, Approver, Checker, Viewer)
+    // VAVE Analysis (Admin, Approver, Checker, Viewer) - Monolithic (Keep for compatibility if needed, but structured via new routes below)
     Route::middleware(['inventory.role:admin,approver,checker,viewer'])->prefix('inventory/vave')->name('inventory.vave.')->group(function () {
         Route::get('/', [VaveAnalysisController::class, 'index'])->name('index');
         Route::get('/data', [VaveAnalysisController::class, 'data'])->name('data');
@@ -314,6 +318,36 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::get('/download-template', [VaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
         Route::match(['post', 'put'], '/import-data', [VaveAnalysisController::class, 'importExcel'])->name('importExcel');
         Route::delete('/base/{id}', [VaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
+    });
+
+    // Project VAVE Analysis
+    Route::middleware(['inventory.role:admin,approver,checker,viewer'])->prefix('inventory/project-vave-analysis')->name('inventory.projectVaveAnalysis.')->group(function () {
+        Route::get('/', [ProjectVaveAnalysisController::class, 'index'])->name('index');
+        Route::get('/data', [ProjectVaveAnalysisController::class, 'data'])->name('data');
+        Route::get('/base/{id}', [ProjectVaveAnalysisController::class, 'showBase'])->name('showBase');
+        Route::post('/base', [ProjectVaveAnalysisController::class, 'storeBase'])->name('storeBase');
+        Route::get('/comparison/{id}', [ProjectVaveAnalysisController::class, 'getComparison'])->name('getComparison');
+        Route::get('/comparison/{id}/export', [ProjectVaveAnalysisController::class, 'exportExcel'])->name('export');
+        Route::get('/summary-export', [ProjectVaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
+        Route::get('/get-bases', [ProjectVaveAnalysisController::class, 'getBases'])->name('getBases');
+        Route::get('/download-template', [ProjectVaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::match(['post', 'put'], '/import-data', [ProjectVaveAnalysisController::class, 'importExcel'])->name('importExcel');
+        Route::delete('/base/{id}', [ProjectVaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
+    });
+
+    // Regular VAVE Analysis
+    Route::middleware(['inventory.role:admin,approver,checker,viewer'])->prefix('inventory/regular-vave-analysis')->name('inventory.regularVaveAnalysis.')->group(function () {
+        Route::get('/', [RegularVaveAnalysisController::class, 'index'])->name('index');
+        Route::get('/data', [RegularVaveAnalysisController::class, 'data'])->name('data');
+        Route::get('/base/{id}', [RegularVaveAnalysisController::class, 'showBase'])->name('showBase');
+        Route::post('/base', [RegularVaveAnalysisController::class, 'storeBase'])->name('storeBase');
+        Route::get('/comparison/{id}', [RegularVaveAnalysisController::class, 'getComparison'])->name('getComparison');
+        Route::get('/comparison/{id}/export', [RegularVaveAnalysisController::class, 'exportExcel'])->name('export');
+        Route::get('/summary-export', [RegularVaveAnalysisController::class, 'exportSummary'])->name('exportSummary');
+        Route::get('/get-bases', [RegularVaveAnalysisController::class, 'getBases'])->name('getBases');
+        Route::get('/download-template', [RegularVaveAnalysisController::class, 'downloadTemplate'])->name('downloadTemplate');
+        Route::match(['post', 'put'], '/import-data', [RegularVaveAnalysisController::class, 'importExcel'])->name('importExcel');
+        Route::delete('/base/{id}', [RegularVaveAnalysisController::class, 'destroyBase'])->name('destroyBase');
     });
 
     // Project VAVE Gap Benefit Dashboard (Admin, Approver, Checker, Viewer)
@@ -344,7 +378,14 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::put('transaction-history/{id}', [TransactionHistoryController::class, 'update'])->name('transactionHistory.update');
     });
 
+    // Temporary Debug Route
+    Route::get('/inventory/debug/epicor', [DebugEpicorController::class, 'index'])->name('inventory.debug.epicor');
+    Route::get('/inventory/debug/epicor/data', [DebugEpicorController::class, 'data'])->name('inventory.debug.epicor.data');
+    Route::get('/inventory/debug/epicor/export', [DebugEpicorController::class, 'export'])->name('inventory.debug.epicor.export');
+
+
 });
+
 # endregion
 
 #Region Dashboard API

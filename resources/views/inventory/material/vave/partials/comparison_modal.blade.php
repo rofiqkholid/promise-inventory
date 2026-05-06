@@ -116,7 +116,7 @@ $(document).ready(function() {
 
         window.compareState.id = id;
 
-        $.get(`{{ url('inventory/vave/comparison') }}/${id}`, function(res) {
+        $.get(`${VAVE_CONFIG.url_comparison}/${id}`, function(res) {
             const customer = res.product.customer ? res.product.customer.code : (res.product.customer_code || '');
             const subtitleEl = $('#comparisonSubtitle');
             subtitleEl.empty();
@@ -214,7 +214,7 @@ $(document).ready(function() {
             $('#netImpactStatus').text(statusBadge);
 
             // Update Export Button Shell
-            exportBtn.removeClass('hidden').attr('data-url', `{{ url('inventory/vave/comparison') }}/${id}/export?base_id=${selectedBaseHash}&actual_id=${selectedRevId}`);
+            exportBtn.removeClass('hidden').attr('data-url', `${VAVE_CONFIG.url_comparison}/${id}/export?base_id=${selectedBaseHash}&actual_id=${selectedRevId}`);
         } else {
             impactContainer.addClass('hidden');
             exportBtn.addClass('hidden');

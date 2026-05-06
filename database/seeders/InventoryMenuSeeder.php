@@ -77,9 +77,28 @@ class InventoryMenuSeeder extends Seeder
                         'order' => 7,
                         'roles' => ['admin', 'approver', 'checker', 'viewer'],
                         'children' => [
-                            ['title' => 'VAVE Dashboard (Project)', 'route' => 'inventory.projectVaveDashboard.index', 'icon' => 'fa-solid fa-chart-line', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
-                            ['title' => 'VAVE Dashboard (Regular)', 'route' => 'inventory.regularVaveDashboard.index', 'icon' => 'fa-solid fa-chart-line', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
-                            ['title' => 'VA/VE Analysis', 'route' => 'inventory.vave.index', 'icon' => 'fa-solid fa-calculator', 'order' => 3, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                            [
+                                'title' => 'Project',
+                                'route' => '#',
+                                'icon'  => 'fa-solid fa-folder-tree',
+                                'order' => 1,
+                                'roles' => ['admin', 'approver', 'checker', 'viewer'],
+                                'children' => [
+                                    ['title' => 'VA/VE Project Dashboard', 'route' => 'inventory.projectVaveDashboard.index', 'icon' => 'fa-solid fa-chart-line', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                                    ['title' => 'VA/VE Project Analyze', 'route' => 'inventory.projectVaveAnalysis.index', 'icon' => 'fa-solid fa-calculator', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                                ]
+                            ],
+                            [
+                                'title' => 'Regular',
+                                'route' => '#',
+                                'icon'  => 'fa-solid fa-box-archive',
+                                'order' => 2,
+                                'roles' => ['admin', 'approver', 'checker', 'viewer'],
+                                'children' => [
+                                    ['title' => 'VA/VE Regular Dashboard', 'route' => 'inventory.regularVaveDashboard.index', 'icon' => 'fa-solid fa-chart-line', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                                    ['title' => 'VA/VE Regular Analyze', 'route' => 'inventory.regularVaveAnalysis.index', 'icon' => 'fa-solid fa-calculator', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'viewer']],
+                                ]
+                            ],
                         ]
                     ],
                 ]

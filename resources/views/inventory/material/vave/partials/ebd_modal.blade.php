@@ -309,7 +309,7 @@ $(document).ready(function() {
         $('#btn_new_baseline').addClass('hidden');
         $('#btn_delete_baseline').addClass('hidden');
         
-        $.get(`{{ url('inventory/vave/base') }}/${id}`, function(res) {
+        $.get(`${VAVE_CONFIG.url_base}/${id}`, function(res) {
             $('#rfqModalTitle').text(`Manage EBD - ${res.product.part_no}`);
             window.baseRevisions = res.revisions;
             window.latestRevision = (res.revisions && res.revisions.length > 0) ? res.revisions[0] : null;
@@ -431,7 +431,7 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 $.ajax({
-                    url: `{{ url('inventory/vave/base') }}/${id}`,
+                    url: `${VAVE_CONFIG.url_base}/${id}`,
                     type: 'POST',
                     data: { _token: '{{ csrf_token() }}', _method: 'DELETE' },
                     success: function(res) {
@@ -448,7 +448,7 @@ $(document).ready(function() {
 
     $('#rfqForm').on('submit', function(e) {
         e.preventDefault();
-        $.post('{{ route("inventory.vave.storeBase") }}', $(this).serialize(), function(res) {
+        $.post(VAVE_CONFIG.route_storeBase, $(this).serialize(), function(res) {
             if (res.success) {
                 if(typeof table !== 'undefined') table.ajax.reload();
                 $('#rfqModal').addClass('hidden').removeClass('flex');

@@ -18,7 +18,7 @@
                             <div>
                                 <h4 class="text-[11px] font-bold text-blue-800 dark:text-blue-300 mb-1">Information</h4>
                                 <p class="text-[10px] text-blue-600/80 dark:text-blue-400/80 font-normal leading-relaxed">The system will automatically match the **Part Number** from your Excel file with the existing Product Master. Please use the official template:</p>
-                                <a href="{{ route('inventory.vave.downloadTemplate') }}" target="_blank" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-xs font-bold text-blue-600 dark:text-blue-400 transition-all shadow-sm active:scale-95">
+                                <a href="javascript:void(0)" id="btnDownloadTemplate" class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/50 rounded-xs text-xs font-bold text-blue-600 dark:text-blue-400 transition-all shadow-sm active:scale-95">
                                     <i class="fa-solid fa-download"></i> Download Template
                                 </a>
                             </div>
@@ -261,7 +261,7 @@ $(document).ready(function() {
                 $btn.html(`<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Uploading ${percent}% ...`);
 
                 $.ajax({
-                    url: '{{ route("inventory.vave.importExcel") }}',
+                    url: VAVE_CONFIG.route_importExcel,
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                     data: JSON.stringify(payload),
@@ -308,6 +308,9 @@ $(document).ready(function() {
 
     $('.close-modal-button').on('click', function() {
         $(this).closest('[tabindex="-1"]').addClass('hidden').removeClass('flex');
+    });
+    $('#btnDownloadTemplate').on('click', function() {
+        window.location.href = VAVE_CONFIG.route_downloadTemplate;
     });
 });
 </script>
