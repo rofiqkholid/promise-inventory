@@ -37,7 +37,8 @@ class ProjectVaveAnalysisController extends Controller
             // Get Baseline
             ->leftJoin('inv_m_vave_base as base', function($join) {
                 $join->on('base.product_id', '=', 'p.id')
-                     ->where('base.is_active', '=', 1);
+                     ->where('base.is_active', '=', 1)
+                     ->where('base.base_name', 'like', 'EBD%');
             })
             // Get Latest Revision Weight
             ->leftJoin(DB::raw('(
@@ -256,7 +257,11 @@ class ProjectVaveAnalysisController extends Controller
     public function getComparison($id)
     {
         $product = Products::with('customer')->where('id', Products::decodeHash($id))->firstOrFail();
-        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])->where('product_id', $product->id)->orderBy('created_at', 'desc')->get();
+        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
+            ->where('product_id', $product->id)
+            ->where('base_name', 'like', 'EBD%')
+            ->orderBy('created_at', 'desc')
+            ->get();
         $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')->where('product_id', $product->id)->orderBy('r.sort_order', 'desc')->select('inv_t_product_detail.*')->get();
         return response()->json(['product' => $product, 'bases' => $bases, 'revisions' => $revisions]);
     }
@@ -403,10 +408,10 @@ class ProjectVaveAnalysisController extends Controller
             $totalCreated = count($log['created']); $totalUpdated = count($log['updated']); $unchanged = $log['unchangedCount']; $totalProcessed = $totalCreated + $totalUpdated + $unchanged;
             if (!empty($errors)) {
                 $errorCount = count($errors);
-                if ($totalProcessed === 0) return response()->json(['success' => false, 'message' => 'Full failure', 'errors' => $errors], 422);
-                return response()->json(['success' => true, 'message' => 'Imported with warnings', 'errors' => $errors]);
+                if ($totalProcessed === 0) return response()->json(['success' => false, 'message' => 'Full failure', 'errors' => $errors, 'log' => $log], 422);
+                return response()->json(['success' => true, 'message' => 'Imported with ' . $errorCount . ' warnings.', 'errors' => $errors, 'log' => $log]);
             }
-            return response()->json(['success' => true, 'message' => 'Processed ' . $totalProcessed . ' records']);
+            return response()->json(['success' => true, 'message' => 'Processed ' . $totalProcessed . ' records successfully.', 'log' => $log]);
         } catch (\Exception $e) { return response()->json(['success' => false, 'message' => 'Critical Error: ' . $e->getMessage()], 500); }
     }
 }

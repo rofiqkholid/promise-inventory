@@ -34,10 +34,11 @@ class RegularVaveAnalysisController extends Controller
             ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
             ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Inner join as Regular must have status
-            // Get Baseline
+            // Get Baseline - For Regular, we only read SQ versions
             ->leftJoin('inv_m_vave_base as base', function($join) {
                 $join->on('base.product_id', '=', 'p.id')
-                     ->where('base.is_active', '=', 1);
+                     ->where('base.is_active', '=', 1)
+                     ->where('base.base_name', 'like', 'SQ%');
             })
             // Get Latest Revision Weight
             ->leftJoin(DB::raw('(
@@ -119,15 +120,171 @@ class RegularVaveAnalysisController extends Controller
         return response()->json(['draw' => (int)$request->input('draw'), 'recordsTotal' => $recordsTotal, 'recordsFiltered' => $recordsFiltered, 'data' => $data]);
     }
 
-    // Standard VAVE Methods (Shared Logic)
+    // Standard VAVE Methods (Re-implemented for SQ Branding)
     public function showBase($id) { return (new ProjectVaveAnalysisController)->showBase($id); }
-    public function storeBase(Request $request) { return (new ProjectVaveAnalysisController)->storeBase($request); }
-    public function getComparison($id) { return (new ProjectVaveAnalysisController)->getComparison($id); }
-    public function destroyBase($id) { return (new ProjectVaveAnalysisController)->destroyBase($id); }
-    public function exportExcel(Request $request, $id) { return (new ProjectVaveAnalysisController)->exportExcel($request, $id); }
+
+    public function storeBase(Request $request) 
+    { 
+        $response = (new ProjectVaveAnalysisController)->storeBase($request); 
+        $data = json_decode($response->getContent(), true);
+        if ($data && $data['success']) {
+            $data['message'] = str_replace(['Base', 'New Base'], ['SQ', 'New SQ'], $data['message']);
+            return response()->json($data);
+        }
+        return $response;
+    }
+
+    public function destroyBase($id) 
+    { 
+        $response = (new ProjectVaveAnalysisController)->destroyBase($id); 
+        $data = json_decode($response->getContent(), true);
+        if ($data && $data['success']) {
+            $data['message'] = str_replace('Baseline', 'SQ', $data['message']);
+            return response()->json($data);
+        }
+        return $response;
+    }
+
     public function getBases(Request $request) { return (new ProjectVaveAnalysisController)->getBases($request); }
     public function downloadTemplate() { return (new ProjectVaveAnalysisController)->downloadTemplate(); }
-    public function importExcel(Request $request) { return (new ProjectVaveAnalysisController)->importExcel($request); }
+    public function importExcel(Request $request) 
+    { 
+        // We override to pass is_regular = true to the import class
+        $request->validate(['sheet_name' => 'required|string']);
+        $fileToImport = null; $tmpPath = null;
+        if ($request->has('chunk_index')) {
+            $chunkIndex = $request->input('chunk_index'); $totalChunks = $request->input('total_chunks'); $uploadId = $request->input('upload_id'); $chunkData = $request->input('file_base64_chunk');
+            $tmpTxtPath = sys_get_temp_dir() . '/upload_vave_' . $uploadId . '.txt';
+            file_put_contents($tmpTxtPath, $chunkData, FILE_APPEND);
+            if ($chunkIndex < $totalChunks - 1) return response()->json(['success' => true, 'message' => 'Chunk processed']);
+            $fullBase64 = file_get_contents($tmpTxtPath); @unlink($tmpTxtPath);
+            $base64data = preg_replace('/^data:[a-zA-Z0-9\/\-\.\+]+;base64,/', '', $fullBase64); $fileContent = base64_decode($base64data);
+            $tmpPath = sys_get_temp_dir() . '/' . uniqid('import_vave_') . '.xlsx'; file_put_contents($tmpPath, $fileContent);
+            $fileToImport = $tmpPath;
+        } else { $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:51200']); $fileToImport = $request->file('file'); }
+        
+        try {
+            // Pass true for is_regular
+            $import = new \App\Imports\VaveBaseImport($request->sheet_name, $request->customer_id, $request->model_id, true);
+            \Maatwebsite\Excel\Facades\Excel::import($import, $fileToImport);
+            if ($tmpPath && file_exists($tmpPath)) @unlink($tmpPath);
+            $errors = $import->getErrors(); $log = $import->getSuccessLog();
+            $totalCreated = count($log['created']); $totalUpdated = count($log['updated']); $unchanged = $log['unchangedCount']; $totalProcessed = $totalCreated + $totalUpdated + $unchanged;
+            if (!empty($errors)) {
+                $errorCount = count($errors);
+                if ($totalProcessed === 0) return response()->json(['success' => false, 'message' => 'Full failure', 'errors' => $errors, 'log' => $log], 422);
+                return response()->json(['success' => true, 'message' => 'Imported with ' . $errorCount . ' warnings.', 'errors' => $errors, 'log' => $log]);
+            }
+            return response()->json(['success' => true, 'message' => 'Processed ' . $totalProcessed . ' records successfully.', 'log' => $log]);
+        } catch (\Exception $e) { return response()->json(['success' => false, 'message' => 'Critical Error: ' . $e->getMessage()], 500); }
+    }
+
+    // Epicor Pricing Helpers
+    private function fetchEpicorPrices()
+    {
+        try {
+            $epicorDataRaw = DB::connection('second_db')->select("
+                WITH PriceLatest AS (
+                    select 
+                        a.PartNum, 
+                        a.BaseUnitPrice, 
+                        a.PUM, 
+                        e.ConvFactor,
+                        ROW_NUMBER() OVER (PARTITION BY a.PartNum ORDER BY a.EffectiveDate DESC) as RowNum
+                    from erp.VendPart a
+                    left join erp.UOMClass d on d.Description = a.PartNum
+                    left join erp.UOMConv e on e.UOMClassID = d.UOMClassID and e.UOMCode = a.PUM
+                    where a.PartNum like '%-R%'
+                )
+                SELECT * FROM PriceLatest WHERE RowNum = 1
+            ");
+            $epicorData = [];
+            foreach ($epicorDataRaw as $row) {
+                $epicorData[trim($row->PartNum)] = $row;
+            }
+            return $epicorData;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    private function getEpicorPriceForPart($partNo, $epicorData)
+    {
+        $lookupBase = trim($partNo) . '-R';
+        $epi = $epicorData[$lookupBase] ?? null;
+        
+        if (!$epi) {
+            $pattern = '/^' . preg_quote($lookupBase, '/') . '\d*$/';
+            foreach ($epicorData as $epiPn => $epiRow) {
+                if (preg_match($pattern, $epiPn)) {
+                    $epi = $epiRow;
+                    break;
+                }
+            }
+        }
+
+        if ($epi) {
+            $rawPrice = (float) $epi->BaseUnitPrice;
+            $convFactor = $epi->ConvFactor ? round((float) $epi->ConvFactor, 3) : 0;
+            $pum = trim($epi->PUM);
+            
+            if ($pum === 'SHEET' && $convFactor > 0) {
+                return ceil($rawPrice / $convFactor);
+            } elseif ($pum === 'KG') {
+                return $rawPrice;
+            }
+        }
+        return null;
+    }
+
+    public function getComparison($id)
+    {
+        $product = Products::with('customer')->where('id', Products::decodeHash($id))->firstOrFail();
+        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
+            ->where('product_id', $product->id)
+            ->where('base_name', 'like', 'SQ%')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])
+            ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
+            ->where('product_id', $product->id)
+            ->orderBy('r.sort_order', 'desc')
+            ->select('inv_t_product_detail.*')
+            ->get();
+
+        $epicorData = $this->fetchEpicorPrices();
+        $epicorPrice = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+
+        foreach ($revisions as $rev) {
+            $rev->material_price = ($epicorPrice !== null) ? $epicorPrice : 0;
+        }
+
+        return response()->json(['product' => $product, 'bases' => $bases, 'revisions' => $revisions]);
+    }
+
+    public function exportExcel(Request $request, $id)
+    {
+        $product = Products::findByHashOrFail($id);
+        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])->where('product_id', $product->id)->orderBy('created_at', 'desc')->get();
+        $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])
+            ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
+            ->where('product_id', $product->id)
+            ->orderBy('r.sort_order', 'desc')
+            ->select('inv_t_product_detail.*')
+            ->get();
+            
+        if ($bases->isEmpty() || $revisions->isEmpty()) return back()->with('error', 'Incomplete data for export.');
+
+        $epicorData = $this->fetchEpicorPrices();
+        $epicorPrice = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+
+        foreach ($revisions as $rev) {
+            $rev->material_price = ($epicorPrice !== null) ? $epicorPrice : 0;
+        }
+
+        $fileName = 'VAVE_Analysis_' . $product->part_no . '_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new VaveAnalysisExport(['product' => $product, 'rfqs' => $bases, 'revisions' => $revisions, 'selected_base_id' => $request->base_id, 'selected_actual_id' => $request->actual_id, 'is_regular' => true]), $fileName);
+    }
 
     public function exportSummary(Request $request)
     {
@@ -146,8 +303,11 @@ class RegularVaveAnalysisController extends Controller
         $products = $query->get();
         $data = [];
         $targetBaseNames = $request->input('base_names', []);
+        
+        $epicorData = $this->fetchEpicorPrices();
 
         foreach ($products as $p) {
+            $epicorPrice = $this->getEpicorPriceForPart($p->part_no, $epicorData);
             $allProductBases = DB::table('inv_m_vave_base as base')->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'base.material_spec_id')->leftJoin('inv_m_unit as u', 'u.id', '=', 'base.unit_id')->leftJoin('inv_m_vave_base_suffix as sfx', 'sfx.id', '=', 'base.vave_base_suffix_id')->where('base.product_id', $p->id)->select('base.*', 'ms.spec_name as spec_name', 'u.name as unit_name', 'sfx.name as suffix_name')->orderBy('base.base_name', 'asc')->get();
             $revisions = DB::table('inv_t_product_detail as rev_table')->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'rev_table.material_spec_id')->leftJoin('inv_m_unit as u', 'u.id', '=', 'rev_table.unit_id')->leftJoin('inv_m_revision as r', 'r.id', '=', 'rev_table.revision_id')->where('rev_table.product_id', $p->id)->select('rev_table.*', 'ms.spec_name as spec_name', 'u.name as unit_name', 'r.code as revision_code')->orderBy('r.sort_order', 'asc')->get();
             $p->stages = []; $filteredBases = [];
@@ -171,7 +331,14 @@ class RegularVaveAnalysisController extends Controller
                     }
                 } else { $p->baseline_name = '-'; $p->baseline_weight = 0; $p->baseline_cost = 0; $p->change_status = '-'; }
             } else {
-                $activeBase = $allProductBases->where('is_active', 1)->first() ?? $allProductBases->last();
+                // Filter only SQ versions for Regular active baseline
+                $activeBase = $allProductBases->where('is_active', 1)->filter(fn($b) => str_starts_with(strtoupper($b->base_name), 'SQ'))->first();
+                
+                // If no active SQ, check if there's any SQ at all
+                if (!$activeBase) {
+                    $activeBase = $allProductBases->filter(fn($b) => str_starts_with(strtoupper($b->base_name), 'SQ'))->last();
+                }
+
                 $sfxStr = ($activeBase && $activeBase->suffix_name) ? ' - ' . $activeBase->suffix_name : '';
                 $p->baseline_name = $activeBase ? ($activeBase->base_name . $sfxStr) : '-';
                 $p->baseline_weight = $activeBase ? (float)$activeBase->weight_kg : 0;
@@ -187,8 +354,9 @@ class RegularVaveAnalysisController extends Controller
                 } else { $p->change_status = '-'; }
             }
             foreach($revisions as $rev) {
+                $matPrice = ($epicorPrice !== null) ? $epicorPrice : 0;
                 $p->stages[] = [
-                    'source' => 'ACTUAL', 'name' => 'Revision ' . ($rev->revision_code ?? '-'), 'spec' => $rev->spec_name, 'unit' => $rev->unit_name, 't' => $rev->thickness, 'w' => $rev->width, 'l1' => $rev->length, 'l2' => $rev->length_2, 'pitch' => $rev->pitch, 'theoretical_weight' => $rev->weight_kg, 'net_weight' => $rev->net_weight, 'material_price' => $rev->material_price, 'cost' => $rev->weight_kg * ($rev->material_price ?? 0), 'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0, 'is_baseline' => false
+                    'source' => 'ACTUAL', 'name' => 'Revision ' . ($rev->revision_code ?? '-'), 'spec' => $rev->spec_name, 'unit' => $rev->unit_name, 't' => $rev->thickness, 'w' => $rev->width, 'l1' => $rev->length, 'l2' => $rev->length_2, 'pitch' => $rev->pitch, 'theoretical_weight' => $rev->weight_kg, 'net_weight' => $rev->net_weight, 'material_price' => $matPrice, 'cost' => $rev->weight_kg * ($matPrice ?? 0), 'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0, 'is_baseline' => false
                 ];
             }
             if (count($p->stages) > 0) $data[] = $p;
@@ -197,6 +365,6 @@ class RegularVaveAnalysisController extends Controller
         if ($request->customer_id) { $customer = DB::table('customers')->find($request->customer_id); if ($customer) $fileName .= '_' . str_replace(' ', '_', $customer->code); }
         if ($request->model_id) { $model = DB::table('models')->find($request->model_id); if ($model) $fileName .= '_' . str_replace(' ', '_', $model->name); }
         $fileName .= '_' . date('Ymd_His') . '.xlsx';
-        return Excel::download(new \App\Exports\VaveSummaryExport($data), $fileName);
+        return Excel::download(new \App\Exports\VaveSummaryExport($data, true), $fileName);
     }
 }

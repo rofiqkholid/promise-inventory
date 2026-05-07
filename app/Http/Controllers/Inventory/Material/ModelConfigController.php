@@ -11,7 +11,8 @@ class ModelConfigController extends Controller
 {
     public function index()
     {
-        return view('inventory.material.master-data.model-config');
+        $customers = \DB::table('customers')->orderBy('code')->get(['id', 'code', 'name']);
+        return view('inventory.material.master-data.model-config', compact('customers'));
     }
 
     public function data(Request $request)
@@ -23,7 +24,9 @@ class ModelConfigController extends Controller
                 \DB::raw('MIN(models.id) as id'),
                 'models.name',
                 'customers.code as customer_code',
-                \DB::raw('MAX(inv_m_model_status.project_status) as project_status')
+                \DB::raw('MAX(inv_m_model_status.project_status) as project_status'),
+                \DB::raw('MAX(inv_m_model_status.regular_start_date) as regular_start_date'),
+                \DB::raw('MAX(inv_m_model_status.regular_expired_date) as regular_expired_date')
             )
             ->groupBy('models.name', 'customers.code');
 
@@ -35,6 +38,28 @@ class ModelConfigController extends Controller
                 $q->where('models.name', 'like', "%{$searchValue}%")
                   ->orWhere('customers.code', 'like', "%{$searchValue}%");
             });
+        }
+
+        // Custom Filters
+        if ($request->filled('filter_customer')) {
+            $query->where('models.customer_id', $request->filter_customer);
+        }
+
+        if ($request->filled('filter_status')) {
+            $query->where('inv_m_model_status.project_status', $request->filter_status);
+        }
+
+        if ($request->filled('filter_validity')) {
+            $today = \Carbon\Carbon::today()->toDateString();
+            if ($request->filter_validity === 'active') {
+                $query->where(function($q) use ($today) {
+                    $q->whereNull('inv_m_model_status.regular_expired_date')
+                      ->orWhere('inv_m_model_status.regular_expired_date', '>=', $today);
+                });
+            } elseif ($request->filter_validity === 'expired') {
+                $query->whereNotNull('inv_m_model_status.regular_expired_date')
+                      ->where('inv_m_model_status.regular_expired_date', '<', $today);
+            }
         }
 
         $totalResults = $query->get();
@@ -58,12 +83,17 @@ class ModelConfigController extends Controller
 
         $hashids = new \Hashids\Hashids(config('app.key') . Models::class, config('hashids.connections.main.length', 10), config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'));
 
-        $formatted = $data->map(function($row) use ($hashids) {
+        $today = \Carbon\Carbon::today()->toDateString();
+        $formatted = $data->map(function($row) use ($hashids, $today) {
+            $isExpired = $row->regular_expired_date && $row->regular_expired_date < $today;
             return [
                 'hash_id' => $hashids->encode($row->id),
                 'name' => $row->name,
                 'customer_code' => $row->customer_code,
                 'project_status' => $row->project_status ?? 'Project',
+                'regular_start_date' => $row->regular_start_date,
+                'regular_expired_date' => $row->regular_expired_date,
+                'is_expired' => $isExpired,
             ];
         });
 
@@ -79,8 +109,8 @@ class ModelConfigController extends Controller
     {
         $validated = $request->validate([
             'model_hash_id' => 'required|string',
-            'field' => 'required|string|in:project_status', // easy to expand config fields
-            'value' => 'required|string'
+            'field' => 'required|string|in:project_status,regular_start_date,regular_expired_date', // easy to expand config fields
+            'value' => 'nullable|string'
         ]);
 
         $hashids = new \Hashids\Hashids(config('app.key') . Models::class, config('hashids.connections.main.length', 10), config('hashids.connections.main.alphabet', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'));
@@ -104,14 +134,39 @@ class ModelConfigController extends Controller
             ->where('customer_id', $representativeModel->customer_id)
             ->pluck('id');
 
+        $today = \Carbon\Carbon::today()->toDateString();
+        $statusChanged = false;
+
         // Update the model config logic for ALL matching IDs
         foreach ($idsToUpdate as $id) {
-            ModelStatus::updateOrCreate(
+            $status = ModelStatus::updateOrCreate(
                 ['model_id' => $id],
                 [$validated['field'] => $validated['value']]
             );
+
+            // Evaluate dates immediately if a date field was updated
+            if (in_array($validated['field'], ['regular_start_date', 'regular_expired_date'])) {
+                // Determine the correct status purely based on the start date relative to today
+                $newStatus = 'Project'; // Default base state
+                
+                if ($status->regular_start_date && $status->regular_start_date <= $today) {
+                    $newStatus = 'Regular';
+                }
+                
+                // We no longer force project_status to 'Expired' in DB
+                
+                if ($newStatus !== $status->project_status) {
+                    $status->project_status = $newStatus;
+                    $status->save();
+                    $statusChanged = true;
+                }
+            }
         }
 
-        return response()->json(['success' => true, 'message' => 'Configuration updated successfully for all matching models']);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Configuration updated successfully',
+            'status_changed' => $statusChanged
+        ]);
     }
 }

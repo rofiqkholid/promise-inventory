@@ -16,6 +16,8 @@ class ModelStatus extends Model
     protected $fillable = [
         'model_id',
         'project_status',
+        'regular_start_date',
+        'regular_expired_date',
     ];
 
     public function model()

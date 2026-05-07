@@ -69,7 +69,7 @@
 </div>
 
     @include('inventory.material.vave.partials.ebd_modal')
-    @include('inventory.material.vave.partials.import_modal')
+    @include('inventory.material.vave.partials.import_modal', ['isRegular' => false])
     @include('inventory.material.vave.partials.comparison_modal')
 @endsection
 

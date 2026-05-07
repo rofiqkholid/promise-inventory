@@ -13,7 +13,8 @@ class ProjectVaveDashboardController extends Controller
      */
     public function index()
     {
-        return view('inventory.material.vave.project-dashboard');
+        $versions = DB::table('inv_m_vave_base')->distinct()->pluck('base_name');
+        return view('inventory.material.vave.project-dashboard', compact('versions'));
     }
 
     /**
@@ -26,6 +27,7 @@ class ProjectVaveDashboardController extends Controller
         $month      = $request->input('month'); 
         $customerId = $request->input('customer_id');
         $modelId    = $request->input('model_id');
+        $ebdVersion = $request->input('ebd_version');
 
         $comparisonTrend = [];
         if ($mode === 'comparison') {
@@ -42,8 +44,8 @@ class ProjectVaveDashboardController extends Controller
                     ->leftJoin(DB::raw('(
                         SELECT product_id, MAX(id) as latest_id 
                         FROM inv_m_vave_base 
-                        WHERE (effective_from <= ' . $y . ' AND (effective_to IS NULL OR effective_to >= ' . $y . '))
-                           OR (effective_from IS NULL AND effective_to IS NULL)
+                        WHERE ((effective_from <= ' . $y . ' AND (effective_to IS NULL OR effective_to >= ' . $y . '))
+                           OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
                         GROUP BY product_id
                     ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
                     ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
@@ -83,8 +85,8 @@ class ProjectVaveDashboardController extends Controller
             ->leftJoin(DB::raw('(
                 SELECT product_id, MAX(id) as latest_id 
                 FROM inv_m_vave_base 
-                WHERE (effective_from <= ' . $year . ' AND (effective_to IS NULL OR effective_to >= ' . $year . '))
-                   OR (effective_from IS NULL AND effective_to IS NULL)
+                WHERE ((effective_from <= ' . $year . ' AND (effective_to IS NULL OR effective_to >= ' . $year . '))
+                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
                 GROUP BY product_id
             ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
             ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
@@ -215,6 +217,7 @@ class ProjectVaveDashboardController extends Controller
         $month      = $request->input('month');
         $customerId = $request->input('customer_id');
         $modelId    = $request->input('model_id');
+        $ebdVersion = $request->input('ebd_version');
         $limit      = (int) $request->input('limit', 20);
 
         $query = DB::table('inv_t_inventory_transaction as t')
@@ -227,8 +230,8 @@ class ProjectVaveDashboardController extends Controller
             ->leftJoin(DB::raw('(
                 SELECT product_id, MAX(id) as latest_id 
                 FROM inv_m_vave_base 
-                WHERE (effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
-                   OR (effective_from IS NULL AND effective_to IS NULL)
+                WHERE ((effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
+                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
                 GROUP BY product_id
             ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
             ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')

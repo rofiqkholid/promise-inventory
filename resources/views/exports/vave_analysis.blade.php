@@ -18,11 +18,11 @@
         {{-- Header Row --}}
         <tr>
             <td style="font-weight: bold; border: 1px solid #000000; background-color: #f3f4f6; width: 30px;">PARAMETER</td>
-            <td style="font-weight: bold; border: 1px solid #000000; background-color: #dbeafe; text-align: center; width: 25px;">PLAN (BASE)</td>
+            <td style="font-weight: bold; border: 1px solid #000000; background-color: #dbeafe; text-align: center; width: 25px;">{{ isset($isRegular) && $isRegular ? 'PLAN (SQ)' : 'PLAN (BASE)' }}</td>
             <td style="font-weight: bold; border: 1px solid #000000; background-color: #d1fae5; text-align: center; width: 25px;">ACTUAL (REV)</td>
             <td style="font-weight: bold; border: 1px solid #000000; background-color: #f3f4f6; text-align: center; width: 20px;">VARIANCE (Δ)</td>
             @foreach($baseHistory as $r)
-                <td style="font-weight: bold; border: 1px solid #000000; background-color: #f9fafb; color: #6b7280; text-align: center; width: 20px;">HISTORY (BASE)</td>
+                <td style="font-weight: bold; border: 1px solid #000000; background-color: #f9fafb; color: #6b7280; text-align: center; width: 20px;">{{ isset($isRegular) && $isRegular ? 'HISTORY (SQ)' : 'HISTORY (BASE)' }}</td>
             @endforeach
             @foreach($revisions as $idx => $rev)
                 @if($idx > 0)
@@ -200,26 +200,26 @@
             <td colspan="{{ $totalCols }}" style="font-weight: bold; background-color: #f3f4f6; border: 1px solid #000000; padding: 5px;">3. COMMERCIAL (ESTIMATE)</td>
         </tr>
         <tr>            <td style="border: 1px solid #000000;">Price/kg (IDR)</td>
-            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($vaveBase->material_price, 0) }}</td>
-            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($latestRev->material_price, 0) }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ $vaveBase->material_price > 0 ? number_format($vaveBase->material_price, 0) : (isset($isRegular) && $isRegular ? 'No Epicor Data' : '0') }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ $latestRev->material_price > 0 ? number_format($latestRev->material_price, 0) : (isset($isRegular) && $isRegular ? 'No Epicor Data' : '0') }}</td>
             @php $deltaPrice = (float)($latestRev->material_price ?? 0) - (float)($vaveBase->material_price ?? 0); @endphp
-            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">{{ ($deltaPrice > 0 ? '+' : '') . number_format($deltaPrice, 0) }}</td>
-            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($r->material_price, 0) }}</td> @endforeach
-            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->material_price, 0) }}</td> @endif @endforeach
+            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">{{ ($vaveBase->material_price > 0 && $latestRev->material_price > 0) || !(isset($isRegular) && $isRegular) ? ($deltaPrice > 0 ? '+' : '') . number_format($deltaPrice, 0) : 'N/A' }}</td>
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ $r->material_price > 0 ? number_format($r->material_price, 0) : (isset($isRegular) && $isRegular ? 'No Epicor Data' : '0') }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ $rev->material_price > 0 ? number_format($rev->material_price, 0) : (isset($isRegular) && $isRegular ? 'No Epicor Data' : '0') }}</td> @endif @endforeach
         </tr>
         <tr>
             <td style="border: 1px solid #000000;">Material Cost (IDR)</td>
-            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($baseW * $vaveBase->material_price, 0) }}</td>
-            <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ number_format($actW * $latestRev->material_price, 0) }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ $vaveBase->material_price > 0 ? number_format($baseW * $vaveBase->material_price, 0) : (isset($isRegular) && $isRegular ? 'N/A' : '0') }}</td>
+            <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ $latestRev->material_price > 0 ? number_format($actW * $latestRev->material_price, 0) : (isset($isRegular) && $isRegular ? 'N/A' : '0') }}</td>
             @php 
                 $baseCost = $baseW * $vaveBase->material_price;
                 $actCost = $actW * $latestRev->material_price;
                 $deltaCost = $actCost - $baseCost;
                 $colorC = $deltaCost > 0 ? '#dc2626' : ($deltaCost < 0 ? '#16a34a' : '#000000'); 
             @endphp
-            <td style="border: 1px solid #000000; text-align: center; font-weight: bold; color: {{ $colorC }};">{{ ($deltaCost > 0 ? '+' : '') . number_format($deltaCost, 0) }}</td>
-            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($r->weight_kg * $r->material_price, 0) }}</td> @endforeach
-            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->weight_kg * $rev->material_price, 0) }}</td> @endif @endforeach
+            <td style="border: 1px solid #000000; text-align: center; font-weight: bold; color: {{ ($vaveBase->material_price > 0 && $latestRev->material_price > 0) || !(isset($isRegular) && $isRegular) ? $colorC : '#9ca3af' }};">{{ ($vaveBase->material_price > 0 && $latestRev->material_price > 0) || !(isset($isRegular) && $isRegular) ? ($deltaCost > 0 ? '+' : '') . number_format($deltaCost, 0) : 'N/A' }}</td>
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ $r->material_price > 0 ? number_format($r->weight_kg * $r->material_price, 0) : (isset($isRegular) && $isRegular ? 'N/A' : '0') }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ $rev->material_price > 0 ? number_format($rev->weight_kg * $rev->material_price, 0) : (isset($isRegular) && $isRegular ? 'N/A' : '0') }}</td> @endif @endforeach
         </tr>
  
         {{-- Section: Additional Info --}}

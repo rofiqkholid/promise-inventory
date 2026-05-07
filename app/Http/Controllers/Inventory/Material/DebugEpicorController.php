@@ -26,31 +26,31 @@ class DebugEpicorController extends Controller
     {
         try {
             $epicorDataRaw = DB::connection('second_db')->select("
-                select 
-                    b.VendorID, 
-                    a.PartNum, 
-                    a.BaseUnitPrice, 
-                    a.PUM, 
-                    a.EffectiveDate,
-                    a.ExpirationDate
-                from erp.VendPart a
-                left join erp.Vendor b on b.VendorNum = a.VendorNum
-                left join erp.part c on c.PartNum = a.PartNum
-                where c.ClassID = 'RM'
-                order by a.PartNum, a.EffectiveDate desc
+                WITH PriceLatest AS (
+                    select 
+                        b.VendorID, 
+                        a.PartNum, 
+                        a.BaseUnitPrice, 
+                        a.PUM, 
+                        a.EffectiveDate,
+                        a.ExpirationDate,
+                        e.ConvFactor,
+                        a.PricePerCode,
+                        ROW_NUMBER() OVER (PARTITION BY a.PartNum ORDER BY a.EffectiveDate DESC) as RowNum
+                    from erp.VendPart a
+                    left join erp.Vendor b on b.VendorNum = a.VendorNum
+                    left join erp.part c on c.PartNum = a.PartNum
+                    left join erp.UOMClass d on d.Description = a.PartNum
+                    left join erp.UOMConv e on e.UOMClassID = d.UOMClassID and e.UOMCode = a.PUM
+                    where a.PartNum like '%-R%'
+                )
+                SELECT * FROM PriceLatest WHERE RowNum = 1
             ");
             
             $epicorData = [];
-            $epicorBaseMap = [];
             foreach ($epicorDataRaw as $row) {
                 $pn = trim($row->PartNum);
-                if (!isset($epicorData[$pn])) {
-                    $epicorData[$pn] = $row;
-                    $base = preg_replace('/(-000)?-R$/', '', $pn);
-                    if (!isset($epicorBaseMap[$base])) {
-                        $epicorBaseMap[$base] = $row;
-                    }
-                }
+                $epicorData[$pn] = $row;
             }
         } catch (\Exception $e) {
             throw $e;
@@ -61,7 +61,6 @@ class DebugEpicorController extends Controller
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
             ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('p.is_delete', 0)
-            ->whereIn('ps.name', ['Project', 'Regular']) // Filter only Project and Regular
             ->select([
                 'p.id',
                 'p.part_no',
@@ -77,10 +76,40 @@ class DebugEpicorController extends Controller
 
         $promiseProducts = $query->get();
 
-        $data = $promiseProducts->map(function($p) use ($epicorData, $epicorBaseMap) {
+        $data = $promiseProducts->map(function($p) use ($epicorData) {
             $partNo = trim($p->part_no);
-            $lookupKeyDirect = $partNo . '-R';
-            $epi = $epicorData[$lookupKeyDirect] ?? ($epicorBaseMap[$partNo] ?? null);
+            $lookupBase = $partNo . '-R';
+            
+            // Fuzzy Matching Logic:
+            // 1. Try exact match: PartNo-R
+            // 2. Fallback: Find PartNum in Epicor that matches PartNo-R followed ONLY by numbers
+            $epi = $epicorData[$lookupBase] ?? null;
+            
+            if (!$epi) {
+                // Regex: Starts with lookupBase followed by zero or more digits, then end of string
+                $pattern = '/^' . preg_quote($lookupBase, '/') . '\d*$/';
+                foreach ($epicorData as $epiPn => $epiRow) {
+                    if (preg_match($pattern, $epiPn)) {
+                        $epi = $epiRow;
+                        break;
+                    }
+                }
+            }
+
+            $rawPrice = $epi ? (float) $epi->BaseUnitPrice : null;
+            $convFactor = ($epi && $epi->ConvFactor) ? round((float) $epi->ConvFactor, 3) : 0;
+            $pum = $epi ? trim($epi->PUM) : null;
+            
+            $convertedPrice = null;
+            if ($rawPrice !== null) {
+                if ($pum === 'SHEET' && $convFactor > 0) {
+                    // SHEET: Apply conversion and round UP
+                    $convertedPrice = ceil($rawPrice / $convFactor);
+                } elseif ($pum === 'KG') {
+                    // KG: Show raw data as is (no conversion)
+                    $convertedPrice = $rawPrice;
+                }
+            }
 
             return [
                 'promise_part_no' => $partNo,
@@ -88,10 +117,12 @@ class DebugEpicorController extends Controller
                 'customer' => $p->customer_code,
                 'model' => $p->model_name,
                 'project_status' => $p->project_status_name ?? 'No Status',
-                'target_epicor' => $epi ? $epi->PartNum : $lookupKeyDirect,
+                'target_epicor' => $epi ? $epi->PartNum : $lookupBase,
                 'vendor_id' => $epi ? $epi->VendorID : '-',
-                'epicor_price' => $epi ? (float) $epi->BaseUnitPrice : null,
-                'epicor_pum' => $epi ? $epi->PUM : null,
+                'epicor_price' => $rawPrice,
+                'converted_price' => $convertedPrice,
+                'epicor_pum' => $pum,
+                'epicor_conv_factor' => $convFactor,
                 'epicor_effective' => $epi ? date('d/m/Y', strtotime($epi->EffectiveDate)) : null,
                 'epicor_expired' => ($epi && $epi->ExpirationDate) ? date('d/m/Y', strtotime($epi->ExpirationDate)) : '-',
                 'status' => $epi ? 'FOUND' : 'NOT_FOUND'
@@ -109,64 +140,31 @@ class DebugEpicorController extends Controller
 
     public function data(Request $request)
     {
-        try {
-            $allData = $this->getComparisonData($request);
-            
-            $draw = (int) $request->input('draw');
-            $start = (int) $request->input('start', 0);
-            $length = (int) $request->input('length', 10);
-
-            $recordsTotal = DB::table('products')->where('is_delete', 0)->count();
-            $recordsFiltered = $allData->count();
-            
-            $pagedData = $allData->slice($start, $length)->values();
-
-            return response()->json([
-                'draw' => $draw,
-                'recordsTotal' => $recordsTotal,
-                'recordsFiltered' => $recordsFiltered,
-                'data' => $pagedData
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'draw' => (int)$request->input('draw'),
-                'recordsTotal' => 0,
-                'recordsFiltered' => 0,
-                'data' => [],
-                'error' => 'Error: ' . $e->getMessage()
-            ]);
-        }
+        $allData = $this->getComparisonData($request);
+        
+        $totalRecords = $allData->count();
+        $length = $request->input('length', 15);
+        $start = $request->input('start', 0);
+        
+        // Manual pagination on the collection
+        $pagedData = ($length == -1) ? $allData : $allData->slice($start, $length);
+        
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $totalRecords,
+            'data' => $pagedData->values()
+        ]);
     }
 
     public function export(Request $request)
     {
         $data = $this->getComparisonData($request);
-
-        $headers = [
-            'Part No Promise',
-            'Part Name',
-            'Customer',
-            'Model',
-            'Project Status',
-            'Sync Status',
-            'Epicor PartNum',
-            'Vendor ID',
-            'Price',
-            'PUM',
-            'Effective Date',
-            'Expiry Date'
-        ];
-
-        return Excel::download(new class($data, $headers) implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles {
+        
+        return Excel::download(new class($data) implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles {
             private $data;
-            private $headers;
-
-            public function __construct($data, $headers) {
-                $this->data = $data;
-                $this->headers = $headers;
-            }
-
-            public function collection() {
+            public function __construct($data) { $this->data = $data; }
+            public function collection() { 
                 return $this->data->map(function($item) {
                     return [
                         $item['promise_part_no'],
@@ -174,32 +172,30 @@ class DebugEpicorController extends Controller
                         $item['customer'],
                         $item['model'],
                         $item['project_status'],
-                        $item['status'],
                         $item['target_epicor'],
+                        $item['status'],
                         $item['vendor_id'],
                         $item['epicor_price'],
+                        $item['converted_price'],
                         $item['epicor_pum'],
+                        $item['epicor_conv_factor'],
                         $item['epicor_effective'],
                         $item['epicor_expired'],
                     ];
                 });
             }
-
             public function headings(): array {
-                return $this->headers;
-            }
-
-            public function styles(Worksheet $sheet) {
                 return [
-                    1 => [
-                        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                        'fill' => [
-                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => '4F46E5']
-                        ]
-                    ],
+                    'Promise Part No', 'Part Name', 'Customer', 'Model', 'Project Status',
+                    'Epicor Part Num', 'Sync Status', 'Vendor', 'Raw Price', 'Converted Price',
+                    'PUM', 'Conv Factor', 'Effective Date', 'Expiration Date'
                 ];
             }
-        }, 'epicor_comparison_' . date('Ymd_His') . '.xlsx');
+            public function styles(Worksheet $sheet) {
+                return [
+                    1 => ['font' => ['bold' => true]],
+                ];
+            }
+        }, 'epicor_sync_debug_' . date('Ymd_His') . '.xlsx');
     }
 }

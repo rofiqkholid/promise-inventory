@@ -19,19 +19,21 @@ class VaveBaseImport implements WithMultipleSheets
     private $sheetName;
     private $customerId;
     private $modelId;
+    private $isRegular;
     private $errors = [];
     private $successLog = [];
 
-    public function __construct($sheetName, $customerId = null, $modelId = null)
+    public function __construct($sheetName, $customerId = null, $modelId = null, $isRegular = false)
     {
         $this->sheetName = strval($sheetName);
         $this->customerId = $customerId;
         $this->modelId = $modelId;
+        $this->isRegular = $isRegular;
     }
 
     public function sheets(): array
     {
-        $sheetImport = new VaveBaseImportSheet($this->customerId, $this->modelId);
+        $sheetImport = new VaveBaseImportSheet($this->customerId, $this->modelId, $this->isRegular);
         
         // Store reference to collect logs later
         $this->sheetImport = $sheetImport;
@@ -60,6 +62,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
 {
     private $customerId;
     private $modelId;
+    private $isRegular;
     private $processedProducts = [];
     private $errors = [];
     private $successLog = [
@@ -68,10 +71,11 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
         'unchangedCount' => 0
     ];
 
-    public function __construct($customerId, $modelId)
+    public function __construct($customerId, $modelId, $isRegular = false)
     {
         $this->customerId = $customerId;
         $this->modelId = $modelId;
+        $this->isRegular = $isRegular;
     }
 
     public function startRow(): int
@@ -128,6 +132,21 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                 for ($col = 4; $col < $maxCols; $col += 16) {
                     $baseName = trim($row[$col] ?? '');
                     if (empty($baseName)) continue; // Try next block instead of break
+
+                    // Strict Module Filtering
+                    if ($this->isRegular) {
+                        // In Regular mode, we ONLY read baselines starting with SQ.
+                        // We DO NOT convert EBD to SQ. We simply ignore EBD data.
+                        if (stripos($baseName, 'SQ') !== 0) {
+                            continue;
+                        }
+                    } else {
+                        // In Project mode, we ONLY read baselines starting with EBD.
+                        // We ignore any SQ data present in the file.
+                        if (stripos($baseName, 'EBD') !== 0) {
+                            continue;
+                        }
+                    }
 
                     $foundEbdInRow = true;
                     $vaveErrors = [];

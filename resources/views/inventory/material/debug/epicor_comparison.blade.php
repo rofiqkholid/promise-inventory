@@ -80,6 +80,8 @@
                         <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">Status</th>
                         <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest">Vendor</th>
                         <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-right">Epicor Price</th>
+                        <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">Conv</th>
+                        <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-right">Price (Conv)</th>
                         <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest">Model</th>
                         <th class="px-4 py-4 text-[10px] font-bold uppercase tracking-widest text-center">Cust</th>
                     </tr>
@@ -120,6 +122,8 @@ $(document).ready(function() {
         serverSide: true,
         autoWidth: false,
         pageLength: 15,
+        lengthMenu: [[10, 15, 25, 50, 100, -1], [10, 15, 25, 50, 100, "All"]],
+        dom: '<"flex justify-between items-center mb-4"l>rt<"flex justify-between items-center mt-4"ip>',
         ajax: {
             url: "{{ route('inventory.debug.epicor.data') }}",
             data: function(d) {
@@ -159,7 +163,40 @@ $(document).ready(function() {
             },
             { 
                 data: 'epicor_price',
-                width: '20%',
+                width: '15%',
+                className: 'text-right px-4',
+                render: function(data, type, row) {
+                    if (data === null || data == 0) return `<span class="text-gray-300">—</span>`;
+                    
+                    // Format without standard decimal cents
+                    let formattedPrice = new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(data);
+
+                    return `
+                        <div class="flex flex-col items-end pr-2">
+                            <span class="font-bold text-gray-900 text-sm">${formattedPrice}</span>
+                            <div class="flex items-center gap-1.5 mt-1">
+                                <span class="bg-indigo-50 text-indigo-500 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter border border-indigo-100">/ ${row.epicor_pum || 'UNIT'}</span>
+                                <div class="flex items-center leading-none">
+                                    <span class="text-[7px] text-emerald-600 font-bold uppercase ml-1">Eff: ${row.epicor_effective}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            },
+            {
+                data: 'epicor_conv_factor',
+                width: '5%',
+                className: 'text-center',
+                render: data => `<span class="text-xs font-mono text-gray-500">${data ? parseFloat(data).toFixed(3) : '0.000'}</span>`
+            },
+            { 
+                data: 'converted_price',
+                width: '15%',
                 className: 'text-right px-4',
                 render: function(data, type, row) {
                     if (data === null || data == 0) return `<span class="text-gray-300">—</span>`;
@@ -168,19 +205,15 @@ $(document).ready(function() {
                         style: 'currency',
                         currency: 'IDR',
                         minimumFractionDigits: 0,
-                        maximumFractionDigits: 4
+                        maximumFractionDigits: 0
                     }).format(data);
 
                     return `
                         <div class="flex flex-col items-end pr-2">
-                            <span class="font-bold text-gray-900 text-sm">${formattedPrice}</span>
-                            <div class="flex items-center gap-1.5 mt-1">
-                                <span class="bg-indigo-50 text-indigo-500 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter border border-indigo-100">/ ${row.epicor_pum || 'UNIT'}</span>
-                                <div class="flex flex-col items-end leading-none">
-                                    <span class="text-[7px] text-emerald-600 font-bold uppercase">Eff: ${row.epicor_effective}</span>
-                                    <span class="text-[7px] text-rose-400 font-bold uppercase mt-0.5">Exp: ${row.epicor_expired}</span>
-                                </div>
-                            </div>
+                            <span class="font-bold text-indigo-600 text-sm">${formattedPrice}</span>
+                            <span class="text-[8px] text-gray-400 font-medium mt-1">
+                                ${row.epicor_pum === 'SHEET' ? 'Ceil (Whole)' : 'Raw (KG)'}
+                            </span>
                         </div>`;
                 }
             },
@@ -213,9 +246,14 @@ $(document).ready(function() {
     });
 
     // Custom Search Implementation
-    $('#table_search_container').html('<div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i><input type="text" class="custom-search-input bg-white border-gray-200 rounded-xl pl-9 pr-4 py-1.5 text-xs w-64 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Search Part No..."></div>');
+    const searchHtml = `
+        <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 text-xs"></i>
+            <input type="text" id="custom_search" class="custom-search-input bg-white border-gray-200 rounded-xl pl-9 pr-4 py-1.5 text-xs w-64 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all" placeholder="Search Part No...">
+        </div>`;
+    $('#table_search_container').html(searchHtml);
 
-    $('.custom-search-input').on('keyup', function() {
+    $(document).on('keyup', '#custom_search', function() {
         table.ajax.reload();
     });
 

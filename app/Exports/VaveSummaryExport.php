@@ -13,16 +13,19 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class VaveSummaryExport implements FromView, WithTitle, WithStyles, ShouldAutoSize
 {
     protected $data;
+    protected $isRegular;
 
-    public function __construct($data)
+    public function __construct($data, $isRegular = false)
     {
         $this->data = $data;
+        $this->isRegular = $isRegular;
     }
 
     public function view(): View
     {
         return view('exports.vave_summary', [
-            'products' => $this->data
+            'products' => $this->data,
+            'isRegular' => $this->isRegular
         ]);
     }
 

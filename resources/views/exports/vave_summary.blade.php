@@ -18,9 +18,9 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Model</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part No</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part Name</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">EBD Reference</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Change Status (EBD)</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Wt EBD</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'SQ Reference' : 'EBD Reference' }}</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'Change Status (SQ)' : 'Change Status (EBD)' }}</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'Gross Wt SQ' : 'Gross Wt EBD' }}</th>
                 
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Latest Revision</th>
                 
@@ -35,7 +35,7 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Net Wt</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Scrap (kg)</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Yield Ratio (%)</th>
-                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Status (vs EBD)</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'Status (vs SQ)' : 'Status (vs EBD)' }}</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Price</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Cost</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gap (kg)</th>
@@ -147,8 +147,12 @@
                         {{ $status }}
                     </td>
 
-                    <td style="border: 1px solid #000000; text-align: right;">{{ number_format($stage['material_price'], 2) }}</td>
-                    <td style="border: 1px solid #000000; text-align: right; background-color: #f8fafc; font-weight: bold;">{{ number_format($stage['cost'], 2) }}</td>
+                    <td style="border: 1px solid #000000; text-align: right;{{ $stage['material_price'] <= 0 && (isset($isRegular) && $isRegular) ? ' color: #dc2626; font-style: italic;' : '' }}">
+                        {{ $stage['material_price'] > 0 ? number_format($stage['material_price'], 2) : (isset($isRegular) && $isRegular ? 'No Epicor Data' : '0.00') }}
+                    </td>
+                    <td style="border: 1px solid #000000; text-align: right; background-color: #f8fafc; font-weight: bold;{{ $stage['material_price'] <= 0 && (isset($isRegular) && $isRegular) ? ' color: #dc2626; font-style: italic;' : '' }}">
+                        {{ $stage['material_price'] > 0 ? number_format($stage['cost'], 2) : (isset($isRegular) && $isRegular ? 'N/A' : '0.00') }}
+                    </td>
                     
                    @php
                         // 1. GAP KG (Selisih Gross Weight)
@@ -170,11 +174,17 @@
                             // 2. GAP IDR (Selisih Cost)
                             $saving = $baselineCost - $stage['cost'];
                             $roundSaving = round((float)$saving, 2);
-                            
-                            if ($roundSaving > 0) {
-                                $savingColor = '#166534'; $savingBg = '#f0fdf4'; // Merit
-                            } elseif ($roundSaving < 0) {
-                                $savingColor = '#991b1b'; $savingBg = '#fef2f2'; // Loss
+
+                            if ($stage['material_price'] > 0 || !(isset($isRegular) && $isRegular)) {
+                                if ($roundSaving > 0) {
+                                    $savingColor = '#166534'; $savingBg = '#f0fdf4'; // Merit
+                                } elseif ($roundSaving < 0) {
+                                    $savingColor = '#991b1b'; $savingBg = '#fef2f2'; // Loss
+                                } else {
+                                    $savingColor = '#000000'; $savingBg = '#ffffff';
+                                }
+                            } else {
+                                $savingColor = '#9ca3af'; $savingBg = '#f9fafb';
                             }
                         }
                     @endphp
@@ -186,7 +196,7 @@
 
                     {{-- KOLOM GAP (IDR) --}}
                     <td style="border: 1px solid #000000; text-align: right; color: {{ $savingColor }}; background-color: {{ $savingBg }}; font-weight: bold;">
-                        {{ (!$stage['is_baseline'] && $hasBaseline && $stage['theoretical_weight'] > 0) ? number_format($saving, 2) : '-' }}
+                        {{ (!$stage['is_baseline'] && $hasBaseline && $stage['theoretical_weight'] > 0) ? ($stage['material_price'] > 0 || !(isset($isRegular) && $isRegular) ? number_format($saving, 2) : 'N/A') : '-' }}
                     </td>
                 </tr>
                 @endforeach

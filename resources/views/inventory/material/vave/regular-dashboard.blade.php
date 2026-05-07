@@ -96,7 +96,7 @@
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4">
         <form id="filterForm">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 flex-1">
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Analysis Mode</label>
                         <select id="filterMode" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
@@ -118,8 +118,17 @@
                         <select id="filterCustomer" class="select2-simple w-full"></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Model</label>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Model</label>
                         <select id="filterModel" class="select2-simple w-full" disabled></select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">EBD Version</label>
+                        <select id="filterEbdVersion" class="select2-simple w-full">
+                            <option value="">All Versions</option>
+                            @foreach($versions as $version)
+                                <option value="{{ $version }}">{{ $version }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="flex gap-2 items-end">
                         <button type="button" id="btnReset" class="h-10 px-6 bg-slate-600 hover:bg-slate-700 rounded-xs text-xs font-medium text-white transition-all shadow-sm active:scale-95">
@@ -366,9 +375,15 @@ $(function() {
         $('#btnReset').on('click', function() {
             $('#filterMode').val('monthly').trigger('change');
             $('#filterCustomer').val('').trigger('change');
-            $('#filterPeriod').val('{{ date("Y-m") }}');
+            $('#filterModel').val('').trigger('change');
+            $('#filterEbdVersion').val('').trigger('change');
+            refreshData();
         });
     }
+
+    $('#filterEbdVersion').on('change', function() {
+        refreshData();
+    });
 
     // Refresh Data & Charts
     function refreshData() {
@@ -390,7 +405,8 @@ $(function() {
             year: year,
             month: month,
             customer_id: $('#filterCustomer').val(),
-            model_id: $('#filterModel').val()
+            model_id: $('#filterModel').val(),
+            ebd_version: $('#filterEbdVersion').val()
         };
 
         const btn = $('#btnReset');

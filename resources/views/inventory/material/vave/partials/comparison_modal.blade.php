@@ -1,6 +1,11 @@
 {{-- ============================================================ --}}
 {{-- VA/VE ANALYSIS COMPARISON MODAL                              --}}
 {{-- ============================================================ --}}
+@php
+    $isRegular = $isRegular ?? false;
+    $planLabel = $isRegular ? 'SQ' : 'EBD';
+@endphp
+
 <div id="comparisonModal" tabindex="-1" aria-hidden="true"
     class="hidden fixed inset-0 z-50 bg-black/40 flex items-stretch justify-stretch">
 
@@ -25,7 +30,7 @@
             {{-- Left: Selectors --}}
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                    <label for="selectCompareBase" class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Plan (EBD)</label>
+                    <label for="selectCompareBase" class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Plan ({{ $planLabel }})</label>
                     <select id="selectCompareBase" class="border border-gray-300 dark:border-gray-600 text-xs text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 rounded px-2 py-1.5 outline-none focus:border-blue-500 min-w-[180px]"></select>
                 </div>
                 <div class="h-5 w-px bg-gray-300 dark:bg-gray-600"></div>
@@ -142,9 +147,9 @@ $(document).ready(function() {
             const actualSelect = $('#selectCompareActual').empty();
 
             let html = '';
-            res.bases.forEach(r => {
+            res.bases.forEach((r, index) => {
                 const suffix = r.suffix ? ` - ${r.suffix.name}` : '';
-                html += `<option value="${r.hash_id}" ${r.is_active ? 'selected' : ''}>${r.base_name}${suffix} (${parseFloat(r.weight_kg).toFixed(3)}kg)</option>`;
+                html += `<option value="${r.hash_id}" ${index === 0 ? 'selected' : ''}>${r.base_name}${suffix} (${parseFloat(r.weight_kg).toFixed(3)}kg)</option>`;
             });
             $('#selectCompareBase').html(html);
 
@@ -230,7 +235,7 @@ $(document).ready(function() {
         
         html += `<th class="w-[200px] min-w-[200px] max-w-[200px] px-5 py-4 text-center border-b border-r border-primary-200 dark:border-gray-700 bg-primary-50/50 dark:bg-primary-900/20 sticky top-0 z-40" style="left: 160px;">
                 <div class="flex flex-col items-center">
-                    <span class="text-[9px] text-primary-600 dark:text-primary-400 font-black tracking-[0.2em] mb-1">PLAN (EBD)</span>
+                    <span class="text-[9px] text-primary-600 dark:text-primary-400 font-black tracking-[0.2em] mb-1">PLAN ({{ $planLabel }})</span>
                     <span class="font-black text-slate-800 dark:text-white truncate max-w-[180px] uppercase tracking-tighter" title="${benchmarkBase.base_name}">${benchmarkBase.base_name}</span>
                 </div>
             </th>`;
@@ -275,27 +280,43 @@ $(document).ready(function() {
             return row + `</tr>`;
         };
 
-        const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false) => {
+        const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false, isCurrency = false) => {
             const getVal = (item) => typeof valueGetter === 'function' ? valueGetter(item) : parseFloat(item[valueGetter] || 0);
+            
+            const formatVal = (val, isDelta = false) => {
+                if (isCurrency && (val === 0 || isNaN(val)) && !isDelta) return '<span class="text-red-500 text-[10px] uppercase font-bold tracking-wider">No Epicor Data</span>';
+                if (isNaN(val)) return '-';
+                return val.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision}) + (unit ? ' ' + unit : '');
+            };
+
             const baseVal = getVal(benchmarkBase);
             let row = `<tr class="hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-150 text-xs group">
                 <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 font-semibold text-gray-700 dark:text-gray-300 sticky left-0 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-10 transition-colors group-hover:bg-primary-50">${label}</td>
-                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${baseVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+                <td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-600 sticky z-30 bg-white dark:bg-gray-800 transition-colors group-hover:bg-primary-50" style="left: 160px;">${formatVal(baseVal)}</td>`;
 
             let actualVal = 0;
             if (latestRevision) {
                 actualVal = getVal(latestRevision);
-                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-800 font-bold bg-yellow-50 group-hover:bg-yellow-100 sticky z-30 transform-gpu" style="left: 320px;">${actualVal.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+                row += `<td class="w-[160px] min-w-[160px] max-w-[160px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono text-gray-800 font-bold bg-yellow-50 group-hover:bg-yellow-100 sticky z-30 transform-gpu" style="left: 320px;">${formatVal(actualVal)}</td>`;
                 const delta = actualVal - baseVal;
                 const isGood = invertColor ? delta > 0 : delta <= 0;
                 let cClass = 'text-gray-400', bClass = 'bg-gray-50'; 
                 if (Math.abs(delta) > 0.0001) { cClass = isGood ? 'text-green-600' : 'text-red-600'; bClass = isGood ? 'bg-green-50' : 'bg-red-50'; }
-                row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono font-bold ${cClass} sticky z-30 ${bClass} transition-colors group-hover:bg-primary-100" style="left: 480px;">${delta > 0 ? '+' : ''}${delta.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})} ${unit}</td>`;
+                
+                let deltaStr = '-';
+                if (!isCurrency || (actualVal > 0 && baseVal > 0)) {
+                    deltaStr = `${delta > 0 ? '+' : ''}${formatVal(delta, true)}`;
+                } else if (isCurrency) {
+                    deltaStr = '<span class="text-gray-400 text-[10px] font-bold">-</span>';
+                    cClass = 'text-gray-400'; bClass = 'bg-gray-50';
+                }
+
+                row += `<td class="w-[110px] min-w-[110px] max-w-[110px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 font-mono font-bold ${cClass} sticky z-30 ${bClass} transition-colors group-hover:bg-primary-100" style="left: 480px;">${deltaStr}</td>`;
             } else {
                 row += `<td class="w-[160px] min-w-[160px] px-4 py-2.5 bg-white border-r border-gray-200 sticky z-30" style="left: 320px;">-</td><td class="w-[110px] min-w-[110px] px-4 py-2.5 bg-gray-50 border-r border-gray-200 sticky z-30" style="left: 480px;">-</td>`;
             }
 
-            revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${getVal(rev).toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: precision})}</td>`; });
+            revisions.forEach(rev => { if (!latestRevision || !rev.revision || !latestRevision.revision || rev.revision.code !== latestRevision.revision.code) row += `<td class="w-[120px] min-w-[120px] px-4 py-2.5 text-center border-r border-gray-200 dark:border-gray-700 text-gray-400 history-col hidden border-dashed font-mono">${formatVal(getVal(rev))}</td>`; });
             return row + `</tr>`;
         };
 
@@ -347,8 +368,8 @@ $(document).ready(function() {
         }, '', 1, true); 
         
         html += buildSectionRow('Commercial');
-        html += buildComputedRow('Price/Kg (IDR)', i => parseFloat(i.material_price || 0), '', 0, false);
-        html += buildComputedRow('Total Cost (IDR)', i => (parseFloat(i.weight_kg||0) * parseFloat(i.material_price || 0)), '', 0, false); 
+        html += buildComputedRow('Price/Kg (IDR)', i => parseFloat(i.material_price || 0), '', 0, false, true);
+        html += buildComputedRow('Total Cost (IDR)', i => (parseFloat(i.weight_kg||0) * parseFloat(i.material_price || 0)), '', 0, false, true); 
 
         html += buildSectionRow('Other Information');
         html += buildRow('Remark', item => item.remark ? item.remark : '-');

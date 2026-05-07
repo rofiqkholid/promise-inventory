@@ -8,11 +8,11 @@
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Regular VA/VE Analysis</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Compare EBD (Engineering Breakdown) data with production revisions to analyze material efficiency for Regular models.</p>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Compare SQ (Sales Quotation) data with production revisions to analyze material efficiency for Regular models.</p>
         </div>
         <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <button type="button" id="btnImportEbd" data-modal-target="importEbdModal" class="h-9 px-4 inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xs transition-all gap-2 active:scale-95 shadow-sm text-xs font-medium">
-                <i class="fa-solid fa-file-import"></i> Import EBD Data
+            <button type="button" id="btnImportSq" data-modal-target="importSqModal" class="h-9 px-4 inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xs transition-all gap-2 active:scale-95 shadow-sm text-xs font-medium">
+                <i class="fa-solid fa-file-import"></i> Import SQ Data
             </button>
         </div>
     </div>
@@ -33,8 +33,8 @@
                 </select>
             </div>
             <div class="w-full md:w-64">
-                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">EBD Bases (Export Only)</label>
-                <select id="filterEbdBase" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">SQ Bases (Export Only)</label>
+                <select id="filterSqBase" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Bases</option>
                 </select>
             </div>
@@ -58,7 +58,7 @@
                 <th class="text-left">Part Name</th>
                 <th class="text-center">Customer</th>
                 <th class="text-center">Model</th>
-                <th class="text-center">EBD (Kg)</th>
+                <th class="text-center">SQ (Kg)</th>
                 <th class="text-center">Latest (Kg)</th>
                 <th class="text-center">Analysis Status</th>
                 <th class="text-center w-[180px]">Action</th>
@@ -68,9 +68,9 @@
     </x-table>
 </div>
 
-    @include('inventory.material.vave.partials.ebd_modal')
-    @include('inventory.material.vave.partials.import_modal')
-    @include('inventory.material.vave.partials.comparison_modal')
+    @include('inventory.material.vave.partials.sq_modal')
+    @include('inventory.material.vave.partials.import_modal', ['isRegular' => true])
+    @include('inventory.material.vave.partials.comparison_modal', ['isRegular' => true])
 @endsection
 
 @push('scripts')
@@ -145,8 +145,8 @@ $(function() {
                 orderable: false,
                 render: row => `
                     <div class="flex items-center justify-center gap-1.5">
-                        <button class="rfq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage EBD (Engineering Breakdown)">
-                            <i class="fa-solid fa-pen-to-square btn-icon"></i> <span class="btn-text">EBD</span>
+                        <button class="sq-button h-8 px-4 inline-flex items-center justify-center gap-2 text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400 border border-primary-100 dark:border-primary-800 rounded-xs hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all font-bold text-[10px] active:scale-95 min-w-[85px]" data-id="${row.hash_id}" title="Manage SQ (Sales Quotation)">
+                            <i class="fa-solid fa-pen-to-square btn-icon"></i> <span class="btn-text">SQ</span>
                         </button>
                         <button class="compare-button h-8 px-4 inline-flex items-center justify-center gap-2 text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border border-purple-100 dark:border-purple-800 rounded-xs hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all font-bold text-[10px] active:scale-95 min-w-[100px] ${!row.has_base ? 'opacity-30 grayscale cursor-not-allowed' : ''}" data-id="${row.hash_id}" ${!row.has_base ? 'disabled' : ''} title="VAVE Analysis Comparison">
                             <i class="fa-solid fa-chart-line btn-icon"></i> <span class="btn-text">Analysis</span>
@@ -156,10 +156,10 @@ $(function() {
         ]
     });
 
-    // Initialize EBD Bases on load (independent of customer)
-    function refreshEbdBases(customerId = null) {
+    // Initialize SQ Bases on load (independent of customer)
+    function refreshSqBases(customerId = null) {
         $.get(VAVE_CONFIG.route_getBases, { customer_id: customerId }, function(data) {
-            const baseSelect = $('#filterEbdBase').empty().append('<option value="">All Bases</option>');
+            const baseSelect = $('#filterSqBase').empty().append('<option value="">All Bases</option>');
             data.forEach(name => {
                 baseSelect.append(`<option value="${name}">${name}</option>`);
             });
@@ -174,7 +174,7 @@ $(function() {
             });
         });
 
-        refreshEbdBases();
+        refreshSqBases();
 
         $('#filterCustomer').on('change', function() {
             const customerId = $(this).val();
@@ -201,8 +201,8 @@ $(function() {
         $('#btnResetFilter').on('click', function() {
             $('#filterCustomer').val('').trigger('change');
             $('#filterModel').val('').trigger('change').prop('disabled', true);
-            $('#filterEbdBase').val('').trigger('change');
-            refreshEbdBases(); // Reset to global bases
+            $('#filterSqBase').val('').trigger('change');
+            refreshSqBases(); // Reset to global bases
             table.ajax.reload();
         });
         
@@ -220,7 +220,7 @@ $(function() {
         });
 
         $('.select2-import').select2({
-            dropdownParent: $('#importEbdModal'),
+            dropdownParent: $('#importSqModal'),
             width: '100%',
             placeholder: 'Select...',
         });
@@ -280,7 +280,7 @@ $(function() {
     $('#btnExportSummary').on('click', function() {
         const customerId = $('#filterCustomer').val();
         const modelId = $('#filterModel').val();
-        const baseName = $('#filterEbdBase').val();
+        const baseName = $('#filterSqBase').val();
 
         let url = VAVE_CONFIG.route_exportSummary;
         let params = [];

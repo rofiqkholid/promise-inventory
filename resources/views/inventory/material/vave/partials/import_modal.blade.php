@@ -1,15 +1,24 @@
-{{-- Import EBD Modal --}}
-<div id="importEbdModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
+@php
+    $isRegular = $isRegular ?? false;
+    $prefix = $isRegular ? 'Sq' : 'Ebd';
+    $modalId = $isRegular ? 'importSqModal' : 'importEbdModal';
+    $formId = $isRegular ? 'importSqForm' : 'importEbdForm';
+    $title = $isRegular ? 'Import SQ Data' : 'Import EBD Data';
+    $desc = $isRegular ? 'Bulk import Sales Quotation data from Excel.' : 'Bulk import Engineering Breakdown data from Excel.';
+@endphp
+
+{{-- Import Modal --}}
+<div id="{{ $modalId }}" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
     <div class="relative p-4 w-full max-w-lg max-h-[95vh]">
         <div class="relative bg-white rounded-xs shadow-2xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
             <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
             <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">Import EBD Data</h3>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">Bulk import Engineering Breakdown data from Excel.</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ $title }}</h3>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">{{ $desc }}</p>
             </div>
-            <form id="importEbdForm" method="POST" enctype="multipart/form-data" class="flex flex-col h-full overflow-hidden min-h-0">
+            <form id="{{ $formId }}" method="POST" enctype="multipart/form-data" class="flex flex-col h-full overflow-hidden min-h-0">
                 @csrf
                 <div class="p-6 overflow-y-auto min-h-0 flex-1 space-y-6 custom-scrollbar">
                     <div class="bg-blue-50/50 dark:bg-blue-900/20 p-4 rounded-xs border border-blue-100 dark:border-blue-800/50">
@@ -51,9 +60,9 @@
 
                             {{-- MODEL --}}
                             <div>
-                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">4. Target Model <span class="text-red-500">*</span></label>
-                                <select name="modal_model_id" id="modal_import_model_id" required disabled class="select2-import w-full">
-                                    <option value="">Select Model...</option>
+                                <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">4. Target Model (Optional)</label>
+                                <select name="modal_model_id" id="modal_import_model_id" disabled class="select2-import w-full">
+                                    <option value="">All Models</option>
                                 </select>
                             </div>
                         </div>
@@ -63,14 +72,11 @@
                 </div>
                 <div class="flex-none flex items-center justify-end gap-3 px-8 py-5 border-t border-gray-100 dark:border-gray-700 bg-primary-50/80 dark:bg-slate-900/50">
                     <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-xs font-medium px-6 py-2.5 transition-all active:scale-95 shadow-sm">Cancel</button>
-                    <button type="submit" id="btnSubmitImport" class="text-white bg-primary-600 hover:bg-primary-700 rounded-xs text-xs font-medium px-6 py-2.5 text-center shadow-lg shadow-primary-500/10 transition-all active:scale-95 flex items-center gap-2">
-                        <i class="fa-solid fa-upload"></i> Process Import
+                    <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-bold rounded-xs text-[10px] uppercase tracking-widest px-8 py-3 text-center transition-all active:scale-95 shadow-sm">
+                        <i class="fa-solid fa-cloud-arrow-up mr-2 text-sm"></i> Start {{ $isRegular ? 'SQ' : 'EBD' }} Import
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
         </div>
     </div>
 </div>
@@ -101,122 +107,87 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 $(document).ready(function() {
-    // Initialize Select2 for import modal
-    function initImportSelect2() {
-        $('.select2-import').select2({
-            dropdownParent: $('#importEbdModal'),
-            width: '100%',
-            placeholder: 'Select...'
-        });
+    const modalId = '{{ $modalId }}';
+    const formId = '{{ $formId }}';
+    const isRegular = {{ $isRegular ? 'true' : 'false' }};
 
-        // Initialize Model with AJAX (Lazy Loading)
-        $('#modal_import_model_id').select2({
-            dropdownParent: $('#importEbdModal'),
+    // Global listener for buttons that open this modal
+    $('[data-modal-target="' + modalId + '"]').on('click', function() {
+        initSelect2();
+        $('#' + modalId).removeClass('hidden').addClass('flex');
+    });
+
+    function initSelect2() {
+        $('#' + modalId + ' .select2-import').select2({
+            dropdownParent: $('#' + modalId),
             width: '100%',
-            placeholder: 'Select Model...',
-            ajax: {
-                url: '{{ route("inventory.master.product.getModels") }}',
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return {
-                        customer_id: $('#modal_import_customer_id').val(),
-                        q: params.term // search term
-                    };
-                },
-                processResults: function (data) {
-                    return {
-                        results: data.map(m => ({ id: m.id, text: m.name }))
-                    };
-                },
-                cache: true
-            }
+            placeholder: 'Select...',
+            allowClear: true
         });
     }
 
-    function populateModalCustomers() {
-        if ($('#modal_import_customer_id option').length <= 1) {
-            $.get('{{ route("inventory.master.product.getCustomers") }}', function(data) {
-                $('#modal_import_customer_id').empty().append('<option value="">Select Customer...</option>');
-                data.forEach(c => {
-                    $('#modal_import_customer_id').append(`<option value="${c.id}">${c.code}</option>`);
-                });
-            });
-        }
-    }
-
-    // Handle Open Import Modal
-    $(document).on('click', '[data-modal-target="importEbdModal"]', function() {
-        initImportSelect2();
-        populateModalCustomers();
-        $('#importResult').addClass('hidden').html('');
-        $('#import_next_steps').addClass('hidden');
-        $('#importEbdForm')[0].reset();
-        $('#modal_import_customer_id, #modal_import_model_id, #import_sheet_name').val(null).trigger('change');
-        $('#importEbdModal').removeClass('hidden').addClass('flex');
-    });
-
-    // Handle Import Customer Change
-    $('#modal_import_customer_id').on('change', function() {
-        const cid = $(this).val();
-        const $model = $('#modal_import_model_id');
-        
-        // Clear previous selection
-        $model.val(null).trigger('change');
-
-        if (cid) {
-            // Enable immediately as requested
-            $model.prop('disabled', false);
-        } else {
-            $model.prop('disabled', true);
-        }
-    });
-
-    $('#import_file').on('change', function(e) {
+    // Handle worksheet detection
+    $('#' + modalId + ' #import_file').on('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
-        $('#file_loading').removeClass('hidden');
-        $('#import_next_steps').addClass('hidden');
+        $('#' + modalId + ' #file_loading').removeClass('hidden');
+        $('#' + modalId + ' #import_next_steps').addClass('hidden');
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array', bookSheets: true });
-                const sheetNames = workbook.SheetNames;
-                
-                const $sheet = $('#import_sheet_name');
-                $sheet.empty().append('<option value="">-- Select Worksheet --</option>');
-                sheetNames.forEach(s => $sheet.append(new Option(s, s)));
-                $sheet.trigger('change');
-                
-                $('#import_next_steps').removeClass('hidden');
-            } catch (err) {
-                console.error(err);
-                window.showToast('Failed to read excel sheets from browser.', 'error');
-            } finally {
-                $('#file_loading').addClass('hidden');
-            }
-        };
-        
-        reader.onerror = function() {
-            window.showToast('Error reading file.', 'error');
-            $('#file_loading').addClass('hidden');
-        };
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetNames = workbook.SheetNames;
 
+            const sheetSelect = $('#' + modalId + ' #import_sheet_name').empty().append('<option value="">Select Worksheet...</option>');
+            sheetNames.forEach(name => {
+                sheetSelect.append(`<option value="${name}">${name}</option>`);
+            });
+            sheetSelect.trigger('change');
+
+            $('#' + modalId + ' #file_loading').addClass('hidden');
+            $('#' + modalId + ' #import_next_steps').removeClass('hidden');
+
+            // Load Customers
+            $.get('{{ route("inventory.master.product.getCustomers") }}', function(data) {
+                const customerSelect = $('#' + modalId + ' #modal_import_customer_id').empty().append('<option value="">Select Customer...</option>');
+                data.forEach(c => {
+                    customerSelect.append(`<option value="${c.id}">${c.code}</option>`);
+                });
+                customerSelect.trigger('change');
+            });
+
+            // Load Models if customer selected
+            $('#' + modalId + ' #modal_import_customer_id').on('change', function() {
+                const customerId = $(this).val();
+                const modelSelect = $('#' + modalId + ' #modal_import_model_id').empty().append('<option value="">All Models</option>');
+                if (customerId) {
+                    modelSelect.prop('disabled', false);
+                    $.get('{{ route("inventory.master.product.getModels") }}', { customer_id: customerId }, function(data) {
+                        data.forEach(m => {
+                            modelSelect.append(`<option value="${m.id}">${m.name}</option>`);
+                        });
+                        modelSelect.trigger('change');
+                    });
+                } else {
+                    modelSelect.prop('disabled', true).trigger('change');
+                }
+            });
+        };
         reader.readAsArrayBuffer(file);
     });
 
-    $('#importEbdForm').on('submit', function(e) {
+    // Handle Form Submit (Chunked Upload)
+    $('#' + formId).on('submit', function(e) {
         e.preventDefault();
-        const $btn = $('#btnSubmitImport');
+        const $btn = $('#' + formId + ' button[type="submit"]');
         const originalHtml = $btn.html();
         
         $btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing...');
         $('#importResult').addClass('hidden').html('');
 
-        const fileInput = $('#import_file')[0];
+        const fileInput = $('#' + modalId + ' #import_file')[0];
         if (!fileInput.files || !fileInput.files[0]) {
             window.showToast('Please select a file.', 'error');
             $btn.prop('disabled', false).html(originalHtml);
@@ -224,11 +195,11 @@ $(document).ready(function() {
         }
 
         const file = fileInput.files[0];
-        const customerId = $('#modal_import_customer_id').val();
-        const modelId = $('#modal_import_model_id').val();
-        const sheetName = $('#import_sheet_name').val();
+        const customerId = $('#' + modalId + ' #modal_import_customer_id').val();
+        const modelId = $('#' + modalId + ' #modal_import_model_id').val();
+        const sheetName = $('#' + modalId + ' #import_sheet_name').val();
 
-        if (!customerId || !modelId || !sheetName) {
+        if (!customerId || !sheetName) {
             window.showToast('Please complete all required fields.', 'error');
             $btn.prop('disabled', false).html(originalHtml);
             return;
@@ -270,20 +241,32 @@ $(document).ready(function() {
                         if (index < totalChunks - 1) {
                             uploadChunk(index + 1);
                         } else {
-                            $('#importResult').removeClass('hidden bg-rose-50 text-rose-900 border-rose-100')
-                                .addClass('bg-emerald-50 text-emerald-900 border-emerald-100 p-5 rounded-sm')
-                                .html(res.message);
+                            const isWarning = res.errors && res.errors.length > 0;
+                            const containerClass = isWarning ? 'bg-amber-50 text-amber-900 border-amber-100' : 'bg-emerald-50 text-emerald-900 border-emerald-100';
                             
-                            // Add logs if available
+                            $('#importResult').removeClass('hidden bg-rose-50 text-rose-900 border-rose-100 bg-emerald-50 text-emerald-900 border-emerald-100 bg-amber-50 text-amber-900 border-amber-100')
+                                .addClass(containerClass + ' p-5 rounded-sm')
+                                .html(`<div class="font-bold flex items-center gap-2"><i class="fa-solid ${isWarning ? 'fa-triangle-exclamation text-amber-500' : 'fa-check-circle text-emerald-500'}"></i> ${res.message}</div>`);
+                            
+                            // Add Success Logs if available
                             if (res.log && (res.log.created?.length || res.log.updated?.length)) {
-                                let logHtml = '<div class="mt-3 pt-3 border-t border-emerald-200/50 space-y-1">';
-                                if (res.log.created) res.log.created.forEach(l => logHtml += `<div class="text-[10px] text-emerald-600 font-medium"><i class="fa-solid fa-plus-circle mr-1"></i> [CREATED] ${l}</div>`);
-                                if (res.log.updated) res.log.updated.forEach(l => logHtml += `<div class="text-[10px] text-amber-600 font-medium"><i class="fa-solid fa-pen-to-square mr-1"></i> [UPDATED] ${l}</div>`);
+                                let logHtml = '<div class="mt-3 pt-3 border-t border-slate-200/50 space-y-1">';
+                                if (res.log.created) res.log.created.forEach(l => logHtml += `<div class="text-[10px] text-emerald-600 font-medium"><i class="fa-solid fa-plus-circle mr-1 text-[8px]"></i> [CREATED] ${l}</div>`);
+                                if (res.log.updated) res.log.updated.forEach(l => logHtml += `<div class="text-[10px] text-blue-600 font-medium"><i class="fa-solid fa-pen-to-square mr-1 text-[8px]"></i> [UPDATED] ${l}</div>`);
+                                if (res.log.unchangedCount > 0) logHtml += `<div class="text-[10px] text-gray-500 font-normal italic"><i class="fa-solid fa-info-circle mr-1 text-[8px]"></i> ${res.log.unchangedCount} records were unchanged.</div>`;
                                 logHtml += '</div>';
                                 $('#importResult').append(logHtml);
                             }
 
-                            window.showToast('Import completed successfully', 'success');
+                            // Add Warnings/Errors if available
+                            if (isWarning) {
+                                let errHtml = '<div class="mt-3 pt-3 border-t border-amber-200/50 space-y-1">';
+                                res.errors.forEach(err => errHtml += `<div class="text-[10px] text-rose-600 font-medium leading-tight"><i class="fa-solid fa-circle-exclamation mr-1 text-[8px]"></i> ${err}</div>`);
+                                errHtml += '</div>';
+                                $('#importResult').append(errHtml);
+                            }
+
+                            window.showToast(isWarning ? 'Import completed with warnings' : 'Import completed successfully', isWarning ? 'warning' : 'success');
                             if (typeof table !== 'undefined') table.ajax.reload();
                             $btn.prop('disabled', false).html(originalHtml);
                         }

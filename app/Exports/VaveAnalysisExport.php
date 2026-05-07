@@ -147,6 +147,7 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
             'statusText' => $statusText,
             'statusBg' => $statusBg,
             'statusColor' => $statusColor,
+            'isRegular' => $data['is_regular'] ?? false,
         ];
     }
 
