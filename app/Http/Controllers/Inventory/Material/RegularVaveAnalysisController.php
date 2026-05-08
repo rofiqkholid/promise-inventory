@@ -121,7 +121,7 @@ class RegularVaveAnalysisController extends Controller
     }
 
     // Standard VAVE Methods (Re-implemented for SQ Branding)
-    public function showBase($id) { return (new ProjectVaveAnalysisController)->showBase($id); }
+    public function showBase($id) { return (new ProjectVaveAnalysisController)->showBase($id, 'SQ'); }
 
     public function storeBase(Request $request) 
     { 
@@ -145,7 +145,38 @@ class RegularVaveAnalysisController extends Controller
         return $response;
     }
 
-    public function getBases(Request $request) { return (new ProjectVaveAnalysisController)->getBases($request); }
+    public function getComparison($id)
+    {
+        $product = Products::with('customer')->where('id', Products::decodeHash($id))->firstOrFail();
+        // Removed SQ% filter to allow EBD history visibility
+        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
+            ->where('product_id', $product->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])
+            ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
+            ->where('product_id', $product->id)
+            ->orderBy('r.sort_order', 'desc')
+            ->select('inv_t_product_detail.*')
+            ->get();
+
+        $epicorData = $this->fetchEpicorPrices();
+        $epicorPrice = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+
+        foreach ($revisions as $rev) {
+            $rev->material_price = ($epicorPrice !== null) ? $epicorPrice : 0;
+        }
+
+        return response()->json(['product' => $product, 'bases' => $bases, 'revisions' => $revisions]);
+    }
+
+    public function getBases(Request $request)
+    {
+        $query = DB::table('inv_m_vave_base as vbase')->join('products as p', 'p.id', '=', 'vbase.product_id')->where('p.is_delete', 0);
+        if ($request->customer_id) $query->where('p.customer_id', $request->customer_id);
+        $bases = $query->where('vbase.base_name', 'like', 'SQ%')->distinct()->orderBy('vbase.base_name', 'asc')->pluck('vbase.base_name');
+        return response()->json($bases);
+    }
     public function downloadTemplate() { return (new ProjectVaveAnalysisController)->downloadTemplate(); }
     public function importExcel(Request $request) 
     { 
@@ -237,30 +268,6 @@ class RegularVaveAnalysisController extends Controller
         return null;
     }
 
-    public function getComparison($id)
-    {
-        $product = Products::with('customer')->where('id', Products::decodeHash($id))->firstOrFail();
-        $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
-            ->where('product_id', $product->id)
-            ->where('base_name', 'like', 'SQ%')
-            ->orderBy('created_at', 'desc')
-            ->get();
-        $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])
-            ->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')
-            ->where('product_id', $product->id)
-            ->orderBy('r.sort_order', 'desc')
-            ->select('inv_t_product_detail.*')
-            ->get();
-
-        $epicorData = $this->fetchEpicorPrices();
-        $epicorPrice = $this->getEpicorPriceForPart($product->part_no, $epicorData);
-
-        foreach ($revisions as $rev) {
-            $rev->material_price = ($epicorPrice !== null) ? $epicorPrice : 0;
-        }
-
-        return response()->json(['product' => $product, 'bases' => $bases, 'revisions' => $revisions]);
-    }
 
     public function exportExcel(Request $request, $id)
     {

@@ -873,8 +873,8 @@ $(function() {
                     $('#min_stock').val(data.min_stock);
                     $('#density').val(parseFloat(data.density || 7.85));
                     $('#gross_coil').val(parseFloat(data.gross_coil || 0));
-                    $('#top_coil').val(parseFloat(data.top_coil || 0));
-                    $('#end_coil').val(parseFloat(data.end_coil || 0));
+                    $('#top_coil').val(parseFloat(data.top_coil || 500));
+                    $('#end_coil').val(parseFloat(data.end_coil || 2500));
                     $('#net_coil').val(parseFloat(data.net_coil || 0));
                     $('#net_weight').val(parseFloat(data.net_weight || 0));
                     $('#material_price').val(parseFloat(data.material_price || 20000));
@@ -956,6 +956,10 @@ $(function() {
                     $('#pcs_per_unit').val(d.pcs_per_unit);
                     $('#unit_per_car').val(d.unit_per_car);
                     $('#density').val(parseFloat(d.density || 7.85));
+                    $('#gross_coil').val(parseFloat(d.gross_coil || 0));
+                    $('#top_coil').val(parseFloat(d.top_coil || 500));
+                    $('#end_coil').val(parseFloat(d.end_coil || 2500));
+                    $('#net_coil').val(parseFloat(d.net_coil || 0));
                     $('#net_weight').val(parseFloat(d.net_weight || 0));
                     $('#material_price').val(parseFloat(d.material_price || 20000));
                     $('#remark').val(d.remark);

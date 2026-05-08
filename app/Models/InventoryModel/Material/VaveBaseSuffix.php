@@ -15,14 +15,9 @@ class VaveBaseSuffix extends Model
     protected $hidden = ['id'];
 
     protected $fillable = [
-        'customer_id',
+        'base_type',
         'name',
         'remark',
         'is_active',
     ];
-
-    public function customer()
-    {
-        return $this->belongsTo(\App\Models\Customers::class, 'customer_id');
-    }
 }

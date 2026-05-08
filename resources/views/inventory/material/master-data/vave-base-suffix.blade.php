@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'EBD Suffix Master')
+@section('title', 'VA/VE Suffix Master')
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-8">
         <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">EBD Suffix</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage suffixes for EBD (Engineering Breakdown) versions like SQ, Tech Review, etc.</p>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">VA/VE Suffix</h2>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage suffixes for Engineering Breakdown (EBD) and Sales Quotation (SQ) versions.</p>
         </div>
         <div class="mt-4 sm:mt-0">
             <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
@@ -22,7 +22,7 @@
             <tr>
                 <th scope="col" class="px-6 py-4 w-16 text-center text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Suffix Name</th>
-                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
+                <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Baseline Type</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Remark</th>
                 <th scope="col" class="px-6 py-4 text-center w-24 text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
                 <th scope="col" class="px-6 py-4 text-center w-[100px] text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
@@ -36,7 +36,7 @@
 <div id="modal-vave-suffix" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="modal-title text-sm font-bold text-gray-900 dark:text-white">Add EBD Suffix</h3>
+            <h3 class="modal-title text-sm font-bold text-gray-900 dark:text-white">Add VA/VE Suffix</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -47,12 +47,11 @@
                 <div id="method-field"></div>
                 
                 <div class="mb-5">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Customer <span class="text-red-500">*</span></label>
-                    <select name="customer_id" id="customer_id" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all select2-modal">
-                        <option value="">-- Select Customer --</option>
-                        @foreach($customers as $c)
-                            <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
-                        @endforeach
+                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Baseline Type <span class="text-red-500">*</span></label>
+                    <select name="base_type" id="base_type" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all select2-modal">
+                        <option value="">-- Select Type --</option>
+                        <option value="EBD">EBD (Engineering)</option>
+                        <option value="SQ">SQ (Sales Quotation)</option>
                     </select>
                     <p class="error-msg hidden"></p>
                 </div>
@@ -106,8 +105,8 @@
                 { data: null, orderable: false, searchable: false, className: 'text-center', render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                 { data: 'name', className: 'font-bold text-slate-800 dark:text-slate-200' },
                 { 
-                    data: 'customer', 
-                    render: (d) => d ? `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-px text-[9px] font-bold border border-slate-200 dark:border-slate-600 uppercase tracking-wider">${d.code}</span>` : '-' 
+                    data: 'base_type', 
+                    render: (d) => d ? `<span class="px-2 py-0.5 ${d === 'EBD' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'} rounded-px text-[9px] font-bold border uppercase tracking-wider">${d}</span>` : '-' 
                 },
                 { data: 'remark', render: (d) => d || '-' },
                 { 
@@ -141,8 +140,8 @@
             $form[0].reset(); 
             $form.find('#method-field').empty();
             $form.attr('action', apiBase);
-            $('.modal-title').text('Add EBD Suffix');
-            $('#customer_id').val('').trigger('change.select2');
+            $('.modal-title').text('Add VA/VE Suffix');
+            $('#base_type').val('').trigger('change.select2');
             $form.find('.error-msg').addClass('hidden');
             showMdl('modal-vave-suffix');
         });
@@ -152,7 +151,7 @@
             showMdl('modal-vave-suffix'); // Show loading state or clear previous
             $.get(`${apiBase}/${id}`, (data) => {
                 const $form = $('#vaveSuffixForm');
-                $('.modal-title').text('Edit EBD Suffix');
+                $('.modal-title').text('Edit VA/VE Suffix');
                 $form.find('.error-msg').addClass('hidden');
                 $form.find('#method-field').html('@method("PUT")');
                 

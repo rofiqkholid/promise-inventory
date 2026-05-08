@@ -13,7 +13,7 @@ class ProjectVaveDashboardController extends Controller
      */
     public function index()
     {
-        $versions = DB::table('inv_m_vave_base')->distinct()->pluck('base_name');
+        $versions = DB::table('inv_m_vave_base')->where('base_name', 'like', 'EBD%')->distinct()->pluck('base_name');
         return view('inventory.material.vave.project-dashboard', compact('versions'));
     }
 
@@ -45,7 +45,7 @@ class ProjectVaveDashboardController extends Controller
                         SELECT product_id, MAX(id) as latest_id 
                         FROM inv_m_vave_base 
                         WHERE ((effective_from <= ' . $y . ' AND (effective_to IS NULL OR effective_to >= ' . $y . '))
-                           OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
+                           OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : " AND base_name LIKE 'EBD%'") . '
                         GROUP BY product_id
                     ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
                     ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
@@ -86,7 +86,7 @@ class ProjectVaveDashboardController extends Controller
                 SELECT product_id, MAX(id) as latest_id 
                 FROM inv_m_vave_base 
                 WHERE ((effective_from <= ' . $year . ' AND (effective_to IS NULL OR effective_to >= ' . $year . '))
-                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
+                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : " AND base_name LIKE 'EBD%'") . '
                 GROUP BY product_id
             ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
             ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
@@ -231,7 +231,7 @@ class ProjectVaveDashboardController extends Controller
                 SELECT product_id, MAX(id) as latest_id 
                 FROM inv_m_vave_base 
                 WHERE ((effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
-                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
+                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : " AND base_name LIKE 'EBD%'") . '
                 GROUP BY product_id
             ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
             ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')

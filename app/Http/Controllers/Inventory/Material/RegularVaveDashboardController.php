@@ -13,7 +13,7 @@ class RegularVaveDashboardController extends Controller
      */
     public function index()
     {
-        $versions = DB::table('inv_m_vave_base')->distinct()->pluck('base_name');
+        $versions = DB::table('inv_m_vave_base')->where('base_name', 'like', 'SQ%')->distinct()->pluck('base_name');
         return view('inventory.material.vave.regular-dashboard', compact('versions'));
     }
 
@@ -27,161 +27,191 @@ class RegularVaveDashboardController extends Controller
         $month      = $request->input('month'); 
         $customerId = $request->input('customer_id');
         $modelId    = $request->input('model_id');
-        $ebdVersion = $request->input('ebd_version');
+        $sqVersion  = $request->input('sq_version');
+
+        $startYear = ($mode === 'comparison') ? $year - 4 : $year;
+        $endYear   = $year;
+
+        // 1. Fetch ALL shipments for the range in ONE query for performance and consistency
+        $epicorShipmentsQuery = DB::connection('second_db')->table('erp.ShipDtl as a')
+            ->join('erp.ShipHead as b', 'b.PackNum', '=', 'a.PackNum')
+            ->whereBetween(DB::raw('YEAR(b.ShipDate)'), [$startYear, $endYear])
+            ->select([
+                'a.PartNum',
+                DB::raw('YEAR(b.ShipDate) as ship_year'),
+                DB::raw('MONTH(b.ShipDate) as ship_month'),
+                DB::raw('SUM(a.OurInventoryShipQty) as total_qty')
+            ])
+            ->groupBy('a.PartNum', DB::raw('YEAR(b.ShipDate)'), DB::raw('MONTH(b.ShipDate)'));
+
+        $epicorRawData = $epicorShipmentsQuery->get();
+        
+        // Organize Epicor data: [PartNum][Year][Month] = Qty
+        $shipMap = [];
+        $shipYearTotal = []; // [PartNum][Year] = Total Qty
+        foreach ($epicorRawData as $row) {
+            $pn = trim($row->PartNum);
+            $y  = (int) $row->ship_year;
+            $m  = (int) $row->ship_month;
+            $q  = (float) $row->total_qty;
+
+            $shipMap[$pn][$y][$m] = ($shipMap[$pn][$y][$m] ?? 0) + $q;
+            $shipYearTotal[$pn][$y] = ($shipYearTotal[$pn][$y] ?? 0) + $q;
+        }
 
         $comparisonTrend = [];
         if ($mode === 'comparison') {
-            $startYear = $year - 4;
-            $endYear = $year;
-            
             for ($y = $startYear; $y <= $endYear; $y++) {
-                $yearlyBenefit = DB::table('inv_t_inventory_transaction as t')
-                    ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
-                    ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
-                    ->join('products as p', 'p.id', '=', 'pd.product_id')
+                // Fetch baselines for THIS year. 
+                // FALLBACK: If no baseline is active for $y, use the oldest one (to show theoretical benefit for historical shipments)
+                $yearlyBaselines = DB::table('inv_m_vave_base as vb')
+                    ->join('products as p', 'p.id', '=', 'vb.product_id')
+                    ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
                     ->join('models as m', 'm.id', '=', 'pd.model_id')
-                    ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Join status table
-                    ->leftJoin(DB::raw('(
-                        SELECT product_id, MAX(id) as latest_id 
-                        FROM inv_m_vave_base 
-                        WHERE ((effective_from <= ' . $y . ' AND (effective_to IS NULL OR effective_to >= ' . $y . '))
-                           OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
+                    ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id')
+                    ->join(DB::raw("(
+                        SELECT product_id, 
+                               COALESCE(
+                                   (SELECT MAX(id) FROM inv_m_vave_base WHERE product_id = b1.product_id AND ((effective_from <= $y AND (effective_to IS NULL OR effective_to >= $y)) OR (effective_from IS NULL AND effective_to IS NULL))" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . "),
+                                   (SELECT MIN(id) FROM inv_m_vave_base WHERE product_id = b1.product_id" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . ")
+                               ) as matched_id
+                        FROM inv_m_vave_base b1
                         GROUP BY product_id
-                    ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
-                    ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
-                    ->where('tc.effect', 1)
-                    ->whereYear('t.transaction_date', $y)
+                    ) as latest_ebd"), 'latest_ebd.matched_id', '=', 'vb.id')
                     ->where('p.is_delete', 0)
-                    ->where('ms.project_status', 'Regular') // Filter for Regular Models
-                    ->whereNotNull('vb.id');
+                    ->where('ms.project_status', 'Regular');
 
-                if ($customerId) $yearlyBenefit->where('p.customer_id', $customerId);
-                if ($modelId)    $yearlyBenefit->where('pd.model_id', $modelId);
+                if ($customerId) $yearlyBaselines->where('p.customer_id', $customerId);
+                if ($modelId)    $yearlyBaselines->where('pd.model_id', $modelId);
 
-                $res = $yearlyBenefit->select([
-                    DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                    DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
-                ])->first();
+                $baselines = $yearlyBaselines->select([
+                    'p.part_no', 'vb.weight_kg as plan_kg', 'pd.weight_kg as actual_kg', 'vb.material_price as idr_per_kg'
+                ])->get();
+
+                $totalBenefit = 0;
+                $totalKg = 0;
+
+                foreach ($baselines as $row) {
+                    $pn = trim($row->part_no);
+                    $qty = (float) ($shipYearTotal[$pn][$y] ?? $shipYearTotal[$pn . '-R'][$y] ?? 0);
+                    
+                    $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
+                    if ($weightGap > 0 && $qty > 0) {
+                        $totalBenefit += $weightGap * (float) $row->idr_per_kg * $qty;
+                        $totalKg += $weightGap * $qty;
+                    }
+                }
 
                 $comparisonTrend[] = [
                     'year' => $y,
-                    'gap_benefit_idr' => (float) ($res->gap_benefit_idr ?? 0),
-                    'gap_kg_total' => (float) ($res->gap_kg_total ?? 0),
+                    'gap_benefit_idr' => $totalBenefit,
+                    'gap_kg_total' => $totalKg,
                 ];
             }
         }
 
-        // Base Query
-        $baseQuery = DB::table('inv_t_inventory_transaction as t')
-            ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
-            ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
-            ->join('products as p', 'p.id', '=', 'pd.product_id')
+        // Base Baseline Query for the selected YEAR
+        $baselinesQuery = DB::table('inv_m_vave_base as vb')
+            ->join('products as p', 'p.id', '=', 'vb.product_id')
+            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
             ->join('models as m', 'm.id', '=', 'pd.model_id')
-            ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Join status table
+            ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id')
             ->join('customers as c', 'c.id', '=', 'p.customer_id')
-            ->leftJoin(DB::raw('(
-                SELECT product_id, MAX(id) as latest_id 
-                FROM inv_m_vave_base 
-                WHERE ((effective_from <= ' . $year . ' AND (effective_to IS NULL OR effective_to >= ' . $year . '))
-                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
+            ->join(DB::raw("(
+                SELECT product_id, 
+                       COALESCE(
+                           (SELECT MAX(id) FROM inv_m_vave_base WHERE product_id = b2.product_id AND ((effective_from <= $year AND (effective_to IS NULL OR effective_to >= $year)) OR (effective_from IS NULL AND effective_to IS NULL))" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . "),
+                           (SELECT MIN(id) FROM inv_m_vave_base WHERE product_id = b2.product_id" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . ")
+                       ) as matched_id
+                FROM inv_m_vave_base b2
                 GROUP BY product_id
-            ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
-            ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
-            ->where('tc.effect', 1)
-            ->whereYear('t.transaction_date', $year)
+            ) as latest_ebd"), 'latest_ebd.matched_id', '=', 'vb.id')
             ->where('p.is_delete', 0)
-            ->where('ms.project_status', 'Regular') // Filter for Regular Models
-            ->whereNotNull('vb.id');
+            ->where('ms.project_status', 'Regular');
 
-        if ($customerId) $baseQuery->where('p.customer_id', $customerId);
-        if ($modelId)    $baseQuery->where('pd.model_id', $modelId);
+        if ($customerId) $baselinesQuery->where('p.customer_id', $customerId);
+        if ($modelId)    $baselinesQuery->where('pd.model_id', $modelId);
 
-        // 1. DATA FOR TREND
-        $trendData = (clone $baseQuery)
-            ->select([
-                DB::raw('MONTH(t.transaction_date) as month_num'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
-                DB::raw('SUM(t.qty) as qty_usage'),
-            ])
-            ->groupBy(DB::raw('MONTH(t.transaction_date)'))
-            ->get();
-
-        // DATA FOR MODELS
-        $periodQuery = clone $baseQuery;
-        if ($month) {
-            $periodQuery->whereMonth('t.transaction_date', '<=', $month);
-        }
-
-        $rawData = $periodQuery->select([
-                'p.part_no',
-                'p.part_name',
-                'm.name as model_name',
-                'c.code as customer_code',
-                'vb.base_name as ebd_version',
-                DB::raw('ISNULL(vb.weight_kg, 0) as plan_kg'),
-                DB::raw('ISNULL(pd.weight_kg, 0) as actual_kg'),
-                DB::raw('ISNULL(vb.material_price, 0) as idr_per_kg'),
-                DB::raw('SUM(t.qty) as qty_usage'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
-                DB::raw('SUM(ISNULL(vb.weight_kg, 0) * ISNULL(vb.material_price, 0) * t.qty) as plan_total_cost'),
-                DB::raw('COUNT(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN 1 END) as merit_count'),
-                DB::raw('COUNT(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) < 0 THEN 1 END) as loss_count')
-            ])
-            ->groupBy(
-                'p.part_no', 'p.part_name', 'm.name', 'c.code', 'vb.base_name',
-                'vb.weight_kg', 'pd.weight_kg', 'vb.material_price'
-            )
-            ->whereRaw('(ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0')
-            ->get();
+        $baselines = $baselinesQuery->select([
+            'p.part_no', 'p.part_name', 'm.name as model_name', 'c.code as customer_code', 'vb.base_name as ebd_version',
+            'vb.weight_kg as plan_kg', 'pd.weight_kg as actual_kg', 'vb.material_price as idr_per_kg'
+        ])->get();
 
         $kpiTotals = [
-            'gap_benefit_idr' => 0,
-            'gap_kg_total'    => 0,
-            'qty_usage'       => 0,
-            'merit_count'     => 0,
-            'loss_count'      => 0,
-            'plan_total_cost' => 0,
+            'gap_benefit_idr' => 0, 'gap_kg_total' => 0, 'qty_usage' => 0,
+            'merit_count' => 0, 'loss_count' => 0, 'plan_total_cost' => 0,
         ];
         $itemData = [];
         $modelAgg = [];
-
-        foreach ($rawData as $row) {
-            $gapKg    = (float) $row->gap_kg_total;
-            $gapIdr   = (float) $row->gap_benefit_idr;
-            $qty      = (float) $row->qty_usage;
-
-            $kpiTotals['gap_benefit_idr'] += $gapIdr;
-            $kpiTotals['gap_kg_total']    += $gapKg;
-            $kpiTotals['qty_usage']       += $qty;
-            $kpiTotals['merit_count']     += (int) $row->merit_count;
-            $kpiTotals['loss_count']      += (int) $row->loss_count;
-            $kpiTotals['plan_total_cost'] += (float) $row->plan_total_cost;
-
-            if (!isset($modelAgg[$row->model_name])) {
-                $modelAgg[$row->model_name] = ['kg' => 0, 'idr' => 0, 'merit' => 0, 'loss' => 0, 'plan_cost' => 0];
-            }
-            $modelAgg[$row->model_name]['kg']    += $gapKg;
-            $modelAgg[$row->model_name]['idr']   += $gapIdr;
-            $modelAgg[$row->model_name]['merit'] += (int) $row->merit_count;
-            $modelAgg[$row->model_name]['loss']  += (int) $row->loss_count;
-            $modelAgg[$row->model_name]['plan_cost'] += (float) $row->plan_total_cost;
-
-            $itemData[] = [
-                'part_no'         => $row->part_no,
-                'part_name'       => $row->part_name,
-                'model_name'      => $row->model_name,
-                'customer_code'   => $row->customer_code,
-                'plan_kg'         => (float) $row->plan_kg,
-                'actual_kg'       => (float) $row->actual_kg,
-                'idr_per_kg'      => (float) $row->idr_per_kg,
-                'gap_kg_total'    => $gapKg,
-                'gap_benefit_idr' => $gapIdr,
-                'qty_usage'       => $qty,
-                'ebd_version'     => $row->ebd_version,
-            ];
+        $monthlyTrend = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthlyTrend[$i] = ['month_num' => $i, 'gap_benefit_idr' => 0, 'gap_kg_total' => 0, 'qty_usage' => 0];
         }
+
+        foreach ($baselines as $row) {
+            $pn = trim($row->part_no);
+            // Support exact match or -R suffix
+            $monthlyQtys = $shipMap[$pn][$year] ?? $shipMap[$pn . '-R'][$year] ?? [];
+            
+            $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
+            $price = (float) $row->idr_per_kg;
+            
+            $totalPartQty = 0;
+            $totalPartBenefit = 0;
+            $totalPartKg = 0;
+
+            foreach ($monthlyQtys as $m => $qty) {
+                if ($month && $m > $month) continue; // Respect selected month (cumulative logic)
+
+                if ($weightGap > 0) {
+                    $benefit = $weightGap * $price * $qty;
+                    $kgGap = $weightGap * $qty;
+
+                    $totalPartQty += $qty;
+                    $totalPartBenefit += $benefit;
+                    $totalPartKg += $kgGap;
+
+                    $monthlyTrend[$m]['gap_benefit_idr'] += $benefit;
+                    $monthlyTrend[$m]['gap_kg_total'] += $kgGap;
+                    $monthlyTrend[$m]['qty_usage'] += $qty;
+                }
+            }
+
+            if ($totalPartQty > 0 || $totalPartBenefit != 0) {
+                $kpiTotals['gap_benefit_idr'] += $totalPartBenefit;
+                $kpiTotals['gap_kg_total']    += $totalPartKg;
+                $kpiTotals['qty_usage']       += $totalPartQty;
+                $kpiTotals['plan_total_cost'] += ($row->plan_kg * $price * $totalPartQty);
+                
+                if ($weightGap > 0) $kpiTotals['merit_count']++;
+                else if ($weightGap < 0) $kpiTotals['loss_count']++;
+
+                if (!isset($modelAgg[$row->model_name])) {
+                    $modelAgg[$row->model_name] = ['kg' => 0, 'idr' => 0, 'merit' => 0, 'loss' => 0, 'plan_cost' => 0];
+                }
+                $modelAgg[$row->model_name]['kg']    += $totalPartKg;
+                $modelAgg[$row->model_name]['idr']   += $totalPartBenefit;
+                $modelAgg[$row->model_name]['plan_cost'] += ($row->plan_kg * $price * $totalPartQty);
+                if ($weightGap > 0) $modelAgg[$row->model_name]['merit']++;
+                else if ($weightGap < 0) $modelAgg[$row->model_name]['loss']++;
+
+                $itemData[] = [
+                    'part_no'         => $row->part_no,
+                    'part_name'       => $row->part_name,
+                    'model_name'      => $row->model_name,
+                    'customer_code'   => $row->customer_code,
+                    'plan_kg'         => (float) $row->plan_kg,
+                    'actual_kg'       => (float) $row->actual_kg,
+                    'idr_per_kg'      => $price,
+                    'gap_kg_total'    => $totalPartKg,
+                    'gap_benefit_idr' => $totalPartBenefit,
+                    'qty_usage'       => $totalPartQty,
+                    'sq_version'      => $row->ebd_version,
+                ];
+            }
+        }
+
+        $trendData = array_values($monthlyTrend);
 
         $chartModels = [
             'labels' => array_keys($modelAgg),
@@ -211,55 +241,81 @@ class RegularVaveDashboardController extends Controller
         $month      = $request->input('month');
         $customerId = $request->input('customer_id');
         $modelId    = $request->input('model_id');
-        $ebdVersion = $request->input('ebd_version');
+        $sqVersion  = $request->input('sq_version');
         $limit      = (int) $request->input('limit', 20);
 
-        $query = DB::table('inv_t_inventory_transaction as t')
-            ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
-            ->join('inv_t_product_detail as pd', 'pd.id', '=', 't.product_detail_id')
-            ->join('products as p', 'p.id', '=', 'pd.product_id')
-            ->join('models as m', 'm.id', '=', 'pd.model_id')
-            ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id') // Join status table
-            ->join('customers as c', 'c.id', '=', 'p.customer_id')
-            ->leftJoin(DB::raw('(
-                SELECT product_id, MAX(id) as latest_id 
-                FROM inv_m_vave_base 
-                WHERE ((effective_from <= ' . (int)$year . ' AND (effective_to IS NULL OR effective_to >= ' . (int)$year . '))
-                   OR (effective_from IS NULL AND effective_to IS NULL))' . ($ebdVersion ? " AND base_name = '" . $ebdVersion . "'" : "") . '
-                GROUP BY product_id
-            ) as latest_ebd'), 'latest_ebd.product_id', '=', 'p.id')
-            ->leftJoin('inv_m_vave_base as vb', 'vb.id', '=', 'latest_ebd.latest_id')
-            ->where('tc.effect', 1)
-            ->whereYear('t.transaction_date', $year)
-            ->where('p.is_delete', 0)
-            ->where('ms.project_status', 'Regular') // Filter for Regular Models
-            ->whereNotNull('vb.id');
+        // Fetch Ship Quantities from Epicor for this year
+        $epicorData = DB::connection('second_db')->table('erp.ShipDtl as a')
+            ->join('erp.ShipHead as b', 'b.PackNum', '=', 'a.PackNum')
+            ->where(DB::raw('YEAR(b.ShipDate)'), $year)
+            ->when($month, fn($q) => $q->where(DB::raw('MONTH(b.ShipDate)'), '<=', $month))
+            ->select([
+                'a.PartNum',
+                DB::raw('SUM(a.OurInventoryShipQty) as total_qty')
+            ])
+            ->groupBy('a.PartNum')
+            ->get()
+            ->pluck('total_qty', 'PartNum')
+            ->toArray();
 
-        if ($month)      $query->whereMonth('t.transaction_date', '<=', $month);
-        if ($customerId) $query->where('p.customer_id', $customerId);
-        if ($modelId)    $query->where('pd.model_id', $modelId);
+        // Base Baselines Query with fallback logic
+        $baselinesQuery = DB::table('inv_m_vave_base as vb')
+            ->join('products as p', 'p.id', '=', 'vb.product_id')
+            ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+            ->join('models as m', 'm.id', '=', 'pd.model_id')
+            ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id')
+            ->join(DB::raw("(
+                SELECT product_id, 
+                       COALESCE(
+                           (SELECT MAX(id) FROM inv_m_vave_base WHERE product_id = b3.product_id AND ((effective_from <= $year AND (effective_to IS NULL OR effective_to >= $year)) OR (effective_from IS NULL AND effective_to IS NULL))" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . "),
+                           (SELECT MIN(id) FROM inv_m_vave_base WHERE product_id = b3.product_id" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . ")
+                       ) as matched_id
+                FROM inv_m_vave_base b3
+                GROUP BY product_id
+            ) as latest_ebd"), 'latest_ebd.matched_id', '=', 'vb.id')
+            ->where('p.is_delete', 0)
+            ->where('ms.project_status', 'Regular');
+
+        if ($customerId) $baselinesQuery->where('p.customer_id', $customerId);
+        if ($modelId)    $baselinesQuery->where('pd.model_id', $modelId);
 
         $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
-
-        $data = $query->select([
+        $baselines = $baselinesQuery->select([
                 DB::raw("$labelColumn as label_name"),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN ((ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * ISNULL(vb.material_price, 0)) * t.qty ELSE 0 END) as gap_benefit_idr'),
-                DB::raw('SUM(CASE WHEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0 THEN (ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) * t.qty ELSE 0 END) as gap_kg_total'),
-            ])
-            ->groupBy(DB::raw($labelColumn))
-            ->whereRaw('(ISNULL(vb.weight_kg, 0) - ISNULL(pd.weight_kg, 0)) > 0')
-            ->orderBy('gap_benefit_idr', 'desc')
-            ->limit($limit)
-            ->get();
+                'p.part_no',
+                'vb.weight_kg as plan_kg',
+                'pd.weight_kg as actual_kg',
+                'vb.material_price as idr_per_kg'
+            ])->get();
 
-        $totalAbs = $data->sum(fn($r) => abs((float)$r->gap_benefit_idr));
+        $aggData = [];
+        foreach ($baselines as $row) {
+            $pn = trim($row->part_no);
+            $qty = (float) ($epicorData[$pn] ?? $epicorData[$pn . '-R'] ?? 0);
+            
+            $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
+            if ($weightGap > 0 && $qty > 0) {
+                $benefit = $weightGap * (float) $row->idr_per_kg * $qty;
+                $kgGap = $weightGap * $qty;
+
+                if (!isset($aggData[$row->label_name])) {
+                    $aggData[$row->label_name] = ['label_name' => $row->label_name, 'gap_benefit_idr' => 0, 'gap_kg_total' => 0];
+                }
+                $aggData[$row->label_name]['gap_benefit_idr'] += $benefit;
+                $aggData[$row->label_name]['gap_kg_total'] += $kgGap;
+            }
+        }
+
+        $data = collect(array_values($aggData))->sortByDesc('gap_benefit_idr')->take($limit);
+
+        $totalAbs = $data->sum(fn($r) => abs((float)$r['gap_benefit_idr']));
         $cumulative = 0;
         $result = $data->map(function ($row) use (&$cumulative, $totalAbs) {
-            $val = (float) $row->gap_benefit_idr;
+            $val = (float) $row['gap_benefit_idr'];
             $cumulative += abs($val);
             return [
-                'label'           => $row->label_name,
-                'gap_kg_total'    => (float) $row->gap_kg_total,
+                'label'           => $row['label_name'],
+                'gap_kg_total'    => (float) $row['gap_kg_total'],
                 'gap_benefit_idr' => $val,
                 'cumulative_pct'  => $totalAbs > 0 ? round(($cumulative / $totalAbs) * 100, 1) : 0,
             ];

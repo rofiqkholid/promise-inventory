@@ -50,7 +50,7 @@
     }
 </style>
 
-<div class="dashboard-container w-full flex flex-col gap-3 pb-6">
+<div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar lg:pb-0">
     {{-- Header & KPI Stats --}}
     <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
         <!-- Title Section -->
@@ -122,8 +122,8 @@
                         <select id="filterModel" class="select2-simple w-full" disabled></select>
                     </div>
                     <div class="space-y-1.5">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">EBD Version</label>
-                        <select id="filterEbdVersion" class="select2-simple w-full">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">SQ Version</label>
+                        <select id="filterSqVersion" class="select2-simple w-full">
                             <option value="">All Versions</option>
                             @foreach($versions as $version)
                                 <option value="{{ $version }}">{{ $version }}</option>
@@ -141,11 +141,11 @@
     </div>
 
     {{-- Dashboard Content Area --}}
-    <div class="flex flex-col gap-3 flex-1">
+    <div class="flex flex-col gap-2 flex-1 min-h-0">
         {{-- Charts Row --}}
-        <div class="flex flex-col lg:flex-row gap-3">
+        <div class="flex flex-col lg:flex-row gap-2 flex-none">
             {{-- Combined Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[360px]">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
                 <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight" id="combinedChartTitle">
                         <i class="fa-solid fa-money-bill-trend-up mr-2 text-emerald-500" id="combinedChartIcon"></i> <span id="combinedChartText">Benefit by Model</span>
@@ -163,7 +163,7 @@
             </div>
 
             {{-- Pareto Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[360px]">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-chart-simple mr-2 text-primary-500"></i> Pareto Analysis
@@ -177,7 +177,7 @@
         </div>
 
         {{-- Detailed Data Table --}}
-        <div class="table-container bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative">
+        <div class="table-container bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative flex-1 min-h-0">
             <div class="flex-none flex justify-between items-center mb-2">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis (Regular Model)
@@ -193,7 +193,7 @@
                         <tr>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Part No</th>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Model</th>
-                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">EBD Version</th>
+                            <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">SQ Version</th>
                             <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Plan (Kg)</th>
                             <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Actual (Kg)</th>
                             <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Gap (Kg)</th>
@@ -376,12 +376,12 @@ $(function() {
             $('#filterMode').val('monthly').trigger('change');
             $('#filterCustomer').val('').trigger('change');
             $('#filterModel').val('').trigger('change');
-            $('#filterEbdVersion').val('').trigger('change');
+            $('#filterSqVersion').val('').trigger('change');
             refreshData();
         });
     }
 
-    $('#filterEbdVersion').on('change', function() {
+    $('#filterSqVersion').on('change', function() {
         refreshData();
     });
 
@@ -406,7 +406,7 @@ $(function() {
             month: month,
             customer_id: $('#filterCustomer').val(),
             model_id: $('#filterModel').val(),
-            ebd_version: $('#filterEbdVersion').val()
+            sq_version: $('#filterSqVersion').val()
         };
 
         const btn = $('#btnReset');
@@ -857,7 +857,7 @@ $(function() {
                         <span class="px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-gray-700 text-[11px] font-medium text-slate-600 dark:text-gray-400 uppercase">${item.model_name}</span>
                     </td>
                     <td class="py-2 px-3">
-                        <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">${item.ebd_version || '-'}</span>
+                        <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">${item.sq_version || '-'}</span>
                     </td>
                     <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.plan_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td>
                     <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.actual_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td>
@@ -873,8 +873,8 @@ $(function() {
         });
 
         mainTable = $('#vaveDetailTable').DataTable({
-            pageLength: 10, 
-            lengthMenu: [10, 25, 50], 
+            pageLength: 5, 
+            lengthMenu: [5, 10, 25], 
             ordering: true,
             autoWidth: false,
             responsive: true,

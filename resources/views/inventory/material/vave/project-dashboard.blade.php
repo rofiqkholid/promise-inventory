@@ -50,7 +50,7 @@
     }
 </style>
 
-<div class="dashboard-container w-full flex flex-col gap-3 pb-6">
+<div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar lg:pb-0">
     {{-- Header & KPI Stats --}}
     <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
         <!-- Title Section -->
@@ -141,11 +141,11 @@
     </div>
 
     {{-- Dashboard Content Area --}}
-    <div class="flex flex-col gap-3 flex-1">
+    <div class="flex flex-col gap-2 flex-1 min-h-0">
         {{-- Charts Row --}}
-        <div class="flex flex-col lg:flex-row gap-3">
+        <div class="flex flex-col lg:flex-row gap-2 flex-none">
             {{-- Combined Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[360px]">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
                 <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight" id="combinedChartTitle">
                         <i class="fa-solid fa-money-bill-trend-up mr-2 text-emerald-500" id="combinedChartIcon"></i> <span id="combinedChartText">Benefit by Model</span>
@@ -163,7 +163,7 @@
             </div>
 
             {{-- Pareto Chart --}}
-            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[360px]">
+            <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-chart-simple mr-2 text-primary-500"></i> Pareto Analysis
@@ -177,7 +177,7 @@
         </div>
 
         {{-- Detailed Data Table --}}
-        <div class="table-container bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative">
+        <div class="table-container bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative flex-1 min-h-0">
             <div class="flex-none flex justify-between items-center mb-2">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis (Project Model)
@@ -656,7 +656,7 @@ $(function() {
             const statusText = item.gap_benefit_idr > 0 ? 'MERIT' : 'LOSS';
             tbody.append(`<tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors"><td class="py-2 px-3"><div class="text-[12px] font-medium text-slate-700 dark:text-gray-200 uppercase tracking-tight">${item.part_no}</div></td><td class="py-2 px-3"><span class="px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-gray-700 text-[11px] font-medium text-slate-600 dark:text-gray-400 uppercase">${item.model_name}</span></td><td class="py-2 px-3"><span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">${item.ebd_version || '-'}</span></td><td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.plan_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td><td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.actual_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td><td class="py-2 px-2 text-center font-bold text-[12px] ${gapPerUnit >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${gapPerUnit.toFixed(3)} <span class="text-[10px] font-medium opacity-70">kg</span></td><td class="py-2 px-2 text-center text-[12px] text-slate-400">Rp ${item.idr_per_kg.toLocaleString()}</td><td class="py-2 px-2 text-center font-medium text-[12px] text-slate-700 dark:text-gray-300">${item.qty_usage.toLocaleString()}</td><td class="py-2 px-3 text-right font-bold text-[12px] ${item.gap_benefit_idr >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${formatIDR(item.gap_benefit_idr)}</td><td class="py-2 px-3 text-center"><span class="inline-flex px-2 py-0.5 rounded-xs border text-[10px] font-bold tracking-widest ${statusClass} leading-none uppercase">${statusText}</span></td></tr>`);
         });
-        mainTable = $('#vaveDetailTable').DataTable({ pageLength: 10, lengthMenu: [10, 25, 50], ordering: true, autoWidth: false, responsive: true, dom: '<"flex items-center justify-between gap-4 mb-2"lf>rtip', language: { search: "", searchPlaceholder: "Search Part...", paginate: { previous: "<i class='fa-solid fa-chevron-left'></i>", next: "<i class='fa-solid fa-chevron-right'></i>" } } });
+        mainTable = $('#vaveDetailTable').DataTable({ pageLength: 5, lengthMenu: [5, 10, 25], ordering: true, autoWidth: false, responsive: true, dom: '<"flex items-center justify-between gap-4 mb-2"lf>rtip', language: { search: "", searchPlaceholder: "Search Part...", paginate: { previous: "<i class='fa-solid fa-chevron-left'></i>", next: "<i class='fa-solid fa-chevron-right'></i>" } } });
         setTimeout(() => mainTable.columns.adjust().draw(), 100);
         $('.dataTables_filter input').addClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-[11px] rounded-xs px-3 py-1.5 w-48 focus:ring-1 focus:ring-primary-500 outline-none transition-all');
     }

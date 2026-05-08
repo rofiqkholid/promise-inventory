@@ -157,7 +157,7 @@ class ProjectVaveAnalysisController extends Controller
         ]);
     }
 
-    public function showBase($id)
+    public function showBase($id, $baseType = 'EBD')
     {
         $product = Products::findByHashOrFail($id);
         $base = VaveBase::with(['unit', 'materialSpec', 'suffix'])
@@ -172,7 +172,7 @@ class ProjectVaveAnalysisController extends Controller
             'product' => $product,
             'base' => $base,
             'baseHistory' => $baseHistory,
-            'baseSuffixes' => VaveBaseSuffix::where('customer_id', $product->customer_id)->where('is_active', 1)->get(),
+            'baseSuffixes' => VaveBaseSuffix::where('base_type', $baseType)->where('is_active', 1)->orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::all(),
             'revisions' => InventoryProduct::with(['materialSpec', 'unit', 'revision'])
@@ -220,6 +220,10 @@ class ProjectVaveAnalysisController extends Controller
             'pcs_per_pitch'       => 'required|integer|min:0',
             'weight_kg'           => 'required|numeric|min:0',
             'net_weight'          => 'nullable|numeric|min:0',
+            'gross_coil'          => 'nullable|numeric|min:0',
+            'top_coil'            => 'nullable|numeric|min:0',
+            'end_coil'            => 'nullable|numeric|min:0',
+            'net_coil'            => 'nullable|numeric|min:0',
             'material_price'      => 'nullable|numeric|min:0',
             'effective_from'      => 'nullable|integer|min:2000|max:2099',
             'effective_to'        => 'nullable|integer|min:2000|max:2099',
@@ -259,7 +263,6 @@ class ProjectVaveAnalysisController extends Controller
         $product = Products::with('customer')->where('id', Products::decodeHash($id))->firstOrFail();
         $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])
             ->where('product_id', $product->id)
-            ->where('base_name', 'like', 'EBD%')
             ->orderBy('created_at', 'desc')
             ->get();
         $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')->where('product_id', $product->id)->orderBy('r.sort_order', 'desc')->select('inv_t_product_detail.*')->get();
@@ -375,7 +378,7 @@ class ProjectVaveAnalysisController extends Controller
     {
         $query = DB::table('inv_m_vave_base as vbase')->join('products as p', 'p.id', '=', 'vbase.product_id')->where('p.is_delete', 0);
         if ($request->customer_id) $query->where('p.customer_id', $request->customer_id);
-        $bases = $query->distinct()->orderBy('vbase.base_name', 'asc')->pluck('vbase.base_name');
+        $bases = $query->where('vbase.base_name', 'like', 'EBD%')->distinct()->orderBy('vbase.base_name', 'asc')->pluck('vbase.base_name');
         return response()->json($bases);
     }
 

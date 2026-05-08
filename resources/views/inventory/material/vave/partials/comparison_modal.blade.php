@@ -366,6 +366,14 @@ $(document).ready(function() {
             const g = parseFloat(i.weight_kg)||0, n = parseFloat(i.net_weight)||0;
             return (g>0 && n>0) ? (n/g)*100 : 0;
         }, '', 1, true); 
+
+        if (untCompare.includes('coil')) {
+            html += buildSectionRow('Coil Weight Details');
+            html += buildComputedRow('Gross Coil (Kg)', 'gross_coil', '', 3, false);
+            html += buildComputedRow('Top Coil (mm)', 'top_coil', '', 0, false);
+            html += buildComputedRow('End Coil (mm)', 'end_coil', '', 0, false);
+            html += buildComputedRow('Net Coil (Kg)', 'net_coil', '', 3, false);
+        }
         
         html += buildSectionRow('Commercial');
         html += buildComputedRow('Price/Kg (IDR)', i => parseFloat(i.material_price || 0), '', 0, false, true);

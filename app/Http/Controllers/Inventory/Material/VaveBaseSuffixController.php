@@ -16,8 +16,7 @@ class VaveBaseSuffixController extends Controller
      */
     public function index()
     {
-        $customers = DB::table('customers')->orderBy('code')->get();
-        return view('inventory.material.master-data.vave-base-suffix', compact('customers'));
+        return view('inventory.material.master-data.vave-base-suffix');
     }
 
     /**
@@ -25,7 +24,7 @@ class VaveBaseSuffixController extends Controller
      */
     public function data(Request $request)
     {
-        $query = VaveBaseSuffix::with('customer');
+        $query = VaveBaseSuffix::query();
 
         // Handle Search
         $searchParam = $request->get('search');
@@ -35,9 +34,7 @@ class VaveBaseSuffixController extends Controller
             $query->where(function($q) use ($searchValue) {
                 $q->where('name', 'like', '%' . $searchValue . '%')
                   ->orWhere('remark', 'like', '%' . $searchValue . '%')
-                  ->orWhereHas('customer', function($cq) use ($searchValue) {
-                      $cq->where('code', 'like', '%' . $searchValue . '%');
-                  });
+                  ->orWhere('base_type', 'like', '%' . $searchValue . '%');
             });
         }
 
@@ -48,19 +45,12 @@ class VaveBaseSuffixController extends Controller
         $columnsMap = [
             0 => 'is_active',
             1 => 'name',
-            2 => 'customer_id',
+            2 => 'base_type',
             3 => 'remark'
         ];
         
         $sortColumn = $columnsMap[$sortBy] ?? 'name';
-
-        if ($sortColumn === 'customer_id') {
-            $query->join('customers as c', 'c.id', '=', 'inv_m_vave_base_suffix.customer_id')
-                  ->orderBy('c.code', $sortDir)
-                  ->select('inv_m_vave_base_suffix.*');
-        } else {
-            $query->orderBy($sortColumn, $sortDir);
-        }
+        $query->orderBy($sortColumn, $sortDir);
 
         // Pagination
         $perPage = $request->get('length', 10);
@@ -85,7 +75,7 @@ class VaveBaseSuffixController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'base_type' => ['required', Rule::in(['EBD', 'SQ'])],
             'name' => 'required|string|max:100',
             'remark' => 'nullable|string|max:255',
             'is_active' => 'boolean',
@@ -93,7 +83,7 @@ class VaveBaseSuffixController extends Controller
 
         VaveBaseSuffix::create($validated);
 
-        return response()->json(['success' => true, 'message' => 'EBD Suffix created successfully.']);
+        return response()->json(['success' => true, 'message' => 'VA/VE Suffix created successfully.']);
     }
 
     /**
@@ -112,7 +102,7 @@ class VaveBaseSuffixController extends Controller
     {
         $suffix = VaveBaseSuffix::findByHashOrFail($id);
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
+            'base_type' => ['required', Rule::in(['EBD', 'SQ'])],
             'name' => 'required|string|max:100',
             'remark' => 'nullable|string|max:255',
             'is_active' => 'boolean',
@@ -120,7 +110,7 @@ class VaveBaseSuffixController extends Controller
 
         $suffix->update($validated);
 
-        return response()->json(['success' => true, 'message' => 'EBD Suffix updated successfully.']);
+        return response()->json(['success' => true, 'message' => 'VA/VE Suffix updated successfully.']);
     }
 
     /**
@@ -140,6 +130,6 @@ class VaveBaseSuffixController extends Controller
         }
 
         $suffix->delete();
-        return response()->json(['success' => true, 'message' => 'EBD Suffix deleted successfully.']);
+        return response()->json(['success' => true, 'message' => 'VA/VE Suffix deleted successfully.']);
     }
 }

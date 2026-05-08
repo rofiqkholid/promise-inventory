@@ -267,7 +267,7 @@ $(document).ready(function() {
                             }
 
                             window.showToast(isWarning ? 'Import completed with warnings' : 'Import completed successfully', isWarning ? 'warning' : 'success');
-                            if (typeof table !== 'undefined') table.ajax.reload();
+                            if (typeof window.vaveTable !== 'undefined') window.vaveTable.ajax.reload();
                             $btn.prop('disabled', false).html(originalHtml);
                         }
                     },

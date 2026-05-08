@@ -90,7 +90,7 @@ window.VAVE_CONFIG = {
 };
 
 $(function() {
-    const table = window.defaultDataTable('#vaveTable', {
+    window.vaveTable = window.defaultDataTable('#vaveTable', {
         processing: true,
         serverSide: true,
         ajax: {
@@ -186,16 +186,16 @@ $(function() {
                     data.forEach(m => {
                         $('#filterModel').append(`<option value="${m.id}">${m.name}</option>`);
                     });
-                    table.ajax.reload();
+                    window.vaveTable.ajax.reload();
                 });
             } else {
                 $('#filterModel').prop('disabled', true);
-                table.ajax.reload();
+                window.vaveTable.ajax.reload();
             }
         });
 
         $('#filterModel').on('change', function() {
-            table.ajax.reload();
+            window.vaveTable.ajax.reload();
         });
 
         $('#btnResetFilter').on('click', function() {
@@ -203,7 +203,7 @@ $(function() {
             $('#filterModel').val('').trigger('change').prop('disabled', true);
             $('#filterSqBase').val('').trigger('change');
             refreshSqBases(); // Reset to global bases
-            table.ajax.reload();
+            window.vaveTable.ajax.reload();
         });
         
         $('.select2-simple').select2({
