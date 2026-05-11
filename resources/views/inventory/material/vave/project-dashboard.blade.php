@@ -183,7 +183,7 @@
                     <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis (Project Model)
                 </h3>
                 <button id="btnExportExcel" class="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wider flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all">
-                    <i class="fa-solid fa-file-excel"></i> Export CSV
+                    <i class="fa-solid fa-file-excel"></i> Export Excel
                 </button>
             </div>
             
@@ -213,6 +213,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
 $(function() {
@@ -555,7 +556,7 @@ $(function() {
                     {
                         label: 'Benefit (IDR)',
                         data: data.map(d => d.gap_benefit_idr),
-                        backgroundColor: chartColors.primary,
+                        backgroundColor: chartColors.emerald,
                         yAxisID: 'y',
                         borderRadius: 2,
                         datalabels: { 
@@ -662,13 +663,51 @@ $(function() {
     }
 
     $('#btnExportExcel').on('click', function() {
-        let csv = 'Part No,Model,Plan (Kg),Act (Kg),Gap (Kg),IDR/Kg,Qty In (Part),Benefit (IDR),Status\n';
+        const wb = XLSX.utils.book_new();
+        const data = [];
+        
+        // 1. Header Information
+        data.push(['VAVE ANALYSIS REPORT - PROJECT MODEL']);
+        data.push(['Generated At:', new Date().toLocaleString()]);
+        data.push(['Customer:', $('#filterCustomer option:selected').text() || 'All']);
+        data.push(['Model:', $('#filterModel option:selected').text() || 'All']);
+        data.push(['Period:', $('#filterPeriod').val() || 'All']);
+        data.push([]); // Spacer
+
+        // 2. Table Headers
+        data.push([
+            'Part No', 'Model', 'EBD Version', 'Plan (Kg)', 'Actual (Kg)', 
+            'Gap (Kg)', 'IDR/Kg', 'Qty In', 'Benefit (IDR)', 'Status'
+        ]);
+
+        // 3. Table Content
         $('#vaveDetailTable tbody tr').each(function() {
-            let row = []; $(this).find('td').each(function(index) { let text = $(this).text().trim().replace(/Rp/g, '').replace(/\./g, '').replace(/,/g, '.'); if (index === 0) text = $(this).find('.font-bold').text().trim(); row.push('"' + text + '"'); });
-            csv += row.join(',') + '\n';
+            const row = [];
+            $(this).find('td').each(function(i) {
+                let text = $(this).text().trim();
+                if (i === 0) text = $(this).find('div').text().trim(); // Part No
+                
+                // Clean numeric values
+                if (i >= 3 && i <= 8) {
+                    text = text.replace(/Rp/g, '').replace(/kg/g, '').replace(/\./g, '').replace(/,/g, '.');
+                    row.push(parseFloat(text) || 0);
+                } else {
+                    row.push(text);
+                }
+            });
+            data.push(row);
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a"); link.setAttribute("href", URL.createObjectURL(blob)); link.setAttribute("download", "VAVE_Project_Export_" + new Date().getTime() + ".csv"); link.click();
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // 4. Styling (Column Widths)
+        ws['!cols'] = [
+            { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 12 },
+            { wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 20 }, { wch: 12 }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Analysis");
+        XLSX.writeFile(wb, "VAVE_Project_Analysis_" + new Date().getTime() + ".xlsx");
     });
 
     loadFilters(); refreshData();

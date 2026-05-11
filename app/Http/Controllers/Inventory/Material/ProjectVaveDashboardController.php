@@ -116,7 +116,7 @@ class ProjectVaveDashboardController extends Controller
         // DATA FOR MODELS
         $periodQuery = clone $baseQuery;
         if ($month) {
-            $periodQuery->whereMonth('t.transaction_date', '<=', $month);
+            $periodQuery->whereMonth('t.transaction_date', $month);
         }
 
         $rawData = $periodQuery->select([
@@ -244,7 +244,7 @@ class ProjectVaveDashboardController extends Controller
             })
             ->whereNotNull('vb.id');
 
-        if ($month)      $query->whereMonth('t.transaction_date', '<=', $month);
+        if ($month)      $query->whereMonth('t.transaction_date', $month);
         if ($customerId) $query->where('p.customer_id', $customerId);
         if ($modelId)    $query->where('pd.model_id', $modelId);
 

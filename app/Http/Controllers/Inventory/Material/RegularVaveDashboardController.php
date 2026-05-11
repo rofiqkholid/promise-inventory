@@ -161,19 +161,21 @@ class RegularVaveDashboardController extends Controller
             $totalPartKg = 0;
 
             foreach ($monthlyQtys as $m => $qty) {
-                if ($month && $m > $month) continue; // Respect selected month (cumulative logic)
-
                 if ($weightGap > 0) {
                     $benefit = $weightGap * $price * $qty;
                     $kgGap = $weightGap * $qty;
 
-                    $totalPartQty += $qty;
-                    $totalPartBenefit += $benefit;
-                    $totalPartKg += $kgGap;
-
+                    // Trend always shows everything in the map for the year
                     $monthlyTrend[$m]['gap_benefit_idr'] += $benefit;
                     $monthlyTrend[$m]['gap_kg_total'] += $kgGap;
                     $monthlyTrend[$m]['qty_usage'] += $qty;
+
+                    // KPI and Part totals only if it matches selected month (or no month selected)
+                    if (!$month || $m == $month) {
+                        $totalPartQty += $qty;
+                        $totalPartBenefit += $benefit;
+                        $totalPartKg += $kgGap;
+                    }
                 }
             }
 
@@ -248,7 +250,7 @@ class RegularVaveDashboardController extends Controller
         $epicorData = DB::connection('second_db')->table('erp.ShipDtl as a')
             ->join('erp.ShipHead as b', 'b.PackNum', '=', 'a.PackNum')
             ->where(DB::raw('YEAR(b.ShipDate)'), $year)
-            ->when($month, fn($q) => $q->where(DB::raw('MONTH(b.ShipDate)'), '<=', $month))
+            ->when($month, fn($q) => $q->where(DB::raw('MONTH(b.ShipDate)'), $month))
             ->select([
                 'a.PartNum',
                 DB::raw('SUM(a.OurInventoryShipQty) as total_qty')

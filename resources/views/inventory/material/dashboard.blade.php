@@ -52,7 +52,7 @@
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4">
         <form id="filterForm">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 flex-1">
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Period</label>
                         <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
@@ -64,6 +64,14 @@
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Model</label>
                         <select id="filterModel" name="model[]" class="w-full text-xs"></select>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Project Status</label>
+                        <select id="filterProjectStatus" name="project_status" class="w-full text-xs">
+                            <option value="">All Status</option>
+                            <option value="Regular">Regular</option>
+                            <option value="Project">Project</option>
+                        </select>
                     </div>
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Balance Status</label>
@@ -546,6 +554,13 @@
             }
         });
 
+        $('#filterProjectStatus').select2({
+            placeholder: "Select Status",
+            allowClear: true,
+            multiple: false,
+            width: '100%'
+        });
+
             function fetchDashboardData(formData, btn = null) {
                 let originalText = '';
                 if (btn && btn.length) {
@@ -618,7 +633,7 @@
             let isResetting = false;
 
             // Auto-apply logic
-            $('#month_picker, #filterCustomer, #filterModel, #filterBalance, #filterUsage').on('change', function() {
+            $('#month_picker, #filterCustomer, #filterModel, #filterBalance, #filterUsage, #filterProjectStatus').on('change', function() {
                 if (isResetting) return;
                 fetchDashboardData($('#filterForm').serialize());
             });
@@ -633,6 +648,7 @@
                 $('#filterModel').val(null).trigger('change');
                 $('#filterBalance').val(null).trigger('change');
                 $('#filterUsage').val(null).trigger('change');
+                $('#filterProjectStatus').val(null).trigger('change');
                 
                 // Fetch Data with reset form ONCE
                 fetchDashboardData($('#filterForm').serialize(), btn);
@@ -911,7 +927,7 @@
                             const label = stockStatusChart.data.labels[i];
                             const labelStr = Array.isArray(label) ? label.join('|') : label;
                             const status = stockStatusChart.data.datasets[datasetIndex].label;
-                            openDrilldownModal('stock', labelStr, status);
+                            openDrilldown('stock', labelStr, '');
                         }
                     },
                     onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
@@ -974,7 +990,7 @@
                             const category = usageModelChart.data.datasets[datasetIndex].label;
                             // Map 'Event' -> 'OUT-EVENT', etc.
                             const statusMap = { 'Event': 'OUT-EVENT', 'PP': 'OUT-PP', 'Trial': 'OUT-TRIAL' };
-                            openDrilldownModal('usage_model', labelStr, statusMap[category] || category);
+                            openDrilldown('usage_model', labelStr, '');
                         }
                     },
                     onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
@@ -1037,7 +1053,7 @@
                             
                             // Map dataset label back to DB category
                             const statusMap = { 'In': 'IN', 'Event': 'OUT-EVENT', 'PP': 'OUT-PP', 'Trial': 'OUT-TRIAL' };
-                            openDrilldownModal('trendline', label, statusMap[category] || category);
+                            openDrilldown('trendline', label, '');
                         }
                     },
                     onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
@@ -1128,7 +1144,7 @@
                             const label = makerChart.data.labels[i];
                             const labelStr = Array.isArray(label) ? label.join('|') : label;
                             const status = makerChart.data.datasets[datasetIndex].label;
-                            openDrilldownModal('maker', labelStr, status);
+                            openDrilldown('maker', label, '');
                         }
                     },
                     onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
@@ -1288,7 +1304,7 @@
     let drilldownCurrentStatus = '';
     let searchDebounceTimer;
 
-    window.openDrilldownModal = function(chartType, label, status = null) {
+    window.openDrilldown = function(chartType, label, status = null) {
         drilldownCurrentType = chartType;
         drilldownCurrentLabel = label;
         drilldownCurrentStatus = status || '';
@@ -1332,6 +1348,7 @@
             status: drilldownCurrentStatus, 
             month_year: my,
             search: search,
+            project_status: $('#filterProjectStatus').val(),
             page: drilldownPage,
             pageSize: pageSize
         })

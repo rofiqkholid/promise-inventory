@@ -17,18 +17,20 @@ class DashboardController extends Controller
         $selectedCustomers = $request->input('customer', []);
         $selectedStatusBalance = $request->input('status_balance', []);
         $selectedStatusUsage = $request->input('status_usage', []);
+        $selectedProjectStatus = $request->input('project_status');
 
         $inCategories = TransactionCategory::where('effect', 1)->pluck('code');
         $outCategories = TransactionCategory::where('effect', -1)->pluck('code');
 
         // Helper for Status Filtering
-        $applyStatusFilter = function($query, $statuses) {
+        $applyStatusFilter = function($query, $statuses, $pcsSql) {
             if (empty($statuses)) return;
-            $query->where(function($q) use ($statuses) {
+            $query->where(function($q) use ($statuses, $pcsSql) {
                  foreach ($statuses as $status) {
-                     if ($status === 'Critical') {
-                         $q->orWhere(function($w) {
-                             $w->whereColumn('p.current_stock_qty', '<', 'p.min_stock')
+                     $status = strtolower($status);
+                     if ($status === 'critical') {
+                         $q->orWhere(function($w) use ($pcsSql) {
+                             $w->where(DB::raw($pcsSql), '<', DB::raw('p.min_stock - 30'))
                                ->where('p.min_stock', '>', 0)
                                ->where(function($sq) {
                                    $sq->where(function($inner) {
@@ -41,32 +43,65 @@ class DashboardController extends Controller
                                    });
                                });
                          });
-                     } elseif ($status === 'Over') {
-                         $q->orWhere(function($w) {
-                             $w->whereColumn('p.current_stock_qty', '>', DB::raw('p.min_stock * 3'))
+                     } elseif ($status === 'warning') {
+                         $q->orWhere(function($w) use ($pcsSql) {
+                             $w->where(DB::raw($pcsSql), '>=', DB::raw('p.min_stock - 30'))
+                               ->where(DB::raw($pcsSql), '<', DB::raw('p.min_stock'))
+                               ->where('p.min_stock', '>', 0)
+                               ->where(function($sq) {
+                                   $sq->where(function($inner) {
+                                       $inner->where('ms.project_status', '!=', 'Regular')
+                                             ->orWhereNull('ms.project_status');
+                                   })
+                                   ->where(function($inner) {
+                                       $inner->whereNotIn('p.product_status', ['Oldstock OK', 'Oldstock NG'])
+                                             ->orWhereNull('p.product_status');
+                                   });
+                               });
+                         });
+                     } elseif ($status === 'over') {
+                         $q->orWhere(function($w) use ($pcsSql) {
+                             $w->where(DB::raw($pcsSql), '>', DB::raw('p.min_stock * 3'))
                                ->where('p.min_stock', '>', 0);
                          });
-                     } elseif ($status === 'Safe') {
-                         $q->orWhere(function($w) {
-                              $w->where(function($inner) {
-                                  $inner->where(function($std) {
-                                      $std->whereColumn('p.current_stock_qty', '>=', 'p.min_stock')
-                                          ->whereColumn('p.current_stock_qty', '<=', DB::raw('p.min_stock * 3'));
-                                  })
-                                  ->orWhere(function($override) {
-                                      $override->whereColumn('p.current_stock_qty', '<', 'p.min_stock')
-                                               ->where(function($sq) {
-                                                   $sq->where('ms.project_status', 'Regular')
-                                                      ->orWhereIn('p.product_status', ['Oldstock OK', 'Oldstock NG']);
-                                               });
-                                  })
-                                  ->orWhere('p.min_stock', '<=', 0)
-                                  ->orWhereNull('p.min_stock');
-                              });
+                     } elseif ($status === 'safe') {
+                         $q->orWhere(function($w) use ($pcsSql) {
+                             $w->where(function($inner) use ($pcsSql) {
+                                 // Normal Safe: [min, min*3]
+                                 $inner->where(function($std) use ($pcsSql) {
+                                     $std->where(DB::raw($pcsSql), '>=', DB::raw('p.min_stock'))
+                                         ->where(DB::raw($pcsSql), '<=', DB::raw('p.min_stock * 3'));
+                                 })
+                                 // Override Safe: [0, min] but is Regular/Oldstock
+                                 ->orWhere(function($override) use ($pcsSql) {
+                                     $override->where(DB::raw($pcsSql), '<', DB::raw('p.min_stock'))
+                                              ->where(function($sq) {
+                                                  $sq->where('ms.project_status', 'Regular')
+                                                     ->orWhereIn('p.product_status', ['Oldstock OK', 'Oldstock NG']);
+                                              });
+                                 })
+                                 // Edge case Safe: min <= 0
+                                 ->orWhere('p.min_stock', '<=', 0)
+                                 ->orWhereNull('p.min_stock');
+                             });
                          });
                      }
                  }
             });
+        };
+
+        // Historical Stock Calculation Logic
+        $lastDayOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+        $today = date('Y-m-d');
+        $isHistorical = $lastDayOfMonth < $today;
+
+        $applyProjectStatusFilter = function($query, $status) {
+            if (empty($status)) return;
+            if (is_array($status)) {
+                $query->whereIn('ms.project_status', $status);
+            } else {
+                $query->where('ms.project_status', $status);
+            }
         };
 
         // 1. Stock Query
@@ -78,14 +113,26 @@ class DashboardController extends Controller
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
             ->where('p.is_active', 1);
 
+        if ($isHistorical) {
+            $netChangeSubquery = DB::table('inv_t_inventory_transaction as t')
+                ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
+                ->where('t.transaction_date', '>', $lastDayOfMonth)
+                ->select('t.product_detail_id', DB::raw('SUM(t.qty * tc.effect) as net_change_qty'))
+                ->groupBy('t.product_detail_id');
+            
+            $stockQuery->leftJoinSub($netChangeSubquery, 'adj', 'adj.product_detail_id', '=', 'p.id');
+        }
+
         if (!empty($selectedModels)) $stockQuery->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $stockQuery->whereIn('prod.customer_id', $selectedCustomers);
-        $applyStatusFilter($stockQuery, $selectedStatusBalance);
+        $applyProjectStatusFilter($stockQuery, $selectedProjectStatus);
+        $histQtySql = $isHistorical ? "(p.current_stock_qty - ISNULL(adj.net_change_qty, 0))" : "p.current_stock_qty";
+        $pcsSql = \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql($histQtySql, 'p', 'u.name');
+        $amountSql = \App\Models\InventoryModel\Material\InventoryProduct::getAmountCalculationSql($histQtySql, 'p', 'u.name');
 
-        $pcsSql = \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql('p.current_stock_qty', 'p', 'u.name');
-        $amountSql = \App\Models\InventoryModel\Material\InventoryProduct::getAmountCalculationSql('p.current_stock_qty', 'p', 'u.name');
+        $applyStatusFilter($stockQuery, $selectedStatusBalance, $pcsSql);
         
-        $totalStockPcs = (clone $stockQuery)->sum('p.current_stock_pcs') ?? 0;
+        $totalStockPcs = (clone $stockQuery)->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
         $totalStockAmount = (clone $stockQuery)->selectRaw("SUM({$amountSql}) as total")->value('total') ?? 0;
 
         // 2. Transaction Query Base
@@ -101,8 +148,8 @@ class DashboardController extends Controller
         $queryTrans = clone $recentTransQuery;
         if (!empty($selectedModels)) $queryTrans->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $queryTrans->whereIn('prod.customer_id', $selectedCustomers);
-        if ($monthYear) $queryTrans->where('t.transaction_date', 'like', "$monthYear%");
-        $applyStatusFilter($queryTrans, $selectedStatusBalance);
+        $applyProjectStatusFilter($queryTrans, $selectedProjectStatus);
+        $applyStatusFilter($queryTrans, $selectedStatusBalance, $pcsSql);
 
         // Stats (Item Part)
         $materialInCount = (clone $queryTrans)->whereIn('tc.code', $inCategories)->distinct()->count('p.id');
@@ -121,10 +168,11 @@ class DashboardController extends Controller
 
         // Stock Data for Bar Chart (Item Count per Status)
         $allProducts = $stockQuery->select(
+            'p.id',
             'm.name as model_name', 
             'c.code as customer_code', 
-            'p.current_stock_qty', 
-            'p.current_stock_pcs',
+            DB::raw("{$histQtySql} as current_stock_qty"), 
+            DB::raw("CAST({$pcsSql} AS INT) as current_stock_pcs"),
             'p.min_stock', 
             'p.product_status', 
             'ms.project_status',
@@ -279,12 +327,21 @@ class DashboardController extends Controller
             $usageByMaker[] = ['maker' => $maker, 'on_budget' => $counts['on_budget'], 'near_loss' => $counts['near_loss'], 'loss' => $counts['loss']];
         }
 
+        // Sort Usage Table by Status (Loss -> Near Loss -> On Budget)
+        usort($usageTable, function($a, $b) {
+            $order = ['Loss' => 1, 'Near Loss' => 2, 'On Budget' => 3];
+            return ($order[$a['status']] ?? 99) <=> ($order[$b['status']] ?? 99);
+        });
+
         // Tables
         $balanceStatusTable = (clone $stockQuery)
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
             ->select(
                 'p.id', 'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
-                'm.name as model_name', 'p.current_stock_qty', 'p.current_stock_pcs', 'p.min_stock',
+                'm.name as model_name', 
+                DB::raw("{$histQtySql} as current_stock_qty"), 
+                DB::raw("CAST({$pcsSql} AS INT) as current_stock_pcs"), 
+                'p.min_stock',
                 'p.pcs_per_unit', 'p.weight_kg', 'p.gross_coil', 'u.name as unit_name',
                 'ms.project_status', 'p.product_status', 'p.action_status', 'p.action_remark'
             )
@@ -410,8 +467,22 @@ class DashboardController extends Controller
         $pageSize   = $request->input('pageSize', 10);
         $page       = $request->input('page', 1);
         $offset     = ($page - 1) * $pageSize;
+        $selectedProjectStatus = $request->input('project_status');
 
         $outCategories = \App\Models\InventoryModel\Material\TransactionCategory::where('effect', -1)->pluck('code');
+
+        $lastDayOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+        $today = date('Y-m-d');
+        $isHistorical = $lastDayOfMonth < $today;
+
+        $applyProjectStatusFilter = function($query, $status) {
+            if (empty($status)) return;
+            if (is_array($status)) {
+                $query->whereIn('ms.project_status', $status);
+            } else {
+                $query->where('ms.project_status', $status);
+            }
+        };
 
         $baseProduct = DB::table('inv_t_product_detail as p')
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
@@ -422,6 +493,18 @@ class DashboardController extends Controller
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
             ->where('p.is_active', 1);
 
+        if ($isHistorical) {
+            $netChangeSubquery = DB::table('inv_t_inventory_transaction as t')
+                ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
+                ->where('t.transaction_date', '>', $lastDayOfMonth)
+                ->select('t.product_detail_id', DB::raw('SUM(t.qty * tc.effect) as net_change_qty'))
+                ->groupBy('t.product_detail_id');
+            $baseProduct->leftJoinSub($netChangeSubquery, 'adj', 'adj.product_detail_id', '=', 'p.id');
+        }
+
+        $histQtySql = $isHistorical ? "(p.current_stock_qty - ISNULL(adj.net_change_qty, 0))" : "p.current_stock_qty";
+        $pcsSql = \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql($histQtySql, 'p', 'u.name');
+
         $baseTrans = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
@@ -430,7 +513,8 @@ class DashboardController extends Controller
             ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
             ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
-            ->leftJoin('inv_m_supplier as s', 's.id', '=', 't.supplier_id');
+            ->leftJoin('inv_m_supplier as s', 's.id', '=', 't.supplier_id')
+            ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
 
         $result = [];
         $title  = '';
@@ -440,11 +524,12 @@ class DashboardController extends Controller
             $parts = explode('|', $label);
             $modelName = $parts[0] ?? '';
             $custCode  = $parts[1] ?? '';
-            $title = "Stock Detail — {$modelName} / {$custCode}";
 
             $query = (clone $baseProduct)
                 ->where(DB::raw('ISNULL(m.name, \'N/A\')'), $modelName)
                 ->where(DB::raw('ISNULL(c.code, \'N/A\')'), $custCode);
+            
+            $applyProjectStatusFilter($query, $selectedProjectStatus);
 
             if ($search) {
                 $query->where(function($q) use ($search) {
@@ -456,21 +541,24 @@ class DashboardController extends Controller
             $items = $query->select(
                     'p.id', 'prod.part_no', 'rev.code as revision',
                     'm.name as model_name', 'c.code as customer_code',
-                    'p.current_stock_qty', 'p.min_stock',
+                    'p.min_stock',
                     'u.name as unit_name', 'p.pcs_per_unit',
                     'p.weight_kg', 'p.gross_coil',
-                    'p.product_status', 'ms.project_status', 'p.action_status', 'p.action_remark'
+                    'p.product_status', 'ms.project_status', 'p.action_status', 'p.action_remark',
+                    DB::raw("{$histQtySql} as current_stock_qty"), 
+                    DB::raw("CAST({$pcsSql} AS INT) as current_stock_pcs")
                 )
                 ->orderBy('prod.part_no')
                 ->get();
 
+            $statusText = $items->first()->project_status ?? '';
+            $projTag = $statusText ? ($statusText === 'Regular' ? ' [Regular]' : ' [Project]') : '';
+            $title = "Stock Detail — {$modelName} / {$custCode}{$projTag}";
+
             $processed = [];
             foreach ($items as $row) {
-                // Convert to PCS for accurate comparison
-                $currentPcs = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
-                    $row->current_stock_qty, $row->weight_kg, $row->pcs_per_unit, $row->unit_name, 
-                    0, 0, 0, 1, $row->gross_coil
-                );
+                // Use the calculated historical PCS
+                $currentPcs = (int)$row->current_stock_pcs;
 
                 $statusRaw = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
                     $currentPcs, $row->min_stock, $row->project_status ?: $row->product_status
@@ -493,6 +581,16 @@ class DashboardController extends Controller
                     'action_remark' => $row->action_remark,
                 ];
             }
+
+            // Sort by Status Priority (Critical -> Warning -> Over -> Safe) then Part No
+            usort($processed, function($a, $b) {
+                $order = ['Critical' => 1, 'Warning' => 2, 'Over' => 3, 'Safe' => 4];
+                $oA = $order[$a['status']] ?? 99;
+                $oB = $order[$b['status']] ?? 99;
+                if ($oA === $oB) return strcasecmp($a['part_no'], $b['part_no']);
+                return $oA <=> $oB;
+            });
+
             $total = count($processed);
             $result = array_slice($processed, $offset, $pageSize);
 
@@ -508,6 +606,8 @@ class DashboardController extends Controller
             $query = (clone $baseTrans)
                 ->whereYear('t.transaction_date', $year)
                 ->whereMonth('t.transaction_date', $monthNum);
+            
+            $applyProjectStatusFilter($query, $selectedProjectStatus);
 
             if ($statusFilter) {
                 // Map display label back to OUT-EVENT etc. if needed
@@ -558,23 +658,17 @@ class DashboardController extends Controller
             $parts = explode('|', $label);
             $modelName = $parts[0] ?? '';
             $custCode  = $parts[1] ?? '';
-            $title = "Usage Detail — {$modelName} / {$custCode}";
 
             $query = (clone $baseTrans)
                 ->where('t.transaction_date', 'like', "{$monthYear}%")
                 ->whereIn('tc.code', $outCategories)
                 ->where(DB::raw('ISNULL(m.name, \'N/A\')'), $modelName)
                 ->where(DB::raw('ISNULL(c.code, \'N/A\')'), $custCode);
+            
+            $applyProjectStatusFilter($query, $selectedProjectStatus);
 
-            if ($statusFilter) {
-                $query->where('tc.code', $statusFilter);
-            }
-
-            if ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('prod.part_no', 'like', "%{$search}%");
-                });
-            }
+            if ($statusFilter) $query->where('tc.code', $statusFilter);
+            if ($search) $query->where('prod.part_no', 'like', "%{$search}%");
 
             $total = (clone $query)->distinct()->count(DB::raw("CONCAT(prod.part_no, ISNULL(rev.code,''), tc.code, CAST(t.transaction_date AS NVARCHAR))"));
             
@@ -584,12 +678,17 @@ class DashboardController extends Controller
                     DB::raw('SUM(t.qty) as qty'),
                     'u.name as unit_name',
                     DB::raw('SUM(t.qty * ISNULL(p.pcs_per_unit, 1)) as qty_pcs'),
-                    't.transaction_date'
+                    't.transaction_date',
+                    'ms.project_status'
                 )
-                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date', 'u.name')
+                ->groupBy('prod.part_no', 'rev.code', 'tc.code', 't.transaction_date', 'u.name', 'ms.project_status')
                 ->orderBy('t.transaction_date', 'desc')
                 ->offset($offset)->limit($pageSize)
                 ->get();
+
+            $statusText = $items->first()->project_status ?? '';
+            $projTag = $statusText ? ($statusText === 'Regular' ? ' [Regular]' : ' [Project]') : '';
+            $title = "Usage Detail — {$modelName} / {$custCode}{$projTag}";
 
             foreach ($items as $row) {
                 $result[] = [
@@ -609,6 +708,8 @@ class DashboardController extends Controller
                 ->where('t.transaction_date', 'like', "{$monthYear}%")
                 ->where('tc.code', 'OUT-TRIAL')
                 ->where('s.code', $label);
+            
+            $applyProjectStatusFilter($query, $selectedProjectStatus);
 
             if ($search) {
                 $query->where(function($q) use ($search) {
@@ -654,6 +755,16 @@ class DashboardController extends Controller
                     'status'    => $status,
                 ];
             }
+
+            // Sort by Status Priority (Loss -> Near Loss -> On Budget)
+            usort($processed, function($a, $b) {
+                $order = ['Loss' => 1, 'Near Loss' => 2, 'On Budget' => 3];
+                $oA = $order[$a['status']] ?? 99;
+                $oB = $order[$b['status']] ?? 99;
+                if ($oA === $oB) return strcasecmp($a['part_no'], $b['part_no']);
+                return $oA <=> $oB;
+            });
+
             $total = count($processed);
             $result = array_slice($processed, $offset, $pageSize);
         }

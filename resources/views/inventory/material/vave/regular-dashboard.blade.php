@@ -56,7 +56,7 @@
         <!-- Title Section -->
         <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-white leading-tight mb-0.5 tracking-tight">Regular Model Vave Analysis</h2>
-            <p class="text-[11px] text-gray-500 dark:text-gray-400 font-normal leading-tight">Gap Benefit: (Plan - Act Kg) × Price × Qty In</p>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 font-normal leading-tight">Gap Benefit: (Plan - Act Kg) × Price × Qty Out</p>
         </div>
 
             <!-- KPI Grid & Filter Toggle -->
@@ -183,7 +183,7 @@
                     <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis (Regular Model)
                 </h3>
                 <button id="btnExportExcel" class="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wider flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all">
-                    <i class="fa-solid fa-file-excel"></i> Export CSV
+                    <i class="fa-solid fa-file-excel"></i> Export Excel
                 </button>
             </div>
             
@@ -198,7 +198,7 @@
                             <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Actual (Kg)</th>
                             <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Gap (Kg)</th>
                             <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">IDR/Kg</th>
-                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Qty In</th>
+                            <th class="py-2 px-2 text-[11px] font-medium text-slate-500 tracking-wider text-center">Qty Out</th>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider text-right">Benefit</th>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider text-center">Status</th>
                         </tr>
@@ -213,6 +213,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 <script>
 $(function() {
@@ -568,7 +569,7 @@ $(function() {
                     {
                         label: 'Benefit (IDR)',
                         data: data.map(d => d.gap_benefit_idr),
-                        backgroundColor: chartColors.primary,
+                        backgroundColor: chartColors.emerald,
                         yAxisID: 'y',
                         borderRadius: 2,
                         datalabels: { 
@@ -899,21 +900,51 @@ $(function() {
 
 
     $('#btnExportExcel').on('click', function() {
-        let csv = 'Part No,Model,Plan (Kg),Act (Kg),Gap (Kg),IDR/Kg,Qty In (Part),Benefit (IDR),Status\n';
+        const wb = XLSX.utils.book_new();
+        const data = [];
+        
+        // 1. Header Information
+        data.push(['VAVE ANALYSIS REPORT - REGULAR MODEL']);
+        data.push(['Generated At:', new Date().toLocaleString()]);
+        data.push(['Customer:', $('#filterCustomer option:selected').text() || 'All']);
+        data.push(['Model:', $('#filterModel option:selected').text() || 'All']);
+        data.push(['Period:', $('#filterPeriod').val() || 'All']);
+        data.push([]); // Spacer
+
+        // 2. Table Headers
+        data.push([
+            'Part No', 'Model', 'SQ Version', 'Plan (Kg)', 'Actual (Kg)', 
+            'Gap (Kg)', 'IDR/Kg', 'Qty Out', 'Benefit (IDR)', 'Status'
+        ]);
+
+        // 3. Table Content
         $('#vaveDetailTable tbody tr').each(function() {
-            let row = [];
-            $(this).find('td').each(function(index) {
-                let text = $(this).text().trim().replace(/Rp/g, '').replace(/\./g, '').replace(/,/g, '.');
-                if (index === 0) text = $(this).find('.font-bold').text().trim();
-                row.push('"' + text + '"');
+            const row = [];
+            $(this).find('td').each(function(i) {
+                let text = $(this).text().trim();
+                if (i === 0) text = $(this).find('div').text().trim(); // Part No
+                
+                // Clean numeric values
+                if (i >= 3 && i <= 8) {
+                    text = text.replace(/Rp/g, '').replace(/kg/g, '').replace(/\./g, '').replace(/,/g, '.');
+                    row.push(parseFloat(text) || 0);
+                } else {
+                    row.push(text);
+                }
             });
-            csv += row.join(',') + '\n';
+            data.push(row);
         });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        link.setAttribute("href", URL.createObjectURL(blob));
-        link.setAttribute("download", "VAVE_Regular_Export_" + new Date().getTime() + ".csv");
-        link.click();
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // 4. Styling (Column Widths)
+        ws['!cols'] = [
+            { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 12 }, { wch: 12 },
+            { wch: 12 }, { wch: 15 }, { wch: 10 }, { wch: 20 }, { wch: 12 }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Analysis");
+        XLSX.writeFile(wb, "VAVE_Regular_Analysis_" + new Date().getTime() + ".xlsx");
     });
 
     loadFilters();
