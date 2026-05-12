@@ -5,7 +5,7 @@
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+    <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Supplier</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage local and global suppliers.</p>
@@ -36,7 +36,7 @@
 <div id="modal-supplier-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Add Supplier</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white">Add Supplier</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -50,19 +50,19 @@
                         <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center peer-checked:border-primary-600 dark:peer-checked:border-primary-500 transition-all group-hover:scale-110">
                             <div class="w-2.5 h-2.5 bg-primary-600 dark:bg-primary-500 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
                         </div>
-                        <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 peer-checked:text-gray-900 dark:peer-checked:text-white">Manual Input</span>
+                        <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400 peer-checked:text-gray-900 dark:peer-checked:text-white">Manual Input</span>
                     </label>
                     <label class="inline-flex items-center gap-3 cursor-pointer group">
                         <input type="radio" name="source_type" value="global" class="hidden peer">
                         <div class="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center peer-checked:border-primary-600 dark:peer-checked:border-primary-500 transition-all group-hover:scale-110">
                             <div class="w-2.5 h-2.5 bg-primary-600 dark:bg-primary-500 rounded-full opacity-0 peer-checked:opacity-100 transition-opacity"></div>
                         </div>
-                        <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 peer-checked:text-gray-900 dark:peer-checked:text-white">Global Promise</span>
+                        <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400 peer-checked:text-gray-900 dark:peer-checked:text-white">Global Promise</span>
                     </label>
                 </div>
 
                 <div id="global-supplier-container" class="hidden mb-6">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Search Global Supplier</label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Search Global Supplier</label>
                     <select id="global_supplier_search" class="select2-global-supplier w-full"></select>
                     <input type="hidden" name="promise_supp_id" id="add_promise_supp_id">
                 </div>
@@ -70,35 +70,69 @@
                 <div id="supplier-detail-fields">
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Code <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Code <span class="text-red-500">*</span></label>
                             <input type="text" name="code" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400">
                             <p class="error-msg hidden"></p>
                         </div>
                         <div>
-                            <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
                             <input type="text" name="name" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400">
                             <p class="error-msg hidden"></p>
                         </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Email</label>
+                            <input type="email" name="email" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. supplier@example.com">
+                            <p class="error-msg hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Phone</label>
+                            <input type="text" name="phone" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. 021-123456">
+                            <p class="error-msg hidden"></p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Address</label>
+                        <textarea name="address" rows="3" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="Enter supplier address..."></textarea>
+                        <p class="error-msg hidden"></p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Remark</label>
+                        <input type="text" name="remark" maxlength="100" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="Optional notes...">
+                        <p class="error-msg hidden"></p>
+                    </div>
                 </div>
 
                 <div id="supplier-card-preview" class="hidden mb-6 p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs">
-                    <div class="grid grid-cols-2 gap-y-4 gap-x-8">
+                    <div class="grid grid-cols-2 gap-y-6 gap-x-8">
                         <div>
-                            <p class="text-[9px] font-bold text-gray-400 mb-1">Code</p>
+                            <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-1">Code</p>
                             <p id="card-code" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
                         </div>
                         <div>
-                            <p class="text-[9px] font-bold text-gray-400 mb-1">Name</p>
+                            <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-1">Name</p>
                             <p id="card-name" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-1">Email</p>
+                            <p id="card-email" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-1">Phone</p>
+                            <p id="card-phone" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div class="col-span-2">
+                            <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wider mb-1">Address</p>
+                            <p id="card-address" class="text-sm font-medium text-gray-900 dark:text-white">-</p>
                         </div>
                     </div>
                 </div>
             </form>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
-            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all shadow-sm active:scale-95">Save Supplier</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors active:scale-95">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all active:scale-95">Save Supplier</button>
         </div>
     </div>
 </div>
@@ -106,7 +140,7 @@
 <div id="modal-supplier-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-2xl transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Edit Supplier</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white">Edit Supplier</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -118,22 +152,44 @@
                 <div id="supplier-edit-detail-fields">
                     <div class="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Code <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Code <span class="text-red-500">*</span></label>
                             <input type="text" name="code" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                             <p class="error-msg hidden"></p>
                         </div>
                         <div>
-                            <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Name <span class="text-red-500">*</span></label>
                             <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                             <p class="error-msg hidden"></p>
                         </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Email</label>
+                            <input type="email" name="email" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                            <p class="error-msg hidden"></p>
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Phone</label>
+                            <input type="text" name="phone" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                            <p class="error-msg hidden"></p>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Address</label>
+                        <textarea name="address" rows="3" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all"></textarea>
+                        <p class="error-msg hidden"></p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Remark</label>
+                        <input type="text" name="remark" maxlength="100" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                        <p class="error-msg hidden"></p>
                     </div>
                 </div>
             </form>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
-            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all shadow-sm active:scale-95">Save Changes</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors active:scale-95">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all active:scale-95">Save Changes</button>
         </div>
     </div>
 </div>
@@ -212,7 +268,14 @@
             const id = $(this).val(); if (!id) return;
             $('#add_promise_supp_id').val(id);
             $.get(`{{ url('inventory/master/supplier/global') }}/${id}`, d => {
-                if (d) { $('#card-code').text(d.code); $('#card-name').text(d.name); $('#supplier-card-preview').removeClass('hidden'); }
+                if (d) { 
+                    $('#card-code').text(d.code); 
+                    $('#card-name').text(d.name); 
+                    $('#card-email').text(d.email || '-');
+                    $('#card-phone').text(d.phone || '-');
+                    $('#card-address').text(d.address || '-');
+                    $('#supplier-card-preview').removeClass('hidden'); 
+                }
             });
         });
 

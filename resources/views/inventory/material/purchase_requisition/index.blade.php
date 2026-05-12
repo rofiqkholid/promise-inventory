@@ -40,7 +40,7 @@
     <div class="mb-4 p-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
         <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end">
             <div class="col-span-1">
-                <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-500">Customer</label>
+                <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Customer</label>
                 <select id="filterCustomer" class="select2-filter w-full">
                     <option value="">All Customers</option>
                     @foreach($customers as $c)
@@ -49,7 +49,7 @@
                 </select>
             </div>
             <div class="col-span-1">
-                <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-500">Model</label>
+                <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Model</label>
                 <select id="filterModel" class="select2-filter w-full">
                     <option value="">All Models</option>
                     @foreach($models as $m)
@@ -58,7 +58,7 @@
                 </select>
             </div>
             <div class="col-span-1">
-                <label class="block mb-2 text-sm font-medium text-gray-600 dark:text-gray-500">Stock Status</label>
+                <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Stock Status</label>
                 <select id="filterStatus" class="select2-filter w-full">
                     <option value="">All Problematic</option>
                     <option value="critical">Critical Only</option>
@@ -120,7 +120,7 @@
         <div class="relative bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 overflow-hidden scale-in">
             <div class="px-6 py-5 bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
                 <div>
-                    <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 class="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-2">
                         <i class="fa-solid fa-circle-info text-primary-600"></i> Requirement Detail
                     </h3>
                 </div>
@@ -133,8 +133,8 @@
                 {{-- Header Summary --}}
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6 bg-slate-50 dark:bg-gray-700/30 rounded-xs border border-slate-100 dark:border-gray-700/50">
                     <div>
-                        <h4 id="det_part_no" class="text-2xl font-black text-slate-800 dark:text-white tracking-tighter uppercase leading-none mb-1">-</h4>
-                        <p id="det_material" class="text-xs text-slate-400 dark:text-gray-500 font-medium uppercase tracking-wide">-</p>
+                        <h4 id="det_part_no" class="text-2xl font-medium text-slate-900 dark:text-white tracking-tighter leading-none mb-1">-</h4>
+                        <p id="det_material" class="text-xs text-slate-500 dark:text-slate-600 font-medium tracking-wide">-</p>
                     </div>
                     <div id="det_status_badge">-</div>
                 </div>
@@ -142,23 +142,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {{-- Left: Stock Metrics --}}
                     <div class="space-y-4">
-                        <label class="block text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest border-b border-slate-100 dark:border-gray-700 pb-2">Inventory Balance</label>
+                        <label class="block text-md font-medium text-slate-900 dark:text-slate-500 border-b border-slate-100 dark:border-gray-700 pb-2">Inventory Balance</label>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="p-4 bg-white dark:bg-gray-900/50 rounded-xs border border-slate-100 dark:border-gray-700">
-                                <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">Stock</p>
-                                <p id="det_current" class="text-lg font-black text-slate-700 dark:text-gray-200 leading-none">-</p>
+                                <p class="text-sm text-slate-900 font-medium mb-1">Stock</p>
+                                <p id="det_current" class="text-md font-medium text-slate-700 dark:text-gray-200 leading-none">-</p>
                             </div>
                             <div class="p-4 bg-white dark:bg-gray-900/50 rounded-xs border border-slate-100 dark:border-gray-700">
-                                <p class="text-[9px] text-gray-400 font-bold uppercase mb-1">Target</p>
-                                <p id="det_target" class="text-lg font-black text-slate-700 dark:text-gray-200 leading-none">-</p>
+                                <p class="text-sm text-slate-900 font-medium mb-1">Target</p>
+                                <p id="det_target" class="text-md font-medium text-slate-700 dark:text-gray-200 leading-none">-</p>
                             </div>
                             <div class="col-span-2 p-5 bg-red-50/50 dark:bg-red-900/10 rounded-xs border border-red-100/50 dark:border-red-900/30">
                                 <p class="text-[9px] text-red-500 font-bold uppercase mb-1 flex items-center gap-1.5">
                                     <i class="fa-solid fa-triangle-exclamation"></i> Material Shortage
                                 </p>
                                 <div class="flex items-baseline gap-1">
-                                    <p id="det_shortage" class="text-3xl font-black text-red-600 dark:text-red-400 tracking-tighter leading-none">-</p>
-                                    <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest">PCS</span>
+                                    <p id="det_shortage" class="text-3xl font-medium text-slate-700 dark:text-slate-500 leading-none">-</p>
+                                    <span class="text-[10px] font-medium text-slate-700 dark:text-slate-500 uppercase tracking-widest">PCS</span>
                                 </div>
                                 <p class="text-[9px] text-red-400/80 font-medium mt-2 leading-relaxed">Required replenishment to maintain minimum safety level.</p>
                             </div>
@@ -167,22 +167,22 @@
 
                     {{-- Right: Traceability --}}
                     <div class="space-y-4">
-                        <label class="block text-[10px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest border-b border-slate-100 dark:border-gray-700 pb-2">Part Traceability</label>
+                        <label class="block text-md font-medium text-slate-900 dark:text-slate-500 border-b border-slate-100 dark:border-gray-700 pb-2">Part Traceability</label>
                         <div class="space-y-4">
                             <div class="flex justify-between items-start border-b border-slate-50 dark:border-gray-700/50 pb-3">
-                                <span class="text-xs text-gray-400 font-medium">Customer</span>
+                                <span class="text-xs text-slate-900 dark:text-slate-400 font-medium">Customer</span>
                                 <span id="det_customer" class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-tight text-right">-</span>
                             </div>
                             <div class="flex justify-between items-start border-b border-slate-50 dark:border-gray-700/50 pb-3">
-                                <span class="text-xs text-gray-400 font-medium">Model</span>
+                                <span class="text-xs text-slate-900 dark:text-slate-400 font-medium">Model</span>
                                 <span id="det_model" class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-tight text-right">-</span>
                             </div>
                             <div class="flex justify-between items-start border-b border-slate-50 dark:border-gray-700/50 pb-3">
-                                <span class="text-xs text-gray-400 font-medium">Unit</span>
+                                <span class="text-xs text-slate-900 dark:text-slate-400 font-medium">Unit</span>
                                 <span id="det_unit" class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-tight text-right">-</span>
                             </div>
                             <div class="flex justify-between items-start border-b border-slate-50 dark:border-gray-700/50 pb-3">
-                                <span class="text-xs text-gray-400 font-medium">Pcs/Unit</span>
+                                <span class="text-xs text-slate-900 dark:text-slate-400 font-medium">Pcs/Unit</span>
                                 <span id="det_pcs_unit" class="text-xs font-bold text-slate-700 dark:text-gray-300 uppercase tracking-tight text-right">-</span>
                             </div>
                         </div>
@@ -230,8 +230,8 @@ $(function() {
                 className: 'text-center',
                 render: function(data, type, row) {
                     return `
-                        <div class="text-xs font-medium text-slate-700 dark:text-gray-300 uppercase leading-none mb-1.5">${row.model || '-'}</div>
-                        <div class="text-[10px] font-medium text-slate-400 dark:text-gray-500 uppercase tracking-widest pl-1">${row.customer || '-'}</div>
+                        <div class="text-xs font-medium text-slate-900 dark:text-gray-300 uppercase leading-none mb-1.5">${row.model || '-'}</div>
+                        <div class="text-[10px] font-medium text-slate-600 dark:text-gray-500 uppercase tracking-widest pl-1">${row.customer || '-'}</div>
                     `;
                 }
             },
@@ -240,14 +240,14 @@ $(function() {
                 className: 'py-3 min-w-[180px]',
                 render: function(data, type, row) {
                     return `
-                        <div class="font-medium text-slate-800 dark:text-white leading-tight uppercase tracking-tight">${data}</div>
-                        <div class="text-[10px] text-slate-400 uppercase truncate max-w-[200px]">${row.part_name || '-'}</div>
+                        <div class="font-medium text-slate-900 dark:text-white leading-tight uppercase tracking-tight">${data}</div>
+                        <div class="text-[10px] text-slate-600 uppercase truncate max-w-[200px]">${row.part_name || '-'}</div>
                     `;
                 }
             },
             { 
                 data: 'material',
-                className: 'text-xs text-gray-600 dark:text-gray-400',
+                className: 'text-xs text-slate-600 dark:text-gray-600',
                 render: d => d || '-'
             },
             { 
@@ -256,7 +256,7 @@ $(function() {
             },
             { 
                 data: 'min_stock', 
-                className: 'text-center font-medium text-slate-500 dark:text-gray-400 text-xs' 
+                className: 'text-center font-medium text-slate-900 dark:text-slate-900 text-xs' 
             },
             { 
                 data: 'shortage', 

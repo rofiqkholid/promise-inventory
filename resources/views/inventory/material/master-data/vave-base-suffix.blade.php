@@ -5,13 +5,13 @@
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+    <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">VA/VE Suffix</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage suffixes for Engineering Breakdown (EBD) and Sales Quotation (SQ) versions.</p>
         </div>
         <div class="mt-4 sm:mt-0">
-            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
@@ -36,7 +36,7 @@
 <div id="modal-vave-suffix" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="modal-title text-sm font-bold text-gray-900 dark:text-white">Add VA/VE Suffix</h3>
+            <h3 class="modal-title text-sm font-medium text-gray-900 dark:text-white">Add VA/VE Suffix</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -47,7 +47,7 @@
                 <div id="method-field"></div>
                 
                 <div class="mb-5">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Baseline Type <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Baseline Type <span class="text-red-500">*</span></label>
                     <select name="base_type" id="base_type" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all select2-modal">
                         <option value="">-- Select Type --</option>
                         <option value="EBD">EBD (Engineering)</option>
@@ -57,13 +57,13 @@
                 </div>
 
                 <div class="mb-5">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Suffix Name <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Suffix Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400 placeholder:font-normal" placeholder="e.g. SQ, Tech Review, Final">
                     <p class="error-msg hidden"></p>
                 </div>
 
                 <div class="mb-5">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Remark</label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Remark</label>
                     <textarea name="remark" rows="3" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400 placeholder:font-normal" placeholder="Optional notes..."></textarea>
                     <p class="error-msg hidden"></p>
                 </div>
@@ -72,14 +72,14 @@
                     <div class="flex items-center h-5">
                         <input type="checkbox" name="is_active" value="1" checked class="w-4 h-4 text-primary-600 bg-white border-gray-300 rounded-sm focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                     </div>
-                    <label class="text-[11px] font-bold text-slate-700 dark:text-gray-300">Active Status</label>
+                    <label class="text-[11px] font-medium text-slate-700 dark:text-gray-300">Active Status</label>
                 </div>
                 <p class="error-msg hidden"></p>
             </form>
         </div>
         <div class="border-t border-gray-200 dark:border-gray-800 px-6 py-5 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
-            <button type="button" id="btnSubmit" class="flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all active:scale-95 shadow-sm">Save</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors active:scale-95">Cancel</button>
+            <button type="button" id="btnSubmit" class="flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all active:scale-95">Save</button>
         </div>
     </div>
 </div>
@@ -103,7 +103,7 @@
             serverSide: true, processing: true,
             columns: [
                 { data: null, orderable: false, searchable: false, className: 'text-center', render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
-                { data: 'name', className: 'font-bold text-slate-800 dark:text-slate-200' },
+                { data: 'name', className: 'font-medium text-slate-800 dark:text-slate-200' },
                 { 
                     data: 'base_type', 
                     render: (d) => d ? `<span class="px-2 py-0.5 ${d === 'EBD' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800'} rounded-px text-[9px] font-bold border uppercase tracking-wider">${d}</span>` : '-' 

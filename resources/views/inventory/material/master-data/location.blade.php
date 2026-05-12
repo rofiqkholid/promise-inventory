@@ -34,7 +34,7 @@
 <div id="modal-location-add" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Add Location</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white">Add Location</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -43,12 +43,12 @@
             <form class="modal-form" data-action="{{ route('inventory.master.location.store') }}">
                 @csrf
                 <div class="mb-4">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Location Name <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Location Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400" placeholder="e.g. Rack A-1">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Status</label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Status</label>
                     <select name="is_active" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
@@ -58,8 +58,8 @@
             </form>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
-            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all shadow-sm active:scale-95">Save</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors active:scale-95">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all active:scale-95">Save</button>
         </div>
     </div>
 </div>
@@ -67,7 +67,7 @@
 <div id="modal-location-edit" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
     <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 transition-all border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white">Edit Location</h3>
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white">Edit Location</h3>
             <button type="button" class="close-modal text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
@@ -77,12 +77,12 @@
                 @csrf
                 @method('PUT')
                 <div class="mb-4">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Location Name <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Location Name <span class="text-red-500">*</span></label>
                     <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     <p class="error-msg hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label class="block mb-2 text-[11px] font-bold text-slate-600 dark:text-gray-300">Status</label>
+                    <label class="block mb-2 text-[11px] font-medium text-slate-900 dark:text-gray-300">Status</label>
                     <select name="is_active" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
@@ -92,8 +92,8 @@
             </form>
         </div>
         <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
-            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95">Cancel</button>
-            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all shadow-sm active:scale-95">Save Changes</button>
+            <button type="button" class="close-modal flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors active:scale-95">Cancel</button>
+            <button type="submit" class="submit-btn flex-1 px-4 py-2.5 bg-primary-600 border border-transparent rounded-xs text-xs font-medium text-white hover:bg-primary-700 transition-all active:scale-95">Save Changes</button>
         </div>
     </div>
 </div>
@@ -123,8 +123,8 @@
                     data: 'is_active', 
                     className: 'text-center',
                     render: (d) => d 
-                        ? '<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50">Active</span>' 
-                        : '<span class="px-2 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wide border bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50">Inactive</span>'
+                        ? '<span class="px-2 py-1.5 rounded-xs text-[10px] font-medium uppercase tracking-wide border bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50">Active</span>' 
+                        : '<span class="px-2 py-1.5 rounded-xs text-[10px] font-medium uppercase tracking-wide border bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50">Inactive</span>'
                 },
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center', width: '120px',

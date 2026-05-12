@@ -468,14 +468,17 @@ textarea[disabled] {
 
 /* Force Centering when collapsed (Pre-Alpine) */
 .sidebar-collapsed .section-container {
-    border-top-color: #e2e8f0 !important; /* Slate-200 for better visibility */
+    border-top-color: #e2e8f0 !important;
+    /* Slate-200 for better visibility */
     margin-top: 1rem !important;
 }
+
 .dark .sidebar-collapsed .section-container {
-    border-top-color: #334155 !important; /* Gray-700 */
+    border-top-color: #334155 !important;
+    /* Gray-700 */
 }
 
-.sidebar-collapsed nav a, 
+.sidebar-collapsed nav a,
 .sidebar-collapsed nav button:not(.section-header-button) {
     justify-content: center !important;
     padding-left: 0 !important;

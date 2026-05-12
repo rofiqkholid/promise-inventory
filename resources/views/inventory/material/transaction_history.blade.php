@@ -16,7 +16,7 @@
     {{-- FILTER BAR --}}
     <div class="mb-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-3">
                 <i class="fa-solid fa-filter text-primary-600"></i> History Filter
             </h3>
         </div>
@@ -24,19 +24,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
                 {{-- DATE RANGE --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">Timeline</label>
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-500">Timeline</label>
                     <div class="relative group">
-                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary-500 text-[10px] pointer-events-none transition-colors z-10"></i>
+                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-900 group-focus-within:text-primary-500 text-[10px] pointer-events-none transition-colors z-10"></i>
                         <input type="text" id="filter_date_range" readonly 
                             value="{{ date('01-m-Y') . ' - ' . date('t-m-Y') }}"
-                            class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-primary-500 cursor-pointer w-full pl-10 transition-all font-medium" 
+                            class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-slate-900 focus:ring-0 focus:border-primary-500 cursor-pointer w-full pl-10 transition-all font-medium" 
                             placeholder="Filter by Date">
                     </div>
                 </div>
 
                 {{-- PART --}}
                 <div class="w-full lg:col-span-1">
-                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">Part</label>
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-500">Part</label>
                     <select id="filter_product" class="select2-filter w-full">
                         <option value="">All Parts</option>
                         @foreach($products as $product)
@@ -49,7 +49,7 @@
 
                 {{-- CATEGORY --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">Category</label>
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-500">Category</label>
                     <select id="filter_category" class="select2-filter w-full">
                         <option value="">All Transactions</option>
                         @foreach($categories as $category)
@@ -60,7 +60,7 @@
 
                 {{-- User/PIC --}}
                 <div class="w-full">
-                    <label class="block mb-2 text-xs font-bold text-gray-400 dark:text-gray-500">PIC</label>
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-500">PIC</label>
                     <select id="filter_user" class="select2-filter w-full">
                         <option value="">All PICs</option>
                         @foreach($pics as $p)
@@ -82,7 +82,7 @@
     {{-- History Table Panel --}}
     <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden flex flex-col">
         <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center">
                 <i class="fa-solid fa-table-list mr-3 text-primary-600"></i> History Data
             </h3>
         </div>
@@ -196,7 +196,7 @@
                 },
                 { data: 'origin_destination', orderable: false, className: 'text-xs text-gray-600 dark:text-gray-400' },
                 { data: 'qty', className: 'text-center font-medium text-slate-900 dark:text-white' },
-                { data: 'pic_name', className: 'text-xs text-gray-600 dark:text-gray-400' },
+                { data: 'pic_name', className: 'text-xs text-gray-600 dark:text-gray-900' },
                 { data: 'remark', defaultContent: '-', className: 'text-xs text-gray-500 font-normal leading-relaxed' }
             ],
             order: [[2, 'desc']], // Default sort by Timestamp Descending

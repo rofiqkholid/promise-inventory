@@ -17,7 +17,7 @@
         <div class="lg:col-span-1">
             <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-3">
                         <i class="fa-solid fa-right-left text-primary-600"></i> Transaction Input
                     </h3>
                 </div>
@@ -27,7 +27,7 @@
                         {{-- Product Selection --}}
                         <div class="mb-6">
                             <div class="flex justify-between items-end mb-3">
-                                <label for="product_detail_id" class="block text-xs font-bold text-slate-600 dark:text-gray-300 mb-2">Part <span class="text-red-500">*</span></label>
+                                <label for="product_detail_id" class="block text-xs font-medium text-slate-900 dark:text-gray-300 mb-2">Part <span class="text-red-500">*</span></label>
                                 <button type="button" id="btn-scan" class="inline-flex items-center justify-center px-4 h-9 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-200 dark:border-primary-800 rounded-xs transition-all active:scale-95">
                                     <i class="fa-solid fa-barcode mr-2"></i> Scan Camera
                                 </button>
@@ -55,21 +55,21 @@
                                 <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-boxes-stacked text-primary-500 text-xs"></i>
-                                        <span class="text-xs font-bold text-slate-500">Current Balance</span>
+                                        <span class="text-xs font-medium text-slate-500">Current Balance</span>
                                     </div>
-                                    <span id="currentBalanceVal" class="text-sm font-bold text-slate-900 dark:text-white">0</span>
+                                    <span id="currentBalanceVal" class="text-sm font-medium text-slate-900 dark:text-white">0</span>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Transaction Category --}}
                         <div class="mb-6">
-                            <label for="transaction_category_id" class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">Category <span class="text-red-500">*</span></label>
+                            <label for="transaction_category_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Category <span class="text-red-500">*</span></label>
                             <select name="transaction_category_id" id="transaction_category_id" class="premium-input" required>
                                 <option value="">Select Category...</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}">
-                                        {{ $category->name }} ({{ $category->effect == 1 ? 'IN +' : 'OUT -' }})
+                                    <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}" data-code="{{ $category->code }}" data-name="{{ $category->name }}">
+                                        {{ $category->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -77,7 +77,7 @@
 
                         {{-- Coil Center (For IN) --}}
                         <div class="mb-6 hidden" id="coilCenterContainer">
-                            <label for="coil_center_id" class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">Coil Center <span class="text-red-500">*</span></label>
+                            <label for="coil_center_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Coil Center <span class="text-red-500">*</span></label>
                             <select name="coil_center_id" id="coil_center_id" class="premium-input select2" style="width: 100%">
                                 <option value="">Select Coil Center...</option>
                                 @foreach($coilCenters as $cc)
@@ -89,7 +89,7 @@
                         {{-- Supplier & Destination Row (For OUT) --}}
                         <div class="grid grid-cols-2 gap-5 mb-6 hidden" id="outFieldsContainer">
                             <div>
-                                <label for="supplier_id" class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">Supplier <span class="text-red-500">*</span></label>
+                                <label for="supplier_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Supplier <span class="text-red-500">*</span></label>
                                 <select name="supplier_id" id="supplier_id" class="premium-input select2" style="width: 100%">
                                     <option value="">Select Supplier...</option>
                                     @foreach($suppliers as $supplier)
@@ -98,7 +98,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="destination_id" class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">Destination <span class="text-red-500">*</span></label>
+                                <label for="destination_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Destination <span class="text-red-500">*</span></label>
                                 <select name="destination_id" id="destination_id" class="premium-input select2" style="width: 100%">
                                     <option value="">Select Destination...</option>
                                     @foreach($suppliers as $supplier)
@@ -111,7 +111,7 @@
                         {{-- Qty & Date Row --}}
                         <div class="grid grid-cols-2 gap-5 mb-6">
                             <div>
-                                <label id="qtyLabel" for="qty" class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">Qty (Unit) <span class="text-red-500">*</span></label>
+                                <label id="qtyLabel" for="qty" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Qty (Unit) <span class="text-red-500">*</span></label>
                                 <input type="number" name="qty" id="qty" step="any" min="0.01" class="premium-input w-full" required placeholder="0">
                                 
                                 {{-- Calculator Preview --}}
@@ -124,7 +124,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="transaction_date" class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">Date <span class="text-red-500">*</span></label>
+                                <label for="transaction_date" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Date <span class="text-red-500">*</span></label>
                                 <input type="date" name="transaction_date" id="transaction_date" value="{{ date('Y-m-d') }}" 
                                     onclick="this.showPicker()"
                                     class="premium-input w-full" required>
@@ -133,8 +133,8 @@
 
                         {{-- PIC --}}
                         <div class="mb-6">
-                            <label class="block mb-2 text-xs font-bold text-slate-600 dark:text-gray-300">PIC Name</label>
-                            <div class="bg-gray-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 text-slate-500 text-xs font-semibold rounded-xs block w-full px-4 h-10 flex items-center gap-2">
+                            <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">PIC Name</label>
+                            <div class="bg-gray-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 text-slate-500 text-xs font-medium rounded-xs block w-full px-4 h-10 flex items-center gap-2">
                                 <i class="fa-solid fa-user-circle text-gray-400 text-sm"></i>
                                 <span>{{ Auth::user()->name }}</span>
                             </div>
@@ -142,8 +142,8 @@
 
                         {{-- Remark --}}
                         <div class="mb-4">
-                            <label for="remark" class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Remark</label>
-                            <textarea name="remark" id="remark" rows="2" class="block p-3 w-full text-xs font-semibold text-gray-900 bg-white dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700 focus:ring-0 focus:border-primary-500 transition-all dark:text-white placeholder-gray-300" placeholder="Optional notes..."></textarea>
+                            <label for="remark" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Remark</label>
+                            <textarea name="remark" id="remark" rows="2" class="block p-3 w-full text-xs font-medium text-gray-900 bg-white dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700 focus:ring-0 focus:border-primary-500 transition-all dark:text-white placeholder-gray-300" placeholder="Optional notes..."></textarea>
                         </div>
 
                         {{-- Submit Button --}}
@@ -160,7 +160,7 @@
             <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden h-full flex flex-col">
                 <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
                     <div class="flex flex-wrap justify-between items-center gap-4" id="activityHeader">
-                        <h3 class="text-sm font-bold text-gray-900 dark:text-white flex items-center">
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center">
                             <i class="fa-solid fa-clock-rotate-left mr-3 text-primary-600"></i> Transaction Log
                         </h3>
                         <div class="flex items-center gap-3">
@@ -179,7 +179,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {{-- Part Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Part</label>
+                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">Part</label>
                                 <select id="filter_product_detail_id" class="select2-filter-log w-full">
                                     <option value="">All Parts</option>
                                     @foreach($products as $product)
@@ -190,18 +190,18 @@
 
                             {{-- Category Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Category</label>
+                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">Category</label>
                                 <select id="filter_category_id" class="select2-filter-log w-full">
                                     <option value="">All Categories</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->hash_id }}">{{ $category->name }} ({{ $category->effect == 1 ? 'IN' : 'OUT' }})</option>
+                                        <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}" data-code="{{ $category->code }}" data-name="{{ $category->name }}">{{ $category->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
                             {{-- PIC Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">PIC</label>
+                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">PIC</label>
                                 <select id="filter_pic_id" class="select2-filter-log w-full">
                                     <option value="">All PIC</option>
                                     @foreach($pics as $p)
@@ -212,7 +212,7 @@
 
                             {{-- Date Filter --}}
                             <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-bold text-gray-400 dark:text-gray-500">Date Range</label>
+                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">Date Range</label>
                                 <div class="relative">
                                     <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none transition-colors z-10"></i>
                                     <input type="text" id="filter_date_range" readonly 
@@ -274,7 +274,7 @@
                 <div class="space-y-3.5">
                     {{-- Product Selection --}}
                     <div>
-                        <label class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Material <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Material <span class="text-red-500">*</span></label>
                         <select id="edit_product_detail_id" class="select2-modal" disabled>
                             <option value="">Select Material...</option>
                             @foreach($products as $product)
@@ -291,7 +291,7 @@
 
                     {{-- Transaction Category --}}
                     <div>
-                        <label class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Category <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Category <span class="text-red-500">*</span></label>
                         <select name="transaction_category_id" id="edit_transaction_category_id" class="select2-modal" required>
                             <option value="">Select Category...</option>
                             @foreach($categories as $category)
@@ -304,7 +304,7 @@
 
                     {{-- Conditional Fields --}}
                     <div id="editCoilCenterContainer" class="hidden">
-                        <label class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Coil Center <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Coil Center <span class="text-red-500">*</span></label>
                         <select name="coil_center_id" id="edit_coil_center_id" class="select2-modal">
                             <option value="">Select Coil Center...</option>
                             @foreach($coilCenters as $cc)
@@ -315,7 +315,7 @@
 
                     <div id="editOutFieldsContainer" class="grid grid-cols-2 gap-5 hidden">
                         <div>
-                            <label class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Supplier <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Supplier <span class="text-red-500">*</span></label>
                             <select name="supplier_id" id="edit_supplier_id" class="select2-modal">
                                 <option value="">Select Supplier...</option>
                                 @foreach($suppliers as $supplier)
@@ -324,7 +324,7 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Destination <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Destination <span class="text-red-500">*</span></label>
                             <select name="destination_id" id="edit_destination_id" class="select2-modal">
                                 <option value="">Select Destination...</option>
                                 @foreach($suppliers as $supplier)
@@ -337,7 +337,7 @@
                     {{-- Qty & Date Row --}}
                     <div class="grid grid-cols-2 gap-5">
                         <div>
-                            <label class="block mb-2 text-xs font-medium text-slate-600 dark:text-gray-300 tracking-wider">Quantity <span class="text-red-500">*</span></label>
+                            <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Quantity <span class="text-red-500">*</span></label>
                             <input type="number" name="qty" id="edit_qty" step="1" min="1" class="w-full h-10 px-3 bg-gray-50 border border-slate-200 dark:bg-gray-900 dark:border-gray-700 rounded-xs text-[11px] font-medium focus:border-primary-500 focus:ring-0 outline-none transition-all dark:text-white" required placeholder="0">
                         </div>
                         <div>
@@ -398,22 +398,26 @@
         }
 
         if ($.fn.select2) {
-            function formatCategory(state) {
+            window.formatCategory = function(state) {
                 if (!state.id) return state.text;
-                let effect = $(state.element).data('effect');
-                let icon = effect == 1 
-                    ? '<i class="fa-solid fa-arrow-down text-emerald-500 mr-2"></i>' // IN (Arrow Down/In)
-                    : '<i class="fa-solid fa-arrow-up text-red-500 mr-2"></i>';     // OUT (Arrow Up/Out)
+                let element = $(state.element);
+                let code = element.data('code') || state.text.trim();
+                let effect = element.data('effect');
                 
-                let textClass = effect == 1 ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-700 dark:text-red-400';
+                let badge = '';
+                if (effect == 1) {
+                    badge = '<span class="inline-flex items-center justify-center px-1.5 py-1 rounded-xs text-[12px] font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 mr-2 leading-none"><i class="fa-solid fa-arrow-down mr-1"></i>IN</span>';
+                } else if (effect == -1) {
+                    badge = '<span class="inline-flex items-center justify-center px-1.5 py-1 rounded-xs text-[12px] font-medium bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 mr-2 leading-none"><i class="fa-solid fa-arrow-up mr-1"></i>OUT</span>';
+                }
                 
-                return $(`<span class="${textClass} flex items-center">${icon}${state.text}</span>`);
+                return $(`<div class="flex items-center"><div class="flex items-center h-5">${badge}</div><span class="text-xs font-medium text-slate-700 dark:text-gray-300 truncate">${code}</span></div>`);
             }
 
             $('#transaction_category_id').select2({
                 minimumResultsForSearch: Infinity,
-                templateResult: formatCategory,
-                templateSelection: formatCategory,
+                templateResult: window.formatCategory,
+                templateSelection: window.formatCategory,
                 width: '100%'
             }).on('change', function() {
                 let selected = $(this).select2('data')[0];
@@ -463,7 +467,7 @@
             columns: [
                 { 
                     data: 'transaction_date',
-                    render: (d) => `<span class="text-[10px] font-semibold text-gray-500 uppercase tracking-tight">${d}</span>`
+                    render: (d) => `<span class="text-[10px] font-medium text-gray-500 uppercase tracking-tight">${d}</span>`
                 },
                 {
                     data: 'model_name',
@@ -491,17 +495,17 @@
                         };
                         const color = colorMap[d] || (d.includes('OUT') ? 'rose' : 'emerald');
                         const badgeClass = `bg-${color}-50 text-${color}-700 border-${color}-100 dark:bg-${color}-900/30 dark:text-${color}-400 dark:border-${color}-800`;
-                        return `<span class="inline-block px-2 py-0.5 rounded-xs border ${badgeClass} text-[9px] font-medium tracking-widest whitespace-nowrap">${d}</span>`;
+                        return `<span class="inline-block px-2 py-0.5 rounded-xs border ${badgeClass} text-[10px] font-medium tracking-widest whitespace-nowrap">${d}</span>`;
                     }
                 },
                 { 
                     data: 'qty', 
                     className: 'text-center',
-                    render: (d) => `<span class="font-semibold text-slate-700 dark:text-slate-300 text-xs">${d}</span>`
+                    render: (d) => `<span class="font-medium text-slate-700 dark:text-slate-300 text-xs">${d}</span>`
                 },
                 { 
                     data: 'pic_name',
-                    render: (d) => `<span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">${d}</span>`
+                    render: (d) => `<span class="text-[10px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-tight">${d}</span>`
                 },
                 @if(Auth::user()->hasAppRole('supervisor') || Auth::user()->hasAppRole('admin'))
                 {
@@ -576,10 +580,18 @@
             table.ajax.reload();
         });
 
-        $('.select2-filter-log').select2({
+        $('#filter_product_detail_id, #filter_pic_id').select2({
             width: '100%',
             containerCssClass: 'select2-filter-log',
             dropdownCssClass: 'select2-filter-log'
+        });
+
+        $('#filter_category_id').select2({
+            width: '100%',
+            containerCssClass: 'select2-filter-log',
+            dropdownCssClass: 'select2-filter-log',
+            templateResult: window.formatCategory,
+            templateSelection: window.formatCategory
         });
 
         // Initialize Global Scanner Service (Unified)

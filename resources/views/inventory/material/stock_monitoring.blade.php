@@ -90,7 +90,7 @@
 
                 <!-- Customer -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Customer</label>
+                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Customer</label>
                     <div class="w-full">
                         <select id="filter_customer" class="select2 w-full">
                             <option value="">All Customers</option>
@@ -103,7 +103,7 @@
 
                 <!-- Model -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Model</label>
+                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Model</label>
                     <div class="w-full">
                         <select id="filter_model" class="select2 w-full">
                             <option value="">All Models</option>
@@ -113,7 +113,7 @@
 
                 <!-- Status -->
                 <div class="space-y-1.5">
-                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Project Status</label>
+                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Project Status</label>
                     <div class="w-full">
                         <select id="filter_project_status" class="select2 w-full">
                             <option value="">All Status</option>
@@ -126,7 +126,7 @@
 
                 <!-- Stock Status -->
                 <div class="space-y-1.5" id="filter_status_container">
-                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Stock Status</label>
+                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Stock Status</label>
                     <div class="w-full">
                         <select id="filter_status" class="select2 w-full">
                             <option value="">All Status</option>
@@ -140,7 +140,7 @@
 
                 <!-- Usage Status (Hidden by default) -->
                 <div class="space-y-1.5 hidden" id="filter_usage_status_container">
-                    <label class="block text-xs font-medium text-gray-400 dark:text-gray-500 tracking-wider leading-tight">Usage Status</label>
+                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Usage Status</label>
                     <div class="w-full">
                         <select id="filter_usage_status" class="select2 w-full">
                             <option value="">All Status</option>
@@ -169,7 +169,7 @@
                 <i class="fa-solid fa-layer-group"></i>
             </div>
             <div>
-                <div class="text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight mb-1">Total parts</div>
+                <div class="text-sm font-bold text-slate-900 dark:text-gray-500 tracking-tight mb-1">Total parts</div>
                 <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['total'] ?? 0) }}</div>
             </div>
         </div>
@@ -387,8 +387,8 @@
                         }
                         return `
                             <div class="flex flex-col pl-3">
-                                <span class="font-bold text-slate-700 dark:text-slate-200 leading-none tracking-tight">${partNoDisplay}</span>
-                                <span class="text-[10px] text-slate-400 font-medium truncate max-w-[180px] mt-1">${row.part_name || ''}</span>
+                                <span class="font-medium text-slate-900 dark:text-slate-200 leading-none tracking-tight">${partNoDisplay}</span>
+                                <span class="text-[10px] text-slate-500 font-medium truncate max-w-[180px] mt-1">${row.part_name || ''}</span>
                             </div>
                         `;
                     }
@@ -414,7 +414,7 @@
             },
             {
                 data: 'min_stock',
-                className: 'text-center font-medium text-slate-500 text-[11px]',
+                className: 'text-center font-medium text-slate-900 text-[11px]',
                 render: (data) => data || '0'
             },
             {
@@ -422,7 +422,7 @@
                 className: 'text-center',
                 render: function(data, type, row) {
                     if (type === 'display') {
-                        let indicatorClass = 'bg-gray-400';
+                        let indicatorClass = 'bg-slate-600';
                         let textColorClass = 'text-gray-900 dark:text-white';
                         const status = row.stock_status || 'default';
 
@@ -449,7 +449,7 @@
                                     <span class="w-2 h-2 rounded-full ${indicatorClass}"></span>
                                     <span class="font-bold ${textColorClass} text-xs tracking-tight">${data}</span>
                                 </div>
-                                <span class="text-[9px] text-gray-400 font-medium tracking-wider opacity-80">${row.balance_unit} (${row.current_qty})</span>
+                                <span class="text-[9px] text-slate-600 dark:text-slate-400 font-medium tracking-wider opacity-80">${row.balance_unit} (${row.current_qty})</span>
                             </div>
                         `;
                     }
@@ -473,7 +473,7 @@
                 if (type === 'display') {
                     const display = row.sto_gap_display;
                     if (display === '-') return `<span class="text-gray-300 font-mono text-[10px]">-</span>`;
-                    let colorClass = 'text-slate-500 dark:text-gray-400';
+                    let colorClass = 'text-slate-600 dark:text-gray-400';
                     if (parseFloat(row.sto_gap) > 0) colorClass = 'text-emerald-600 dark:text-emerald-400';
                     else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-rose-600 dark:text-rose-400';
                     

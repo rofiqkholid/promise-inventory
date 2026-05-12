@@ -5,26 +5,18 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
+    <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Model Configuration</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Batch manage specific configuration / status per model (e.g., Project vs Regular).</p>
         </div>
-        <div class="mt-4 sm:mt-0 flex gap-2">
-            <a href="{{ route('inventory.projectVaveDashboard.index') }}" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xs transition-all shadow-sm active:scale-95">
-                <i class="fa-solid fa-chart-line mr-2"></i> Project VAVE
-            </a>
-            <a href="{{ route('inventory.regularVaveDashboard.index') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xs transition-all shadow-sm active:scale-95">
-                <i class="fa-solid fa-chart-line mr-2"></i> Regular VAVE
-            </a>
-        </div>
     </div>
     <!-- Filter Bar -->
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-xs border border-gray-200 dark:border-gray-700 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Customer Filter -->
             <div>
-                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Customer</label>
+                <label class="block text-xs font-medium text-gray-900 dark:text-gray-900 mb-1">Customer</label>
                 <select id="filterCustomer" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Customers</option>
                     @foreach($customers as $c)
@@ -35,7 +27,7 @@
 
             <!-- Status Filter -->
             <div>
-                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Project Status</label>
+                <label class="block text-xs font-medium text-gray-900 dark:text-gray-900 mb-1">Project Status</label>
                 <select id="filterStatus" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All Statuses</option>
                     <option value="Project">Project Only</option>
@@ -45,7 +37,7 @@
 
             <!-- Validity Filter (Only relevant for Regular/All) -->
             <div id="containerValidity">
-                <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Lifecycle Validity</label>
+                <label class="block text-xs font-medium text-gray-900 dark:text-gray-900 mb-1">Lifecycle Validity</label>
                 <select id="filterValidity" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">All (Active & Expired)</option>
                     <option value="active">Active (Valid)</option>
@@ -133,7 +125,7 @@
                         // Switch toggle design for status: Regular is ON, Project is OFF
                         return `
                             <div class="flex flex-col justify-center items-center gap-1">
-                                ${row.is_expired ? '<span class="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 shadow-sm">EXPIRED</span>' : ''}
+                                ${row.is_expired ? '<span class="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded-xs dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">EXPIRED</span>' : ''}
                                 <label class="relative inline-flex items-center ${isDisabled ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'} group" title="${isDisabled ? 'Cannot toggle: Model is Expired' : 'Toggle Project Status'}">
                                     <input type="checkbox" class="sr-only peer status-toggle" data-id="${row.hash_id}" ${displayAsRegular ? 'checked' : ''} ${isDisabled ? 'disabled' : ''}>
                                     <div class="w-10 h-5.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4.5 after:w-4.5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
