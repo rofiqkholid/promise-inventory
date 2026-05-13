@@ -8,7 +8,7 @@ class TolTransaction extends Model
 {
     protected $table = 'tol_t_transactions';
     protected $fillable = [
-        'tool_id', 'location_id', 'transaction_type',
+        'tool_id', 'location_id', 'destination_id', 'transaction_type',
         'qty', 'ref_doc', 'note', 'transacted_by', 'transacted_at',
     ];
 
@@ -25,6 +25,11 @@ class TolTransaction extends Model
     public function location()
     {
         return $this->belongsTo(TolLocation::class, 'location_id');
+    }
+
+    public function destination()
+    {
+        return $this->belongsTo(TolDestination::class, 'destination_id');
     }
 
     public function operator()

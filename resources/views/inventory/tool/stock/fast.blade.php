@@ -79,12 +79,21 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="mb-4 hidden">
+                <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
-                    <select name="location_id" id="transLocationId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
-                        <option value="">-- Select Location --</option>
+                    <select name="location_id" id="transLocationId" disabled class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-not-allowed">
+                        <option value="">-- Auto From Master --</option>
                         @foreach($locations as $loc)
                             <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4 hidden" id="destinationGroup">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Destination <span class="text-red-500">*</span></label>
+                    <select name="destination_id" id="transDestinationId" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                        <option value="">-- Select Destination --</option>
+                        @foreach($destinations as $dest)
+                            <option value="{{ $dest->id }}">{{ $dest->code }} — {{ $dest->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -92,9 +101,9 @@
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider" id="labelQty">Quantity <span class="text-red-500">*</span></label>
                     <input type="number" name="qty" min="1" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="0">
                 </div>
-                <div class="mb-4">
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Reference Doc</label>
-                    <input type="text" name="ref_doc" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="e.g. PO-2024-001 or WO-2024-001">
+                <div class="mb-4" id="refDocGroup">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Reference Doc <span class="text-red-500">*</span></label>
+                    <input type="text" name="ref_doc" id="transRefDoc" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="e.g. PO-2024-001">
                 </div>
                 <div class="mb-2">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Note</label>
@@ -126,7 +135,7 @@
                         <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tool</th>
                         <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
                         <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Qty</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Ref Doc</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Ref / Destination</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
                     </tr>
                 </thead>
@@ -188,13 +197,25 @@ $(document).ready(function() {
 
     // Handle transaction type toggle UI
     $('input[name="transaction_type"]').on('change', function() {
-        const type = $(this).val();
+        const type = $(this).val(); // IN or OUT
         if (type === 'IN') {
             $('#saveTransaction').removeClass('bg-red-600 hover:bg-red-700').addClass('bg-primary-600 hover:bg-primary-700').text('Submit Stock IN');
             $('#labelQty').text('Qty IN *');
+            
+            // Show Ref Doc, Hide Destination
+            $('#refDocGroup').removeClass('hidden');
+            $('#transRefDoc').prop('required', true);
+            $('#destinationGroup').addClass('hidden');
+            $('#transDestinationId').prop('required', false);
         } else {
             $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700').addClass('bg-red-600 hover:bg-red-700').text('Submit Stock OUT');
             $('#labelQty').text('Qty OUT *');
+            
+            // Hide Ref Doc, Show Destination
+            $('#refDocGroup').addClass('hidden');
+            $('#transRefDoc').prop('required', false);
+            $('#destinationGroup').removeClass('hidden');
+            $('#transDestinationId').prop('required', true);
         }
     });
 
@@ -248,7 +269,8 @@ $(document).ready(function() {
                 columns: [
                     { 
                         data: 'transacted_at', 
-                        render: d => {
+                        render: (d, type) => {
+                            if (type === 'sort' || type === 'type') return d;
                             const date = new Date(d);
                             return `<span class="text-[11px] text-gray-500 font-mono">${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>`;
                         } 
@@ -277,7 +299,16 @@ $(document).ready(function() {
                             return `<span class="font-bold font-mono ${color}">${d > 0 ? '+' : ''}${d}</span>`;
                         }
                     },
-                    { data: 'ref_doc', render: d => `<span class="text-[10px] font-mono">${d || '-'}</span>` },
+                    { 
+                        data: null, 
+                        render: r => {
+                            if (r.transaction_type.toLowerCase() === 'in') {
+                                return `<span class="text-[10px] font-mono text-gray-600">Ref: ${r.ref_doc || '-'}</span>`;
+                            } else {
+                                return `<span class="text-[10px] font-bold text-blue-600"><i class="fa-solid fa-truck-arrow-right mr-1 opacity-50"></i>${r.destination?.name || '-'}</span>`;
+                            }
+                        }
+                    },
                     { data: 'operator.name', render: d => `<span class="text-[10px]">${d || '-'}</span>` },
                 ],
                 order: [[0, 'desc']],

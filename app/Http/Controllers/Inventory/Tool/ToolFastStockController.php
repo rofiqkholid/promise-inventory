@@ -7,6 +7,7 @@ use App\Models\InventoryModel\Tool\TolFastStock;
 use App\Models\InventoryModel\Tool\TolTransaction;
 use App\Models\InventoryModel\Tool\TolTool;
 use App\Models\InventoryModel\Tool\TolLocation;
+use App\Models\InventoryModel\Tool\TolDestination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -79,7 +80,8 @@ class ToolFastStockController extends Controller
                         ->orderBy('name')
                         ->get();
         $locations = TolLocation::where('is_active', true)->orderBy('code')->get();
-        return view('inventory.tool.stock.fast', compact('tools', 'locations'));
+        $destinations = TolDestination::where('is_active', true)->orderBy('name')->get();
+        return view('inventory.tool.stock.fast', compact('tools', 'locations', 'destinations'));
     }
 
     /** Tambah stok awal (initial stock) */
@@ -87,19 +89,16 @@ class ToolFastStockController extends Controller
     {
         $validated = $request->validate([
             'tool_id'     => 'required|exists:tol_m_tools,id',
-            'location_id' => 'nullable|exists:tol_m_locations,id',
-            'qty'         => 'required|integer|min:0',
-            'ref_doc'     => 'nullable|string|max:100',
+            'qty'         => 'required|integer|min:1',
+            'ref_doc'     => 'required|string|max:100',
             'note'        => 'nullable|string',
         ]);
 
-        if (empty($validated['location_id'])) {
-            $tool = TolTool::find($validated['tool_id']);
-            if (!$tool->location_id) {
-                return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
-            }
-            $validated['location_id'] = $tool->location_id;
+        $tool = TolTool::findOrFail($validated['tool_id']);
+        if (!$tool->location_id) {
+            return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
         }
+        $validated['location_id'] = $tool->location_id;
 
         DB::transaction(function () use ($validated) {
             $stock = TolFastStock::firstOrCreate(
@@ -130,20 +129,17 @@ class ToolFastStockController extends Controller
     public function out(Request $request)
     {
         $validated = $request->validate([
-            'tool_id'     => 'required|exists:tol_m_tools,id',
-            'location_id' => 'nullable|exists:tol_m_locations,id',
-            'qty'         => 'required|integer|min:1',
-            'ref_doc'     => 'nullable|string|max:100',
-            'note'        => 'nullable|string',
+            'tool_id'        => 'required|exists:tol_m_tools,id',
+            'destination_id' => 'required|exists:tol_m_destinations,id',
+            'qty'            => 'required|integer|min:1',
+            'note'           => 'nullable|string',
         ]);
 
-        if (empty($validated['location_id'])) {
-            $tool = TolTool::find($validated['tool_id']);
-            if (!$tool->location_id) {
-                return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
-            }
-            $validated['location_id'] = $tool->location_id;
+        $tool = TolTool::findOrFail($validated['tool_id']);
+        if (!$tool->location_id) {
+            return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
         }
+        $validated['location_id'] = $tool->location_id;
 
         $stock = TolFastStock::where('tool_id', $validated['tool_id'])
             ->where('location_id', $validated['location_id'])
@@ -164,9 +160,9 @@ class ToolFastStockController extends Controller
             TolTransaction::create([
                 'tool_id'          => $validated['tool_id'],
                 'location_id'      => $validated['location_id'],
+                'destination_id'   => $validated['destination_id'],
                 'transaction_type' => 'out',
                 'qty'              => -$validated['qty'],
-                'ref_doc'          => $validated['ref_doc'] ?? null,
                 'note'             => $validated['note'] ?? null,
                 'transacted_by'    => Auth::user()->id,
                 'transacted_at'    => now(),
@@ -182,7 +178,7 @@ class ToolFastStockController extends Controller
         $toolId     = $request->input('tool_id');
         $locationId = $request->input('location_id');
 
-        $query = TolTransaction::with(['tool', 'location', 'operator'])
+        $query = TolTransaction::with(['tool', 'location', 'destination', 'operator'])
             ->when($toolId, fn($q) => $q->where('tool_id', $toolId))
             ->when($locationId, fn($q) => $q->where('location_id', $locationId))
             ->orderBy('transacted_at', 'desc');

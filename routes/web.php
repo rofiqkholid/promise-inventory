@@ -35,6 +35,7 @@ use App\Http\Controllers\Inventory\Tool\ToolFastStockController;
 use App\Http\Controllers\Inventory\Tool\ToolSlowBatchController;
 use App\Http\Controllers\Inventory\Tool\ToolStoController;
 use App\Http\Controllers\Inventory\Tool\ToolSketchController;
+use App\Http\Controllers\Inventory\Tool\ToolDestinationController;
 
 use App\Http\Controllers\Inventory\Material\UnitController;
 use App\Http\Controllers\Inventory\Material\RankController;
@@ -196,6 +197,9 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             // Master — Location
             Route::get('/location', [ToolLocationController::class, 'index'])->name('location.index');
             Route::resource('location', ToolLocationController::class)->except(['create', 'edit', 'show', 'index']);
+
+            // Master — Destination
+            Route::resource('destination', ToolDestinationController::class)->except(['create', 'edit', 'show']);
 
             // Operational — Fast Moving Stock (IN / OUT / List)
             Route::prefix('fast-stock')->name('fast-stock.')->group(function () {
