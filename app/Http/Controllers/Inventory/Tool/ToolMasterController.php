@@ -77,7 +77,6 @@ class ToolMasterController extends Controller
         $validated = $request->validate([
             'category_id'      => 'required|exists:tol_m_categories,id',
             'sketch_id'        => 'nullable|exists:tol_m_sketches,id',
-            'location_id'      => 'required|exists:tol_m_locations,id',
             'name'             => 'required|string|max:150',
             'brand'            => 'required|string|max:100',
             'spec_code'        => 'nullable|string|max:100',
@@ -104,7 +103,6 @@ class ToolMasterController extends Controller
         $validated = $request->validate([
             'category_id'      => 'required|exists:tol_m_categories,id',
             'sketch_id'        => 'nullable|exists:tol_m_sketches,id',
-            'location_id'      => 'required|exists:tol_m_locations,id',
             'name'             => 'required|string|max:150',
             'brand'            => 'required|string|max:100',
             'spec_code'        => 'nullable|string|max:100',

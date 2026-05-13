@@ -108,7 +108,7 @@ class ToolStoController extends Controller
         $event = TolStoEvent::with(['creator', 'approver', 'fastDetails.tool', 'fastDetails.location', 'slowDetails.batch.tool'])->findOrFail($id);
         
         $fastTools = TolTool::whereHas('category', fn($q) => $q->where('moving_type', 'fast'))->orderBy('name')->get();
-        $slowBatches = TolSlowBatch::with('tool')->where('status', 'active')->get();
+        $slowBatches = TolSlowBatch::with('tool')->whereIn('status', ['active', 'nok'])->get();
         $locations = TolLocation::orderBy('code')->get();
 
         return view('inventory.tool.sto.show', compact('event', 'fastTools', 'slowBatches', 'locations'));
@@ -152,31 +152,33 @@ class ToolStoController extends Controller
         $validated = $request->validate([
             'batch_id'       => 'required|exists:tol_t_slow_batches,id',
             'physical_check' => 'required|in:ok,nok',
-            'qty_ok'         => 'required|integer|min:0',
-            'qty_nok'        => 'required|integer|min:0',
+            'physical_rate'  => 'required|numeric|min:0|max:100',
             'note'           => 'nullable|string',
         ]);
 
         $batch = TolSlowBatch::findOrFail($validated['batch_id']);
         
-        // Simple age calculation
-        $ageYears = Carbon::parse($batch->purchase_date)->diffInDays(now()) / 365;
-        // Simple remaining value (linear depreciation for now)
-        $remainingValue = max(0, $batch->purchase_price * (1 - ($ageYears / max(1, $batch->std_lifetime_yrs))));
+        // Accurate age calculation
+        $purchase = Carbon::parse($batch->purchase_date);
+        $ageYears = round($purchase->diffInDays(now()) / 365.25, 2);
+        $remainYrs = max(0, $batch->std_lifetime_yrs - $ageYears);
+        
+        // Live Value calculation: Price * (Remain/Total) * (Rate/100)
+        $depFactor = $remainYrs / max(1, $batch->std_lifetime_yrs);
+        $physFactor = $validated['physical_rate'] / 100;
+        $remainingValue = round($batch->purchase_price * $depFactor * $physFactor, 2);
 
         TolStoSlow::create([
             'event_id'        => $event->id,
             'batch_id'        => $validated['batch_id'],
             'physical_check'  => $validated['physical_check'],
-            'qty_checked'     => $validated['qty_ok'] + $validated['qty_nok'],
-            'qty_ok'          => $validated['qty_ok'],
-            'qty_nok'         => $validated['qty_nok'],
-            'age_years'       => round($ageYears, 2),
-            'remaining_value' => round($remainingValue, 2),
+            'physical_rate'   => $validated['physical_rate'],
+            'age_years'       => $ageYears,
+            'remaining_value' => $remainingValue,
             'note'            => $validated['note'] ?? null,
         ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Batch added.']);
+        return response()->json(['status' => 'success', 'message' => 'Asset added to STO.']);
     }
 
     public function submit($id)
@@ -219,13 +221,17 @@ class ToolStoController extends Controller
             // Process Slow Details
             foreach ($event->slowDetails as $detail) {
                 $batch = $detail->batch;
-                $batch->qty_current = $detail->qty_ok;
+                $batch->physical_rate = $detail->physical_rate;
+                
                 if ($detail->physical_check === 'nok') {
                     $batch->status = 'nok';
                     $batch->nok_date = now();
                     $batch->nok_reason = $detail->note;
                     $batch->nok_by = Auth::user()->id;
+                } else {
+                    $batch->status = 'active'; // Reset to active if OK during STO
                 }
+                
                 $batch->current_value = $detail->remaining_value;
                 $batch->save();
             }

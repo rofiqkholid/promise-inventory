@@ -156,26 +156,24 @@
                     <table class="w-full text-xs text-left">
                         <thead class="bg-gray-50 dark:bg-gray-800/30 text-[9px] font-bold uppercase tracking-wider text-gray-400">
                             <tr>
-                                <th class="px-6 py-3">Batch / Tool</th>
-                                <th class="px-6 py-3 text-center">Status</th>
-                                <th class="px-6 py-3 text-center">OK</th>
-                                <th class="px-6 py-3 text-center">NOK</th>
+                                <th class="px-6 py-3">ID Number / Tool</th>
+                                <th class="px-6 py-3 text-center">Check Result</th>
+                                <th class="px-6 py-3 text-center">Physical Rate</th>
                                 <th class="px-6 py-3 text-right">Age (Y)</th>
-                                <th class="px-6 py-3 text-right">Value</th>
+                                <th class="px-6 py-3 text-right">Asset Value</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-gray-800">
                             @forelse($event->slowDetails as $item)
                             <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                 <td class="px-6 py-4">
-                                    <div class="text-[10px] font-mono font-bold text-emerald-600 mb-0.5">{{ $item->batch->batch_no }}</div>
+                                    <div class="text-[10px] font-mono font-bold text-emerald-600 mb-0.5">{{ $item->batch->id_number }}</div>
                                     <div class="font-bold text-gray-900 dark:text-white">{{ $item->batch->tool->name }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-center uppercase">
                                     <span class="px-2 py-0.5 rounded-full text-[8px] font-bold {{ $item->physical_check === 'ok' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">{{ $item->physical_check }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-center font-mono font-bold text-gray-900 dark:text-white">{{ $item->qty_ok }}</td>
-                                <td class="px-6 py-4 text-center font-mono font-bold text-red-600">{{ $item->qty_nok }}</td>
+                                <td class="px-6 py-4 text-center font-mono font-bold text-gray-900 dark:text-white">{{ $item->physical_rate }}%</td>
                                 <td class="px-6 py-4 text-right font-mono text-gray-500">{{ $item->age_years }}</td>
                                 <td class="px-6 py-4 text-right font-mono font-bold text-emerald-600">Rp {{ number_format($item->remaining_value, 0, ',', '.') }}</td>
                             </tr>
@@ -245,11 +243,11 @@
             @csrf
             <div class="space-y-4">
                 <div>
-                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Batch</label>
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Asset (ID Number)</label>
                     <select name="batch_id" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
-                        <option value="">Select Batch</option>
+                        <option value="">Select Asset</option>
                         @foreach($slowBatches as $b)
-                            <option value="{{ $b->id }}">{{ $b->batch_no }} — {{ $b->tool->name }}</option>
+                            <option value="{{ $b->id }}" data-rate="{{ $b->physical_rate }}">{{ $b->id_number }} — {{ $b->tool->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -262,18 +260,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Total Qty Checked</label>
-                        <input type="number" name="qty_checked_display" readonly class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 text-xs rounded-xs block w-full p-2.5 transition-all" value="1">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Qty OK</label>
-                        <input type="number" name="qty_ok" value="1" required min="0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
-                    </div>
-                    <div>
-                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Qty NOK</label>
-                        <input type="number" name="qty_nok" value="0" required min="0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">Physical Rate (%)</label>
+                        <input type="number" name="physical_rate" value="100" required min="0" max="100" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
                     </div>
                 </div>
                 <div>
@@ -306,6 +294,13 @@
         });
 
         // Form Add Slow
+        $('select[name="batch_id"]', '#modal-add-slow').on('change', function() {
+            const rate = $('option:selected', this).data('rate');
+            if (rate !== undefined) {
+                $('input[name="physical_rate"]', '#modal-add-slow').val(rate);
+            }
+        });
+
         $('#formAddSlow').on('submit', function(e) {
             e.preventDefault();
             $.ajax({

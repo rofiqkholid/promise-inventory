@@ -9,15 +9,13 @@ class TolStoSlow extends Model
     protected $table = 'tol_t_sto_slow';
     protected $fillable = [
         'event_id', 'batch_id',
-        'physical_check', 'qty_checked', 'qty_ok', 'qty_nok',
+        'physical_check', 'physical_rate',
         'age_years', 'remaining_value',
         'note'
     ];
 
     protected $casts = [
-        'qty_checked'     => 'integer',
-        'qty_ok'          => 'integer',
-        'qty_nok'         => 'integer',
+        'physical_rate'   => 'float',
         'age_years'       => 'float',
         'remaining_value' => 'float',
     ];

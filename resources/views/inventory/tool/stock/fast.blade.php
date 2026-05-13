@@ -75,14 +75,14 @@
                     <select name="tool_id" id="transToolId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Tool --</option>
                         @foreach($tools as $tool)
-                            <option value="{{ $tool->id }}" data-location-id="{{ $tool->location_id }}">{{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})</option>
+                            <option value="{{ $tool->id }}">{{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
-                    <select name="location_id" id="transLocationId" disabled class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-not-allowed">
-                        <option value="">-- Auto From Master --</option>
+                    <select name="location_id" id="transLocationId" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                        <option value="">-- Select Location --</option>
                         @foreach($locations as $loc)
                             <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
                         @endforeach
@@ -90,10 +90,14 @@
                 </div>
                 <div class="mb-4 hidden" id="destinationGroup">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Destination <span class="text-red-500">*</span></label>
-                    <select name="destination_id" id="transDestinationId" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                    <select name="to_location_id" id="to_location_id" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Destination --</option>
-                        @foreach($destinations as $dest)
-                            <option value="{{ $dest->id }}">{{ $dest->code }} — {{ $dest->name }}</option>
+                        @foreach($destinations as $category => $locs)
+                            <optgroup label="{{ strtoupper($category) }}">
+                                @foreach($locs as $loc)
+                                    <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>
@@ -199,7 +203,7 @@ $(document).ready(function() {
             { data: 'tool_name', render: d => `<span class="font-semibold text-gray-900 dark:text-white">${d}</span>` },
             { data: 'brand' },
             { data: 'spec_code', render: d => d ? `<span class="font-mono text-xs text-primary-600 dark:text-primary-400">${d}</span>` : '-' },
-            { data: 'location', render: d => `<span class="text-xs"></span>` },
+            { data: 'location', render: d => `<span class="text-xs font-bold text-gray-700 dark:text-gray-300">${d}</span>` },
             {
                 data: 'current_qty', className: 'text-center',
                 render: (d, t, r) => `<span class="font-bold text-gray-900 dark:text-white">${d}</span>`
@@ -230,6 +234,7 @@ $(document).ready(function() {
     // Handle transaction type toggle UI
     $('input[name="transaction_type"]').on('change', function() {
         const type = $(this).val(); // IN or OUT
+        const isOut = (type === 'OUT');
         if (type === 'IN') {
             $('#saveTransaction').removeClass('bg-red-600 hover:bg-red-700').addClass('bg-primary-600 hover:bg-primary-700').text('Submit Stock IN');
             $('#labelQty').text('Qty IN *');
@@ -238,7 +243,7 @@ $(document).ready(function() {
             $('#refDocGroup').removeClass('hidden');
             $('#transRefDoc').prop('required', true);
             $('#destinationGroup').addClass('hidden');
-            $('#transDestinationId').prop('required', false);
+            $('#to_location_id').prop('required', false);
         } else {
             $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700').addClass('bg-red-600 hover:bg-red-700').text('Submit Stock OUT');
             $('#labelQty').text('Qty OUT *');
@@ -247,7 +252,7 @@ $(document).ready(function() {
             $('#refDocGroup').addClass('hidden');
             $('#transRefDoc').prop('required', false);
             $('#destinationGroup').removeClass('hidden');
-            $('#transDestinationId').prop('required', true);
+            $('#to_location_id').prop('required', isOut);
         }
     });
 
@@ -258,15 +263,7 @@ $(document).ready(function() {
         showMdl('modal-tool-transaction'); 
     });
 
-    // Auto-fill location from tool selection
-    $('#transToolId').on('change', function() {
-        const locationId = $('option:selected', this).data('location-id');
-        if (locationId) {
-            $('#transLocationId').val(locationId).trigger('change');
-        } else {
-            $('#transLocationId').val('').trigger('change');
-        }
-    });
+
 
     $('#saveTransaction').on('click', function() {
         const type = $('input[name="transaction_type"]:checked').val();
@@ -369,7 +366,13 @@ $(document).ready(function() {
                             if (r.transaction_type.toLowerCase() === 'in') {
                                 return `<span class="text-[10px] font-mono text-gray-600">Ref: ${r.ref_doc || '-'}</span>`;
                             } else {
-                                return `<span class="text-[10px] font-bold text-blue-600"><i class="fa-solid fa-truck-arrow-right mr-1 opacity-50"></i>${r.destination?.code || '-'}</span>`;
+                                const loc = r.destination;
+                                if (!loc) return '-';
+                                return `
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-bold text-blue-600"><i class="fa-solid fa-location-dot mr-1 opacity-50"></i>${loc.name}</span>
+                                        <span class="text-[8px] uppercase text-gray-400 font-bold tracking-tighter">${loc.category}</span>
+                                    </div>`;
                             }
                         }
                     },

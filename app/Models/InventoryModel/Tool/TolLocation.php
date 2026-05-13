@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TolLocation extends Model
 {
     protected $table = 'tol_m_locations';
-    protected $fillable = ['code', 'name', 'description', 'is_active'];
+    protected $fillable = ['code', 'name', 'category', 'description', 'is_active'];
 
     protected $casts = ['is_active' => 'boolean'];
 

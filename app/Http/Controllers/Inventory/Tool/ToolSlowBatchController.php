@@ -31,7 +31,7 @@ class ToolSlowBatchController extends Controller
 
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('batch_no', 'like', "%$search%")
+                    $q->where('id_number', 'like', "%$search%")
                       ->orWhereHas('tool', fn($t) => $t->where('name', 'like', "%$search%")
                           ->orWhere('brand', 'like', "%$search%")
                           ->orWhere('spec_code', 'like', "%$search%"))
@@ -49,23 +49,28 @@ class ToolSlowBatchController extends Controller
                 $purchase = Carbon::parse($row->purchase_date);
                 $ageYears = round($purchase->diffInDays($today) / 365.25, 2);
                 $remainYrs = max(0, $row->std_lifetime_yrs - $ageYears);
+                
+                // Asset Value calculation using depreciation * physical_rate
+                $depFactor = $remainYrs / $row->std_lifetime_yrs;
+                $physFactor = $row->physical_rate / 100;
                 $assetValue = $row->status === 'active'
-                    ? round($row->qty_current * $row->purchase_price * ($remainYrs / $row->std_lifetime_yrs), 2)
+                    ? round($row->qty_current * $row->purchase_price * $depFactor * $physFactor, 2)
                     : 0;
 
                 return [
                     'id'               => $row->id,
-                    'batch_no'         => $row->batch_no,
+                    'id_number'        => $row->id_number,
                     'tool_id'          => $row->tool_id,
                     'tool_name'        => $tool?->name ?? '-',
                     'brand'            => $tool?->brand ?? '-',
                     'spec_code'        => $tool?->spec_code ?? '-',
                     'category'         => $tool?->category?->name ?? '-',
-                    'location'         => '',
+                    'location'         => $row->location?->name ?? '-',
                     'purchase_date'    => $row->purchase_date->format('d M Y'),
                     'purchase_date_raw'=> $row->purchase_date->format('Y-m-d'),
                     'location_id'      => $row->location_id,
                     'purchase_price'   => $row->purchase_price,
+                    'physical_rate'    => $row->physical_rate,
                     'qty_purchased'    => $row->qty_purchased,
                     'qty_current'      => $row->qty_current,
                     'std_lifetime_yrs' => $row->std_lifetime_yrs,
@@ -102,41 +107,26 @@ class ToolSlowBatchController extends Controller
     {
         $validated = $request->validate([
             'tool_id'          => 'required|exists:tol_m_tools,id',
-            'location_id'      => 'nullable|exists:tol_m_locations,id',
+            'id_number'        => 'required|string|max:50|unique:tol_t_slow_batches,id_number',
+            'location_id'      => 'required|exists:tol_m_locations,id',
             'purchase_date'    => 'required|date',
             'purchase_price'   => 'required|numeric|min:0',
-            'qty_purchased'    => 'required|integer|min:1',
+            'physical_rate'    => 'required|numeric|min:0|max:100',
             'std_lifetime_yrs' => 'required|integer|min:1',
         ]);
 
-        if (empty($validated['location_id'])) {
-            $tool = TolTool::find($validated['tool_id']);
-            if (!$tool->location_id) {
-                return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
-            }
-            $validated['location_id'] = $tool->location_id;
-        }
-
-        // Auto-generate batch_no
-        $tool     = TolTool::find($validated['tool_id']);
-        $category = $tool->category;
-        $prefix   = $category ? strtoupper(substr(str_replace(' ', '', $category->name), 0, 3)) : 'TOL';
-        $year     = Carbon::parse($validated['purchase_date'])->year;
-        $count    = TolSlowBatch::whereYear('purchase_date', $year)->count() + 1;
-        $batchNo  = "{$prefix}-{$year}-" . str_pad($count, 3, '0', STR_PAD_LEFT);
-
-        // Nilai aset awal = full purchase price × qty
-        $initValue = $validated['purchase_price'] * $validated['qty_purchased'];
+        // Initial value = Price * (Rate/100)
+        $initValue = round($validated['purchase_price'] * ($validated['physical_rate'] / 100), 2);
 
         TolSlowBatch::create([
             ...$validated,
-            'batch_no'    => $batchNo,
-            'qty_current' => $validated['qty_purchased'],
+            'qty_purchased' => 1,
+            'qty_current'   => 1,
             'current_value' => $initValue,
-            'status'      => 'active',
+            'status'        => 'active',
         ]);
 
-        return response()->json(['status' => 'success', 'message' => "Batch {$batchNo} registered successfully."]);
+        return response()->json(['status' => 'success', 'message' => "Item registered successfully with ID: {$validated['id_number']}"]);
     }
 
     /** Update data batch (sebelum ada STO) */
@@ -149,23 +139,16 @@ class ToolSlowBatchController extends Controller
         }
 
         $validated = $request->validate([
+            'id_number'        => 'required|string|max:50|unique:tol_t_slow_batches,id_number,' . $id,
             'purchase_date'    => 'required|date',
             'purchase_price'   => 'required|numeric|min:0',
+            'physical_rate'    => 'required|numeric|min:0|max:100',
             'std_lifetime_yrs' => 'required|integer|min:1',
-            'location_id'      => 'nullable|exists:tol_m_locations,id',
+            'location_id'      => 'required|exists:tol_m_locations,id',
         ]);
 
-        if (empty($validated['location_id'])) {
-            $toolMaster = $batch->tool;
-            if ($toolMaster && $toolMaster->location_id) {
-                $validated['location_id'] = $toolMaster->location_id;
-            } else {
-                 return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
-            }
-        }
-
         $batch->update($validated);
-        return response()->json(['status' => 'success', 'message' => 'Batch updated successfully.']);
+        return response()->json(['status' => 'success', 'message' => 'Item updated successfully.']);
     }
 
     /** Total nilai aset aktif (untuk laporan/dashboard) */

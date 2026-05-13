@@ -7,7 +7,6 @@ use App\Models\InventoryModel\Tool\TolFastStock;
 use App\Models\InventoryModel\Tool\TolTransaction;
 use App\Models\InventoryModel\Tool\TolTool;
 use App\Models\InventoryModel\Tool\TolLocation;
-use App\Models\InventoryModel\Tool\TolDestination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +54,7 @@ class ToolFastStockController extends Controller
                     'category'     => $tool?->category?->name ?? '-',
                     'moving_type'  => $tool?->category?->moving_type ?? '-',
                     'location_id'  => $row->location_id,
-                    'location'     => '',
+                    'location'     => $location?->name ?? '-',
                     'current_qty'  => $row->current_qty,
                     'qty_min'      => $tool?->qty_min ?? 0,
                     'qty_max'      => $tool?->qty_max ?? 0,
@@ -80,7 +79,15 @@ class ToolFastStockController extends Controller
                         ->orderBy('name')
                         ->get();
         $locations = TolLocation::where('is_active', true)->orderBy('code')->get();
-        $destinations = TolDestination::where('is_active', true)->orderBy('name')->get();
+        
+        // Group locations by category for easier selection (only Machine and Subcont for OUT)
+        $destinations = TolLocation::where('is_active', true)
+                        ->whereIn('category', ['machine', 'subcont'])
+                        ->orderBy('category')
+                        ->orderBy('name')
+                        ->get()
+                        ->groupBy('category');
+
         return view('inventory.tool.stock.fast', compact('tools', 'locations', 'destinations'));
     }
 
@@ -89,16 +96,11 @@ class ToolFastStockController extends Controller
     {
         $validated = $request->validate([
             'tool_id'     => 'required|exists:tol_m_tools,id',
+            'location_id' => 'required|exists:tol_m_locations,id',
             'qty'         => 'required|integer|min:1',
             'ref_doc'     => 'required|string|max:100',
             'note'        => 'nullable|string',
         ]);
-
-        $tool = TolTool::findOrFail($validated['tool_id']);
-        if (!$tool->location_id) {
-            return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
-        }
-        $validated['location_id'] = $tool->location_id;
 
         DB::transaction(function () use ($validated) {
             $stock = TolFastStock::firstOrCreate(
@@ -130,7 +132,7 @@ class ToolFastStockController extends Controller
     {
         $validated = $request->validate([
             'tool_id'        => 'required|exists:tol_m_tools,id',
-            'destination_id' => 'required|exists:tol_m_destinations,id',
+            'to_location_id' => 'required|exists:tol_m_locations,id',
             'qty'            => 'required|integer|min:1',
             'note'           => 'nullable|string',
         ]);
@@ -160,7 +162,7 @@ class ToolFastStockController extends Controller
             TolTransaction::create([
                 'tool_id'          => $validated['tool_id'],
                 'location_id'      => $validated['location_id'],
-                'destination_id'   => $validated['destination_id'],
+                'to_location_id'   => $validated['to_location_id'],
                 'transaction_type' => 'out',
                 'qty'              => -$validated['qty'],
                 'note'             => $validated['note'] ?? null,
