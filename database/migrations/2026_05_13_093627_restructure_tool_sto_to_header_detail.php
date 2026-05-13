@@ -58,12 +58,33 @@ return new class extends Migration
             FETCH NEXT FROM ConstraintCursor INTO @ConstraintName;
             WHILE @@FETCH_STATUS = 0
             BEGIN
-                SET @Sql = 'ALTER TABLE ' + @TableName + ' DROP CONSTRAINT ' + @ConstraintName;
+                 SET @Sql = 'ALTER TABLE ' + @TableName + ' DROP CONSTRAINT ' + @ConstraintName;
                 EXEC(@Sql);
                 FETCH NEXT FROM ConstraintCursor INTO @ConstraintName;
             END;
             CLOSE ConstraintCursor;
             DEALLOCATE ConstraintCursor;
+
+            -- Drop Indexes
+            DECLARE @IdxName NVARCHAR(255);
+            DECLARE IndexCursor CURSOR FOR
+            SELECT i.name
+            FROM sys.indexes i
+            JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+            JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+            WHERE i.object_id = OBJECT_ID(@TableName)
+            AND c.name IN ('sto_date', 'status', 'conducted_by', 'approved_by')
+            AND i.is_primary_key = 0;
+            OPEN IndexCursor;
+            FETCH NEXT FROM IndexCursor INTO @IdxName;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @Sql = 'DROP INDEX ' + @IdxName + ' ON ' + @TableName;
+                EXEC(@Sql);
+                FETCH NEXT FROM IndexCursor INTO @IdxName;
+            END;
+            CLOSE IndexCursor;
+            DEALLOCATE IndexCursor;
         ");
 
         Schema::table('tol_t_sto_fast', function (Blueprint $table) {
@@ -100,12 +121,33 @@ return new class extends Migration
             FETCH NEXT FROM ConstraintCursor INTO @ConstraintName;
             WHILE @@FETCH_STATUS = 0
             BEGIN
-                SET @Sql = 'ALTER TABLE ' + @TableName + ' DROP CONSTRAINT ' + @ConstraintName;
+                 SET @Sql = 'ALTER TABLE ' + @TableName + ' DROP CONSTRAINT ' + @ConstraintName;
                 EXEC(@Sql);
                 FETCH NEXT FROM ConstraintCursor INTO @ConstraintName;
             END;
             CLOSE ConstraintCursor;
             DEALLOCATE ConstraintCursor;
+
+            -- Drop Indexes
+            DECLARE @IdxNameSlow NVARCHAR(255);
+            DECLARE IndexCursorSlow CURSOR FOR
+            SELECT i.name
+            FROM sys.indexes i
+            JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+            JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+            WHERE i.object_id = OBJECT_ID(@TableName)
+            AND c.name IN ('sto_date', 'status', 'conducted_by', 'approved_by')
+            AND i.is_primary_key = 0;
+            OPEN IndexCursorSlow;
+            FETCH NEXT FROM IndexCursorSlow INTO @IdxNameSlow;
+            WHILE @@FETCH_STATUS = 0
+            BEGIN
+                SET @Sql = 'DROP INDEX ' + @IdxNameSlow + ' ON ' + @TableName;
+                EXEC(@Sql);
+                FETCH NEXT FROM IndexCursorSlow INTO @IdxNameSlow;
+            END;
+            CLOSE IndexCursorSlow;
+            DEALLOCATE IndexCursorSlow;
         ");
 
         Schema::table('tol_t_sto_slow', function (Blueprint $table) {
