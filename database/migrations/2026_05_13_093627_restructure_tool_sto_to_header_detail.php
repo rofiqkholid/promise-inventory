@@ -67,7 +67,7 @@ return new class extends Migration
         ");
 
         Schema::table('tol_t_sto_fast', function (Blueprint $table) {
-            $table->unsignedBigInteger('event_id')->after('id');
+            $table->unsignedBigInteger('event_id')->nullable()->after('id');
             $table->foreign('event_id')->references('id')->on('tol_t_sto_events')->onDelete('cascade');
             $table->dropColumn(['sto_date', 'status', 'conducted_by', 'approved_by']);
         });
@@ -109,7 +109,7 @@ return new class extends Migration
         ");
 
         Schema::table('tol_t_sto_slow', function (Blueprint $table) {
-            $table->unsignedBigInteger('event_id')->after('id');
+            $table->unsignedBigInteger('event_id')->nullable()->after('id');
             $table->foreign('event_id')->references('id')->on('tol_t_sto_events')->onDelete('cascade');
             $table->dropColumn(['sto_date', 'status', 'conducted_by', 'approved_by']);
         });
