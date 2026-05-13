@@ -11,18 +11,17 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Fast Moving Stock</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Stock monitoring and IN/OUT transactions for fast moving tools (e.g. Endmill, Drill).</p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 flex gap-2">
+            <button type="button" id="btnHistory" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                <i class="fa-solid fa-clock-rotate-left"></i> History
+            </button>
             <button type="button" id="btnNewTransaction" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i> New Transaction
             </button>
         </div>
     </div>
 
-    {{-- Reorder Alert Banner --}}
-    <div id="reorderAlertBanner" class="hidden mb-4 flex items-center gap-3 px-4 py-3 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-sm"></i>
-        <span class="text-xs font-semibold text-amber-700 dark:text-amber-400">Some tools are below minimum stock level! Check highlighted rows.</span>
-    </div>
+
 
     {{-- Table --}}
     <x-table id="fastStockTable">
@@ -76,11 +75,11 @@
                     <select name="tool_id" id="transToolId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Tool --</option>
                         @foreach($tools as $tool)
-                            <option value="{{ $tool->id }}">{{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})</option>
+                            <option value="{{ $tool->id }}" data-location-id="{{ $tool->location_id }}">{{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="mb-4">
+                <div class="mb-4 hidden">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
                     <select name="location_id" id="transLocationId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Location --</option>
@@ -109,6 +108,33 @@
         </div>
     </div>
 </div>
+
+{{-- Modal: History --}}
+<div id="modal-tool-history" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4">
+    <div class="relative w-full max-w-5xl transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-primary-500"></i> Transaction History
+            </h3>
+            <button class="close-modal text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="overflow-y-auto px-6 py-6 flex-1 custom-scrollbar">
+            <x-table id="historyTable" class="w-full">
+                <thead class="bg-gray-50 dark:bg-gray-800/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tool</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Qty</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Ref Doc</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </x-table>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -132,18 +158,12 @@ $(document).ready(function() {
             { data: 'tool_name', render: d => `<span class="font-semibold text-gray-900 dark:text-white">${d}</span>` },
             { data: 'brand' },
             { data: 'spec_code', render: d => d ? `<span class="font-mono text-xs text-primary-600 dark:text-primary-400">${d}</span>` : '-' },
-            { data: 'location', render: d => `<span class="text-xs">${d}</span>` },
+            { data: 'location', render: d => `<span class="text-xs"></span>` },
             {
-                data: null, className: 'text-center',
-                render: (d, t, r) => {
-                    const cls = r.below_limit
-                        ? 'font-bold text-red-600 dark:text-red-400'
-                        : 'font-bold text-gray-900 dark:text-white';
-                    const icon = r.below_limit ? '<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-1"></i>' : '';
-                    return `<span class="${cls}">${r.current_qty}${icon}</span>`;
-                }
+                data: 'current_qty', className: 'text-center',
+                render: (d, t, r) => `<span class="font-bold text-gray-900 dark:text-white">${d}</span>`
             },
-            { data: 'limit_stock', className: 'text-center', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
+            { data: 'qty_min', className: 'text-center', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
             { data: 'uom', className: 'text-center', render: d => `<span class="text-xs font-mono">${d}</span>` },
             { data: 'last_updated', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
             {
@@ -158,13 +178,7 @@ $(document).ready(function() {
             }
         ],
         drawCallback: function() {
-            // Show reorder banner if any below_limit
-            const api = this.api();
-            hasLow = false;
-            api.rows().every(function() {
-                if (this.data().below_limit) { hasLow = true; return false; }
-            });
-            $('#reorderAlertBanner').toggleClass('hidden', !hasLow);
+            // Reorder check removed as per request
         }
     });
 
@@ -191,6 +205,16 @@ $(document).ready(function() {
         showMdl('modal-tool-transaction'); 
     });
 
+    // Auto-fill location from tool selection
+    $('#transToolId').on('change', function() {
+        const locationId = $('option:selected', this).data('location-id');
+        if (locationId) {
+            $('#transLocationId').val(locationId).trigger('change');
+        } else {
+            $('#transLocationId').val('').trigger('change');
+        }
+    });
+
     $('#saveTransaction').on('click', function() {
         const type = $('input[name="transaction_type"]:checked').val();
         const url = type === 'IN' ? apiIn : apiOut;
@@ -208,6 +232,61 @@ $(document).ready(function() {
                 toast('error', 'Error', xhr.responseJSON?.message || 'Failed'); 
             }
         });
+    });
+
+    // History Logic
+    let historyTable = null;
+    $('#btnHistory').on('click', function() {
+        showMdl('modal-tool-history');
+        if (!historyTable) {
+            historyTable = window.defaultDataTable('#historyTable', {
+                ajax: { 
+                    url: "{{ route('inventory.tool.fast-stock.history') }}", 
+                    type: 'GET',
+                    dataSrc: 'data' // Controller returns pagination object
+                },
+                columns: [
+                    { 
+                        data: 'transacted_at', 
+                        render: d => {
+                            const date = new Date(d);
+                            return `<span class="text-[11px] text-gray-500 font-mono">${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>`;
+                        } 
+                    },
+                    { 
+                        data: 'tool', 
+                        render: d => `
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-gray-900 dark:text-white">${d.name}</span>
+                                <span class="text-[10px] text-gray-500">${d.brand}</span>
+                            </div>` 
+                    },
+                    { 
+                        data: 'transaction_type', className: 'text-center',
+                        render: d => {
+                            const isIn = d.toLowerCase() === 'in';
+                            const cls = isIn ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
+                            return `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${cls}">${d}</span>`;
+                        }
+                    },
+                    { 
+                        data: 'qty', className: 'text-center',
+                        render: (d, t, r) => {
+                            const isIn = r.transaction_type.toLowerCase() === 'in';
+                            const color = isIn ? 'text-emerald-600' : 'text-red-600';
+                            return `<span class="font-bold font-mono ${color}">${d > 0 ? '+' : ''}${d}</span>`;
+                        }
+                    },
+                    { data: 'ref_doc', render: d => `<span class="text-[10px] font-mono">${d || '-'}</span>` },
+                    { data: 'operator.name', render: d => `<span class="text-[10px]">${d || '-'}</span>` },
+                ],
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthChange: false
+            });
+        } else {
+            historyTable.ajax.reload();
+        }
     });
 
     // Quick OUT from table row

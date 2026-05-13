@@ -138,14 +138,10 @@ class InventoryMenuSeeder extends Seeder
                     ],
                     [
                         'title' => 'Stock Opname (STO)',
-                        'route' => '#',
+                        'route' => 'inventory.tool.sto.index',
                         'icon'  => 'fa-solid fa-clipboard-check',
                         'order' => 3,
                         'roles' => ['admin', 'approver', 'checker', 'operator'],
-                        'children' => [
-                            ['title' => 'STO Fast Moving', 'route' => 'inventory.tool.sto-fast.index', 'icon' => 'fa-solid fa-bolt', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'operator']],
-                            ['title' => 'STO Slow Moving', 'route' => 'inventory.tool.sto-slow.index', 'icon' => 'fa-solid fa-cubes', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'operator']],
-                        ]
                     ],
                 ]
             ],

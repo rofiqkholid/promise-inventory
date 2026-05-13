@@ -21,10 +21,13 @@
             <tr>
                 <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Category</th>
+                <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Name</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Spec Code</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">UOM</th>
+                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min</th>
+                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Max</th>
                 <th scope="col" class="px-6 py-4 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
             </tr>
         </thead>
@@ -58,19 +61,40 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400">
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
+                        <select name="location_id" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
+                            <option value="">Select Location</option>
+                            @foreach($locations as $location)
+                                <option value="{{ $location->id }}">{{ $location->name }} ({{ $location->code }})</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all placeholder:text-gray-400">
+                    </div>
+                    <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Brand <span class="text-red-500">*</span></label>
                         <input type="text" name="brand" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                     </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Spec Code</label>
                         <input type="text" name="spec_code" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">UOM <span class="text-red-500">*</span></label>
+                        <select name="uom" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                            <option value="PCS">PCS</option>
+                            <option value="BOX">BOX</option>
+                            <option value="SET">SET</option>
+                            <option value="ROLL">ROLL</option>
+                        </select>
                     </div>
                 </div>
 
@@ -93,19 +117,18 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">UOM <span class="text-red-500">*</span></label>
-                        <select name="uom" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
-                            <option value="PCS">PCS</option>
-                            <option value="BOX">BOX</option>
-                            <option value="SET">SET</option>
-                            <option value="ROLL">ROLL</option>
-                        </select>
-                    </div>
-                    <div>
+                <div class="grid grid-cols-4 gap-4 mb-4">
+                    <div class="col-span-2">
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs / Unit <span class="text-red-500">*</span></label>
                         <input type="number" name="pcs_per_unit" required value="1" min="1" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs block w-full p-3">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Qty Min</label>
+                        <input type="number" name="qty_min" value="0" min="0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs block w-full p-3">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Qty Max</label>
+                        <input type="number" name="qty_max" value="0" min="0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs block w-full p-3">
                     </div>
                 </div>
                 
@@ -133,11 +156,14 @@
             ajax: { url: apiBase, type: 'GET' },
             columns: [
                 { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
-                { data: 'category.name', render: d => d || '-' },
+                { data: 'category_name', render: d => d || '-' },
+                { data: 'location_name', render: d => d || '-' },
                 { data: 'name' },
                 { data: 'brand' },
                 { data: 'spec_code', render: d => d || '-' },
                 { data: 'uom' },
+                { data: 'qty_min', className: 'text-center' },
+                { data: 'qty_max', className: 'text-center' },
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center', width: '100px',
                     render: (d, t, r) => `

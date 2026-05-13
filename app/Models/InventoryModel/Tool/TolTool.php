@@ -8,10 +8,10 @@ class TolTool extends Model
 {
     protected $table = 'tol_m_tools';
     protected $fillable = [
-        'category_id', 'name', 'brand', 'spec_code',
+        'category_id', 'location_id', 'name', 'brand', 'spec_code',
         'diameter', 'length', 'material_type', 'hrc',
         'uom', 'pcs_per_unit', 'price_per_unit',
-        'limit_stock', 'std_lifetime_yrs', 'is_active',
+        'limit_stock', 'qty_min', 'qty_max', 'std_lifetime_yrs', 'is_active',
     ];
 
     protected $casts = [
@@ -20,6 +20,8 @@ class TolTool extends Model
         'price_per_unit'  => 'float',
         'pcs_per_unit'    => 'integer',
         'limit_stock'     => 'integer',
+        'qty_min'         => 'integer',
+        'qty_max'         => 'integer',
         'std_lifetime_yrs'=> 'integer',
         'is_active'       => 'boolean',
     ];
@@ -27,6 +29,11 @@ class TolTool extends Model
     public function category()
     {
         return $this->belongsTo(TolCategory::class, 'category_id');
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(TolLocation::class, 'location_id');
     }
 
     public function fastStock()

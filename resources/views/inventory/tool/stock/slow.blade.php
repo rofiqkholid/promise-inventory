@@ -85,16 +85,17 @@
                             @foreach($tools as $tool)
                                 @if($tool->category && $tool->category->moving_type === 'slow')
                                 <option value="{{ $tool->id }}"
-                                    data-lifetime="{{ $tool->std_lifetime_yrs }}">
+                                    data-lifetime="{{ $tool->std_lifetime_yrs }}"
+                                    data-location-id="{{ $tool->location_id }}">
                                     {{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})
                                 </option>
                                 @endif
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-span-2">
+                    <div class="col-span-2 hidden">
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
-                        <select name="location_id" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                        <select name="location_id" id="batchLocationId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                             <option value="">-- Select Location --</option>
                             @foreach($locations as $loc)
                                 <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
@@ -156,7 +157,7 @@ $(document).ready(function() {
                     `<div><span class="font-semibold text-xs text-gray-900 dark:text-white">${r.tool_name}</span><br>
                     <span class="text-[10px] text-gray-500">${r.brand} · ${r.spec_code || 'No Spec'} · ${r.category}</span></div>`
             },
-            { data: 'location', render: d => `<span class="text-xs">${d}</span>` },
+            { data: 'location', render: d => `<span class="text-xs"></span>` },
             { data: 'purchase_date', className: 'text-center', render: d => `<span class="text-xs">${d}</span>` },
             { data: 'purchase_price', className: 'text-right font-mono text-xs', render: d => idr(d) },
             {
@@ -233,10 +234,18 @@ $(document).ready(function() {
     }
     $('input[name="qty_purchased"], input[name="purchase_price"]').on('input', updatePreview);
 
-    // Auto-fill lifetime from tool selection
+    // Auto-fill lifetime and location from tool selection
     $('select[name="tool_id"]', '#modal-batch-form').on('change', function() {
-        const lifetime = $('option:selected', this).data('lifetime');
+        const selected = $('option:selected', this);
+        const lifetime = selected.data('lifetime');
+        const locationId = selected.data('location-id');
+        
         if (lifetime) $('#batchLifetime').val(lifetime);
+        if (locationId) {
+            $('#batchLocationId').val(locationId).trigger('change');
+        } else {
+            $('#batchLocationId').val('').trigger('change');
+        }
     });
 
     $('#btnAddBatch').on('click', () => {

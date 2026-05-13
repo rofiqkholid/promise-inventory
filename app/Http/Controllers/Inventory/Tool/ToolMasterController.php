@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Inventory\Tool;
 use App\Http\Controllers\Controller;
 use App\Models\InventoryModel\Tool\TolTool;
 use App\Models\InventoryModel\Tool\TolCategory;
+use App\Models\InventoryModel\Tool\TolLocation;
 use Illuminate\Http\Request;
 
 class ToolMasterController extends Controller
@@ -17,7 +18,7 @@ class ToolMasterController extends Controller
             $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
 
-            $query = TolTool::with('category')->where('is_active', true);
+            $query = TolTool::with(['category', 'location'])->where('is_active', true);
             $recordsTotal = (clone $query)->count();
 
             if (!empty($search)) {
@@ -37,6 +38,8 @@ class ToolMasterController extends Controller
                 'id'               => $t->id,
                 'category_id'      => $t->category_id,
                 'category_name'    => $t->category?->name ?? '-',
+                'location_id'      => $t->location_id,
+                'location_name'    => $t->location?->name ?? '-',
                 'moving_type'      => $t->category?->moving_type ?? 'fast',
                 'name'             => $t->name,
                 'brand'            => $t->brand,
@@ -49,6 +52,8 @@ class ToolMasterController extends Controller
                 'pcs_per_unit'     => $t->pcs_per_unit,
                 'price_per_unit'   => $t->price_per_unit,
                 'limit_stock'      => $t->limit_stock,
+                'qty_min'          => $t->qty_min,
+                'qty_max'          => $t->qty_max,
                 'std_lifetime_yrs' => $t->std_lifetime_yrs,
                 'action'           => '',
             ]);
@@ -60,13 +65,15 @@ class ToolMasterController extends Controller
         }
 
         $categories = TolCategory::where('is_active', true)->orderBy('name')->get();
-        return view('inventory.tool.master.index', compact('categories'));
+        $locations = TolLocation::where('is_active', true)->orderBy('name')->get();
+        return view('inventory.tool.master.index', compact('categories', 'locations'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'category_id'      => 'required|exists:tol_m_categories,id',
+            'location_id'      => 'required|exists:tol_m_locations,id',
             'name'             => 'required|string|max:150',
             'brand'            => 'required|string|max:100',
             'spec_code'        => 'nullable|string|max:100',
@@ -78,6 +85,8 @@ class ToolMasterController extends Controller
             'pcs_per_unit'     => 'required|integer|min:1',
             'price_per_unit'   => 'nullable|numeric|min:0',
             'limit_stock'      => 'nullable|integer|min:0',
+            'qty_min'          => 'nullable|integer|min:0',
+            'qty_max'          => 'nullable|integer|min:0',
             'std_lifetime_yrs' => 'nullable|integer|min:1',
         ]);
 
@@ -90,6 +99,7 @@ class ToolMasterController extends Controller
         $tool = TolTool::findOrFail($id);
         $validated = $request->validate([
             'category_id'      => 'required|exists:tol_m_categories,id',
+            'location_id'      => 'required|exists:tol_m_locations,id',
             'name'             => 'required|string|max:150',
             'brand'            => 'required|string|max:100',
             'spec_code'        => 'nullable|string|max:100',
@@ -101,6 +111,8 @@ class ToolMasterController extends Controller
             'pcs_per_unit'     => 'required|integer|min:1',
             'price_per_unit'   => 'nullable|numeric|min:0',
             'limit_stock'      => 'nullable|integer|min:0',
+            'qty_min'          => 'nullable|integer|min:0',
+            'qty_max'          => 'nullable|integer|min:0',
             'std_lifetime_yrs' => 'nullable|integer|min:1',
         ]);
 

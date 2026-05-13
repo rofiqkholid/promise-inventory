@@ -33,8 +33,7 @@ use App\Http\Controllers\Inventory\Tool\ToolMasterController;
 use App\Http\Controllers\Inventory\Tool\ToolLocationController;
 use App\Http\Controllers\Inventory\Tool\ToolFastStockController;
 use App\Http\Controllers\Inventory\Tool\ToolSlowBatchController;
-use App\Http\Controllers\Inventory\Tool\ToolStoFastController;
-use App\Http\Controllers\Inventory\Tool\ToolStoSlowController;
+use App\Http\Controllers\Inventory\Tool\ToolStoController;
 
 use App\Http\Controllers\Inventory\Material\UnitController;
 use App\Http\Controllers\Inventory\Material\RankController;
@@ -203,21 +202,19 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                 Route::get('/total-asset', [ToolSlowBatchController::class, 'totalAssetValue'])->name('totalAsset');
             });
 
-            // STO — Fast Moving
-            Route::prefix('sto-fast')->name('sto-fast.')->group(function () {
-                Route::get('/', [ToolStoFastController::class, 'index'])->name('index');
-                Route::post('/', [ToolStoFastController::class, 'store'])->name('store');
-                Route::post('/{id}/approve', [ToolStoFastController::class, 'approve'])->name('approve');
-                Route::delete('/{id}', [ToolStoFastController::class, 'destroy'])->name('destroy');
-            });
-
-            // STO — Slow Moving
-            Route::prefix('sto-slow')->name('sto-slow.')->group(function () {
-                Route::get('/', [ToolStoSlowController::class, 'index'])->name('index');
-                Route::post('/', [ToolStoSlowController::class, 'store'])->name('store');
-                Route::post('/preview', [ToolStoSlowController::class, 'preview'])->name('preview');
-                Route::post('/{id}/approve', [ToolStoSlowController::class, 'approve'])->name('approve');
-                Route::delete('/{id}', [ToolStoSlowController::class, 'destroy'])->name('destroy');
+            // STO — Unified (Header-Detail)
+            Route::prefix('sto')->name('sto.')->group(function () {
+                Route::get('/', [ToolStoController::class, 'index'])->name('index');
+                Route::post('/', [ToolStoController::class, 'store'])->name('store');
+                Route::get('/preview-code', [ToolStoController::class, 'previewCode'])->name('previewCode');
+                Route::get('/{id}', [ToolStoController::class, 'show'])->name('show');
+                Route::post('/{id}/submit', [ToolStoController::class, 'submit'])->name('submit');
+                Route::post('/{id}/approve', [ToolStoController::class, 'approve'])->name('approve');
+                Route::post('/{id}/reject', [ToolStoController::class, 'reject'])->name('reject');
+                
+                // Detail management
+                Route::post('/{id}/item-fast', [ToolStoController::class, 'addItemFast'])->name('addItemFast');
+                Route::post('/{id}/item-slow', [ToolStoController::class, 'addItemSlow'])->name('addItemSlow');
             });
         });
 

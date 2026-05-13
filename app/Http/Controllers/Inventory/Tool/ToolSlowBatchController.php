@@ -61,7 +61,7 @@ class ToolSlowBatchController extends Controller
                     'brand'            => $tool?->brand ?? '-',
                     'spec_code'        => $tool?->spec_code ?? '-',
                     'category'         => $tool?->category?->name ?? '-',
-                    'location'         => $row->location ? "{$row->location->code} — {$row->location->name}" : '-',
+                    'location'         => '',
                     'purchase_date'    => $row->purchase_date->format('d M Y'),
                     'purchase_date_raw'=> $row->purchase_date->format('Y-m-d'),
                     'location_id'      => $row->location_id,
@@ -102,12 +102,20 @@ class ToolSlowBatchController extends Controller
     {
         $validated = $request->validate([
             'tool_id'          => 'required|exists:tol_m_tools,id',
-            'location_id'      => 'required|exists:tol_m_locations,id',
+            'location_id'      => 'nullable|exists:tol_m_locations,id',
             'purchase_date'    => 'required|date',
             'purchase_price'   => 'required|numeric|min:0',
             'qty_purchased'    => 'required|integer|min:1',
             'std_lifetime_yrs' => 'required|integer|min:1',
         ]);
+
+        if (empty($validated['location_id'])) {
+            $tool = TolTool::find($validated['tool_id']);
+            if (!$tool->location_id) {
+                return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
+            }
+            $validated['location_id'] = $tool->location_id;
+        }
 
         // Auto-generate batch_no
         $tool     = TolTool::find($validated['tool_id']);
@@ -144,8 +152,17 @@ class ToolSlowBatchController extends Controller
             'purchase_date'    => 'required|date',
             'purchase_price'   => 'required|numeric|min:0',
             'std_lifetime_yrs' => 'required|integer|min:1',
-            'location_id'      => 'required|exists:tol_m_locations,id',
+            'location_id'      => 'nullable|exists:tol_m_locations,id',
         ]);
+
+        if (empty($validated['location_id'])) {
+            $toolMaster = $batch->tool;
+            if ($toolMaster && $toolMaster->location_id) {
+                $validated['location_id'] = $toolMaster->location_id;
+            } else {
+                 return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
+            }
+        }
 
         $batch->update($validated);
         return response()->json(['status' => 'success', 'message' => 'Batch updated successfully.']);
