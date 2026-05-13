@@ -121,8 +121,9 @@ class InventoryMenuSeeder extends Seeder
                         'roles' => ['admin', 'approver'],
                         'children' => [
                             ['title' => 'Tool Category', 'route' => 'inventory.tool.category.index', 'icon' => 'fa-solid fa-tags', 'order' => 1, 'roles' => ['admin', 'approver']],
-                            ['title' => 'Tool Specification', 'route' => 'inventory.tool.master.index', 'icon' => 'fa-solid fa-wrench', 'order' => 2, 'roles' => ['admin', 'approver']],
-                            ['title' => 'Tool Location', 'route' => 'inventory.tool.location.index', 'icon' => 'fa-solid fa-location-dot', 'order' => 3, 'roles' => ['admin', 'approver']],
+                            ['title' => 'Tool Sketch', 'route' => 'inventory.tool.sketch.index', 'icon' => 'fa-solid fa-image', 'order' => 2, 'roles' => ['admin', 'approver']],
+                            ['title' => 'Tool Specification', 'route' => 'inventory.tool.master.index', 'icon' => 'fa-solid fa-wrench', 'order' => 3, 'roles' => ['admin', 'approver']],
+                            ['title' => 'Tool Location', 'route' => 'inventory.tool.location.index', 'icon' => 'fa-solid fa-location-dot', 'order' => 4, 'roles' => ['admin', 'approver']],
                         ]
                     ],
                     [

@@ -18,7 +18,7 @@ class ToolMasterController extends Controller
             $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
 
-            $query = TolTool::with(['category', 'location'])->where('is_active', true);
+            $query = TolTool::with(['category', 'sketch', 'location'])->where('is_active', true);
             $recordsTotal = (clone $query)->count();
 
             if (!empty($search)) {
@@ -38,6 +38,9 @@ class ToolMasterController extends Controller
                 'id'               => $t->id,
                 'category_id'      => $t->category_id,
                 'category_name'    => $t->category?->name ?? '-',
+                'sketch_id'        => $t->sketch_id,
+                'sketch_name'      => $t->sketch?->name ?? '-',
+                'sketch_image'     => $t->sketch?->image_path ? asset('storage/'.$t->sketch->image_path) : null,
                 'location_id'      => $t->location_id,
                 'location_name'    => $t->location?->name ?? '-',
                 'moving_type'      => $t->category?->moving_type ?? 'fast',
@@ -73,6 +76,7 @@ class ToolMasterController extends Controller
     {
         $validated = $request->validate([
             'category_id'      => 'required|exists:tol_m_categories,id',
+            'sketch_id'        => 'nullable|exists:tol_m_sketches,id',
             'location_id'      => 'required|exists:tol_m_locations,id',
             'name'             => 'required|string|max:150',
             'brand'            => 'required|string|max:100',
@@ -99,6 +103,7 @@ class ToolMasterController extends Controller
         $tool = TolTool::findOrFail($id);
         $validated = $request->validate([
             'category_id'      => 'required|exists:tol_m_categories,id',
+            'sketch_id'        => 'nullable|exists:tol_m_sketches,id',
             'location_id'      => 'required|exists:tol_m_locations,id',
             'name'             => 'required|string|max:150',
             'brand'            => 'required|string|max:100',

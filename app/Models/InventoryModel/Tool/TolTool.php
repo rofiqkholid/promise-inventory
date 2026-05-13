@@ -8,7 +8,7 @@ class TolTool extends Model
 {
     protected $table = 'tol_m_tools';
     protected $fillable = [
-        'category_id', 'location_id', 'name', 'brand', 'spec_code',
+        'category_id', 'sketch_id', 'location_id', 'name', 'brand', 'spec_code',
         'diameter', 'length', 'material_type', 'hrc',
         'uom', 'pcs_per_unit', 'price_per_unit',
         'limit_stock', 'qty_min', 'qty_max', 'std_lifetime_yrs', 'is_active',
@@ -29,6 +29,11 @@ class TolTool extends Model
     public function category()
     {
         return $this->belongsTo(TolCategory::class, 'category_id');
+    }
+
+    public function sketch()
+    {
+        return $this->belongsTo(TolSketch::class, 'sketch_id');
     }
 
     public function location()

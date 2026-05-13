@@ -21,6 +21,7 @@
             <tr>
                 <th scope="col" class="px-6 py-4 w-16 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Category</th>
+                <th scope="col" class="px-6 py-4 text-center w-16 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Sketch</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Name</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
@@ -59,6 +60,18 @@
                                 <option value="{{ $category->id }}">{{ $category->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Tool Sketch</label>
+                        <div class="flex gap-2">
+                            <select name="sketch_id" id="sketch_id" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
+                                <option value="">Select Sketch</option>
+                            </select>
+                            <div id="sketch-preview-container" class="w-10 h-10 border border-gray-200 dark:border-gray-700 rounded-xs flex-shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800 overflow-hidden cursor-pointer hover:scale-110 transition-all">
+                                <i id="sketch-preview-placeholder" class="fa-solid fa-image text-gray-300 text-xs"></i>
+                                <img id="sketch-preview-img" class="hidden w-full h-full object-cover">
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
@@ -157,6 +170,11 @@
             columns: [
                 { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
                 { data: 'category_name', render: d => d || '-' },
+                { 
+                    data: 'sketch_image', 
+                    className: 'text-center',
+                    render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+                },
                 { data: 'location_name', render: d => d || '-' },
                 { data: 'name' },
                 { data: 'brand' },
@@ -187,20 +205,80 @@
         $('.add-button').on('click', function() {
             $('#masterForm')[0].reset();
             $('#toolId').val('');
+            $('#sketch_id').html('<option value="">Select Sketch</option>');
+            $('#sketch-preview-img').addClass('hidden');
+            $('#sketch-preview-placeholder').removeClass('hidden');
             $('input[name="_method"]').val('POST');
             $('#modal-title').text('Add Tool');
             showMdl('modal-master-form');
         });
+
+        // Fetch Sketches on Category Change
+        $('[name="category_id"]').on('change', function() {
+            const categoryId = $(this).val();
+            const sketchSelect = $('#sketch_id');
+            sketchSelect.html('<option value="">Loading...</option>');
+            
+            if (!categoryId) {
+                sketchSelect.html('<option value="">Select Sketch</option>');
+                return;
+            }
+
+            $.get(`{{ url('inventory/tool/sketch/by-category') }}/${categoryId}`, function(res) {
+                let html = '<option value="">Select Sketch</option>';
+                res.forEach(s => {
+                    html += `<option value="${s.id}" data-img="/storage/${s.image_path}">${s.name}</option>`;
+                });
+                sketchSelect.html(html);
+                
+                // If editing, re-select current sketch
+                const currentSketchId = $('#masterForm').data('current-sketch-id');
+                if (currentSketchId) {
+                    sketchSelect.val(currentSketchId).trigger('change');
+                    $('#masterForm').data('current-sketch-id', null);
+                }
+            });
+        });
+
+        // Sketch Preview
+        $('#sketch_id').on('change', function() {
+            const selected = $(this).find(':selected');
+            const imgPath = selected.data('img');
+            if (imgPath) {
+                $('#sketch-preview-img').attr('src', imgPath).removeClass('hidden');
+                $('#sketch-preview-placeholder').addClass('hidden');
+            } else {
+                $('#sketch-preview-img').addClass('hidden');
+                $('#sketch-preview-placeholder').removeClass('hidden');
+            }
+        });
+
+        window.previewImg = (src) => {
+            Swal.fire({
+                imageUrl: src,
+                imageAlt: 'Tool Sketch',
+                showConfirmButton: false,
+                width: 'auto',
+                padding: '0',
+                background: 'transparent',
+                backdrop: 'rgba(0,0,0,0.8)'
+            });
+        };
 
         $(document).on('click', '.edit-btn', function() {
             $('#masterForm')[0].reset();
             const data = $(this).data('row');
             
             $('#toolId').val(data.id);
+            $('#masterForm').data('current-sketch-id', data.sketch_id);
+            
             Object.keys(data).forEach(key => {
                 const el = $(`#masterForm [name="${key}"]`);
                 if (el.length) el.val(data[key]);
             });
+            
+            // Trigger category change to load sketches
+            $('[name="category_id"]').trigger('change');
             
             $('input[name="_method"]').val('PUT');
             $('#modal-title').text('Edit Tool');

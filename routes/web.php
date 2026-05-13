@@ -34,6 +34,7 @@ use App\Http\Controllers\Inventory\Tool\ToolLocationController;
 use App\Http\Controllers\Inventory\Tool\ToolFastStockController;
 use App\Http\Controllers\Inventory\Tool\ToolSlowBatchController;
 use App\Http\Controllers\Inventory\Tool\ToolStoController;
+use App\Http\Controllers\Inventory\Tool\ToolSketchController;
 
 use App\Http\Controllers\Inventory\Material\UnitController;
 use App\Http\Controllers\Inventory\Material\RankController;
@@ -181,6 +182,16 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
 
             // Master — Tool Specification
             Route::resource('master', ToolMasterController::class)->except(['create', 'edit', 'show']);
+
+            // Master — Sketch
+            Route::prefix('sketch')->name('sketch.')->group(function () {
+                Route::get('/', [ToolSketchController::class, 'index'])->name('index');
+                Route::post('/', [ToolSketchController::class, 'store'])->name('store');
+                Route::get('/{id}/edit', [ToolSketchController::class, 'edit'])->name('edit');
+                Route::post('/{id}/update', [ToolSketchController::class, 'update'])->name('update');
+                Route::delete('/{id}', [ToolSketchController::class, 'destroy'])->name('destroy');
+                Route::get('/by-category/{categoryId}', [ToolSketchController::class, 'getByCategory'])->name('getByCategory');
+            });
 
             // Master — Location
             Route::get('/location', [ToolLocationController::class, 'index'])->name('location.index');
