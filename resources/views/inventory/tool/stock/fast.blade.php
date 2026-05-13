@@ -119,8 +119,8 @@
 </div>
 
 {{-- Modal: History --}}
-<div id="modal-tool-history" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4">
-    <div class="relative w-full max-w-5xl transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+<div id="modal-tool-history" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-0 md:p-4">
+    <div class="relative w-full h-full md:h-[95vh] md:w-[95vw] transform overflow-hidden md:rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col shadow-2xl transition-all">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
             <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <i class="fa-solid fa-clock-rotate-left text-primary-500"></i> Transaction History
@@ -128,6 +128,36 @@
             <button class="close-modal text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
         <div class="overflow-y-auto px-6 py-6 flex-1 custom-scrollbar">
+            {{-- History Filters --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xs">
+                <div>
+                    <label class="block mb-1 text-[9px] font-bold text-gray-500 uppercase tracking-widest">Timeline</label>
+                    <div class="relative group">
+                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 text-[10px] pointer-events-none transition-colors z-10"></i>
+                        <input type="text" id="filter_date_range" readonly 
+                            class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xs h-9 text-[10px] text-gray-600 dark:text-white focus:ring-0 focus:border-primary-500 cursor-pointer w-full pl-10 transition-all font-medium" 
+                            placeholder="Select Date Range">
+                    </div>
+                </div>
+                <div>
+                    <label class="block mb-1 text-[9px] font-bold text-gray-500 uppercase tracking-widest">Tool Name</label>
+                    <select id="filterHistToolId" class="select2-hist-filter w-full">
+                        <option value="">All Tools</option>
+                        @foreach($tools as $tool)
+                            <option value="{{ $tool->id }}">{{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1 text-[9px] font-bold text-gray-500 uppercase tracking-widest">Type</label>
+                    <select id="filterHistType" class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-[10px] rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2">
+                        <option value="">All Types</option>
+                        <option value="in">IN (Restock)</option>
+                        <option value="out">OUT (Usage)</option>
+                    </select>
+                </div>
+            </div>
+
             <x-table id="historyTable" class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-800/50">
                     <tr>
@@ -135,6 +165,8 @@
                         <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tool</th>
                         <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
                         <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Qty</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Min Stock</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Current Stock</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Ref / Destination</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
                     </tr>
@@ -257,14 +289,44 @@ $(document).ready(function() {
 
     // History Logic
     let historyTable = null;
+    let histDateRangePicker = null;
+
     $('#btnHistory').on('click', function() {
         showMdl('modal-tool-history');
+
+        // Init Select2 for filter
+        $('.select2-hist-filter').select2({
+            dropdownParent: $('#modal-tool-history'),
+            width: '100%'
+        });
+        
+        // Init Litepicker if not exists
+        if (!histDateRangePicker) {
+            histDateRangePicker = new Litepicker({
+                element: document.getElementById('filter_date_range'),
+                singleMode: false,
+                autoApply: true,
+                format: 'DD-MM-YYYY',
+                delimiter: ' - ',
+                setup: (picker) => {
+                    picker.on('selected', (date1, date2) => {
+                        if (historyTable) historyTable.ajax.reload();
+                    });
+                }
+            });
+        }
+
         if (!historyTable) {
             historyTable = window.defaultDataTable('#historyTable', {
                 ajax: { 
                     url: "{{ route('inventory.tool.fast-stock.history') }}", 
                     type: 'GET',
-                    dataSrc: 'data' // Controller returns pagination object
+                    data: function(d) {
+                        d.date_range = $('#filter_date_range').val();
+                        d.tool_id = $('#filterHistToolId').val();
+                        d.transaction_type = $('#filterHistType').val();
+                    },
+                    dataSrc: 'data'
                 },
                 columns: [
                     { 
@@ -299,6 +361,8 @@ $(document).ready(function() {
                             return `<span class="font-bold font-mono ${color}">${d > 0 ? '+' : ''}${d}</span>`;
                         }
                     },
+                    { data: 'qty_min', className: 'text-center', render: d => `<span class="text-xs font-bold text-gray-500">${d}</span>` },
+                    { data: 'current_stock', className: 'text-center', render: d => `<span class="text-xs font-bold text-primary-600">${d}</span>` },
                     { 
                         data: null, 
                         render: r => {
@@ -314,6 +378,11 @@ $(document).ready(function() {
                 order: [[0, 'desc']],
                 pageLength: 10,
                 lengthChange: false
+            });
+
+            // Reactive Filters
+            $('#filterHistToolId, #filterHistType').on('change', function() {
+                historyTable.ajax.reload();
             });
         } else {
             historyTable.ajax.reload();

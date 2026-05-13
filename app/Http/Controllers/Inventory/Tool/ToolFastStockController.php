@@ -177,14 +177,42 @@ class ToolFastStockController extends Controller
     {
         $toolId     = $request->input('tool_id');
         $locationId = $request->input('location_id');
+        $dateRange  = $request->input('date_range');
+        $dateStart  = $request->input('date_start');
+        $dateEnd    = $request->input('date_end');
+
+        if ($dateRange && str_contains($dateRange, ' - ')) {
+            [$start, $end] = explode(' - ', $dateRange);
+            $dateStart = \Carbon\Carbon::createFromFormat('d-m-Y', $start)->format('Y-m-d');
+            $dateEnd   = \Carbon\Carbon::createFromFormat('d-m-Y', $end)->format('Y-m-d');
+        }
+        $transType  = $request->input('transaction_type');
+        $searchTool = $request->input('search_tool');
 
         $query = TolTransaction::with(['tool', 'location', 'destination', 'operator'])
             ->when($toolId, fn($q) => $q->where('tool_id', $toolId))
             ->when($locationId, fn($q) => $q->where('location_id', $locationId))
+            ->when($dateStart, fn($q) => $q->whereDate('transacted_at', '>=', $dateStart))
+            ->when($dateEnd, fn($q) => $q->whereDate('transacted_at', '<=', $dateEnd))
+            ->when($transType, fn($q) => $q->where('transaction_type', $transType))
+            ->when($searchTool, fn($q) => $q->whereHas('tool', fn($t) => $t->where('name', 'like', "%$searchTool%")))
             ->orderBy('transacted_at', 'desc');
 
         if ($request->ajax()) {
             $data = $query->paginate(50);
+            
+            // Transform to include qty_min and current_qty for display
+            $data->getCollection()->transform(function($item) {
+                // Get current stock for this tool+location
+                $stock = \App\Models\InventoryModel\Tool\TolFastStock::where('tool_id', $item->tool_id)
+                    ->where('location_id', $item->location_id)
+                    ->first();
+                
+                $item->qty_min = $item->tool?->qty_min ?? 0;
+                $item->current_stock = $stock?->current_qty ?? 0;
+                return $item;
+            });
+
             return response()->json($data);
         }
 
