@@ -305,7 +305,7 @@ $(document).ready(function() {
                             if (r.transaction_type.toLowerCase() === 'in') {
                                 return `<span class="text-[10px] font-mono text-gray-600">Ref: ${r.ref_doc || '-'}</span>`;
                             } else {
-                                return `<span class="text-[10px] font-bold text-blue-600"><i class="fa-solid fa-truck-arrow-right mr-1 opacity-50"></i>${r.destination?.name || '-'}</span>`;
+                                return `<span class="text-[10px] font-bold text-blue-600"><i class="fa-solid fa-truck-arrow-right mr-1 opacity-50"></i>${r.destination?.code || '-'}</span>`;
                             }
                         }
                     },
