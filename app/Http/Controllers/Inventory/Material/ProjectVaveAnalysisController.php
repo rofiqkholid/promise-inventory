@@ -162,10 +162,12 @@ class ProjectVaveAnalysisController extends Controller
         $product = Products::findByHashOrFail($id);
         $base = VaveBase::with(['unit', 'materialSpec', 'suffix'])
             ->where('product_id', $product->id)
+            ->where('base_name', 'like', $baseType . '%')
             ->orderBy('created_at', 'desc')
             ->first();
         $baseHistory = VaveBase::with(['unit', 'materialSpec', 'suffix'])
             ->where('product_id', $product->id)
+            ->where('base_name', 'like', $baseType . '%')
             ->orderBy('created_at', 'desc')
             ->get();
         return response()->json([
@@ -231,24 +233,43 @@ class ProjectVaveAnalysisController extends Controller
         ])->validate();
         $validated['product_id'] = $productId;
         $currentYear = (int) date('Y');
+        $baseType = $request->input('base_type', 'EBD');
+
         DB::beginTransaction();
         try {
-            $previousActive = VaveBase::where('product_id', $productId)->where('is_active', 1)->when($baseId, fn($q) => $q->where('id', '!=', $baseId))->first();
+            // Find previous active ONLY for the same base type
+            $previousActive = VaveBase::where('product_id', $productId)
+                ->where('base_name', 'like', $baseType . '%')
+                ->where('is_active', 1)
+                ->when($baseId, fn($q) => $q->where('id', '!=', $baseId))
+                ->first();
+                
             if ($previousActive && is_null($previousActive->effective_to)) {
                 $previousActive->update(['effective_to' => $currentYear - 1]);
             }
-            VaveBase::where('product_id', $productId)->update(['is_active' => 0]);
+            
+            // Deactivate ONLY previous baselines of the same type
+            VaveBase::where('product_id', $productId)
+                ->where('base_name', 'like', $baseType . '%')
+                ->update(['is_active' => 0]);
+
             $validated['is_active'] = 1;
             if (empty($validated['effective_from'])) $validated['effective_from'] = $currentYear;
             if (!array_key_exists('effective_to', $validated) || $validated['effective_to'] === '') $validated['effective_to'] = null;
+            
             if ($baseId) {
                 $base = VaveBase::findOrFail($baseId);
                 $base->update($validated);
-                $message = 'Base updated successfully.';
+                $message = $baseType . ' updated successfully.';
             } else {
-                if (empty($validated['base_name'])) $validated['base_name'] = 'Base ' . (VaveBase::where('product_id', $productId)->count() + 1);
+                if (empty($validated['base_name'])) {
+                    $count = VaveBase::where('product_id', $productId)
+                        ->where('base_name', 'like', $baseType . '%')
+                        ->count();
+                    $validated['base_name'] = $baseType . ' ' . ($count + 1);
+                }
                 VaveBase::create($validated);
-                $message = 'New Base created successfully.';
+                $message = 'New ' . $baseType . ' created successfully.';
             }
             DB::commit();
             return response()->json(['success' => true, 'message' => $message]);
@@ -274,15 +295,23 @@ class ProjectVaveAnalysisController extends Controller
         $base = VaveBase::findByHashOrFail($id);
         $productId = $base->product_id;
         $wasActive = $base->is_active;
+        $baseName = $base->base_name;
+        $prefix = str_starts_with(strtoupper($baseName), 'SQ') ? 'SQ' : 'EBD';
+
         DB::beginTransaction();
         try {
             $base->delete();
             if ($wasActive) {
-                $next = VaveBase::where('product_id', $productId)->orderBy('created_at', 'desc')->first();
+                // Reactivate the most recent remaining baseline OF THE SAME TYPE
+                $next = VaveBase::where('product_id', $productId)
+                    ->where('base_name', 'like', $prefix . '%')
+                    ->orderBy('created_at', 'desc')
+                    ->first();
                 if ($next) $next->update(['is_active' => 1]);
             }
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Base deleted successfully.']);
+            $message = ($prefix === 'SQ' ? 'SQ' : 'Base') . ' deleted successfully.';
+            return response()->json(['success' => true, 'message' => $message]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
@@ -389,7 +418,7 @@ class ProjectVaveAnalysisController extends Controller
         return response()->download($path);
     }
 
-    public function importExcel(Request $request)
+    public function importExcel(Request $request, $isRegular = false)
     {
         $request->validate(['sheet_name' => 'required|string']);
         $fileToImport = null; $tmpPath = null;
@@ -404,7 +433,7 @@ class ProjectVaveAnalysisController extends Controller
             $fileToImport = $tmpPath;
         } else { $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:51200']); $fileToImport = $request->file('file'); }
         try {
-            $import = new VaveBaseImport($request->sheet_name, $request->customer_id, $request->model_id);
+            $import = new VaveBaseImport($request->sheet_name, $request->customer_id, $request->model_id, $isRegular);
             Excel::import($import, $fileToImport);
             if ($tmpPath && file_exists($tmpPath)) @unlink($tmpPath);
             $errors = $import->getErrors(); $log = $import->getSuccessLog();

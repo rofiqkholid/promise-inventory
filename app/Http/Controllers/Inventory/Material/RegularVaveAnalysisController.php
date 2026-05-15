@@ -125,6 +125,7 @@ class RegularVaveAnalysisController extends Controller
 
     public function storeBase(Request $request) 
     { 
+        $request->merge(['base_type' => 'SQ']);
         $response = (new ProjectVaveAnalysisController)->storeBase($request); 
         $data = json_decode($response->getContent(), true);
         if ($data && $data['success']) {
