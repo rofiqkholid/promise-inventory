@@ -89,7 +89,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">ID Number <span class="text-red-500">*</span></label>
-                        <input type="text" name="id_number" required class="uppercase bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="e.g. TOL-2024-001">
+                        <input type="text" name="id_number" required readonly class="uppercase bg-slate-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-400 text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 cursor-not-allowed" placeholder="Select a Tool to generate...">
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Purchase Date <span class="text-red-500">*</span></label>

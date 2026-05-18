@@ -192,7 +192,6 @@
                                 <th class="py-2 px-3 text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider">Batch ID</th>
                                 <th class="py-2 px-2 text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider">Tool / Spec</th>
                                 <th class="py-2 px-2 text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-center">Lifetime</th>
-                                <th class="py-2 px-2 text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-right">Qty</th>
                                 <th class="py-2 px-3 text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-right">Value</th>
                             </tr>
                         </thead>
@@ -212,12 +211,11 @@
                                             {{ number_format($batch->age_years, 1) }} / {{ $batch->std_lifetime_yrs }} Yr
                                         </span>
                                     </td>
-                                    <td class="py-2 px-2 text-right text-slate-700 dark:text-slate-300 font-semibold">{{ $batch->qty_current }}</td>
                                     <td class="py-2 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">IDR {{ number_format($batch->current_value, 0, ',', '.') }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-8 text-center text-slate-400">
+                                    <td colspan="4" class="py-8 text-center text-slate-400">
                                         <p class="text-xs font-semibold">No active slow batches.</p>
                                     </td>
                                 </tr>
