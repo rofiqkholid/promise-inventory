@@ -334,7 +334,7 @@
             $.get(`{{ url('inventory/tool/sketch/by-category') }}/${categoryId}`, function(res) {
                 let html = '<option value="">Select Sketch</option>';
                 res.forEach(s => {
-                    html += `<option value="${s.id}" data-img="/storage/${s.image_path}">${s.name}</option>`;
+                    html += `<option value="${s.id}" data-img="{{ url('storage') }}/${s.image_path}">${s.name}</option>`;
                 });
                 sketchSelect.html(html);
                 
