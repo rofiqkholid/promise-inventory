@@ -149,7 +149,7 @@
                 $('#name').val(res.name);
                 $('#modal-title').text('Edit Tool Sketch');
                 
-                $('#image-preview').attr('src', '/storage/' + res.image_path).show();
+                $('#image-preview').attr('src', '{{ url('storage') }}/' + res.image_path).show();
                 $('#preview-icon').hide();
                 
                 $('#modal-sketch').removeClass('hidden');
