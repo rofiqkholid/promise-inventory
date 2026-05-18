@@ -51,20 +51,20 @@
     <x-table id="fastStockTable">
         <thead class="bg-gray-50 dark:bg-gray-800/50">
             <tr>
-                <th class="px-4 py-4 w-12 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Category</th>
-                <th class="px-4 py-4 text-center w-16 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Sketch</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Tool Name</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Spec Code</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
-                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Stock</th>
-                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min. Stock</th>
-                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Max. Stock</th>
-                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
-                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">UOM</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Last Updated</th>
-                <th class="px-4 py-4 text-center w-[90px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
+                <th class="px-4 py-4 w-12 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Category</th>
+                <th class="px-4 py-4 text-center w-16 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Sketch</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 180px;">Tool Name</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 250px;">Spec Code</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Stock</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min. Stock</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Max. Stock</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">UOM</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Last Updated</th>
+                <th class="px-4 py-4 text-center w-[90px] text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
             </tr>
         </thead>
         <tbody></tbody>
@@ -194,14 +194,14 @@
             <x-table id="historyTable" class="w-full">
                 <thead class="bg-gray-50 dark:bg-gray-800/50">
                     <tr>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Date</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Tool</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Qty</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Min Stock</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Current Stock</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Ref / Destination</th>
-                        <th class="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Date</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Tool</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Type</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Qty</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Min Stock</th>
+                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Current Stock</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Ref / Destination</th>
+                        <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
                     </tr>
                 </thead>
                 <tbody></tbody>

@@ -226,7 +226,7 @@
 
                     <div class="overflow-x-auto border border-slate-100 dark:border-gray-800 rounded-xs">
                         <table class="min-w-full divide-y divide-slate-100 dark:divide-gray-800 text-xs text-left" id="dtSettingsTable">
-                            <thead class="bg-slate-50 dark:bg-slate-800/40 text-[9px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider">
+                            <thead class="bg-slate-50 dark:bg-slate-800/40 text-[9px] font-bold text-slate-500 dark:text-gray-400 tracking-wider">
                                 <tr>
                                     <th scope="col" class="px-4 py-3 w-44">Material Category</th>
                                     <th scope="col" class="px-4 py-3 text-center w-28">Spindle Speed (n)<br><span class="text-[8px] font-normal lowercase">rev/min</span></th>

@@ -111,7 +111,7 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-800/30 text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                        <thead class="bg-gray-50 dark:bg-gray-800/30 text-[9px] font-bold tracking-wider text-gray-400">
                             <tr>
                                 <th class="px-6 py-3">Tool Name</th>
                                 <th class="px-6 py-3">Location</th>
@@ -154,7 +154,7 @@
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-xs text-left">
-                        <thead class="bg-gray-50 dark:bg-gray-800/30 text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                        <thead class="bg-gray-50 dark:bg-gray-800/30 text-[9px] font-bold tracking-wider text-gray-400">
                             <tr>
                                 <th class="px-6 py-3">ID Number / Tool</th>
                                 <th class="px-6 py-3 text-center">Check Result</th>
