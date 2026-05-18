@@ -74,7 +74,7 @@ class ToolFastStockController extends Controller
             ]);
         }
 
-        $tools     = TolTool::with('category')
+        $tools     = TolTool::with(['category', 'location'])
                         ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
                         ->where('is_active', true)
                         ->orderBy('name')
@@ -97,11 +97,17 @@ class ToolFastStockController extends Controller
     {
         $validated = $request->validate([
             'tool_id'     => 'required|exists:tol_m_tools,id',
-            'location_id' => 'required|exists:tol_m_locations,id',
+            'location_id' => 'nullable|exists:tol_m_locations,id',
             'qty'         => 'required|integer|min:1',
             'ref_doc'     => 'required|string|max:100',
             'note'        => 'nullable|string',
         ]);
+
+        $tool = TolTool::findOrFail($validated['tool_id']);
+        if (!$tool->location_id) {
+            return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
+        }
+        $validated['location_id'] = $tool->location_id;
 
         DB::transaction(function () use ($validated) {
             $stock = TolFastStock::firstOrCreate(

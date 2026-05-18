@@ -105,7 +105,7 @@ class ToolInformationController extends Controller
                 'name' => $tool->name,
                 'brand' => $tool->brand,
                 'spec_code' => $tool->spec_code ?? '-',
-                'diameter' => $tool->diameter ?? '-',
+                'dimension' => $tool->dimension ?? '-',
                 'length' => $tool->length ?? '-',
                 'material_type' => $tool->material_type ?? '-',
                 'hrc' => $tool->hrc ?? '-',

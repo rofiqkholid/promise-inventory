@@ -108,7 +108,7 @@
                             <option value="75">75% — Good</option>
                             <option value="50">50% — Still good</option>
                             <option value="25">25% — Warning</option>
-                            <option value="0">0% — Broken</option>
+                            <option value="0">0% — Retired</option>
                         </select>
                     </div>
                     <div>
@@ -153,7 +153,7 @@
 <script>
 $(document).ready(function() {
     const apiBase = "{{ route('inventory.tool.slow-batch.index') }}";
-    const idr = (v) => 'Rp ' + parseFloat(v || 0).toLocaleString('id-ID');
+    const idr = (v) => 'Rp ' + parseFloat(v || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
     window.previewImg = (src) => {
         Swal.fire({
@@ -216,7 +216,7 @@ $(document).ready(function() {
                         label = 'WARNING';
                         cls = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
                     } else if (val === 0) {
-                        label = 'BROKEN';
+                        label = 'RETIRED';
                         cls = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
                     }
                     return `<span class="px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider ${cls}">${label}</span>`;

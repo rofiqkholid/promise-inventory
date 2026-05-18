@@ -26,6 +26,7 @@
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Spec Code</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">UOM</th>
+                <th scope="col" class="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Price</th>
                 <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min</th>
                 <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Max</th>
                 <th scope="col" class="px-6 py-4 text-center w-[100px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
@@ -69,7 +70,7 @@
                             <select name="category_id" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
                                 <option value="">Select Category</option>
                                 @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    <option value="{{ $category->id }}" data-moving-type="{{ $category->moving_type }}">{{ $category->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -116,8 +117,8 @@
 
                     <div class="grid grid-cols-4 gap-4">
                         <div>
-                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Diameter</label>
-                            <input type="number" step="0.01" name="diameter" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Dimension (ø / T / Range)</label>
+                            <input type="text" name="dimension" placeholder="e.g. 200, 32-R2.5, 0-150" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         </div>
                         <div>
                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Length</label>
@@ -134,9 +135,13 @@
                     </div>
 
                     <div class="grid grid-cols-4 gap-4">
-                        <div class="col-span-2">
+                        <div id="pcsPerUnitGroup" class="col-span-2">
                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Pcs / Unit <span class="text-red-500">*</span></label>
                             <input type="number" name="pcs_per_unit" required value="1" min="1" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs block w-full p-3">
+                        </div>
+                        <div id="priceGroup" class="col-span-1 hidden">
+                            <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Price (IDR)</label>
+                            <input type="number" name="price_per_unit" id="price_per_unit" value="0" min="0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs block w-full p-3">
                         </div>
                         <div>
                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Qty Min</label>
@@ -217,6 +222,16 @@
                 { data: 'brand' },
                 { data: 'spec_code', render: d => d || '-' },
                 { data: 'uom' },
+                { 
+                    data: 'price_per_unit', 
+                    className: 'text-right font-mono text-xs',
+                    render: (d, t, r) => {
+                        if (r.moving_type === 'fast' && d > 0) {
+                            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(d);
+                        }
+                        return '-';
+                    }
+                },
                 { data: 'qty_min', className: 'text-center' },
                 { data: 'qty_max', className: 'text-center' },
                 {
@@ -270,11 +285,27 @@
             $('#settingRowsContainer').empty();
             $('input[name="_method"]').val('POST');
             $('#modal-title').text('Add Tool');
+            toggleMovingTypeFields();
             showMdl('modal-master-form');
         });
 
+        function toggleMovingTypeFields() {
+            const selectedOpt = $('[name="category_id"] option:selected');
+            const movingType = selectedOpt.data('moving-type');
+            
+            if (movingType === 'fast') {
+                $('#pcsPerUnitGroup').removeClass('col-span-2').addClass('col-span-1');
+                $('#priceGroup').removeClass('hidden');
+            } else {
+                $('#pcsPerUnitGroup').removeClass('col-span-1').addClass('col-span-2');
+                $('#priceGroup').addClass('hidden');
+                $('#price_per_unit').val('0'); // Reset price if not fast moving
+            }
+        }
+
         // Fetch Sketches on Category Change
         $('[name="category_id"]').on('change', function() {
+            toggleMovingTypeFields();
             const categoryId = $(this).val();
             const sketchSelect = $('#sketch_id');
             sketchSelect.html('<option value="">Loading...</option>');

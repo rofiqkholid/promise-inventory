@@ -102,7 +102,9 @@
                     <select name="tool_id" id="transToolId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Tool --</option>
                         @foreach($tools as $tool)
-                            <option value="{{ $tool->id }}">{{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})</option>
+                            <option value="{{ $tool->id }}" data-location-id="{{ $tool->location_id }}">
+                                {{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -325,6 +327,20 @@ $(document).ready(function() {
         }
     });
 
+    // Auto-select location from selected Tool (read-only from Master data)
+    $('#transToolId').on('change', function() {
+        const selected = $('option:selected', this);
+        const locId = selected.data('location-id');
+        
+        if (locId) {
+            $('#transLocationId').val(locId).trigger('change');
+            $('#transLocationId').addClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', true);
+        } else {
+            $('#transLocationId').val('').trigger('change');
+            $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
+        }
+    });
+
     $('#btnNewTransaction').on('click', () => { 
         $('#formTransaction')[0].reset(); 
         $('input[name="transaction_type"][value="IN"]').prop('checked', true).trigger('change');
@@ -332,16 +348,21 @@ $(document).ready(function() {
         showMdl('modal-tool-transaction'); 
     });
 
-
-
     $('#saveTransaction').on('click', function() {
         const type = $('input[name="transaction_type"]:checked').val();
         const url = type === 'IN' ? apiIn : apiOut;
         
+        // Temporarily enable location_id so it gets serialized correctly
+        $('#transLocationId').prop('disabled', false);
+        const formData = $('#formTransaction').serialize();
+        if ($('#transToolId').val() && $('option:selected', '#transToolId').data('location-id')) {
+            $('#transLocationId').prop('disabled', true);
+        }
+        
         $.ajax({
             url: url, 
             method: 'POST', 
-            data: $('#formTransaction').serialize(),
+            data: formData,
             success: (res) => { 
                 toast('success', `Stock ${type}`, res.message); 
                 hideMdl('modal-tool-transaction'); 

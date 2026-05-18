@@ -9,13 +9,13 @@ class TolTool extends Model
     protected $table = 'tol_m_tools';
     protected $fillable = [
         'category_id', 'sketch_id', 'location_id', 'name', 'brand', 'spec_code',
-        'diameter', 'length', 'material_type', 'hrc',
+        'dimension', 'length', 'material_type', 'hrc',
         'uom', 'pcs_per_unit', 'price_per_unit',
         'limit_stock', 'qty_min', 'qty_max', 'std_lifetime_yrs', 'is_active',
     ];
 
     protected $casts = [
-        'diameter'        => 'float',
+        'dimension'       => 'string',
         'length'          => 'float',
         'price_per_unit'  => 'float',
         'pcs_per_unit'    => 'integer',

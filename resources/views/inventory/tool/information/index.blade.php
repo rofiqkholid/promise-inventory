@@ -3,9 +3,9 @@
 @section('title', 'Tool Information & Settings Catalog')
 
 @section('content')
-<div class="text-gray-900 dark:text-gray-100 min-h-[80vh] flex flex-col">
+<div class="text-gray-900 dark:text-gray-100 flex flex-col">
     <!-- Header Area -->
-    <div class="sm:flex sm:items-center sm:justify-between mb-6 pb-5 border-b border-slate-100 dark:border-gray-800">
+    <div class="sm:flex sm:items-center sm:justify-between mb-6 border-b border-slate-100 dark:border-gray-800">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Tool Information Center</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Quick search, physical drawings, real-time stock levels, and machining parameter settings.</p>
@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
         
         <!-- Left Side: Catalog Search Panel (3 Cols - Narrower & Sleeker) -->
-        <div class="lg:col-span-3 flex flex-col bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs overflow-hidden shadow-xs h-[calc(100vh-220px)] min-h-[500px]">
+        <div class="lg:col-span-3 flex flex-col bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs shadow-xs">
             <!-- Search Inputs Header -->
             <div class="p-4 bg-slate-50/50 dark:bg-gray-800/40 border-b border-slate-100 dark:border-gray-800 flex flex-col gap-3">
                 <div>
@@ -25,7 +25,7 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
                             <i class="fa-solid fa-magnifying-glass text-xs"></i>
                         </span>
-                        <input type="text" id="toolSearchInput" placeholder="Type name, brand..." class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full pl-9 p-2.5 transition-all">
+                        <input type="text" id="toolSearchInput" placeholder="Type name, brand..." class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full pr-2 py-2.5 transition-all" style="padding-left: 2.5rem !important;">
                     </div>
                 </div>
 
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Right Side: Details View Area (9 Cols - More Spacious) -->
-        <div class="lg:col-span-9 flex flex-col h-[calc(100vh-220px)] min-h-[500px]">
+        <div class="lg:col-span-9 flex flex-col h-[calc(100vh-265px)] min-h-[400px] overflow-hidden">
             
             <!-- Empty State Detail View -->
             <div id="detailEmptyState" class="flex-1 flex flex-col items-center justify-center bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs shadow-xs p-10 text-center">
@@ -61,11 +61,63 @@
                 <p class="text-xs text-gray-400 max-w-sm mt-2">Click on any tool from the catalog list on the left to reveal its complete technical specifications, inventory stocks, and machining settings parameters.</p>
             </div>
 
+            <!-- Loading State Detail View (Skeleton / Shimmer) -->
+            <div id="detailLoadingState" class="hidden flex-1 flex flex-col gap-4 overflow-hidden pr-1 animate-pulse">
+                <!-- Main Header Details Skeleton -->
+                <div class="bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-4 shadow-xs">
+                    <div class="flex flex-col gap-2.5">
+                        <div class="flex gap-2">
+                            <div class="h-4 w-16 bg-slate-200 dark:bg-gray-800 rounded-xs"></div>
+                            <div class="h-4 w-12 bg-slate-200 dark:bg-gray-800 rounded-xs"></div>
+                        </div>
+                        <div class="h-6 w-1/3 bg-slate-200 dark:bg-gray-800 rounded-xs"></div>
+                        <div class="h-4 w-1/2 bg-slate-200 dark:bg-gray-800 rounded-xs"></div>
+                    </div>
+                </div>
+
+                <!-- Specs, Drawing & Stock Grid Skeleton -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <!-- Sketch Drawing Skeleton (4 Cols) -->
+                    <div class="md:col-span-4 bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-5 shadow-xs flex flex-col justify-between h-[300px]">
+                        <div class="h-4 w-1/2 bg-slate-200 dark:bg-gray-800 rounded-xs mb-4"></div>
+                        <div class="flex-1 bg-slate-100 dark:bg-gray-800/40 rounded-xs flex items-center justify-center">
+                            <i class="fa-solid fa-image text-slate-200 dark:text-gray-700 text-3xl"></i>
+                        </div>
+                        <div class="h-4 w-3/4 bg-slate-200 dark:bg-gray-800 rounded-xs mt-4"></div>
+                    </div>
+
+                    <!-- Specifications List Skeleton (4 Cols) -->
+                    <div class="md:col-span-4 bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-5 shadow-xs h-[300px] flex flex-col justify-between">
+                        <div>
+                            <div class="h-4 w-1/2 bg-slate-200 dark:bg-gray-800 rounded-xs mb-6"></div>
+                            <div class="space-y-4.5">
+                                <div class="flex justify-between"><div class="h-3.5 w-1/3 bg-slate-200 dark:bg-gray-800 rounded-xs"></div><div class="h-3.5 w-1/4 bg-slate-200 dark:bg-gray-800 rounded-xs"></div></div>
+                                <div class="flex justify-between"><div class="h-3.5 w-1/3 bg-slate-200 dark:bg-gray-800 rounded-xs"></div><div class="h-3.5 w-1/4 bg-slate-200 dark:bg-gray-800 rounded-xs"></div></div>
+                                <div class="flex justify-between"><div class="h-3.5 w-1/3 bg-slate-200 dark:bg-gray-800 rounded-xs"></div><div class="h-3.5 w-1/4 bg-slate-200 dark:bg-gray-800 rounded-xs"></div></div>
+                                <div class="flex justify-between"><div class="h-3.5 w-1/3 bg-slate-200 dark:bg-gray-800 rounded-xs"></div><div class="h-3.5 w-1/4 bg-slate-200 dark:bg-gray-800 rounded-xs"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warehouse Stock Skeleton (4 Cols) -->
+                    <div class="md:col-span-4 bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-5 shadow-xs h-[300px] flex flex-col justify-between">
+                        <div>
+                            <div class="h-4 w-1/2 bg-slate-200 dark:bg-gray-800 rounded-xs mb-6"></div>
+                            <div class="h-16 bg-slate-100 dark:bg-gray-800/40 rounded-xs flex items-center justify-center mb-6"></div>
+                            <div class="space-y-3">
+                                <div class="h-8 bg-slate-50 dark:bg-gray-800/20 rounded-xs"></div>
+                                <div class="h-8 bg-slate-50 dark:bg-gray-800/20 rounded-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Full Details Card Container (Hidden initially) -->
             <div id="detailContent" class="hidden flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
                 
-                <!-- Main Header Details (Clean borderless header, removes unnecessary nested card) -->
-                <div class="pb-3 border-b border-slate-100 dark:border-gray-800 relative overflow-hidden">
+                <!-- Main Header Details with Premium Card Background -->
+                <div class="bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-4 shadow-xs relative">
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                         <div>
                             <div class="flex items-center gap-2 mb-1.5">
@@ -103,24 +155,8 @@
                             </h4>
                             <div class="space-y-2.5 text-xs">
                                 <div class="flex justify-between items-center py-1 border-b border-slate-50/50 dark:border-gray-800/40">
-                                    <span class="text-slate-400">Tool Name</span>
-                                    <span id="dtDetailName" class="font-bold text-slate-700 dark:text-gray-200 truncate max-w-[140px]" title="">-</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-slate-50/50 dark:border-gray-800/40">
-                                    <span class="text-slate-400">Spec Code</span>
-                                    <span id="dtDetailSpecCode" class="font-bold text-slate-700 dark:text-gray-200">-</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-slate-50/50 dark:border-gray-800/40">
-                                    <span class="text-slate-400">Brand</span>
-                                    <span id="dtDetailBrand" class="font-bold text-slate-700 dark:text-gray-200">-</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-slate-50/50 dark:border-gray-800/40">
-                                    <span class="text-slate-400">Category</span>
-                                    <span id="dtDetailCategory" class="font-bold text-slate-700 dark:text-gray-200">-</span>
-                                </div>
-                                <div class="flex justify-between items-center py-1 border-b border-slate-50/50 dark:border-gray-800/40">
-                                    <span class="text-slate-400">Diameter (ø)</span>
-                                    <span id="dtDiameter" class="font-bold text-slate-700 dark:text-gray-200">-</span>
+                                    <span class="text-slate-400">Dimension (ø / T / Range)</span>
+                                    <span id="dtDimension" class="font-bold text-slate-700 dark:text-gray-200">-</span>
                                 </div>
                                 <div class="flex justify-between items-center py-1 border-b border-slate-50/50 dark:border-gray-800/40">
                                     <span class="text-slate-400">Length (L)</span>
@@ -226,6 +262,7 @@
         const placeholder = $('#searchPlaceholder');
 
         let debounceTimer;
+        let selectedToolId = null;
 
         // Perform live AJAX search
         function performSearch() {
@@ -261,13 +298,21 @@
 
                     let html = '<div class="space-y-1">';
                     res.forEach(item => {
+                        const isActive = selectedToolId == item.id;
+                        const cardClasses = isActive 
+                            ? 'tool-search-card p-3 rounded-xs border border-primary-500 bg-blue-50/70 dark:bg-blue-950/30 ring-1 ring-primary-500 cursor-pointer transition-all flex items-center gap-3'
+                            : 'tool-search-card p-3 rounded-xs border border-slate-100 dark:border-gray-800 hover:border-primary-100 hover:bg-primary-50/20 dark:hover:bg-primary-950/10 cursor-pointer transition-all flex items-center gap-3';
+                        const titleClasses = isActive
+                            ? 'text-xs font-bold text-primary-600 dark:text-primary-400 truncate'
+                            : 'text-xs font-bold text-slate-700 dark:text-slate-200 truncate';
+
                         html += `
-                            <div class="tool-search-card p-3 rounded-xs border border-slate-100 dark:border-gray-800 hover:border-primary-100 hover:bg-primary-50/20 dark:hover:bg-primary-950/10 cursor-pointer transition-all flex items-center gap-3" data-id="${item.id}">
+                            <div class="${cardClasses}" data-id="${item.id}">
                                 <div class="w-10 h-10 rounded-xs border border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800 overflow-hidden flex-shrink-0 flex items-center justify-center">
                                     ${item.sketch_image ? `<img src="${item.sketch_image}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-image text-[10px] text-slate-300"></i>`}
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">${item.name}</h4>
+                                    <h4 class="${titleClasses}">${item.name}</h4>
                                     <p class="text-[10px] text-slate-400 truncate">Code: ${item.spec_code} | Brand: ${item.brand}</p>
                                     <div class="flex gap-1.5 mt-1.5">
                                         <span class="text-[8px] font-bold uppercase tracking-wider text-primary-500 bg-primary-50 dark:bg-primary-950/40 dark:text-primary-400 px-1 py-0.5 rounded-xs">${item.category_name}</span>
@@ -301,12 +346,28 @@
 
         // Load detailed tool info on click
         $(document).on('click', '.tool-search-card', function() {
-            $('.tool-search-card').removeClass('border-primary-500 bg-primary-50/30 dark:bg-primary-950/20');
-            $(this).addClass('border-primary-500 bg-primary-50/30 dark:bg-primary-950/20');
-
             const toolId = $(this).data('id');
+            selectedToolId = toolId;
+
+            // Reset all search cards to default style
+            $('.tool-search-card')
+                .removeClass('border-primary-500 bg-primary-50/30 bg-blue-50/70 dark:bg-primary-950/20 dark:bg-blue-950/30 ring-1 ring-primary-500')
+                .addClass('border-slate-100 dark:border-gray-800');
+            $('.tool-search-card h4')
+                .removeClass('text-primary-600 dark:text-primary-400')
+                .addClass('text-slate-700 dark:text-slate-200');
+
+            // Apply active visual styles to the clicked card
+            $(this)
+                .removeClass('border-slate-100 dark:border-gray-800')
+                .addClass('border-primary-500 bg-blue-50/70 dark:bg-blue-950/30 ring-1 ring-primary-500');
+            $(this).find('h4')
+                .removeClass('text-slate-700 dark:text-slate-200')
+                .addClass('text-primary-600 dark:text-primary-400');
+
             $('#detailEmptyState').addClass('hidden');
             $('#detailContent').addClass('hidden');
+            $('#detailLoadingState').removeClass('hidden');
 
             $.ajax({
                 url: `{{ url('inventory/tool/information') }}/${toolId}`,
@@ -323,14 +384,14 @@
                     $('#dtBrand').text(tool.brand);
                     $('#dtSpecCode').text(tool.spec_code);
 
-                    // Specifications Details Info
-                    $('#dtDetailName').text(tool.name).attr('title', tool.name);
-                    $('#dtDetailSpecCode').text(tool.spec_code);
-                    $('#dtDetailBrand').text(tool.brand);
-                    $('#dtDetailCategory').text(tool.category_name);
 
-                    // Specs Info
-                    $('#dtDiameter').text(tool.diameter !== '-' ? tool.diameter + ' mm' : '-');
+                    // Set dimension value (only append ' mm' if it is purely numeric)
+                    let dimVal = tool.dimension || '-';
+                    if (dimVal !== '-' && !isNaN(dimVal)) {
+                        dimVal += ' mm';
+                    }
+                    $('#dtDimension').text(dimVal);
+
                     $('#dtLength').text(tool.length !== '-' ? tool.length + ' mm' : '-');
                     $('#dtMaterialType').text(tool.material_type);
                     $('#dtHrc').text(tool.hrc);
@@ -461,10 +522,13 @@
                     }
                     $('#dtSettingsContainer').html(settingsHtml);
 
-                    // Show content
+                    // Hide loading and show content
+                    $('#detailLoadingState').addClass('hidden');
                     $('#detailContent').removeClass('hidden').addClass('animate-fade-in');
                 },
                 error: function() {
+                    $('#detailLoadingState').addClass('hidden');
+                    $('#detailEmptyState').removeClass('hidden');
                     toast('error', 'Error', 'Failed to load tool details.');
                 }
             });
