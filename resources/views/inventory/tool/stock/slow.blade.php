@@ -45,12 +45,13 @@
             <tr>
                 <th class="px-4 py-4 w-12 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">ID Number</th>
+                <th scope="col" class="px-6 py-4 text-center w-16 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Sketch</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Tool Name</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
                 <th scope="col" class="px-6 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Purchase Date</th>
                 <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Age / Life</th>
-                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Life Status</th>
-                <th scope="col" class="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Rate (%)</th>
+                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Rate (%)</th>
+                <th scope="col" class="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Condition Status</th>
                 <th scope="col" class="px-6 py-4 text-right text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Asset Value (IDR)</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
                 <th class="px-4 py-4 text-center w-[90px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
@@ -88,7 +89,7 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">ID Number <span class="text-red-500">*</span></label>
-                        <input type="text" name="id_number" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="e.g. TOL-2024-001">
+                        <input type="text" name="id_number" required class="uppercase bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="e.g. TOL-2024-001">
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Purchase Date <span class="text-red-500">*</span></label>
@@ -102,7 +103,13 @@
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Physical Rate (%) <span class="text-red-500">*</span></label>
-                        <input type="number" name="physical_rate" min="0" max="100" value="100" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="100">
+                        <select name="physical_rate" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                            <option value="100">100% — Ok</option>
+                            <option value="75">75% — Good</option>
+                            <option value="50">50% — Still good</option>
+                            <option value="25">25% — Warning</option>
+                            <option value="0">0% — Broken</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Std. Lifetime (Yrs) <span class="text-red-500">*</span></label>
@@ -148,6 +155,18 @@ $(document).ready(function() {
     const apiBase = "{{ route('inventory.tool.slow-batch.index') }}";
     const idr = (v) => 'Rp ' + parseFloat(v || 0).toLocaleString('id-ID');
 
+    window.previewImg = (src) => {
+        Swal.fire({
+            imageUrl: src,
+            imageAlt: 'Tool Sketch',
+            showConfirmButton: false,
+            width: 'auto',
+            padding: '0',
+            background: 'transparent',
+            backdrop: 'rgba(0,0,0,0.8)'
+        });
+    };
+
     let currentStatus = 'active';
 
     window.slowTable = window.defaultDataTable('#slowBatchTable', {
@@ -158,6 +177,11 @@ $(document).ready(function() {
         columns: [
             { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
             { data: 'id_number', render: d => `<span class="font-mono font-semibold text-primary-600 dark:text-primary-400 text-xs">${d}</span>` },
+            { 
+                data: 'sketch_image', 
+                className: 'text-center',
+                render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+            },
             {
                 data: null, render: (d, t, r) =>
                     `<div><span class="font-semibold text-xs text-gray-900 dark:text-white">${r.tool_name}</span><br>
@@ -169,18 +193,34 @@ $(document).ready(function() {
                 data: 'age_years', className: 'text-center', 
                 render: (d, t, r) => `<span class="text-xs font-semibold ${d >= r.std_lifetime_yrs ? 'text-orange-600' : 'text-gray-600'}">${d} / ${r.std_lifetime_yrs}</span>` 
             },
-            {
-                data: null, className: 'text-center',
-                render: (d, t, r) => {
-                    const isExpired = r.age_years >= r.std_lifetime_yrs;
-                    const label = isExpired ? 'EXPIRED' : 'OPTIMAL';
-                    const cls = isExpired ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700';
-                    return `<span class="px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider ${cls}">${label}</span>`;
-                }
-            },
             { 
                 data: 'physical_rate', className: 'text-center', 
                 render: d => `<span class="text-xs font-bold ${d < 50 ? 'text-red-500' : 'text-emerald-600'}">${d}%</span>` 
+            },
+            {
+                data: 'physical_rate', className: 'text-center',
+                render: (d) => {
+                    const val = Math.round(d);
+                    let label = 'UNKNOWN';
+                    let cls = 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
+                    if (val === 100) {
+                        label = 'OK';
+                        cls = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                    } else if (val === 75) {
+                        label = 'GOOD';
+                        cls = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                    } else if (val === 50) {
+                        label = 'STILL GOOD';
+                        cls = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+                    } else if (val === 25 || val === 20) {
+                        label = 'WARNING';
+                        cls = 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+                    } else if (val === 0) {
+                        label = 'BROKEN';
+                        cls = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                    }
+                    return `<span class="px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider ${cls}">${label}</span>`;
+                }
             },
             {
                 data: null, className: 'text-right font-mono',
@@ -248,7 +288,7 @@ $(document).ready(function() {
     // Preview asset value (Sync with controller logic: Price * Depreciation * Physical Rate)
     function updatePreview() {
         const price = parseFloat($('input[name="purchase_price"]').val()) || 0;
-        const rate  = parseFloat($('input[name="physical_rate"]').val()) || 0;
+        const rate  = parseFloat($('[name="physical_rate"]').val()) || 0;
         const purchaseDateStr = $('input[name="purchase_date"]').val();
         const lifetime = parseFloat($('input[name="std_lifetime_yrs"]').val()) || 1;
 
@@ -265,13 +305,55 @@ $(document).ready(function() {
         const total = price * depFactor * (rate / 100);
         $('#previewInitialValue').text(total > 0 ? idr(total) : (total === 0 && purchaseDateStr ? idr(0) : '—'));
     }
-    $('input[name="purchase_price"], input[name="physical_rate"], input[name="purchase_date"], input[name="std_lifetime_yrs"]').on('input change', updatePreview);
+    $('input[name="purchase_price"], select[name="physical_rate"], input[name="purchase_date"], input[name="std_lifetime_yrs"]').on('input change', updatePreview);
 
-    // Auto-fill lifetime from tool selection
+    // Auto-fill lifetime and ID prefix from tool selection
     $('select[name="tool_id"]', '#modal-batch-form').on('change', function() {
         const selected = $('option:selected', this);
         const lifetime = selected.data('lifetime');
         if (lifetime) $('#batchLifetime').val(lifetime);
+
+        const toolId = $(this).val();
+        const idInput = $('input[name="id_number"]', '#batchForm');
+        
+        // Only generate ID number for new registrations (where batchId is empty)
+        if (toolId && !$('#batchId').val()) {
+            idInput.attr('placeholder', 'Generating...');
+            $.ajax({
+                url: apiBase + '/next-id',
+                method: 'GET',
+                data: { tool_id: toolId },
+                success: function(res) {
+                    if (res.next_id) {
+                        idInput.val(res.next_id);
+                    } else {
+                        idInput.val('');
+                        idInput.attr('placeholder', 'e.g. TOL-2024-001');
+                    }
+                },
+                error: function() {
+                    idInput.val('');
+                    idInput.attr('placeholder', 'e.g. TOL-2024-001');
+                }
+            });
+        }
+    });
+
+    // Auto-transform ID number to uppercase as typed
+    $('input[name="id_number"]', '#batchForm').on('input', function() {
+        $(this).val($(this).val().toUpperCase());
+    });
+
+    // Automatically set status to NOK and disable active option when physical rate is 0%
+    $('select[name="physical_rate"]', '#modal-batch-form').on('change', function() {
+        const rate = $(this).val();
+        const statusSelect = $('select[name="status"]', '#modal-batch-form');
+        if (rate === '0') {
+            statusSelect.val('nok').trigger('change');
+            statusSelect.find('option[value="active"]').attr('disabled', true);
+        } else {
+            statusSelect.find('option[value="active"]').removeAttr('disabled');
+        }
     });
 
     $('#btnAddBatch').on('click', () => {
@@ -292,7 +374,7 @@ $(document).ready(function() {
         $('select[name="tool_id"]', '#batchForm').val(btn.data('tool-id')).trigger('change');
         $('input[name="purchase_date"]', '#batchForm').val(btn.data('purchase-date'));
         $('input[name="purchase_price"]', '#batchForm').val(btn.data('purchase-price'));
-        $('input[name="physical_rate"]', '#batchForm').val(btn.data('physical-rate'));
+        $('[name="physical_rate"]', '#batchForm').val(Math.round(btn.data('physical-rate'))).trigger('change');
         $('input[name="std_lifetime_yrs"]', '#batchForm').val(btn.data('lifetime'));
         $('select[name="location_id"]', '#batchForm').val(btn.data('location-id'));
         $('select[name="status"]', '#batchForm').val(btn.data('status'));

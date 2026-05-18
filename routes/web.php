@@ -35,7 +35,7 @@ use App\Http\Controllers\Inventory\Tool\ToolFastStockController;
 use App\Http\Controllers\Inventory\Tool\ToolSlowBatchController;
 use App\Http\Controllers\Inventory\Tool\ToolStoController;
 use App\Http\Controllers\Inventory\Tool\ToolSketchController;
-use App\Http\Controllers\Inventory\Tool\ToolDestinationController;
+use App\Http\Controllers\Inventory\Tool\ToolInformationController;
 
 use App\Http\Controllers\Inventory\Material\UnitController;
 use App\Http\Controllers\Inventory\Material\RankController;
@@ -198,9 +198,6 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/location', [ToolLocationController::class, 'index'])->name('location.index');
             Route::resource('location', ToolLocationController::class)->except(['create', 'edit', 'show', 'index']);
 
-            // Master — Destination
-            Route::resource('destination', ToolDestinationController::class)->except(['create', 'edit', 'show']);
-
             // Operational — Fast Moving Stock (IN / OUT / List)
             Route::prefix('fast-stock')->name('fast-stock.')->group(function () {
                 Route::get('/', [ToolFastStockController::class, 'index'])->name('index');
@@ -212,6 +209,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             // Operational — Slow Moving Batches
             Route::prefix('slow-batch')->name('slow-batch.')->group(function () {
                 Route::get('/', [ToolSlowBatchController::class, 'index'])->name('index');
+                Route::get('/next-id', [ToolSlowBatchController::class, 'getNextId'])->name('nextId');
                 Route::post('/', [ToolSlowBatchController::class, 'store'])->name('store');
                 Route::put('/{id}', [ToolSlowBatchController::class, 'update'])->name('update');
                 Route::get('/total-asset', [ToolSlowBatchController::class, 'totalAssetValue'])->name('totalAsset');
@@ -230,6 +228,13 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                 // Detail management
                 Route::post('/{id}/item-fast', [ToolStoController::class, 'addItemFast'])->name('addItemFast');
                 Route::post('/{id}/item-slow', [ToolStoController::class, 'addItemSlow'])->name('addItemSlow');
+            });
+
+            // Master — Tool Information Search
+            Route::prefix('information')->name('information.')->group(function () {
+                Route::get('/', [ToolInformationController::class, 'index'])->name('index');
+                Route::get('/search', [ToolInformationController::class, 'search'])->name('search');
+                Route::get('/{id}', [ToolInformationController::class, 'show'])->name('show');
             });
         });
 

@@ -23,7 +23,7 @@ class ToolFastStockController extends Controller
             $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
 
-            $query = TolFastStock::with(['tool.category', 'location']);
+            $query = TolFastStock::with(['tool.category', 'tool.sketch', 'location']);
 
             $recordsTotal = (clone $query)->count();
 
@@ -51,6 +51,7 @@ class ToolFastStockController extends Controller
                     'tool_name'    => $tool?->name ?? '-',
                     'brand'        => $tool?->brand ?? '-',
                     'spec_code'    => $tool?->spec_code ?? '-',
+                    'sketch_image' => $tool?->sketch?->image_path ? asset('storage/'.$tool->sketch->image_path) : null,
                     'category'     => $tool?->category?->name ?? '-',
                     'moving_type'  => $tool?->category?->moving_type ?? '-',
                     'location_id'  => $row->location_id,
@@ -203,15 +204,17 @@ class ToolFastStockController extends Controller
         if ($request->ajax()) {
             $data = $query->paginate(50);
             
-            // Transform to include qty_min and current_qty for display
+            // Transform to include qty_min and historical running stock balance for display
             $data->getCollection()->transform(function($item) {
-                // Get current stock for this tool+location
-                $stock = \App\Models\InventoryModel\Tool\TolFastStock::where('tool_id', $item->tool_id)
+                // Calculate historical running stock at the time of this transaction (SUM up to this transaction ID)
+                $runningStock = DB::table('tol_t_transactions')
+                    ->where('tool_id', $item->tool_id)
                     ->where('location_id', $item->location_id)
-                    ->first();
+                    ->where('id', '<=', $item->id)
+                    ->sum('qty');
                 
                 $item->qty_min = $item->tool?->qty_min ?? 0;
-                $item->current_stock = $stock?->current_qty ?? 0;
+                $item->current_stock = (int) $runningStock;
                 return $item;
             });
 

@@ -124,7 +124,6 @@ class InventoryMenuSeeder extends Seeder
                             ['title' => 'Tool Sketch', 'route' => 'inventory.tool.sketch.index', 'icon' => 'fa-solid fa-image', 'order' => 2, 'roles' => ['admin', 'approver']],
                             ['title' => 'Tool Specification', 'route' => 'inventory.tool.master.index', 'icon' => 'fa-solid fa-wrench', 'order' => 3, 'roles' => ['admin', 'approver']],
                             ['title' => 'Tool Location', 'route' => 'inventory.tool.location.index', 'icon' => 'fa-solid fa-location-dot', 'order' => 4, 'roles' => ['admin', 'approver']],
-                            ['title' => 'Tool Destination', 'route' => 'inventory.tool.destination.index', 'icon' => 'fa-solid fa-truck-arrow-right', 'order' => 5, 'roles' => ['admin', 'approver']],
                         ]
                     ],
                     [
@@ -144,6 +143,13 @@ class InventoryMenuSeeder extends Seeder
                         'icon'  => 'fa-solid fa-clipboard-check',
                         'order' => 3,
                         'roles' => ['admin', 'approver', 'checker', 'operator'],
+                    ],
+                    [
+                        'title' => 'Tool Information',
+                        'route' => 'inventory.tool.information.index',
+                        'icon'  => 'fa-solid fa-circle-info',
+                        'order' => 4,
+                        'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
                     ],
                 ]
             ],

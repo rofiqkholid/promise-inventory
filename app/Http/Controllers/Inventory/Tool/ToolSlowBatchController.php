@@ -21,7 +21,7 @@ class ToolSlowBatchController extends Controller
             $search = $request->input('search.value');
             $status = $request->input('status', 'active'); // filter by status
 
-            $query = TolSlowBatch::with(['tool.category', 'location']);
+            $query = TolSlowBatch::with(['tool.category', 'tool.sketch', 'location']);
 
             if ($status !== 'all') {
                 $query->where('status', $status);
@@ -64,6 +64,7 @@ class ToolSlowBatchController extends Controller
                     'tool_name'        => $tool?->name ?? '-',
                     'brand'            => $tool?->brand ?? '-',
                     'spec_code'        => $tool?->spec_code ?? '-',
+                    'sketch_image'     => $tool?->sketch?->image_path ? asset('storage/'.$tool->sketch->image_path) : null,
                     'category'         => $tool?->category?->name ?? '-',
                     'location'         => $row->location?->name ?? '-',
                     'purchase_date'    => $row->purchase_date->format('d M Y'),
@@ -117,13 +118,14 @@ class ToolSlowBatchController extends Controller
 
         // Initial value = Price * (Rate/100)
         $initValue = round($validated['purchase_price'] * ($validated['physical_rate'] / 100), 2);
+        $status = $validated['physical_rate'] == 0 ? 'nok' : 'active';
 
         TolSlowBatch::create([
             ...$validated,
             'qty_purchased' => 1,
             'qty_current'   => 1,
             'current_value' => $initValue,
-            'status'        => 'active',
+            'status'        => $status,
         ]);
 
         return response()->json(['status' => 'success', 'message' => "Item registered successfully with ID: {$validated['id_number']}"]);
@@ -145,7 +147,14 @@ class ToolSlowBatchController extends Controller
             'physical_rate'    => 'required|numeric|min:0|max:100',
             'std_lifetime_yrs' => 'required|integer|min:1',
             'location_id'      => 'required|exists:tol_m_locations,id',
+            'status'           => 'required|string|in:active,nok,retired',
         ]);
+
+        if ($validated['physical_rate'] == 0) {
+            if ($validated['status'] === 'active') {
+                $validated['status'] = 'nok';
+            }
+        }
 
         $batch->update($validated);
         return response()->json(['status' => 'success', 'message' => 'Item updated successfully.']);
@@ -156,5 +165,40 @@ class ToolSlowBatchController extends Controller
     {
         $total = TolSlowBatch::where('status', 'active')->sum('current_value');
         return response()->json(['total_asset_value' => $total]);
+    }
+
+    /** Generate next auto-increment ID number based on Tool's Category Prefix */
+    public function getNextId(Request $request)
+    {
+        $toolId = $request->query('tool_id');
+        if (!$toolId) {
+            return response()->json(['next_id' => '']);
+        }
+
+        $tool = TolTool::with('category')->find($toolId);
+        if (!$tool || !$tool->category || !$tool->category->code_prefix) {
+            return response()->json(['next_id' => '']);
+        }
+
+        $prefix = strtoupper($tool->category->code_prefix);
+
+        // Fetch existing batch ID numbers matching this prefix.
+        // We find the max suffix number database-agnostically to be perfectly reliable.
+        $batches = TolSlowBatch::where('id_number', 'LIKE', $prefix . '-%')->get(['id_number']);
+
+        $maxNum = 0;
+        foreach ($batches as $b) {
+            if (preg_match('/^' . preg_quote($prefix, '/') . '-(\d+)$/i', $b->id_number, $matches)) {
+                $num = (int)$matches[1];
+                if ($num > $maxNum) {
+                    $maxNum = $num;
+                }
+            }
+        }
+
+        $nextNum = $maxNum + 1;
+        $nextId = $prefix . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+
+        return response()->json(['next_id' => $nextId]);
     }
 }

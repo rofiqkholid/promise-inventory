@@ -21,7 +21,31 @@
         </div>
     </div>
 
-
+    {{-- Status Legend --}}
+    <div class="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xs p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-slate-400 text-xs"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Stock Status Legend:</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">CRITICAL</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Stock &lt; Min</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">WARNING</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Stock = Min</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">SAFE</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Min &lt; Stock &le; Max</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">OVER</span>
+                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Stock &gt; Max</span>
+            </div>
+        </div>
+    </div>
 
     {{-- Table --}}
     <x-table id="fastStockTable">
@@ -29,12 +53,15 @@
             <tr>
                 <th class="px-4 py-4 w-12 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Category</th>
+                <th class="px-4 py-4 text-center w-16 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Sketch</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Tool Name</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Spec Code</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Stock</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min. Stock</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Max. Stock</th>
+                <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">UOM</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Last Updated</th>
                 <th class="px-4 py-4 text-center w-[90px] text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
@@ -193,6 +220,18 @@ $(document).ready(function() {
 
     const idr = (v) => 'Rp ' + parseFloat(v).toLocaleString('id-ID');
 
+    window.previewImg = (src) => {
+        Swal.fire({
+            imageUrl: src,
+            imageAlt: 'Tool Sketch',
+            showConfirmButton: false,
+            width: 'auto',
+            padding: '0',
+            background: 'transparent',
+            backdrop: 'rgba(0,0,0,0.8)'
+        });
+    };
+
     let hasLow = false;
 
     window.fastStockTable = window.defaultDataTable('#fastStockTable', {
@@ -200,6 +239,11 @@ $(document).ready(function() {
         columns: [
             { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
             { data: 'category', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
+            { 
+                data: 'sketch_image', 
+                className: 'text-center',
+                render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+            },
             { data: 'tool_name', render: d => `<span class="font-semibold text-gray-900 dark:text-white">${d}</span>` },
             { data: 'brand' },
             { data: 'spec_code', render: d => d ? `<span class="font-mono text-xs text-primary-600 dark:text-primary-400">${d}</span>` : '-' },
@@ -208,7 +252,32 @@ $(document).ready(function() {
                 data: 'current_qty', className: 'text-center',
                 render: (d, t, r) => `<span class="font-bold text-gray-900 dark:text-white">${d}</span>`
             },
-            { data: 'qty_min', className: 'text-center', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
+            { data: 'qty_min', className: 'text-center', render: d => `<span class="text-xs text-gray-500 font-semibold">${d}</span>` },
+            { data: 'qty_max', className: 'text-center', render: d => `<span class="text-xs text-gray-500 font-semibold">${d || '-'}</span>` },
+            {
+                data: null, className: 'text-center',
+                render: (d, t, r) => {
+                    const qty = parseFloat(r.current_qty || 0);
+                    const min = parseFloat(r.qty_min || 0);
+                    const max = parseFloat(r.qty_max || 0);
+                    
+                    let label = 'SAFE';
+                    let cls = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                    
+                    if (qty < min) {
+                        label = 'CRITICAL';
+                        cls = 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
+                    } else if (qty === min) {
+                        label = 'WARNING';
+                        cls = 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+                    } else if (max > 0 && qty > max) {
+                        label = 'OVER';
+                        cls = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+                    }
+                    
+                    return `<span class="px-2 py-0.5 rounded-xs text-[9px] font-bold uppercase tracking-wider ${cls}">${label}</span>`;
+                }
+            },
             { data: 'uom', className: 'text-center', render: d => `<span class="text-xs font-mono">${d}</span>` },
             { data: 'last_updated', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
             {

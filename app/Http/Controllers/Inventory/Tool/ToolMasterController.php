@@ -18,7 +18,7 @@ class ToolMasterController extends Controller
             $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
 
-            $query = TolTool::with(['category', 'sketch', 'location'])->where('is_active', true);
+            $query = TolTool::with(['category', 'sketch', 'location', 'settings'])->where('is_active', true);
             $recordsTotal = (clone $query)->count();
 
             if (!empty($search)) {
@@ -58,6 +58,7 @@ class ToolMasterController extends Controller
                 'qty_min'          => $t->qty_min,
                 'qty_max'          => $t->qty_max,
                 'std_lifetime_yrs' => $t->std_lifetime_yrs,
+                'settings'         => $t->settings,
                 'action'           => '',
             ]);
 
@@ -93,7 +94,24 @@ class ToolMasterController extends Controller
             'std_lifetime_yrs' => 'nullable|integer|min:1',
         ]);
 
-        TolTool::create($validated);
+        $tool = TolTool::create($validated);
+
+        if ($request->has('settings')) {
+            foreach ($request->input('settings') as $setting) {
+                if (empty($setting['material_category'])) continue;
+                $tool->settings()->create([
+                    'material_category'        => $setting['material_category'],
+                    'spindle_speed'            => $setting['spindle_speed'] ?? null,
+                    'table_feed'               => $setting['table_feed'] ?? null,
+                    'depth_of_cut'             => $setting['depth_of_cut'] ?? null,
+                    'step_over'                => $setting['step_over'] ?? null,
+                    'cnc_small_plant_b'        => isset($setting['cnc_small_plant_b']),
+                    'cnc_big_hartford_plant_f' => isset($setting['cnc_big_hartford_plant_f']),
+                    'status'                   => $setting['status'] ?? 'USE',
+                ]);
+            }
+        }
+
         return response()->json(['status' => 'success', 'message' => 'Tool Specification created successfully.']);
     }
 
@@ -120,6 +138,26 @@ class ToolMasterController extends Controller
         ]);
 
         $tool->update($validated);
+
+        // Reset existing settings
+        $tool->settings()->delete();
+
+        if ($request->has('settings')) {
+            foreach ($request->input('settings') as $setting) {
+                if (empty($setting['material_category'])) continue;
+                $tool->settings()->create([
+                    'material_category'        => $setting['material_category'],
+                    'spindle_speed'            => $setting['spindle_speed'] ?? null,
+                    'table_feed'               => $setting['table_feed'] ?? null,
+                    'depth_of_cut'             => $setting['depth_of_cut'] ?? null,
+                    'step_over'                => $setting['step_over'] ?? null,
+                    'cnc_small_plant_b'        => isset($setting['cnc_small_plant_b']),
+                    'cnc_big_hartford_plant_f' => isset($setting['cnc_big_hartford_plant_f']),
+                    'status'                   => $setting['status'] ?? 'USE',
+                ]);
+            }
+        }
+
         return response()->json(['status' => 'success', 'message' => 'Tool Specification updated successfully.']);
     }
 

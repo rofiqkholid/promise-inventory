@@ -59,10 +59,10 @@
                 </div>
                 <div>
                     <label class="block mb-1 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Upload Image</label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 dark:border-gray-700 border-dashed rounded-xs hover:border-primary-500 transition-all cursor-pointer" onclick="document.getElementById('image_input').click()">
+                    <div id="dropzone" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 dark:border-gray-700 border-dashed rounded-xs hover:border-primary-500 transition-all cursor-pointer" onclick="document.getElementById('image_input').click()">
                         <div class="space-y-1 text-center">
                             <i id="preview-icon" class="fa-solid fa-image text-3xl text-gray-400 mb-2"></i>
-                            <img id="image-preview" class="hidden h-32 w-auto mx-auto object-contain mb-2 rounded-xs">
+                            <img id="image-preview" class="h-32 w-auto mx-auto object-contain mb-2 rounded-xs" style="display: none;">
                             <div class="flex text-xs text-gray-600 dark:text-gray-400">
                                 <span class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-xs font-bold text-primary-600 hover:text-primary-500">Upload a file</span>
                                 <p class="pl-1">or drag and drop</p>
@@ -137,8 +137,8 @@
             $('#formSketch')[0].reset();
             $('#sketch_id').val('');
             $('#modal-title').text('Add Tool Sketch');
-            $('#image-preview').addClass('hidden');
-            $('#preview-icon').removeClass('hidden');
+            $('#image-preview').hide().attr('src', '');
+            $('#preview-icon').show();
             $('#modal-sketch').removeClass('hidden');
         };
 
@@ -149,8 +149,8 @@
                 $('#name').val(res.name);
                 $('#modal-title').text('Edit Tool Sketch');
                 
-                $('#image-preview').attr('src', '/storage/' + res.image_path).removeClass('hidden');
-                $('#preview-icon').addClass('hidden');
+                $('#image-preview').attr('src', '/storage/' + res.image_path).show();
+                $('#preview-icon').hide();
                 
                 $('#modal-sketch').removeClass('hidden');
             });
@@ -189,12 +189,54 @@
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    $('#image-preview').attr('src', e.target.result).removeClass('hidden');
-                    $('#preview-icon').addClass('hidden');
+                    $('#image-preview').attr('src', e.target.result).show();
+                    $('#preview-icon').hide();
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         };
+
+        // Drag & Drop Functionality
+        const dropzone = $('#dropzone');
+        const fileInput = $('#image_input');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.on(eventName, preventDefaults);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop zone when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.on(eventName, highlight);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.on(eventName, unhighlight);
+        });
+
+        function highlight() {
+            dropzone.addClass('border-primary-500 bg-primary-50/10 dark:bg-primary-900/10');
+        }
+
+        function unhighlight() {
+            dropzone.removeClass('border-primary-500 bg-primary-50/10 dark:bg-primary-900/10');
+        }
+
+        // Handle dropped files
+        dropzone.on('drop', function(e) {
+            const dt = e.originalEvent.dataTransfer;
+            const files = dt.files;
+
+            if (files.length) {
+                fileInput[0].files = files;
+                fileInput.trigger('change');
+            }
+        });
 
         $(document).on('click', '.close-modal', function() { $(this).closest('.modal-container').addClass('hidden'); });
         $('#modal-preview').on('click', function() { $(this).addClass('hidden'); });

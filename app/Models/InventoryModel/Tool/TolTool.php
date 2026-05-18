@@ -55,4 +55,9 @@ class TolTool extends Model
     {
         return $this->hasMany(TolTransaction::class, 'tool_id');
     }
+
+    public function settings()
+    {
+        return $this->hasMany(TolToolSetting::class, 'tool_id');
+    }
 }

@@ -22,8 +22,13 @@ class ToolCategoryController extends Controller
         $validated = $request->validate([
             'name'         => 'required|string|max:100',
             'moving_type'  => 'required|in:fast,slow',
+            'code_prefix'  => 'required_if:moving_type,slow|nullable|string|max:10|unique:tol_m_categories,code_prefix',
             'description'  => 'nullable|string',
         ]);
+
+        if (isset($validated['code_prefix'])) {
+            $validated['code_prefix'] = strtoupper($validated['code_prefix']);
+        }
 
         TolCategory::create($validated);
         return response()->json(['status' => 'success', 'message' => 'Tool Category created successfully.']);
@@ -35,8 +40,13 @@ class ToolCategoryController extends Controller
         $validated = $request->validate([
             'name'         => 'required|string|max:100',
             'moving_type'  => 'required|in:fast,slow',
+            'code_prefix'  => 'required_if:moving_type,slow|nullable|string|max:10|unique:tol_m_categories,code_prefix,' . $id,
             'description'  => 'nullable|string',
         ]);
+
+        if (isset($validated['code_prefix'])) {
+            $validated['code_prefix'] = strtoupper($validated['code_prefix']);
+        }
 
         $category->update($validated);
         return response()->json(['status' => 'success', 'message' => 'Tool Category updated successfully.']);
