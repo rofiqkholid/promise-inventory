@@ -141,7 +141,7 @@
                             </h4>
                             <div class="h-44 flex items-center justify-center border border-slate-100 dark:border-gray-800 rounded-xs bg-slate-50 dark:bg-slate-800/40 overflow-hidden relative group cursor-zoom-in" id="dtSketchContainer">
                                 <i id="dtSketchPlaceholder" class="fa-solid fa-image text-3xl text-slate-200 dark:text-gray-700"></i>
-                                <img id="dtSketchImg" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300" style="display: none;">
+                                <img id="dtSketchImg" referrerpolicy="no-referrer" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300" style="display: none;">
                             </div>
                         </div>
                         <p id="dtSketchName" class="text-[9px] text-center text-slate-400 mt-2 truncate">-</p>
@@ -251,6 +251,14 @@
 
     </div>
 </div>
+
+{{-- Modal: Image Preview --}}
+<div id="modal-preview" class="modal-container hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4">
+    <div class="relative max-w-4xl w-full h-full flex items-center justify-center p-4">
+        <img id="img-full" src="" referrerpolicy="no-referrer" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
+        <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -309,7 +317,7 @@
                         html += `
                             <div class="${cardClasses}" data-id="${item.id}">
                                 <div class="w-10 h-10 rounded-xs border border-slate-100 dark:border-gray-800 bg-slate-50 dark:bg-gray-800 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                    ${item.sketch_image ? `<img src="${item.sketch_image}" class="w-full h-full object-cover">` : `<i class="fa-solid fa-image text-[10px] text-slate-300"></i>`}
+                                    ${item.sketch_image ? `<img src="${item.sketch_image}" referrerpolicy="no-referrer" class="w-full h-full object-cover">` : `<i class="fa-solid fa-image text-[10px] text-slate-300"></i>`}
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="${titleClasses}">${item.name}</h4>
@@ -532,6 +540,21 @@
                     toast('error', 'Error', 'Failed to load tool details.');
                 }
             });
+        });
+
+        window.previewImg = (src) => {
+            $('#img-full').attr('src', src);
+            $('#modal-preview').removeClass('hidden');
+        };
+
+        $(document).on('click', '#modal-preview', function(e) {
+            if ($(e.target).closest('#img-full').length === 0) {
+                $('#modal-preview').addClass('hidden');
+            }
+        });
+        $(document).on('click', '#modal-preview .close-preview', function(e) {
+            e.stopPropagation();
+            $('#modal-preview').addClass('hidden');
         });
     });
 </script>

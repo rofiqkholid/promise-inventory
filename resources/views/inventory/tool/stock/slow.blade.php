@@ -147,6 +147,14 @@
         </div>
     </div>
 </div>
+
+{{-- Modal: Image Preview --}}
+<div id="modal-preview" class="modal-container hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4">
+    <div class="relative max-w-4xl w-full h-full flex items-center justify-center p-4">
+        <img id="img-full" src="" referrerpolicy="no-referrer" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
+        <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -156,15 +164,8 @@ $(document).ready(function() {
     const idr = (v) => 'Rp ' + parseFloat(v || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
     window.previewImg = (src) => {
-        Swal.fire({
-            imageUrl: src,
-            imageAlt: 'Tool Sketch',
-            showConfirmButton: false,
-            width: 'auto',
-            padding: '0',
-            background: 'transparent',
-            backdrop: 'rgba(0,0,0,0.8)'
-        });
+        $('#img-full').attr('src', src);
+        $('#modal-preview').removeClass('hidden');
     };
 
     let currentStatus = 'active';
@@ -180,7 +181,7 @@ $(document).ready(function() {
             { 
                 data: 'sketch_image', 
                 className: 'text-center',
-                render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+                render: d => d ? `<img src="${d}" referrerpolicy="no-referrer" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
             },
             {
                 data: null, render: (d, t, r) =>
@@ -284,6 +285,15 @@ $(document).ready(function() {
     const showMdl = (id) => { $('.modal-container').addClass('hidden'); $(`#${id}`).removeClass('hidden'); };
     const hideMdl = (id) => { $(`#${id}`).addClass('hidden'); };
     $('.close-modal').on('click', function() { $(this).closest('.modal-container').addClass('hidden'); });
+    $(document).on('click', '#modal-preview', function(e) {
+        if ($(e.target).closest('#img-full').length === 0) {
+            $('#modal-preview').addClass('hidden');
+        }
+    });
+    $(document).on('click', '#modal-preview .close-preview', function(e) {
+        e.stopPropagation();
+        $('#modal-preview').addClass('hidden');
+    });
 
     // Preview asset value (Sync with controller logic: Price * Depreciation * Physical Rate)
     function updatePreview() {
