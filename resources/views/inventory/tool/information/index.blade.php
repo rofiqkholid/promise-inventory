@@ -16,7 +16,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
         
         <!-- Left Side: Catalog Search Panel (3 Cols - Narrower & Sleeker) -->
-        <div class="lg:col-span-3 flex flex-col bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs shadow-xs">
+        <div class="lg:col-span-3 flex flex-col bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs shadow-xs lg:h-[calc(100vh-140px)] lg:min-h-[500px] lg:sticky lg:top-[90px]">
             <!-- Search Inputs Header -->
             <div class="p-4 bg-slate-50/50 dark:bg-gray-800/40 border-b border-slate-100 dark:border-gray-800 flex flex-col gap-3">
                 <div>
@@ -50,10 +50,10 @@
         </div>
 
         <!-- Right Side: Details View Area (9 Cols - More Spacious) -->
-        <div class="lg:col-span-9 flex flex-col h-[calc(100vh-265px)] min-h-[400px] overflow-hidden">
+        <div class="lg:col-span-9 flex flex-col h-auto overflow-visible">
             
             <!-- Empty State Detail View -->
-            <div id="detailEmptyState" class="flex-1 flex flex-col items-center justify-center bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs shadow-xs p-10 text-center">
+            <div id="detailEmptyState" class="flex-1 flex flex-col items-center justify-center bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs shadow-xs p-10 text-center min-h-[400px]">
                 <div class="w-20 h-20 bg-slate-50 dark:bg-gray-800/40 rounded-full flex items-center justify-center mb-4 text-slate-300 dark:text-gray-700">
                     <i class="fa-solid fa-search-plus text-3xl"></i>
                 </div>
@@ -62,7 +62,7 @@
             </div>
 
             <!-- Loading State Detail View (Skeleton / Shimmer) -->
-            <div id="detailLoadingState" class="hidden flex-1 flex flex-col gap-4 overflow-hidden pr-1 animate-pulse">
+            <div id="detailLoadingState" class="hidden flex-1 flex flex-col gap-4 overflow-visible pr-1 animate-pulse">
                 <!-- Main Header Details Skeleton -->
                 <div class="bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-4 shadow-xs">
                     <div class="flex flex-col gap-2.5">
@@ -114,7 +114,7 @@
             </div>
 
             <!-- Full Details Card Container (Hidden initially) -->
-            <div id="detailContent" class="hidden flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-1">
+            <div id="detailContent" class="hidden flex-1 flex flex-col gap-4 overflow-visible h-auto">
                 
                 <!-- Main Header Details with Premium Card Background -->
                 <div class="bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-xs p-4 shadow-xs relative">
@@ -122,7 +122,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-1.5">
                                 <span id="dtCategoryBadge" class="px-2 py-0.5 bg-primary-50 dark:bg-primary-950/40 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-900 text-[9px] font-bold uppercase tracking-wider rounded-xs">Category</span>
-                                <span id="dtMovingBadge" class="px-2 py-0.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-gray-700 text-[9px] font-bold uppercase tracking-wider rounded-xs">Fast</span>
+                                <span id="dtMovingBadge" class="px-2 py-0.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-gray-300 border border-slate-200 dark:border-gray-700 text-[9px] font-bold uppercase tracking-wider rounded-xs">FAST MOVING</span>
                             </div>
                             <h3 id="dtToolName" class="text-xl font-bold text-slate-800 dark:text-white tracking-tight">Tool Name</h3>
                             <p class="text-xs text-slate-500 dark:text-gray-400 mt-1">Brand: <span id="dtBrand" class="font-semibold text-slate-700 dark:text-gray-200">-</span> | Spec Code: <span id="dtSpecCode" class="font-semibold text-slate-700 dark:text-gray-200">-</span></p>
@@ -324,7 +324,7 @@
                                     <p class="text-[10px] text-slate-400 truncate">Code: ${item.spec_code} | Brand: ${item.brand}</p>
                                     <div class="flex gap-1.5 mt-1.5">
                                         <span class="text-[8px] font-bold uppercase tracking-wider text-primary-500 bg-primary-50 dark:bg-primary-950/40 dark:text-primary-400 px-1 py-0.5 rounded-xs">${item.category_name}</span>
-                                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-1 py-0.5 rounded-xs">${item.moving_type}</span>
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-1 py-0.5 rounded-xs">${item.moving_type.toUpperCase()} MOVING</span>
                                     </div>
                                 </div>
                             </div>
@@ -387,7 +387,7 @@
 
                     // Header Info
                     $('#dtCategoryBadge').text(tool.category_name);
-                    $('#dtMovingBadge').text(tool.moving_type.toUpperCase());
+                    $('#dtMovingBadge').text(tool.moving_type.toUpperCase() + ' MOVING');
                     $('#dtToolName').text(tool.name);
                     $('#dtBrand').text(tool.brand);
                     $('#dtSpecCode').text(tool.spec_code);
