@@ -60,7 +60,7 @@ class ToolInformationController extends Controller
     /**
      * Retrieve complete detailed information for a specific tool.
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $tool = TolTool::with([
             'category',
@@ -98,30 +98,37 @@ class ToolInformationController extends Controller
             $totalQty = $tool->slowBatches->where('status', 'active')->sum('qty_current');
         }
 
-        // Return unified structure
-        return response()->json([
-            'tool' => [
-                'id' => $tool->id,
-                'name' => $tool->name,
-                'brand' => $tool->brand,
-                'spec_code' => $tool->spec_code ?? '-',
-                'dimension' => $tool->dimension ?? '-',
-                'length' => $tool->length ?? '-',
-                'material_type' => $tool->material_type ?? '-',
-                'hrc' => $tool->hrc ?? '-',
-                'uom' => $tool->uom,
-                'qty_min' => $tool->qty_min ?? 0,
-                'qty_max' => $tool->qty_max ?? 0,
-                'category_name' => $tool->category?->name ?? '-',
-                'moving_type' => $tool->category?->moving_type ?? 'fast',
-                'sketch_image' => $tool->sketch?->image_path ? asset('storage/' . $tool->sketch->image_path) : null,
-                'sketch_name' => $tool->sketch?->name ?? '-',
-            ],
-            'settings' => $tool->settings,
-            'stock' => [
-                'total_qty' => $totalQty,
-                'details' => $stockInfo,
-            ]
-        ]);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'tool' => [
+                    'id' => $tool->id,
+                    'name' => $tool->name,
+                    'brand' => $tool->brand,
+                    'spec_code' => $tool->spec_code ?? '-',
+                    'dimension' => $tool->dimension ?? '-',
+                    'length' => $tool->length ?? '-',
+                    'material_type' => $tool->material_type ?? '-',
+                    'hrc' => $tool->hrc ?? '-',
+                    'uom' => $tool->uom,
+                    'qty_min' => $tool->qty_min ?? 0,
+                    'qty_max' => $tool->qty_max ?? 0,
+                    'category_name' => $tool->category?->name ?? '-',
+                    'moving_type' => $tool->category?->moving_type ?? 'fast',
+                    'sketch_image' => $tool->sketch?->image_path ? asset('storage/' . $tool->sketch->image_path) : null,
+                    'sketch_name' => $tool->sketch?->name ?? '-',
+                ],
+                'settings' => $tool->settings,
+                'stock' => [
+                    'total_qty' => $totalQty,
+                    'details' => $stockInfo,
+                ]
+            ]);
+        }
+
+        // Fetch active draft STO event if exists
+        $activeSto = \App\Models\InventoryModel\Tool\TolStoEvent::where('status', 'draft')->latest()->first();
+        $activeStoId = $activeSto ? $activeSto->id : null;
+
+        return view('inventory.tool.information.scan_info', compact('tool', 'stockInfo', 'totalQty', 'activeStoId'));
     }
 }

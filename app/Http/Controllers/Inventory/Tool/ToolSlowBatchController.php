@@ -201,4 +201,16 @@ class ToolSlowBatchController extends Controller
 
         return response()->json(['next_id' => $nextId]);
     }
+
+    public function printQr($id)
+    {
+        $batch = TolSlowBatch::with(['tool.category', 'tool.sketch', 'location'])->findOrFail($id);
+        
+        $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)
+            ->errorCorrection('M')
+            ->margin(1)
+            ->generate(route('inventory.tool.information.show', $batch->tool_id));
+
+        return view('inventory.tool.stock.qrcode-slowmoving', compact('batch', 'qrCode'));
+    }
 }

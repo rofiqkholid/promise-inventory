@@ -213,7 +213,7 @@
 {{-- Modal: Image Preview --}}
 <div id="modal-preview" class="modal-container hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4">
     <div class="relative max-w-4xl w-full h-full flex items-center justify-center p-4">
-        <img id="img-full" src="" referrerpolicy="no-referrer" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
+        <img id="img-full" src="" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
         <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 </div>
@@ -239,13 +239,14 @@ $(document).ready(function() {
 
     window.fastStockTable = window.defaultDataTable('#fastStockTable', {
         ajax: { url: apiList, type: 'GET' },
+        order: [[3, 'asc']],
         columns: [
             { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
             { data: 'category', render: d => `<span class="text-xs text-gray-500">${d}</span>` },
             { 
                 data: 'sketch_image', 
                 className: 'text-center',
-                render: d => d ? `<img src="${d}" referrerpolicy="no-referrer" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+                render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
             },
             { data: 'tool_name', render: d => `<span class="font-semibold text-gray-900 dark:text-white">${d}</span>` },
             { data: 'brand' },
@@ -287,9 +288,9 @@ $(document).ready(function() {
                 data: null, orderable: false, searchable: false, className: 'text-center',
                 render: (d, t, r) => `
                     <div class="flex items-center justify-center gap-1.5">
-                        <button class="out-quick-btn h-8 px-2 inline-flex items-center gap-1 text-red-600 rounded-xs bg-red-50 hover:bg-red-100 text-[9px] font-bold uppercase transition-colors"
-                            data-tool-id="${r.tool_id}" data-location-id="${r.location_id}" data-tool-name="${r.tool_name}" title="Quick OUT">
-                            <i class="fa-solid fa-minus text-xs"></i> OUT
+                        <button class="print-qr-btn w-8 h-8 inline-flex items-center justify-center text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-xs border border-primary-100/50 dark:border-primary-800/30 transition-all active:scale-95"
+                            data-tool-id="${r.tool_id}" title="Print QR Code">
+                            <i class="fa-solid fa-print text-sm"></i>
                         </button>
                     </div>`
             }
@@ -357,6 +358,16 @@ $(document).ready(function() {
         $('select.select2').trigger('change'); // Reset Select2 display
         showMdl('modal-tool-transaction'); 
     });
+
+    // Auto-trigger transaction modal if tool_id is passed in query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedToolId = urlParams.get('tool_id');
+    if (preselectedToolId) {
+        $('#formTransaction')[0].reset(); 
+        $('input[name="transaction_type"][value="IN"]').prop('checked', true).trigger('change');
+        $('#transToolId').val(preselectedToolId).trigger('change');
+        showMdl('modal-tool-transaction'); 
+    }
 
     $('#saveTransaction').on('click', function() {
         const type = $('input[name="transaction_type"]:checked').val();
@@ -492,18 +503,10 @@ $(document).ready(function() {
         }
     });
 
-    // Quick OUT from table row
-    $(document).on('click', '.out-quick-btn', function() {
-        const toolId     = $(this).data('tool-id');
-        const locationId = $(this).data('location-id');
-        $('#formTransaction')[0].reset();
-        $('input[name="transaction_type"][value="OUT"]').prop('checked', true).trigger('change');
-        
-        // Update values and trigger change for Select2
-        $('select[name="tool_id"]', '#formTransaction').val(toolId).trigger('change');
-        $('select[name="location_id"]', '#formTransaction').val(locationId).trigger('change');
-        
-        showMdl('modal-tool-transaction');
+    // Print QR Code from table row
+    $(document).on('click', '.print-qr-btn', function() {
+        const toolId = $(this).data('tool-id');
+        window.open(`{{ url('inventory/tool/fast-stock/print-qr') }}/${toolId}`, '_blank');
     });
 });
 </script>

@@ -82,7 +82,7 @@
                                 </select>
                                 <div id="sketch-preview-container" class="w-10 h-10 border border-gray-200 dark:border-gray-700 rounded-xs flex-shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800 overflow-hidden cursor-pointer hover:scale-110 transition-all">
                                     <i id="sketch-preview-placeholder" class="fa-solid fa-image text-gray-300 text-xs"></i>
-                                    <img id="sketch-preview-img" referrerpolicy="no-referrer" class="w-full h-full object-cover" style="display: none;">
+                                    <img id="sketch-preview-img" class="w-full h-full object-cover" style="display: none;">
                                 </div>
                             </div>
                         </div>
@@ -202,7 +202,7 @@
 {{-- Modal: Image Preview --}}
 <div id="modal-preview" class="modal-container hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4">
     <div class="relative max-w-4xl w-full h-full flex items-center justify-center p-4">
-        <img id="img-full" src="" referrerpolicy="no-referrer" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
+        <img id="img-full" src="" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
         <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 </div>
@@ -223,7 +223,7 @@
                 { 
                     data: 'sketch_image', 
                     className: 'text-center',
-                    render: d => d ? `<img src="${d}" referrerpolicy="no-referrer" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+                    render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
                 },
                 { data: 'name' },
                 { data: 'brand' },

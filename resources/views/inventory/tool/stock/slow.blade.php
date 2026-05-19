@@ -151,7 +151,7 @@
 {{-- Modal: Image Preview --}}
 <div id="modal-preview" class="modal-container hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4">
     <div class="relative max-w-4xl w-full h-full flex items-center justify-center p-4">
-        <img id="img-full" src="" referrerpolicy="no-referrer" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
+        <img id="img-full" src="" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
         <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 </div>
@@ -175,13 +175,14 @@ $(document).ready(function() {
             url: apiBase, type: 'GET',
             data: (d) => { d.status = currentStatus; }
         },
+        order: [[1, 'desc']],
         columns: [
             { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
             { data: 'id_number', render: d => `<span class="font-mono font-semibold text-primary-600 dark:text-primary-400 text-xs">${d}</span>` },
             { 
                 data: 'sketch_image', 
                 className: 'text-center',
-                render: d => d ? `<img src="${d}" referrerpolicy="no-referrer" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
+                render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
             },
             {
                 data: null, render: (d, t, r) =>
@@ -244,19 +245,25 @@ $(document).ready(function() {
             { 
                 data: null, orderable: false, searchable: false, className: 'text-center',
                 render: (d, t, r) => `
-                    <button class="edit-batch-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors"
-                        data-id="${r.id}" 
-                        data-id-number="${r.id_number}"
-                        data-tool-id="${r.tool_id}"
-                        data-location-id="${r.location_id}"
-                        data-purchase-date="${r.purchase_date_raw}" 
-                        data-purchase-price="${r.purchase_price}" 
-                        data-physical-rate="${r.physical_rate}"
-                        data-lifetime="${r.std_lifetime_yrs}" 
-                        data-status="${r.status}"
-                        title="Edit">
-                        <i class="fa-solid fa-pen-to-square text-sm"></i>
-                    </button>`
+                    <div class="flex items-center justify-center gap-1">
+                        <button class="print-qr-btn h-8 w-8 inline-flex items-center justify-center text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xs border border-green-100/50 dark:border-green-800/30 transition-all active:scale-95"
+                            data-id="${r.id}" title="Print QR Code">
+                            <i class="fa-solid fa-print text-sm"></i>
+                        </button>
+                        <button class="edit-batch-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors"
+                            data-id="${r.id}" 
+                            data-id-number="${r.id_number}"
+                            data-tool-id="${r.tool_id}"
+                            data-location-id="${r.location_id}"
+                            data-purchase-date="${r.purchase_date_raw}" 
+                            data-purchase-price="${r.purchase_price}" 
+                            data-physical-rate="${r.physical_rate}"
+                            data-lifetime="${r.std_lifetime_yrs}" 
+                            data-status="${r.status}"
+                            title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                        </button>
+                    </div>`
             }
         ],
         drawCallback: function() {
@@ -376,6 +383,19 @@ $(document).ready(function() {
         showMdl('modal-batch-form');
     });
 
+    // Auto-trigger registration modal if tool_id is passed in query string
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedToolId = urlParams.get('tool_id');
+    if (preselectedToolId) {
+        $('#batchForm')[0].reset();
+        $('#batchId').val('');
+        $('input[name="_method"]').val('POST');
+        $('#batchModalTitle').text('Register New Batch');
+        $('#previewInitialValue').text('—');
+        $('select[name="tool_id"]', '#batchForm').val(preselectedToolId).trigger('change');
+        showMdl('modal-batch-form');
+    }
+
     $(document).on('click', '.edit-batch-btn', function() {
         const btn = $(this);
         $('#batchForm')[0].reset();
@@ -402,6 +422,12 @@ $(document).ready(function() {
             success: (res) => { toast('success', 'Success', res.message); hideMdl('modal-batch-form'); slowTable.ajax.reload(); },
             error:   (xhr) => { toast('error',   'Error',   xhr.responseJSON?.message || 'Failed'); }
         });
+    });
+
+    // Print QR Code from table row
+    $(document).on('click', '.print-qr-btn', function() {
+        const batchId = $(this).data('id');
+        window.open(`{{ url('inventory/tool/slow-batch/print-qr') }}/${batchId}`, '_blank');
     });
 });
 </script>

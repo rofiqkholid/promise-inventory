@@ -178,4 +178,16 @@ class ToolMasterController extends Controller
         $tool->update(['is_active' => false]);
         return response()->json(['status' => 'success', 'message' => 'Tool deactivated successfully.']);
     }
+
+    public function printQr($id)
+    {
+        $tool = TolTool::with(['category', 'sketch'])->findOrFail($id);
+        
+        $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(250)
+            ->errorCorrection('M')
+            ->margin(1)
+            ->generate(route('inventory.tool.information.show', $tool->id));
+
+        return view('inventory.tool.stock.qrcode-fastmoving', compact('tool', 'qrCode'));
+    }
 }

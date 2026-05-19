@@ -67,6 +67,17 @@ class User extends Authenticatable
         return $this->roles->contains('code', $roleCode);
     }
 
+    public function hasRole($roleString)
+    {
+        $roles = explode('|', $roleString);
+        foreach ($roles as $role) {
+            if ($this->hasAppRole(trim($role))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public function specificMenus()
     {
         return $this->belongsToMany(\App\Models\InventoryModel\Menu::class, 'inv_user_menus', 'user_id', 'menu_id');

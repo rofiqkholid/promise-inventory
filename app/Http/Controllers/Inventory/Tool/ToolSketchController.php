@@ -37,7 +37,7 @@ class ToolSketchController extends Controller
                 'id'          => $r->id,
                 'name'        => $r->name,
                 'category'    => $r->category?->name ?? '-',
-                'image'       => '<img src="'.asset('storage/'.$r->image_path).'" referrerpolicy="no-referrer" class="h-12 w-12 object-cover rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg(\''.asset('storage/'.$r->image_path).'\')">',
+                'image'       => '<img src="'.asset('storage/'.$r->image_path).'" class="h-12 w-12 object-cover rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg(\''.asset('storage/'.$r->image_path).'\')">',
                 'action'      => '
                     <div class="flex justify-center gap-1">
                         <button onclick="editSketch('.$r->id.')" class="w-8 h-8 flex items-center justify-center rounded-xs bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all"><i class="fa-solid fa-pen-to-square text-xs"></i></button>

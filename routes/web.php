@@ -204,6 +204,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                 Route::post('/', [ToolFastStockController::class, 'store'])->name('store');        // IN
                 Route::post('/out', [ToolFastStockController::class, 'out'])->name('out');          // OUT
                 Route::get('/history', [ToolFastStockController::class, 'history'])->name('history');
+                Route::get('/print-qr/{id}', [ToolMasterController::class, 'printQr'])->name('printQr');
             });
 
             // Operational — Slow Moving Batches
@@ -213,6 +214,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                 Route::post('/', [ToolSlowBatchController::class, 'store'])->name('store');
                 Route::put('/{id}', [ToolSlowBatchController::class, 'update'])->name('update');
                 Route::get('/total-asset', [ToolSlowBatchController::class, 'totalAssetValue'])->name('totalAsset');
+                Route::get('/print-qr/{id}', [ToolSlowBatchController::class, 'printQr'])->name('printQr');
             });
 
             // STO — Unified (Header-Detail)
@@ -220,14 +222,20 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                 Route::get('/', [ToolStoController::class, 'index'])->name('index');
                 Route::post('/', [ToolStoController::class, 'store'])->name('store');
                 Route::get('/preview-code', [ToolStoController::class, 'previewCode'])->name('previewCode');
+                Route::get('/get-current-stock', [ToolStoController::class, 'getCurrentStock'])->name('getCurrentStock');
                 Route::get('/{id}', [ToolStoController::class, 'show'])->name('show');
                 Route::post('/{id}/submit', [ToolStoController::class, 'submit'])->name('submit');
                 Route::post('/{id}/approve', [ToolStoController::class, 'approve'])->name('approve');
                 Route::post('/{id}/reject', [ToolStoController::class, 'reject'])->name('reject');
+                Route::post('/{id}/reopen', [ToolStoController::class, 'reopen'])->name('reopen');
+                Route::put('/{id}/update-event', [ToolStoController::class, 'updateEvent'])->name('updateEvent');
+                Route::delete('/{id}/delete-event', [ToolStoController::class, 'deleteEvent'])->name('deleteEvent');
                 
                 // Detail management
                 Route::post('/{id}/item-fast', [ToolStoController::class, 'addItemFast'])->name('addItemFast');
                 Route::post('/{id}/item-slow', [ToolStoController::class, 'addItemSlow'])->name('addItemSlow');
+                Route::delete('/{id}/item-fast/{itemId}', [ToolStoController::class, 'deleteItemFast'])->name('deleteItemFast');
+                Route::delete('/{id}/item-slow/{itemId}', [ToolStoController::class, 'deleteItemSlow'])->name('deleteItemSlow');
             });
 
             // Master — Tool Information Search

@@ -62,7 +62,7 @@
                     <div id="dropzone" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-200 dark:border-gray-700 border-dashed rounded-xs hover:border-primary-500 transition-all cursor-pointer" onclick="document.getElementById('image_input').click()">
                         <div class="space-y-1 text-center">
                             <i id="preview-icon" class="fa-solid fa-image text-3xl text-gray-400 mb-2"></i>
-                            <img id="image-preview" referrerpolicy="no-referrer" class="h-32 w-auto mx-auto object-contain mb-2 rounded-xs" style="display: none;">
+                            <img id="image-preview" class="h-32 w-auto mx-auto object-contain mb-2 rounded-xs" style="display: none;">
                             <div class="flex text-xs text-gray-600 dark:text-gray-400">
                                 <span class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-xs font-bold text-primary-600 hover:text-primary-500">Upload a file</span>
                                 <p class="pl-1">or drag and drop</p>
@@ -84,7 +84,7 @@
 {{-- Modal: Image Preview --}}
 <div id="modal-preview" class="modal-container hidden fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 p-4">
     <div class="relative max-w-4xl w-full h-full flex items-center justify-center p-4">
-        <img id="img-full" src="" referrerpolicy="no-referrer" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
+        <img id="img-full" src="" class="max-w-full max-h-[90vh] object-contain rounded-xs shadow-2xl transition-all duration-300">
         <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 </div>
