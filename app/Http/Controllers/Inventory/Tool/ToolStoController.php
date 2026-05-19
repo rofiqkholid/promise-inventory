@@ -189,7 +189,7 @@ class ToolStoController extends Controller
     {
         $event = TolStoEvent::with(['creator', 'approver', 'fastDetails.tool', 'fastDetails.location', 'slowDetails.batch.tool'])->findOrFail($id);
         
-        $fastTools = TolTool::with(['category', 'location'])
+        $fastTools = TolTool::with(['category', 'fastStock'])
             ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
             ->where('is_active', true)
             ->orderBy('name')

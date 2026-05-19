@@ -392,10 +392,11 @@
                         <option value="">Select Tool</option>
                         @foreach($fastTools as $t)
                             @php
-                                $key = $t->id . '-' . $t->location_id;
+                                $locId = $t->fastStock->first()?->location_id;
+                                $key = $t->id . '-' . $locId;
                                 $isCounted = in_array($key, $countedFastKeys);
                             @endphp
-                            <option value="{{ $t->id }}" data-location-id="{{ $t->location_id }}"
+                            <option value="{{ $t->id }}" data-location-id="{{ $locId }}"
                                 @if($isCounted) disabled data-counted="true" @endif>
                                 {{ $t->name }} ({{ $t->brand }})
                             </option>

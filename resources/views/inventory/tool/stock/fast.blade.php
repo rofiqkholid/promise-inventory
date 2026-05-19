@@ -102,7 +102,7 @@
                     <select name="tool_id" id="transToolId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Tool --</option>
                         @foreach($tools as $tool)
-                            <option value="{{ $tool->id }}" data-location-id="{{ $tool->location_id }}">
+                            <option value="{{ $tool->id }}" data-location-id="{{ $tool->fastStock->first()?->location_id }}">
                                 {{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})
                             </option>
                         @endforeach

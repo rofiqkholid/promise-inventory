@@ -74,7 +74,7 @@ class ToolFastStockController extends Controller
             ]);
         }
 
-        $tools     = TolTool::with(['category', 'location'])
+        $tools     = TolTool::with(['category', 'fastStock'])
                         ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
                         ->where('is_active', true)
                         ->orderBy('name')

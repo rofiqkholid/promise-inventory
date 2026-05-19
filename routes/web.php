@@ -57,6 +57,9 @@ Route::get('/debug-sso', function () {
 });
 
 Route::get('/login', function () {
+    if (request()->has('redirect')) {
+        session()->put('url.intended', request()->get('redirect'));
+    }
     return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('login');
 
@@ -68,7 +71,7 @@ Route::get('/', function () {
         'user_id' => Auth::id(),
     ]);
     if (Auth::check()) {
-        return redirect()->route('dashboard');
+        return redirect()->intended(route('dashboard'));
     }
     return redirect()->route('login');
 });
