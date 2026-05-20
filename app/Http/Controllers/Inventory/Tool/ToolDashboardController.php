@@ -115,7 +115,7 @@ class ToolDashboardController extends Controller
 
             $qty = $stock->current_qty;
             $qtyMin = $tool->qty_min ?? 0;
-            $limitStock = $tool->limit_stock ?? ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
+            $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
             $qtyMax = $tool->qty_max ?? ($qtyMin > 0 ? $qtyMin * 3 : 20);
 
             if ($qty < $qtyMin) {
@@ -157,9 +157,9 @@ class ToolDashboardController extends Controller
 
             $qty = $stock->current_qty;
             $qtyMin = $tool->qty_min ?? 0;
-            $limitStock = $tool->limit_stock ?? ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
+            $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
 
-            if ($qty <= $limitStock) {
+            if ($qty <= $limitStock || $qty < $qtyMin) {
                 $status = $qty < $qtyMin ? 'Critical' : 'Warning';
                 $balanceWarnings[] = [
                     'id' => $stock->id,
@@ -172,7 +172,9 @@ class ToolDashboardController extends Controller
                     'qty_min' => $qtyMin,
                     'limit_stock' => $limitStock,
                     'status' => $status,
-                    'action' => $status === 'Critical' ? 'Restock Immediately' : 'Schedule Restock'
+                    'action' => $status === 'Critical' ? 'Restock Immediately' : 'Schedule Restock',
+                    'action_status' => $stock->action_status,
+                    'action_remark' => $stock->action_remark
                 ];
             }
         }
@@ -303,14 +305,14 @@ class ToolDashboardController extends Controller
         ];
 
 
-        // 7. Recent Activity Timeline (Fast Transactions, Slow Batch purchases, retired items)
+        // 7. Recent Activity Timeline (Fast Transactions only)
         $activities = [];
 
         // Fast moving transactions (IN & OUT only)
         $fastTrans = TolTransaction::with(['tool', 'location', 'destination'])
             ->whereIn('transaction_type', ['in', 'out'])
             ->latest('transacted_at')
-            ->take(15)
+            ->take(10)
             ->get();
         
         foreach ($fastTrans as $t) {
@@ -331,62 +333,31 @@ class ToolDashboardController extends Controller
             ];
         }
 
-        // Slow moving batches
-        $slowBatches = TolSlowBatch::with(['tool', 'location'])
-            ->latest('created_at')
-            ->take(15)
-            ->get();
-
-        foreach ($slowBatches as $b) {
-            if ($b->status === 'active') {
-                $type = 'IN';
-                $color = 'emerald';
-                $qty = $b->qty_current;
-                $icon = 'fa-solid fa-box-archive';
-            } elseif ($b->status === 'retired' || $b->status === 'nok') {
-                $type = 'OUT';
-                $color = 'rose';
-                $qty = $b->qty_current;
-                $icon = 'fa-solid fa-ban';
-            } else {
-                continue;
-            }
-
-            $activities[] = [
-                'type' => $type,
-                'tool_name' => $b->tool?->name ?? '-',
-                'spec_code' => $b->tool?->spec_code ?? '-',
-                'qty' => $qty,
-                'uom' => 'PCS',
-                'icon' => $icon,
-                'color' => $color,
-                'timestamp' => $b->created_at ? $b->created_at->toIso8601String() : $b->updated_at->toIso8601String(),
-                'display_time' => $b->created_at ? $b->created_at->format('d-m-Y') : $b->updated_at->format('d-m-Y')
-            ];
-        }
-
         // Sort combined activities by timestamp desc
         usort($activities, function ($a, $b) {
             return strcmp($b['timestamp'], $a['timestamp']);
         });
 
-        // Limit to top 8 recent activities
-        $activities = array_slice($activities, 0, 8);
+        // Limit to top 10 recent activities
+        $activities = array_slice($activities, 0, 10);
 
 
 
         $latestSlowBatches = TolSlowBatch::with(['tool', 'location'])
             ->where('status', 'active')
-            ->latest()
+            ->get()
+            ->sortByDesc(function ($batch) {
+                return $batch->std_lifetime_yrs > 0 ? ($batch->age_years / $batch->std_lifetime_yrs) : 0;
+            })
             ->take(8)
-            ->get();
+            ->values();
 
         $fastValFormatted = $fastStockValue >= 1000000 
-            ? 'IDR ' . number_format($fastStockValue / 1000000, 1, ',', '.') . 'M' 
-            : 'IDR ' . number_format($fastStockValue, 0, ',', '.');
+            ? number_format($fastStockValue / 1000000, 1, ',', '.') . 'M' 
+            : number_format($fastStockValue, 0, ',', '.');
         $slowValFormatted = $slowBatchValue >= 1000000 
-            ? 'IDR ' . number_format($slowBatchValue / 1000000, 1, ',', '.') . 'M' 
-            : 'IDR ' . number_format($slowBatchValue, 0, ',', '.');
+            ? number_format($slowBatchValue / 1000000, 1, ',', '.') . 'M' 
+            : number_format($slowBatchValue, 0, ',', '.');
 
         return view('inventory.tool.dashboard', compact(
             'period', 'startDate', 'endDate',
@@ -394,5 +365,124 @@ class ToolDashboardController extends Controller
             'groupedStockStatus', 'balanceWarnings', 'trendData', 'paretoData', 'activities', 'latestSlowBatches',
             'fastValFormatted', 'slowValFormatted'
         ));
+    }
+
+    public function updateActionStatus(Request $request, $id)
+    {
+        $stock = TolFastStock::findOrFail($id);
+        
+        $updateData = [];
+        if ($request->has('action_status')) {
+            $status = $request->action_status;
+            $updateData['action_status'] = ($status === '' || $status === 'NULL') ? null : $status;
+        }
+        if ($request->has('action_remark')) {
+            $updateData['action_remark'] = $request->action_remark;
+        }
+
+        if (!empty($updateData)) {
+            $stock->update($updateData);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Action information updated.']);
+    }
+
+    public function chartDrilldown(Request $request)
+    {
+        $chartType  = $request->input('chart');
+        $label      = $request->input('label');
+        $statusFilter = strtolower($request->input('status', ''));
+        $search     = $request->input('search');
+        $pageSize   = $request->input('pageSize', 10);
+        $page       = $request->input('page', 1);
+        $offset     = ($page - 1) * $pageSize;
+
+        $result = [];
+        $title  = '';
+        $total  = 0;
+
+        if ($chartType === 'stock') {
+            $categoryName = $label;
+            $title = "Stock Detail — {$categoryName}";
+
+            $query = TolFastStock::with(['tool.category', 'location']);
+
+            if ($categoryName === 'Uncategorized') {
+                $query->whereHas('tool', function($q) {
+                    $q->whereNull('category_id');
+                });
+            } else {
+                $query->whereHas('tool.category', function($q) use ($categoryName) {
+                    $q->where('name', $categoryName);
+                });
+            }
+
+            if ($search) {
+                $query->whereHas('tool', function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('spec_code', 'like', "%{$search}%")
+                      ->orWhere('brand', 'like', "%{$search}%");
+                });
+            }
+
+            $items = $query->get();
+
+            $processed = [];
+            foreach ($items as $stock) {
+                $tool = $stock->tool;
+                if (!$tool) continue;
+
+                $qty = $stock->current_qty;
+                $qtyMin = $tool->qty_min ?? 0;
+                $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
+                $qtyMax = $tool->qty_max ?? ($qtyMin > 0 ? $qtyMin * 3 : 20);
+
+                if ($qty < $qtyMin) {
+                    $statusRaw = 'critical';
+                } elseif ($qty <= $limitStock) {
+                    $statusRaw = 'warning';
+                } elseif ($qty > $qtyMax && $qtyMax > 0) {
+                    $statusRaw = 'over';
+                } else {
+                    $statusRaw = 'safe';
+                }
+
+                if ($statusFilter && $statusRaw !== $statusFilter) {
+                    continue;
+                }
+
+                $processed[] = [
+                    'id'            => $stock->id,
+                    'part_no'       => $tool->name, // Using tool name as primary identifier
+                    'spec_code'     => $tool->spec_code ?? '-',
+                    'brand'         => $tool->brand ?? '-',
+                    'stock'         => number_format($qty) . ' ' . ($tool->uom ?? 'PCS'),
+                    'min_stock'     => number_format($qtyMin) . ' ' . ($tool->uom ?? 'PCS'),
+                    'location'      => $stock->location?->name ?? '-',
+                    'status'        => ucfirst($statusRaw),
+                    'action_status' => $stock->action_status,
+                    'action_remark' => $stock->action_remark,
+                ];
+            }
+
+            // Sort by Status Priority then Tool Name
+            usort($processed, function($a, $b) {
+                $order = ['Critical' => 1, 'Warning' => 2, 'Over' => 3, 'Safe' => 4];
+                $oA = $order[$a['status']] ?? 99;
+                $oB = $order[$b['status']] ?? 99;
+                if ($oA === $oB) return strcasecmp($a['part_no'], $b['part_no']);
+                return $oA <=> $oB;
+            });
+
+            $total = count($processed);
+            $result = array_slice($processed, $offset, $pageSize);
+        }
+
+        return response()->json([
+            'title'  => $title,
+            'chart'  => $chartType,
+            'data'   => $result,
+            'total'  => $total
+        ]);
     }
 }

@@ -29,24 +29,22 @@
     </div>
 
     <!-- Events Table -->
-    <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
-        <x-table id="stoEventsTable">
-            <thead>
-                <tr>
-                    <th class="px-6 py-4 w-16 border-b border-slate-200 dark:border-gray-700 text-center font-bold text-gray-500 dark:text-gray-400 text-xs">No</th>
-                    <th class="px-6 py-4 text-left w-48 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Event Code</th>
-                    <th class="px-6 py-4 text-left border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Counting Period</th>
-                    <th class="px-6 py-4 text-left w-40 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">PIC</th>
-                    <th class="px-6 py-4 text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Net Amount</th>
-                    <th class="px-6 py-4 text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Net PCS</th>
-                    <th class="px-6 py-4 text-center w-32 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Status</th>
-                    <th class="px-6 py-4 text-center w-40 border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">STO Control</th>
-                    <th class="px-6 py-4 w-[100px] text-center border-b border-slate-200 dark:border-gray-700 font-bold text-gray-500 dark:text-gray-400 text-xs">Action</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </x-table>
-    </div>
+    <x-table id="stoEventsTable">
+        <thead>
+            <tr>
+                <th class="w-16 text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">No</th>
+                <th class="text-left w-48 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Event Code</th>
+                <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Counting Period</th>
+                <th class="text-left w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">PIC</th>
+                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Amount</th>
+                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net PCS</th>
+                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Status</th>
+                <th class="text-center w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">STO Control</th>
+                <th class="w-[100px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </x-table>
 </div>
 
 <!-- Create Modal -->

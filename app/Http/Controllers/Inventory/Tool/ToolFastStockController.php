@@ -116,6 +116,17 @@ class ToolFastStockController extends Controller
             );
 
             $stock->current_qty   += $validated['qty'];
+            
+            // Auto-cleanup Action Plan if stock goes above warning threshold
+            if ($tool) {
+                $qtyMin = $tool->qty_min ?? 0;
+                $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
+                if ($stock->current_qty > $limitStock) {
+                    $stock->action_status = null;
+                    $stock->action_remark = null;
+                }
+            }
+
             $stock->last_updated_at = now();
             $stock->save();
 

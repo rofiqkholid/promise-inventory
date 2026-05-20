@@ -56,6 +56,8 @@ class StoDashboardController extends Controller
             'last_period'   => $lastEvent && $lastEvent->period_end ? $lastEvent->period_end->format('d M Y') : '-',
         ];
 
+        $reasons = \App\Models\InventoryModel\Material\StoReason::where('is_active', 1)->orderBy('id')->get(['id', 'name', 'category']);
+
         if ($request->ajax()) {
             return response()->json([
                 'stats'             => $stats,
@@ -67,7 +69,8 @@ class StoDashboardController extends Controller
         return view('inventory.material.sto.dashboard', compact(
             'stats',
             'recentEvents',
-            'correctionByModel'
+            'correctionByModel',
+            'reasons'
         ));
     }
 

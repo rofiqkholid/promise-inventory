@@ -340,16 +340,15 @@
 
     @include('components.scanner-modal')
 
-    <!-- RESULTS TABLE -->
-    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden">
-        <div class="p-4 md:p-6 border-b border-gray-50 dark:border-gray-700 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="p-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 flex-1 w-full flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-slate-100 dark:bg-slate-700 rounded-xs">
                    <i class="fa-solid fa-list-check text-slate-600 dark:text-slate-300"></i>
                 </div>
                 <div>
                    <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-widest text-sm">Counting Journal</h3>
-                   <p class="text-xs text-gray-400 font-medium tracking-tighter">Real-time log of recorded quantities.</p>
+                   <p class="text-[11px] text-gray-550 dark:text-gray-400 font-normal">Real-time log of recorded quantities.</p>
                 </div>
             </div>
 
@@ -364,38 +363,38 @@
                 </div>
             </div>
         </div>
-
-        <div class="overflow-x-auto w-full custom-scrollbar">
-            <x-table id="stoDetailsTable" class="w-full">
-                <thead>
-                        <th rowspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">No</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Model</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Material Information</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Auditor</th>
-                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">System Status</th>
-                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Real Count</th>
-                        <th colspan="2" class="px-6 py-4 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Variance</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Location</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Reason</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Remark</th>
-                        <th rowspan="2" class="px-6 py-4 text-left font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700">Timestamp</th>
-                        @if($stoEvent->status === 'OPEN')
-                        <th rowspan="2" class="px-6 py-4 w-[60px] text-center font-bold text-gray-500 dark:text-gray-400 border-b border-slate-200 dark:border-gray-700">Action</th>
-                        @endif
-                    </tr>
-                    <tr>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Qty</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-700/30">Amount</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Qty</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-primary-50/30 dark:bg-primary-900/10">Amount</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Qty</th>
-                        <th class="px-4 py-2 text-center font-bold text-gray-500 dark:text-gray-400 border-b border-r border-slate-200 dark:border-gray-700 border-t border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-700/30">Amount</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </x-table>
-        </div>
     </div>
+
+    <!-- RESULTS TABLE -->
+    <x-table id="stoDetailsTable" class="w-full">
+        <thead>
+            <tr class="bg-slate-50 dark:bg-gray-850">
+                <th rowspan="2" class="w-12 text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">No</th>
+                <th rowspan="2" class="w-32 text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Model</th>
+                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Material Information</th>
+                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Auditor</th>
+                <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-slate-100/50 dark:bg-gray-800/50 border-x border-slate-200/80 dark:border-gray-750">System Status</th>
+                <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-primary-50/30 dark:bg-primary-950/20 border-r border-slate-200/80 dark:border-gray-750">Real Count</th>
+                <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-slate-100/50 dark:bg-gray-800/50 border-r border-slate-200/80 dark:border-gray-750">Variance</th>
+                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Location</th>
+                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Reason</th>
+                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Remark</th>
+                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Timestamp</th>
+                @if($stoEvent->status === 'OPEN')
+                <th rowspan="2" class="w-[60px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
+                @endif
+            </tr>
+            <tr class="bg-slate-50 dark:bg-gray-850">
+                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-l border-slate-200/80 dark:border-gray-750">Qty</th>
+                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
+                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-primary-50/20 dark:bg-primary-950/10">Qty</th>
+                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-primary-50/20 dark:bg-primary-950/10 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
+                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30">Qty</th>
+                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </x-table>
 
 <!-- Finalize Modal & Reject Modal UI logic remains the same, but styled consistently -->
 
@@ -442,30 +441,31 @@
             </button>
         </div>
         <div class="p-0 overflow-y-auto flex-1 h-full">
-            <table class="w-full text-left border-collapse">
-                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-900 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">
+            <table class="custom-table w-full text-left border-collapse">
+                <thead class="sticky top-0 bg-slate-50 dark:bg-gray-850 border-b border-slate-200 dark:border-gray-750 z-10">
                     <tr>
-                        <th class="px-6 py-3">Product</th>
-                        <th class="px-6 py-3">Part Name</th>
-                        <th class="px-6 py-3 text-center">Action</th>
+                        <th class="w-[45%] text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Product</th>
+                        <th class="w-[45%] text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Part Name</th>
+                        <th class="w-[10%] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody class="divide-y divide-slate-100 dark:divide-gray-850">
                     @forelse($products as $p)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
-                        <td class="px-6 py-3 font-mono font-bold text-xs text-gray-900 dark:text-white">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors group">
+                        <td class="font-mono font-bold text-xs text-gray-900 dark:text-white">
                             [{{ $p->model_name ?? 'No Model' }}] {{ $p->part_no }} {{ $p->revision ? '- ' . $p->revision : '' }}
                         </td>
-                        <td class="px-6 py-3 text-xs text-gray-600 dark:text-gray-400">{{ $p->part_name }}</td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="text-xs text-gray-600 dark:text-gray-400">{{ $p->part_name }}</td>
+                        <td class="text-center">
                             <button onclick="closeRemainingModal(); editFromTable('{{ $p->hash_id }}', null)"
                                     class="h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-all" title="Record Now">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-400 italic text-sm">All products have been recorded.</td>
+                        <td colspan="3" class="text-center text-gray-400 italic text-sm">All products have been recorded.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -815,8 +815,8 @@
                 order: [[2, 'asc']], // Order by Part No primarily for grouping
                 autoWidth: true,
                 columnDefs: [
-                    { targets: '_all', className: 'whitespace-nowrap px-4 py-3 border-r border-slate-200 dark:border-slate-700' },
-                    { targets: -1, className: 'whitespace-nowrap px-4 py-3' } // Remove right border from last column
+                    { targets: '_all', className: 'whitespace-nowrap px-4 py-2.5 font-medium text-slate-700 dark:text-gray-300' },
+                    { targets: -1, className: 'whitespace-nowrap px-4 py-2.5 text-center' }
                 ],
                 drawCallback: function(settings) {
                     const api = this.api();
@@ -842,7 +842,7 @@
                             // FIRST ROW of product group
                             const rowCount = productCounts[productHash];
                             const diffQty = data.total_diff_qty;
-                            const diffClass = diffQty > 0 ? 'text-rose-600' : (diffQty < 0 ? 'text-rose-600' : 'text-emerald-600');
+                            const diffClass = diffQty > 0 ? 'text-rose-600 font-bold' : (diffQty < 0 ? 'text-rose-600 font-bold' : 'text-emerald-600 font-bold');
                             const diffIcon = diffQty > 0 ? '+' : '';
 
                             // Apply rowspans (No, Model, Material Info, System Status Qty/Amount, Var Qty/Amount, Reason, Remark)
@@ -856,15 +856,15 @@
                             });
 
                             // Set Group Data for merged columns
-                            $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-black text-slate-900 bg-slate-50/30');
+                            $row.find('td:eq(0)').html(startIdx + groupCounter++).addClass('font-semibold text-slate-900 dark:text-white bg-slate-50/30 dark:bg-slate-900/10');
 
-                             $row.find('td:eq(4)').html(InventoryHelper.formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200');
-                            $row.find('td:eq(5)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-slate-800/40');
+                            $row.find('td:eq(4)').html(InventoryHelper.formatQtyHtml(data.total_system_qty, data.pcs_per_unit, data.unit_code, data.weight_kg, '', data.gross_coil)).addClass('bg-slate-50/50 dark:bg-gray-800/10 border-l border-slate-200/80 dark:border-gray-750');
+                            $row.find('td:eq(5)').html(formatCurrencyHtml(data.total_system_amount)).addClass('bg-slate-50/50 dark:bg-gray-800/10 border-r border-slate-200/80 dark:border-gray-750');
 
-                            $row.find('td:eq(8)').html(`<div class="${diffClass}">${InventoryHelper.formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40 border-l border-slate-200 border-r');
-                            $row.find('td:eq(9)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-slate-800/40');
+                            $row.find('td:eq(8)').html(`<div class="${diffClass}">${InventoryHelper.formatQtyHtml(diffQty, data.pcs_per_unit, data.unit_code, data.weight_kg, diffIcon, data.gross_coil)}</div>`).addClass('bg-slate-50/50 dark:bg-gray-800/10 border-l border-slate-200/80 dark:border-gray-750 border-r border-slate-200/80 dark:border-gray-750');
+                            $row.find('td:eq(9)').html(`<div class="${diffClass}">${formatCurrencyHtml(data.total_diff_amount, true)}</div>`).addClass('bg-slate-50/50 dark:bg-gray-800/10 border-r border-slate-200/80 dark:border-gray-750');
 
-                            $row.addClass('border-t-2 border-slate-300 dark:border-slate-600');
+                            $row.addClass('border-t border-slate-200 dark:border-gray-700');
                             lastProduct = productHash;
                         } else {
                             // SUBSEQUENT ROWS - hide merged cells

@@ -687,9 +687,9 @@
                 url: "{{ route('inventory.tool.sto.addItemFast', $event->id) }}",
                 type: "POST",
                 data: formData,
-                success: (res) => { window.showToast('success', res.message); window.location.reload(); },
+                success: (res) => { window.showToast(res.message, 'success'); window.location.reload(); },
                 error: (err) => { 
-                    window.showToast('error', err.responseJSON?.message || 'Error'); 
+                    window.showToast(err.responseJSON?.message || 'Error', 'error'); 
                     btn.prop('disabled', false).text($('#fastItemId').val() ? 'Save Changes' : 'Add to List');
                 }
             });
@@ -769,9 +769,9 @@
                 url: "{{ route('inventory.tool.sto.addItemSlow', $event->id) }}",
                 type: "POST",
                 data: $(this).serialize(),
-                success: (res) => { window.showToast('success', res.message); window.location.reload(); },
+                success: (res) => { window.showToast(res.message, 'success'); window.location.reload(); },
                 error: (err) => { 
-                    window.showToast('error', err.responseJSON?.message || 'Error'); 
+                    window.showToast(err.responseJSON?.message || 'Error', 'error'); 
                     btn.prop('disabled', false).text($('#slowItemId').val() ? 'Save Changes' : 'Add to List');
                 }
             });
@@ -853,11 +853,11 @@
                         type: 'DELETE',
                         data: { _token: "{{ csrf_token() }}" },
                         success: function(res) {
-                            window.showToast('success', res.message);
+                            window.showToast(res.message, 'success');
                             window.location.reload();
                         },
                         error: function(err) {
-                            window.showToast('error', err.responseJSON?.message || 'Gagal menghapus item');
+                            window.showToast(err.responseJSON?.message || 'Gagal menghapus item', 'error');
                         }
                     });
                 }
@@ -883,11 +883,11 @@
                         type: 'DELETE',
                         data: { _token: "{{ csrf_token() }}" },
                         success: function(res) {
-                            window.showToast('success', res.message);
+                            window.showToast(res.message, 'success');
                             window.location.reload();
                         },
                         error: function(err) {
-                            window.showToast('error', err.responseJSON?.message || 'Gagal menghapus aset');
+                            window.showToast(err.responseJSON?.message || 'Gagal menghapus aset', 'error');
                         }
                     });
                 }
@@ -907,7 +907,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.post("{{ route('inventory.tool.sto.submit', $event->id) }}", {_token: "{{ csrf_token() }}"}, function(res) {
-                        window.showToast('success', res.message);
+                        window.showToast(res.message, 'success');
                         window.location.reload();
                     });
                 }
@@ -927,7 +927,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.post("{{ route('inventory.tool.sto.approve', $event->id) }}", {_token: "{{ csrf_token() }}"}, function(res) {
-                        window.showToast('success', res.message);
+                        window.showToast(res.message, 'success');
                         window.location.reload();
                     });
                 }
@@ -950,7 +950,7 @@
                         _token: "{{ csrf_token() }}",
                         note: result.value
                     }, function(res) {
-                        window.showToast('success', res.message);
+                        window.showToast(res.message, 'success');
                         window.location.reload();
                     });
                 }
@@ -1011,7 +1011,7 @@
                 emptyTable: `
                     <div class="py-16 flex flex-col items-center justify-center text-center w-full">
                         <div>
-                            <i class="fa-solid fa-bolt text-3xl text-slate-350 dark:text-gray-650 m-4 animate-pulse"></i>
+                            <i class="fa-solid fa-bolt text-3xl text-slate-200 dark:text-gray-650 m-4"></i>
                         </div>
                         <h4 class="text-sm font-medium text-slate-900 dark:text-white uppercase tracking-widest mb-2">No Fast Moving Items</h4>
                         <p class="text-xs text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">Belum ada item fast moving yang tercatat.</p>
@@ -1030,7 +1030,7 @@
                 emptyTable: `
                     <div class="py-16 flex flex-col items-center justify-center text-center w-full">
                         <div>
-                            <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-350 dark:text-gray-650 m-4 animate-pulse"></i>
+                            <i class="fa-solid fa-clock-rotate-left text-3xl text-slate-200 dark:text-gray-650 m-4"></i>
                         </div>
                         <h4 class="text-sm font-medium text-slate-900 dark:text-white uppercase tracking-widest mb-2">No Slow Moving Batches</h4>
                         <p class="text-xs text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">Belum ada aset slow moving yang tercatat.</p>

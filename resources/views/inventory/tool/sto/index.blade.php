@@ -168,12 +168,12 @@
                 type: "POST",
                 data: $(this).serialize(),
                 success: function(res) {
-                    window.showToast('success', res.message);
+                    window.showToast(res.message, 'success');
                     $('#modal-edit-event').addClass('hidden');
                     table.ajax.reload(null, false);
                 },
                 error: function(err) {
-                    window.showToast('error', err.responseJSON?.message || 'Something went wrong');
+                    window.showToast(err.responseJSON?.message || 'Something went wrong', 'error');
                     btn.prop('disabled', false).text('Save Changes');
                 }
             });
@@ -202,7 +202,7 @@
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(res) {
-                            window.showToast('success', res.message);
+                            window.showToast(res.message, 'success');
                             table.ajax.reload(null, false);
                         },
                         error: function(err) {
@@ -227,11 +227,11 @@
                 type: "POST",
                 data: $(this).serialize(),
                 success: function(res) {
-                    window.showToast('success', res.message);
+                    window.showToast(res.message, 'success');
                     window.location.href = res.redirect;
                 },
                 error: function(err) {
-                    window.showToast('error', err.responseJSON?.message || 'Something went wrong');
+                    window.showToast(err.responseJSON?.message || 'Something went wrong', 'error');
                     btn.prop('disabled', false).text('Create Event');
                 }
             });

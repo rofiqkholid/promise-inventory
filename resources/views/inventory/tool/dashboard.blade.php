@@ -31,12 +31,12 @@
                         <i class="fa-solid {{ $stat['icon'] }}"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
+                        <p class="text-[11px] font-bold text-slate-600 dark:text-slate-400 tracking-tight leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
                         <h3 class="text-xs font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
                             {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
                         </h3>
                         @if($stat['label'] === 'Total Value')
-                            <p class="text-[9px] text-slate-400 dark:text-slate-500 font-bold leading-none mt-1 whitespace-nowrap">
+                            <p class="text-[9px] text-slate-400 dark:text-slate-500 font-medium leading-none mt-1 whitespace-nowrap">
                                 Fast: {{ $fastValFormatted }} | Slow: {{ $slowValFormatted }}
                             </p>
                         @endif
@@ -106,6 +106,15 @@
                         <span class="truncate">Stock Status</span> 
                         <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Fast Moving Category</span>
                     </h3>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button id="btnStockPrev" onclick="changeStockPage(-1)" class="w-6 h-6 flex items-center justify-center rounded-xs bg-slate-50 hover:bg-slate-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-500 dark:text-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-gray-600" title="Previous page">
+                            <i class="fa-solid fa-chevron-left text-[9px]"></i>
+                        </button>
+                        <span id="stockPageIndicator" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 min-w-[24px] text-center">1/1</span>
+                        <button id="btnStockNext" onclick="changeStockPage(1)" class="w-6 h-6 flex items-center justify-center rounded-xs bg-slate-50 hover:bg-slate-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-500 dark:text-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-gray-600" title="Next page">
+                            <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
                     <canvas id="stockStatusChart"></canvas>
@@ -137,12 +146,30 @@
                                         ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' 
                                         : 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/40';
                                 @endphp
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer" onclick="openDrilldown('stock', '{{ addslashes($warning['category']) }}', '{{ $warning['status'] }}', '{{ addslashes($warning['tool_name']) }}')">
                                     <td class="py-2 px-3 text-slate-800 dark:text-gray-200">
-                                        <div class="font-bold truncate max-w-[130px]" title="{{ $warning['tool_name'] }}">{{ $warning['tool_name'] }}</div>
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="font-medium truncate max-w-[130px]" title="{{ $warning['tool_name'] }}">{{ $warning['tool_name'] }}</div>
+                                            @php
+                                                $actionIcon = '';
+                                                if ($warning['status'] === 'Critical' || $warning['status'] === 'Warning') {
+                                                    if ($warning['action_status'] === 'Process') {
+                                                        $actionIcon = '<i class="fa-solid fa-clock text-amber-500 text-[10px]" title="In Process"></i>';
+                                                    } elseif ($warning['action_status'] === 'Ordered') {
+                                                        $actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 text-[10px]" title="Ordered"></i>';
+                                                    } else {
+                                                        $actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 text-[10px]" title="Need Action"></i>';
+                                                    }
+                                                }
+                                            @endphp
+                                            {!! $actionIcon !!}
+                                        </div>
                                         <div class="text-[9px] text-slate-400 font-medium truncate max-w-[130px]">{{ $warning['spec_code'] }} | {{ $warning['location'] }}</div>
+                                        @if($warning['action_remark'])
+                                            <p class="text-[8px] text-primary-500 italic mt-0.5 truncate max-w-[130px]"><i class="fa-solid fa-message mr-1 opacity-70"></i>{{ $warning['action_remark'] }}</p>
+                                        @endif
                                     </td>
-                                    <td class="py-2 px-2 text-right text-slate-500 dark:text-slate-400 font-semibold">{{ $warning['qty_min'] }}</td>
+                                    <td class="py-2 px-2 text-right text-slate-500 dark:text-slate-400 font-medium">{{ $warning['qty_min'] }}</td>
                                     <td class="py-2 px-2 text-right font-bold text-rose-500 dark:text-rose-400">{{ $warning['current_qty'] }}</td>
                                     <td class="py-2 px-3 text-right">
                                         <span class="px-1.5 py-0.5 rounded-xs border text-[9px] font-black uppercase tracking-wider {{ $badgeClass }}">
@@ -154,7 +181,7 @@
                                 <tr>
                                     <td colspan="4" class="py-8 text-center text-slate-400">
                                         <i class="fa-solid fa-circle-check text-emerald-500 text-lg mb-1 mx-auto block"></i>
-                                        <div class="text-xs font-semibold">Stock nominal and safe!</div>
+                                        <div class="text-xs font-medium">Stock nominal and safe!</div>
                                     </td>
                                 </tr>
                             @endforelse
@@ -174,6 +201,15 @@
                         <span class="truncate">Pareto Outflow (80/20)</span> 
                         <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Consumption</span>
                     </h3>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button id="btnParetoPrev" onclick="changeParetoPage(-1)" class="w-6 h-6 flex items-center justify-center rounded-xs bg-slate-50 hover:bg-slate-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-500 dark:text-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-gray-600" title="Previous page">
+                            <i class="fa-solid fa-chevron-left text-[9px]"></i>
+                        </button>
+                        <span id="paretoPageIndicator" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 min-w-[24px] text-center">1/1</span>
+                        <button id="btnParetoNext" onclick="changeParetoPage(1)" class="w-6 h-6 flex items-center justify-center rounded-xs bg-slate-50 hover:bg-slate-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-500 dark:text-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-gray-600" title="Next page">
+                            <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0"><canvas id="paretoChart"></canvas></div>
             </div>
@@ -199,15 +235,15 @@
                             @forelse($latestSlowBatches as $batch)
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                     <td class="py-2 px-3 text-slate-800 dark:text-gray-200">
-                                        <div class="font-bold">{{ $batch->id_number }}</div>
+                                        <div class="font-medium">{{ $batch->id_number }}</div>
                                         <div class="text-[9px] text-slate-400 font-medium truncate max-w-[80px]" title="{{ $batch->location?->name }}">{{ $batch->location?->name ?? '-' }}</div>
                                     </td>
                                     <td class="py-2 px-2 text-slate-500 dark:text-slate-400">
-                                        <div class="font-bold text-slate-700 dark:text-slate-300 truncate max-w-[100px]" title="{{ $batch->tool?->name }}">{{ $batch->tool?->name }}</div>
+                                        <div class="font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]" title="{{ $batch->tool?->name }}">{{ $batch->tool?->name }}</div>
                                         <div class="text-[9px] font-medium truncate max-w-[100px]" title="{{ $batch->tool?->spec_code }}">{{ $batch->tool?->spec_code }}</div>
                                     </td>
                                     <td class="py-2 px-2 text-center whitespace-nowrap">
-                                        <span class="font-bold text-[10px] px-1.5 py-0.5 rounded-xs {{ $batch->age_years >= $batch->std_lifetime_yrs ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30' : 'text-slate-600 bg-slate-100 dark:bg-gray-800' }}">
+                                        <span class="font-medium text-[10px] px-1.5 py-0.5 rounded-xs {{ $batch->age_years >= $batch->std_lifetime_yrs ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30' : 'text-slate-600 bg-slate-100 dark:bg-gray-800' }}">
                                             {{ number_format($batch->age_years, 1) }} / {{ $batch->std_lifetime_yrs }} Yr
                                         </span>
                                     </td>
@@ -216,7 +252,7 @@
                             @empty
                                 <tr>
                                     <td colspan="4" class="py-8 text-center text-slate-400">
-                                        <p class="text-xs font-semibold">No active slow batches.</p>
+                                        <p class="text-xs font-medium">No active slow batches.</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -243,18 +279,20 @@
             {{-- Recent Operational Activity Table --}}
             <div class="table-container bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative h-[320px] lg:h-auto lg:flex-[45] min-h-0">
                 <div class="flex-none flex justify-between items-center mb-1">
-                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center">
-                        <i class="fa-solid fa-clock-rotate-left mr-2 text-primary-500"></i> Recent Activity
+                    <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                        <i class="fa-solid fa-clock-rotate-left mr-2 text-primary-500 flex-shrink-0"></i> 
+                        <span class="truncate">Recent Activity</span>
+                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Fast Moving</span>
                     </h3>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar border border-gray-100 dark:border-gray-700/50 rounded-xs">
                     <table class="w-full text-left">
                         <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                             <tr>
-                                <th class="py-2.5 px-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider">Tool / Spec</th>
-                                <th class="py-2.5 px-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider text-center">Type</th>
-                                <th class="py-2.5 px-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider text-right">Qty</th>
-                                <th class="py-2.5 px-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wider text-center">Date</th>
+                                <th class="py-2.5 px-3 text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wider">Tool / Spec</th>
+                                <th class="py-2.5 px-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-center">Type</th>
+                                <th class="py-2.5 px-2 text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-right">Qty</th>
+                                <th class="py-2.5 px-3 text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-center">Date</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 dark:divide-gray-700 text-xs font-medium">
@@ -266,7 +304,7 @@
                                 @endphp
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                     <td class="py-2.5 px-3 text-slate-800 dark:text-gray-200">
-                                        <div class="font-bold truncate max-w-[130px]" title="{{ $act['tool_name'] }}">{{ $act['tool_name'] }}</div>
+                                        <div class="font-medium truncate max-w-[130px]" title="{{ $act['tool_name'] }}">{{ $act['tool_name'] }}</div>
                                         <div class="text-[10px] text-slate-400 font-medium truncate max-w-[130px]" title="{{ $act['spec_code'] }}">{{ $act['spec_code'] }}</div>
                                     </td>
                                     <td class="py-2.5 px-2 text-center whitespace-nowrap">
@@ -277,12 +315,12 @@
                                     <td class="py-2.5 px-2 text-right font-bold font-mono text-slate-700 dark:text-slate-300">
                                         {{ number_format(abs($act['qty'])) }} <span class="text-[10px] font-normal text-slate-400 uppercase ml-0.5">{{ $act['uom'] }}</span>
                                     </td>
-                                    <td class="py-2.5 px-3 text-center text-slate-400 text-[11px] whitespace-nowrap" title="{{ $act['timestamp'] }}">{{ $act['display_time'] }}</td>
+                                    <td class="py-2.5 px-3 text-center font-medium text-slate-400 text-[11px] whitespace-nowrap" title="{{ $act['timestamp'] }}">{{ $act['display_time'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
                                     <td colspan="4" class="py-8 text-center text-slate-400">
-                                        <p class="text-xs font-semibold">No recent activity detected.</p>
+                                        <p class="text-xs font-medium">No recent activity detected.</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -294,6 +332,8 @@
 
     </div>
 </div>
+
+
 @endsection
 
 @section('css')
@@ -313,7 +353,108 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: rgba(148, 163, 184, 0.5);
     }
+
+    /* Force Spin Animation for Loaders */
+    @keyframes spin-custom {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    .animate-spin, .fa-spin {
+        animation: spin-custom 1s linear infinite !important;
+        display: inline-block !important;
+    }
 </style>
+
+{{-- Drilldown Modal HTML --}}
+<div id="drilldownModal" class="fixed inset-0 z-[60] hidden" aria-modal="true">
+    <div class="absolute inset-0 bg-slate-900/50" onclick="closeDrilldownModal()"></div>
+    <div class="absolute right-0 top-0 bottom-0 w-full max-w-4xl bg-white dark:bg-gray-900 shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-full" id="drilldownPanel">
+        {{-- Header --}}
+        <div class="flex-none flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                    <p class="text-sm font-semibold text-primary-500 tracking-wider">Detail Explorer</p>
+                    <span id="drilldownCountBadge" class="px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-[11px] font-bold">0</span>
+                </div>
+                <h2 id="drilldownTitle" class="text-lg font-extrabold text-gray-800 dark:text-gray-100 truncate max-w-[600px]">Loading...</h2>
+            </div>
+            <button onclick="closeDrilldownModal()" class="w-8 h-8 flex items-center justify-center rounded-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+        {{-- Loader --}}
+        <div id="drilldownLoader" class="flex-1 flex items-center justify-center">
+            <div class="text-center">
+                <i class="fa-solid fa-spinner fa-spin animate-spin text-3xl text-primary-500 mb-3.5"></i>
+                <p class="text-sm font-semibold text-slate-400 uppercase tracking-wider">Fetching data...</p>
+            </div>
+        </div>
+        {{-- Content --}}
+        <div id="drilldownContent" class="flex-1 flex-col hidden min-h-0">
+            {{-- Quick Filters --}}
+            <div id="drilldownLegendContainer" class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/20">
+                <div class="flex items-center justify-between mb-2">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Filter by status</p>
+                </div>
+                <div id="drilldownLegendButtons" class="inline-flex p-1 bg-gray-100 dark:bg-gray-800/80 rounded-lg gap-1">
+                    {{-- Buttons injected by JS --}}
+                </div>
+            </div>
+
+            <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-20 flex flex-col md:flex-row gap-3 items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Show</span>
+                    <select id="drilldownPageSize" onchange="resetDrilldownAndFetch()" class="h-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-sm font-medium focus:ring-1 focus:ring-primary-500 outline-none cursor-pointer py-0" style="min-width: 64px; padding-top: 0px; padding-bottom: 0px; padding-left: 8px; padding-right: 20px; height: 32px; line-height: normal;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">entries</span>
+                </div>
+                <div class="relative w-full md:w-60">
+                    <input type="text" id="drilldownSearch" placeholder="Search Name or Spec..." class="w-full h-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-gray-400/80" style="padding-left: 30px; padding-right: 16px;">
+                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-1 relative min-h-0">
+                <div id="drilldownTableLoader" class="hidden absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-30 flex items-center justify-center backdrop-blur-[1px] transition-all">
+                    <div class="flex flex-col items-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-xl text-primary-500 mb-2"></i>
+                        <span class="text-sm font-semibold text-slate-500 tracking-wider">Updating...</span>
+                    </div>
+                </div>
+
+                <div class="h-full overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left text-xs">
+                        <thead id="drilldownHead" class="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
+                        </thead>
+                        <tbody id="drilldownBody" class="divide-y divide-slate-100 dark:divide-gray-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="flex-none px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex items-center justify-between">
+                <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">Showing <span id="ddPageStart" class="font-bold text-gray-800 dark:text-gray-100">0</span> to <span id="ddPageEnd" class="font-bold text-gray-800 dark:text-gray-100">0</span> of <span id="ddTotal" class="font-bold text-gray-800 dark:text-gray-100">0</span> entries</span>
+                <div class="flex items-center gap-1.5">
+                    <button id="ddPrev" onclick="changeDrilldownPage(-1)" disabled class="w-9 h-9 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-xs flex items-center justify-center flex-shrink-0" title="Previous Page">
+                        <i class="fa-solid fa-chevron-left text-[11px]"></i>
+                    </button>
+                    <span id="ddCurrentPage" class="w-9 h-9 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700/50 rounded-xs text-sm font-extrabold text-primary-600 dark:text-primary-400 flex items-center justify-center flex-shrink-0">1</span>
+                    <button id="ddNext" onclick="changeDrilldownPage(1)" disabled class="w-9 h-9 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-xs flex items-center justify-center flex-shrink-0" title="Next Page">
+                        <i class="fa-solid fa-chevron-right text-[11px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -404,42 +545,52 @@
         };
 
         // 1. Stock Status Stacked Bar Chart
-        const stockLabels = @json(array_keys($groupedStockStatus));
-        const stockData = @json(array_values($groupedStockStatus));
+        const fullStockLabels = @json(array_keys($groupedStockStatus));
+        const fullStockData = @json(array_values($groupedStockStatus));
+        let stockPage = 1;
+        const stockPageSize = 6;
 
         const stockCtx = document.getElementById('stockStatusChart').getContext('2d');
-        new Chart(stockCtx, {
+        const stockStatusChart = new Chart(stockCtx, {
             type: 'bar',
             data: {
-                labels: stockLabels,
+                labels: [],
                 datasets: [
                     {
                         label: 'Critical',
-                        data: stockData.map(d => d.critical),
+                        data: [],
                         backgroundColor: '#ef4444',
                         borderRadius: 2
                     },
                     {
                         label: 'Warning',
-                        data: stockData.map(d => d.warning),
+                        data: [],
                         backgroundColor: '#f59e0b',
                         borderRadius: 2
                     },
                     {
                         label: 'Over',
-                        data: stockData.map(d => d.over),
+                        data: [],
                         backgroundColor: '#3b82f6',
                         borderRadius: 2
                     },
                     {
                         label: 'Safe',
-                        data: stockData.map(d => d.safe),
+                        data: [],
                         backgroundColor: '#10b981',
                         borderRadius: 2
                     }
                 ]
             },
             options: {
+                onClick: (e, elements) => {
+                    if (elements.length > 0) {
+                        const i = elements[0].index;
+                        const label = stockStatusChart.data.labels[i];
+                        openDrilldown('stock', label, ''); // Show 'All' by default
+                    }
+                },
+                onHover: (e, el) => { e.native.target.style.cursor = el[0] ? 'pointer' : 'default'; },
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -449,16 +600,16 @@
                             color: textMuted,
                             boxWidth: 10,
                             font: { size: 10, weight: '600' },
-                            usePointStyle: true,
-                            pointStyle: 'rect',
+                            usePointStyle: false,
                             padding: 15
                         }
                     },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
-                        titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 }
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 12
                     },
                     datalabels: commonDataLabels
                 },
@@ -477,6 +628,36 @@
                 }
             }
         });
+
+        window.changeStockPage = function(dir) {
+            const maxPage = Math.ceil(fullStockLabels.length / stockPageSize) || 1;
+            stockPage += dir;
+            if (stockPage < 1) stockPage = 1;
+            if (stockPage > maxPage) stockPage = maxPage;
+            updateStockChart();
+        };
+
+        function updateStockChart() {
+            const start = (stockPage - 1) * stockPageSize;
+            const end = start + stockPageSize;
+            const slicedLabels = fullStockLabels.slice(start, end);
+            const slicedData = fullStockData.slice(start, end);
+
+            stockStatusChart.data.labels = slicedLabels;
+            stockStatusChart.data.datasets[0].data = slicedData.map(d => d.critical);
+            stockStatusChart.data.datasets[1].data = slicedData.map(d => d.warning);
+            stockStatusChart.data.datasets[2].data = slicedData.map(d => d.over);
+            stockStatusChart.data.datasets[3].data = slicedData.map(d => d.safe);
+            stockStatusChart.update();
+
+            const maxPage = Math.ceil(fullStockLabels.length / stockPageSize) || 1;
+            document.getElementById('stockPageIndicator').textContent = `${stockPage}/${maxPage}`;
+            document.getElementById('btnStockPrev').disabled = stockPage <= 1;
+            document.getElementById('btnStockNext').disabled = stockPage >= maxPage;
+        }
+
+        // Initialize Stock Chart
+        updateStockChart();
 
         // 2. Transaction Trend Chart (IN vs OUT)
         const trendCtx = document.getElementById('trendChart').getContext('2d');
@@ -522,18 +703,21 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'bottom',
                         labels: {
                             color: textMuted,
                             boxWidth: 10,
-                            font: { size: 10, weight: '600' }
+                            font: { size: 10, weight: '600' },
+                            usePointStyle: true,
+                            padding: 15
                         }
                     },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
-                        titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 }
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 12
                     },
                     datalabels: {
                         backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)',
@@ -564,16 +748,22 @@
         });
 
         // 3. Pareto Chart
+        const fullParetoLabels = @json($paretoData['labels']);
+        const fullParetoQuantities = @json($paretoData['quantities']);
+        const fullParetoCumulative = @json($paretoData['cumulative']);
+        let paretoPage = 1;
+        const paretoPageSize = 6;
+
         const paretoCtx = document.getElementById('paretoChart').getContext('2d');
-        new Chart(paretoCtx, {
+        const paretoChart = new Chart(paretoCtx, {
             type: 'bar',
             data: {
-                labels: @json($paretoData['labels']),
+                labels: [],
                 datasets: [
                     {
                         type: 'bar',
                         label: 'Volume',
-                        data: @json($paretoData['quantities']),
+                        data: [],
                         backgroundColor: '#6366f1',
                         borderRadius: 2,
                         yAxisID: 'y',
@@ -582,7 +772,7 @@
                     {
                         type: 'line',
                         label: 'Cum %',
-                        data: @json($paretoData['cumulative']),
+                        data: [],
                         borderColor: '#f59e0b',
                         borderWidth: 2,
                         backgroundColor: 'transparent',
@@ -603,14 +793,19 @@
                 },
                 plugins: {
                     legend: {
-                        position: 'top',
+                        position: 'bottom',
                         labels: {
                             color: textMuted,
                             boxWidth: 10,
-                            font: { size: 10, weight: '600' }
+                            font: { size: 10, weight: '600' },
+                            usePointStyle: false,
+                            padding: 15
                         }
                     },
                     tooltip: {
+                        titleFont: { size: 14, weight: 'bold' },
+                        bodyFont: { size: 13 },
+                        padding: 12,
                         callbacks: {
                             label: function(context) {
                                 let label = context.dataset.label || '';
@@ -653,7 +848,13 @@
                     y: {
                         position: 'left',
                         grid: { color: gridColor },
-                        ticks: { color: textMuted, font: { size: 10 } },
+                        ticks: {
+                            color: textMuted,
+                            font: { size: 10 },
+                            callback: function(value) {
+                                if (Math.floor(value) === value) return value;
+                            }
+                        },
                         grace: '20%'
                     },
                     y2: {
@@ -670,6 +871,391 @@
                 }
             }
         });
+
+        window.changeParetoPage = function(dir) {
+            const maxPage = Math.ceil(fullParetoLabels.length / paretoPageSize) || 1;
+            paretoPage += dir;
+            if (paretoPage < 1) paretoPage = 1;
+            if (paretoPage > maxPage) paretoPage = maxPage;
+            updateParetoChart();
+        };
+
+        function updateParetoChart() {
+            const start = (paretoPage - 1) * paretoPageSize;
+            const end = start + paretoPageSize;
+            
+            paretoChart.data.labels = fullParetoLabels.slice(start, end);
+            paretoChart.data.datasets[0].data = fullParetoQuantities.slice(start, end);
+            paretoChart.data.datasets[1].data = fullParetoCumulative.slice(start, end);
+            paretoChart.update();
+
+            const maxPage = Math.ceil(fullParetoLabels.length / paretoPageSize) || 1;
+            document.getElementById('paretoPageIndicator').textContent = `${paretoPage}/${maxPage}`;
+            document.getElementById('btnParetoPrev').disabled = paretoPage <= 1;
+            document.getElementById('btnParetoNext').disabled = paretoPage >= maxPage;
+        }
+
+        // Initialize Pareto Chart
+        updateParetoChart();
+
+        // ── DRILLDOWN MODAL ──────────────────────────────────────────────────────
+        const drilldownUrl = '{{ route("api.tool.dashboard.drilldown") }}';
+        let currentMonthYear = '{{ date("Y-m") }}'; // Fallback if no filter
+
+        const DRILLDOWN_COLS = {
+            stock: [
+                { key: 'part_no',   label: 'Tool Name',      cls: 'text-left py-2 px-3' },
+                { key: 'spec_code', label: 'Spec',           cls: 'text-left py-2 px-3' },
+                { key: 'stock',     label: 'Stock',          cls: 'text-right py-2 px-2' },
+                { key: 'min_stock', label: 'Min',            cls: 'text-right py-2 px-2' },
+                { key: 'location',  label: 'Location',       cls: 'text-center py-2 px-2' },
+                { key: 'status',    label: 'Status',         cls: 'text-center py-2 px-3' },
+                { key: 'action_status', label: 'Action',     cls: 'text-center py-2 px-3' },
+                { key: 'action_remark', label: 'Note',       cls: 'text-left py-2 px-3 max-w-[200px]' },
+            ]
+        };
+
+        const STATUS_BADGE = {
+            'Critical':   'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+            'Warning':    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+            'Over':       'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+            'Safe':       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+        };
+
+        let drilldownPage = 1;
+        let drilldownCurrentType = '';
+        let drilldownCurrentLabel = '';
+        let drilldownCurrentStatus = '';
+        let searchDebounceTimer;
+
+        window.openDrilldown = function(chartType, label, status = null, searchVal = null) {
+            drilldownCurrentType = chartType;
+            drilldownCurrentLabel = label;
+            drilldownCurrentStatus = status || '';
+            drilldownPage = 1;
+
+            const modal  = document.getElementById('drilldownModal');
+            const panel  = document.getElementById('drilldownPanel');
+            const searchInput = document.getElementById('drilldownSearch');
+
+            if(searchInput) searchInput.value = searchVal || '';
+
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => panel.classList.remove('translate-x-full'));
+            
+            document.getElementById('drilldownTitle').textContent = 'Loading...';
+            document.getElementById('drilldownCountBadge').textContent = '0';
+
+            renderDrilldownLegend(chartType, drilldownCurrentStatus);
+            fetchDrilldownData(true);
+        };
+
+        function fetchDrilldownData(isInitial = false) {
+            const loader = document.getElementById('drilldownLoader');
+            const tableLoader = document.getElementById('drilldownTableLoader');
+            const content = document.getElementById('drilldownContent');
+            const search = document.getElementById('drilldownSearch').value;
+            const pageSize = document.getElementById('drilldownPageSize').value;
+            
+            if (isInitial) {
+                loader.classList.remove('hidden');
+                content.classList.add('hidden');
+                content.classList.remove('flex');
+            } else {
+                tableLoader.classList.remove('hidden');
+            }
+
+            $.get(drilldownUrl, { 
+                chart: drilldownCurrentType, 
+                label: drilldownCurrentLabel, 
+                status: drilldownCurrentStatus, 
+                search: search,
+                page: drilldownPage,
+                pageSize: pageSize
+            })
+            .done(function(res) {
+                document.getElementById('drilldownTitle').textContent = res.title;
+                const cols = DRILLDOWN_COLS[res.chart] || [];
+                const tbody = document.getElementById('drilldownBody');
+                
+                // Header
+                document.getElementById('drilldownHead').innerHTML = '<tr>' + cols.map(c =>
+                    `<th class="${c.cls} text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-gray-800/40">${c.label}</th>`
+                ).join('') + '</tr>';
+
+                // Body
+                if (!res.data || res.data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${cols.length}" class="py-10 text-center text-slate-400 italic text-xs">No data found.</td></tr>`;
+                } else {
+                    tbody.innerHTML = res.data.map(row => {
+                        return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
+                            if (c.key === 'action_status') {
+                                const isCritical = row.status === 'Critical' || row.status === 'Warning';
+                                if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[11px] font-medium">N/A</span></td>`;
+
+                                const current = row[c.key] || '';
+                                const statusMap = {
+                                    '': { label: 'NEED ACTION', cls: 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400' },
+                                    'Process': { label: 'IN PROCESS', cls: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400' },
+                                    'Ordered': { label: 'ORDERED', cls: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400' }
+                                };
+                                const st = statusMap[current] || statusMap[''];
+
+                                let actionIcon = '';
+                                if (row.status === 'Critical' || row.status === 'Warning') {
+                                    if (row.action_status === 'Process') {
+                                        actionIcon = '<i class="fa-solid fa-clock text-amber-500 ml-1.5" title="In Process"></i>';
+                                    } else if (row.action_status === 'Ordered') {
+                                        actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 ml-1.5" title="Ordered"></i>';
+                                    } else {
+                                        actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 ml-1.5" title="Need Action"></i>';
+                                    }
+                                }
+                                
+                                return `<td class="${c.cls}">
+                                    <div class="relative inline-block text-left dropdown-action-container">
+                                        <div class="flex items-center justify-center">
+                                            <button onclick="toggleStatusDropdown(event, '${row.id}')" 
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold border transition-all hover:bg-slate-50 dark:hover:bg-gray-700 ${st.cls}">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5"></span>
+                                                ${st.label}
+                                                <i class="fa-solid fa-chevron-down ml-1 opacity-50 text-[8px]"></i>
+                                            </button>
+                                            ${actionIcon}
+                                        </div>
+                                        <div id="dropdown-${row.id}" class="hidden absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-xs shadow-xl border border-slate-200 dark:border-gray-700 z-[100] overflow-hidden">
+                                            <div class="py-1">
+                                                <button onclick="updateDrilldownActionStatus('${row.id}', '')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2.5"></span> NEED ACTION
+                                                </button>
+                                                <button onclick="updateDrilldownActionStatus('${row.id}', 'Process')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2.5"></span> IN PROCESS
+                                                </button>
+                                                <button onclick="updateDrilldownActionStatus('${row.id}', 'Ordered')" class="w-full text-left px-3.5 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2.5"></span> ORDERED
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>`;
+                            }
+
+                            const val = row[c.key] ?? '';
+                            const badgeCls = c.key === 'status' ? STATUS_BADGE[val] : null;
+
+                            if (c.key === 'action_remark') {
+                                const isCritical = row.status === 'Critical' || row.status === 'Warning';
+                                if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[11px] font-medium">N/A</span></td>`;
+                                
+                                const displayNote = val || 'Add note...';
+                                const noteCls = val ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400/70 italic';
+
+                                return `<td class="${c.cls}">
+                                    <div class="relative w-full dropdown-note-container">
+                                        <button onclick="toggleNoteDropdown(event, '${row.id}')" 
+                                            class="group flex items-start gap-1.5 w-full p-1.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-700 text-left">
+                                            <i class="fa-solid fa-pen-to-square text-[11px] mt-0.5 opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
+                                            <span class="text-xs font-medium ${noteCls} break-words line-clamp-2 leading-snug">${displayNote}</span>
+                                        </button>
+                                        
+                                        <div id="note-dropdown-${row.id}" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 z-[110] p-4">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Action Remark</p>
+                                                <i class="fa-solid fa-message text-primary-500/50 text-xs"></i>
+                                            </div>
+                                            <textarea id="note-input-${row.id}" 
+                                                class="w-full h-24 p-2.5 bg-slate-50 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-700 rounded-xs text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary-500 placeholder:text-slate-300 mb-3"
+                                                placeholder="Type follow-up note here...">${val}</textarea>
+                                            <div class="flex justify-end gap-2">
+                                                <button onclick="closeAllNoteDropdowns()" class="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
+                                                <button onclick="saveActionNote('${row.id}')" class="px-4.5 py-2 bg-primary-500 hover:bg-primary-600 text-white text-xs font-bold rounded-xs shadow-sm transition-all active:scale-95">Save Changes</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>`;
+                            }
+
+                            const cell = badgeCls
+                                ? `<div class="flex items-center justify-center">
+                                    <span class="inline-block px-2.5 py-1 rounded-xs text-[11px] font-extrabold ${badgeCls}">${val}</span>
+                                   </div>`
+                                : `<span class="${c.key === 'part_no' ? 'font-medium text-slate-700 dark:text-gray-200' : 'text-slate-500 dark:text-slate-400'}">${val}</span>`;
+                            return `<td class="${c.cls}">${cell}</td>`;
+                        }).join('') + '</tr>';
+                    }).join('');
+                }
+
+                // Pagination Stats
+                const total = res.total;
+                const start = (drilldownPage - 1) * pageSize + 1;
+                const end = Math.min(drilldownPage * pageSize, total);
+                
+                document.getElementById('drilldownCountBadge').textContent = total;
+                document.getElementById('ddTotal').textContent = total;
+                document.getElementById('ddPageStart').textContent = total === 0 ? 0 : start;
+                document.getElementById('ddPageEnd').textContent = end;
+                document.getElementById('ddCurrentPage').textContent = drilldownPage;
+                
+                document.getElementById('ddPrev').disabled = drilldownPage <= 1;
+                document.getElementById('ddNext').disabled = end >= total;
+
+                if (isInitial) {
+                    loader.classList.add('hidden');
+                    content.classList.remove('hidden');
+                    content.classList.add('flex');
+                    content.style.flexDirection = 'column';
+                } else {
+                    tableLoader.classList.add('hidden');
+                }
+            });
+        }
+
+        window.resetDrilldownAndFetch = function() {
+            drilldownPage = 1;
+            fetchDrilldownData();
+        };
+
+        window.changeDrilldownPage = function(dir) {
+            drilldownPage += dir;
+            fetchDrilldownData();
+            document.querySelector('#drilldownContent .overflow-y-auto').scrollTop = 0;
+        };
+
+        function renderDrilldownLegend(type, activeStatus) {
+            const container = document.getElementById('drilldownLegendButtons');
+            container.innerHTML = '';
+            
+            const legends = ['Critical', 'Warning', 'Over', 'Safe'];
+            
+            const allBtn = createLegendBtn('All', activeStatus === '');
+            allBtn.onclick = () => { drilldownCurrentStatus = ''; drilldownPage = 1; updateLegendActive(allBtn); fetchDrilldownData(); };
+            container.appendChild(allBtn);
+
+            legends.forEach(leg => {
+                const isActive = leg.toLowerCase() === activeStatus.toLowerCase();
+                const btn = createLegendBtn(leg, isActive);
+                btn.onclick = () => { drilldownCurrentStatus = leg; drilldownPage = 1; updateLegendActive(btn); fetchDrilldownData(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function createLegendBtn(label, isActive) {
+            const btn = document.createElement('button');
+            btn.className = `legend-btn px-4 py-1.5 rounded-md text-xs font-extrabold uppercase transition-all duration-200 ${
+                isActive 
+                ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm' 
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`;
+            btn.textContent = label;
+            return btn;
+        }
+
+        function updateLegendActive(activeBtn) {
+            $(activeBtn).siblings().removeClass('bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm')
+                .addClass('text-slate-500 dark:text-slate-400');
+            $(activeBtn).removeClass('text-slate-500 dark:text-slate-400')
+                .addClass('bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm');
+        }
+
+        $('#drilldownSearch').on('input', function() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                resetDrilldownAndFetch();
+            }, 400);
+        });
+
+        window.closeDrilldownModal = function() {
+            const panel = document.getElementById('drilldownPanel');
+            panel.classList.add('translate-x-full');
+            setTimeout(() => document.getElementById('drilldownModal').classList.add('hidden'), 300);
+            window.location.reload(); // Reload to refresh balance warnings side-panel if anything changed
+        };
+
+        window.toggleStatusDropdown = function(event, id) {
+            event.stopPropagation();
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            // Close all other dropdowns
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+            
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+            }
+        };
+
+        // Global click listener to close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown-action-container')) {
+                document.querySelectorAll('[id^="dropdown-"]').forEach(d => d.classList.add('hidden'));
+            }
+            if (!event.target.closest('.dropdown-note-container')) {
+                closeAllNoteDropdowns();
+            }
+        });
+
+        window.updateDrilldownActionStatus = function(id, status) {
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            if (dropdown) dropdown.classList.add('hidden');
+
+            const url = '{{ route("inventory.tool.dashboard.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
+            
+            $.post(url, {
+                _token: '{{ csrf_token() }}',
+                action_status: status
+            })
+            .done(function(res) {
+                if (res.success) {
+                    fetchDrilldownData();
+                }
+            })
+            .fail(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed',
+                    text: 'Could not update status. Please try again.',
+                    customClass: { popup: 'rounded-xs' }
+                });
+            });
+        };
+
+        window.toggleNoteDropdown = function(e, id) {
+            e.stopPropagation();
+            const dropdown = document.getElementById(`note-dropdown-${id}`);
+            const isHidden = dropdown.classList.contains('hidden');
+            
+            closeAllNoteDropdowns();
+            
+            if (isHidden) {
+                dropdown.classList.remove('hidden');
+                const input = document.getElementById(`note-input-${id}`);
+                input.focus();
+                input.setSelectionRange(input.value.length, input.value.length);
+            }
+        };
+
+        window.closeAllNoteDropdowns = function() {
+            document.querySelectorAll('[id^="note-dropdown-"]').forEach(el => el.classList.add('hidden'));
+        };
+
+        window.saveActionNote = function(id) {
+            const val = document.getElementById(`note-input-${id}`).value;
+            const url = '{{ route("inventory.tool.dashboard.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
+            
+            $.post(url, {
+                _token: '{{ csrf_token() }}',
+                action_remark: val
+            })
+            .done(function(res) {
+                if (res.success) {
+                    closeAllNoteDropdowns();
+                    fetchDrilldownData();
+                }
+            });
+        };
+
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrilldownModal(); });
+
     });
 </script>
 @endpush

@@ -180,6 +180,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
         Route::prefix('inventory/tool')->name('inventory.tool.')->group(function () {
             // Dashboard
             Route::get('/dashboard', [ToolDashboardController::class, 'index'])->name('dashboard');
+            Route::post('/dashboard/update-action-status/{id}', [ToolDashboardController::class, 'updateActionStatus'])->name('dashboard.updateActionStatus');
 
             // Master — Category
             Route::resource('category', ToolCategoryController::class)->except(['create', 'edit', 'show']);
@@ -421,4 +422,5 @@ Route::post('/api/data/models', [DashboardController::class, 'getModels'])->name
 Route::post('/api/data/customers', [DashboardController::class, 'getCustomers'])->name('api.data.customers');
 Route::get('/api/data/statuses/{type}', [DashboardController::class, 'getStatuses'])->name('api.data.statuses');
 Route::get('/api/dashboard/drilldown', [DashboardController::class, 'chartDrilldown'])->name('api.dashboard.drilldown');
+Route::get('/api/tool/dashboard/drilldown', [\App\Http\Controllers\Inventory\Tool\ToolDashboardController::class, 'chartDrilldown'])->name('api.tool.dashboard.drilldown');
 #End region

@@ -4,329 +4,281 @@
 @section('page_title', 'STO Analytics')
 
 @section('content')
-<div class="dashboard-container w-full h-auto flex flex-col gap-4 pb-10">
-    {{-- Header & High-Level KPIs --}}
-    <div class="flex flex-wrap items-center justify-between gap-y-3 gap-x-4">
+<div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar select-none">
+    {{-- Header, KPIs & Filters --}}
+    <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 shrink-0">
+        <!-- Title & Subtitle Section -->
         <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-800 dark:text-white leading-tight mb-0.5 flex items-center gap-2">
-                <i class="fa-solid fa-chart-pie text-primary-500"></i>
-                Stock Opname Analytics
+                Stock Opname (STO) Analytics
             </h2>
-            <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-tight italic">Deviation analysis, model concentration (Pareto), and correction logs.</p>
+            <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-tight">Deviation analysis, model concentration, and adjustment logs</p>
         </div>
 
-        <div class="flex-1 flex flex-col md:flex-row gap-2 items-stretch lg:justify-end min-w-[100%] xl:min-w-[700px]">
-            <!-- KPI Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1">
-                @foreach([
-                    ['val' => $stats['total_events'], 'label' => 'Total Events', 'unit' => 'Counts', 'icon' => 'fa-calendar-check', 'color' => 'slate', 'id' => 'stat_total_events'],
-                    ['val' => $stats['last_event'], 'label' => 'Last Event', 'unit' => 'Code', 'icon' => 'fa-boxes-stacked', 'color' => 'primary', 'id' => 'stat_last_event'],
-                    ['val' => '...', 'label' => 'Top Deviation', 'unit' => 'Model', 'icon' => 'fa-triangle-exclamation', 'color' => 'rose', 'id' => 'topDeviationModel'],
-                    ['val' => '...', 'label' => 'Adjustments', 'unit' => 'Pcs', 'icon' => 'fa-history', 'color' => 'emerald', 'id' => 'totalCorrectionPcs'],
-                ] as $stat)
-                <div class="bg-white dark:bg-gray-800 px-3 py-2 rounded-xs border border-gray-200 dark:border-gray-700 flex items-center gap-3 h-[56px] shadow-sm">
-                    <div class="w-10 h-10 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-lg shrink-0 transition-transform group-hover:scale-110">
-                        <i class="fa-solid {{ $stat['icon'] }}"></i>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider leading-none mb-1.5 uppercase">{{ $stat['label'] }}</p>
-                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 leading-none tracking-tight truncate" id="{{ $stat['id'] }}">
-                            {{ $stat['val'] }}
-                        </h3>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-
-            <!-- Actions -->
-            <div class="shrink-0 flex items-stretch gap-2">
-                <button id="btnToggleDashFilter" title="Toggle Filters" class="group flex items-center justify-center w-full md:w-[52px] h-[52px] md:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs transition-all hover:bg-slate-50 dark:hover:bg-gray-700 shadow-sm">
-                    <i class="fa-solid fa-filter text-slate-400 group-hover:text-primary-500 transition-colors text-sm"></i>
-                </button>
-                <a href="{{ route('inventory.sto.index') }}" title="Go to Events" class="group flex items-center justify-center w-full md:w-[52px] h-[52px] md:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs transition-all hover:bg-slate-50 dark:hover:bg-gray-700 shadow-sm">
-                    <i class="fa-solid fa-list-check text-slate-400 group-hover:text-emerald-500 transition-colors text-sm"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    {{-- Collapsible Filter Card --}}
-    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-4 shadow-sm animate-fade-in-down">
-        <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
-                <div class="space-y-1.5">
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Analysis Period</label>
-                    <select id="analysisPeriod" class="w-full text-xs font-bold border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:ring-1 focus:ring-primary-500 outline-none">
-                        <option value="last_6">Last 6 Months</option>
-                        <option value="last_12" selected>Last 12 Months</option>
-                        <option value="ytd">Year to Date</option>
-                        <option value="all">All Records</option>
+        <!-- Right Side Filter dropdown & Logs -->
+        <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">STO Period:</label>
+                <div class="w-[240px]">
+                    <select id="eventSelector" class="w-full">
+                        @foreach($recentEvents as $e)
+                            <option value="{{ $e['hash_id'] }}" data-code="{{ $e['code'] }}" data-period="{{ $e['period'] }}">{{ $e['code'] }} ({{ $e['period'] }})</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button type="button" onclick="window.location.reload()" class="h-10 px-6 bg-slate-50 hover:bg-slate-100 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xs text-xs font-bold text-slate-600 dark:text-gray-300 transition-all border border-slate-200 dark:border-gray-600">
-                    Apply Filter
-                </button>
-            </div>
+            
+            <button onclick="openGlobalAuditLogsModal()" class="h-[38px] px-4 flex items-center gap-1.5 text-xs font-bold text-slate-650 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-gray-700">
+                <i class="fa-solid fa-clock-rotate-left"></i> Audit Logs
+            </button>
         </div>
     </div>
 
-    {{-- Main Analytics Row --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1">
-        <!-- Event Accuracy Trend -->
-        <div class="lg:col-span-8 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 flex flex-col shadow-sm">
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                        <i class="fa-solid fa-chart-line text-emerald-500"></i>
-                        STO Performance Trend
-                    </h3>
-                    <p class="text-[10px] text-gray-400">Net vs Absolute deviation percentage per event period.</p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-primary-500"></span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase">ABS %</span>
-                    </div>
-                    <div class="flex items-center gap-2 border-l border-slate-100 dark:border-gray-700 pl-4">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase">Net %</span>
-                    </div>
-                </div>
+    {{-- KPI Metrics Row --}}
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 shrink-0">
+        @foreach([
+            ['icon' => 'fa-calendar-check', 'color' => 'slate',   'label' => 'Total Events',   'val' => $stats['total_events'],   'unit' => 'STO cycles'],
+            ['icon' => 'fa-lock',           'color' => 'indigo',  'label' => 'Closed Events',  'val' => $stats['closed_events'],  'unit' => 'completed'],
+            ['icon' => 'fa-spinner',        'color' => 'emerald', 'label' => 'Open Events',    'val' => $stats['open_events'],    'unit' => 'in progress'],
+            ['icon' => 'fa-tag',            'color' => 'amber',   'label' => 'Latest Event',   'val' => $stats['last_event'],     'unit' => ''],
+            ['icon' => 'fa-calendar-days',  'color' => 'primary', 'label' => 'Latest Period',  'val' => $stats['last_period'],    'unit' => ''],
+        ] as $kpi)
+        <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2.5 flex items-center gap-3 kpi-card-hover">
+            <div class="w-9 h-9 rounded-xs bg-{{ $kpi['color'] }}-50 dark:bg-{{ $kpi['color'] }}-900/20 flex items-center justify-center text-{{ $kpi['color'] }}-600 dark:text-{{ $kpi['color'] }}-400 flex-shrink-0">
+                <i class="fa-solid {{ $kpi['icon'] }} text-sm"></i>
             </div>
-            <div class="p-6 flex-1 min-h-[320px]">
-                <canvas id="eventTrendChart"></canvas>
+            <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none mb-1 truncate">{{ $kpi['label'] }}</p>
+                <p class="text-sm font-extrabold text-slate-800 dark:text-white leading-none truncate">{{ $kpi['val'] }}
+                    @if($kpi['unit'])<span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 ml-1 normal-case">{{ $kpi['unit'] }}</span>@endif
+                </p>
             </div>
         </div>
+        @endforeach
+    </div>
 
-        <!-- Recent Event Selection -->
-        <div class="lg:col-span-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 flex flex-col shadow-sm overflow-hidden">
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white">Recent Results</h3>
-                <span class="text-[10px] font-bold text-slate-400">{{ count($recentEvents) }} Events</span>
-            </div>
-            <div class="flex-1 overflow-y-auto max-h-[350px] custom-scrollbar p-2 space-y-1">
-                @foreach($recentEvents as $event)
-                    <button onclick="loadPareto('{{ $event['hash_id'] }}', '{{ $event['code'] }}')" class="event-item w-full text-left p-3 rounded-xs border border-transparent hover:border-primary-200 hover:bg-primary-50 dark:hover:bg-primary-900/10 transition-all group">
-                        <div class="flex items-center justify-between mb-1.5">
-                            <span class="text-[11px] font-black text-slate-700 dark:text-gray-200 group-hover:text-primary-600 transition-colors uppercase">{{ $event['code'] }}</span>
-                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-xs bg-white dark:bg-gray-700 border border-slate-100 dark:border-gray-600 text-slate-400 uppercase tracking-tighter">{{ $event['period'] }}</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <div class="flex gap-3">
-                                <div class="flex flex-col">
-                                    <span class="text-[8px] text-slate-400 font-bold uppercase">ABS Dev.</span>
-                                    <span class="text-[11px] font-black text-slate-800 dark:text-white">Rp {{ number_format($event['abs_amount']) }}</span>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="text-[8px] text-slate-400 font-bold uppercase">Accuracy</span>
-                                    <span class="text-[11px] font-black {{ $event['abs_pct'] > 5 ? 'text-rose-500' : 'text-emerald-500' }}">{{ 100 - min(100, $event['abs_pct']) }}%</span>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 group-hover:text-primary-400 group-hover:translate-x-1 transition-all"></i>
-                        </div>
+    {{-- ROW 1: Top Cards --}}
+    <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
+        <!-- Top-Left Card: Summary Result -->
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+            <div class="flex-none flex justify-between items-center mb-1">
+                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 min-w-0 pr-2">
+                    <i class="fa-solid fa-square-poll-vertical mr-1 text-primary-500"></i>
+                    <span class="truncate">Summary Result</span>
+                    <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">(Target: Net ±1%, Abs 4%)</span>
+                </h3>
+                <!-- Inner Card Tabs -->
+                <div class="flex bg-gray-100 dark:bg-gray-700/80 p-0.5 rounded-xs shrink-0 gap-0.5">
+                    <button onclick="switchSummaryTab('amount')" id="summaryTabBtn-amount" class="segmented-tab active-tab">
+                        Mio IDR
                     </button>
-                @endforeach
+                    <button onclick="switchSummaryTab('net')" id="summaryTabBtn-net" class="segmented-tab inactive-tab">
+                        % Net
+                    </button>
+                    <button onclick="switchSummaryTab('abs')" id="summaryTabBtn-abs" class="segmented-tab inactive-tab">
+                        % Abs
+                    </button>
+                </div>
             </div>
-            <div class="p-3 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-gray-700 text-center">
-                <p class="text-[10px] text-slate-400 italic">Select an event to drill-down analysis</p>
+            
+            <div class="flex-1 flex min-h-0 items-center w-full h-full">
+                <!-- Mini Chart Panel (full width) -->
+                <div class="w-full h-full relative min-w-0">
+                     <div id="summaryAmountContainer" class="absolute inset-0 w-full h-full">
+                         <canvas id="summaryAmountChart" class="w-full h-full"></canvas>
+                     </div>
+                     <div id="summaryNetContainer" class="absolute inset-0 w-full h-full hidden">
+                         <canvas id="summaryNetChart" class="w-full h-full"></canvas>
+                     </div>
+                     <div id="summaryAbsContainer" class="absolute inset-0 w-full h-full hidden">
+                         <canvas id="summaryAbsChart" class="w-full h-full"></canvas>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top-Right Card: Accuracy Based on Cust -->
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+            <div class="flex-none flex justify-between items-center mb-1">
+                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                    <i class="fa-solid fa-scale-unbalanced mr-2 text-primary-500"></i>
+                    <span class="truncate">Accuracy based on Cust</span>
+                </h3>
+                <!-- Inner Card Tabs -->
+                <div class="flex bg-gray-100 dark:bg-gray-700/80 p-0.5 rounded-xs shrink-0 gap-0.5">
+                    <button onclick="switchAccuracyTab('net')" id="accuracyTabBtn-net" class="segmented-tab active-tab">
+                        NET
+                    </button>
+                    <button onclick="switchAccuracyTab('abs')" id="accuracyTabBtn-abs" class="segmented-tab inactive-tab">
+                        ABS
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chart Panel -->
+            <div class="flex-1 min-h-0 relative mt-1">
+                 <div id="accuracyNetContainer" class="absolute inset-0 w-full h-full">
+                     <canvas id="accuracyNetChart" class="w-full h-full"></canvas>
+                 </div>
+                 <div id="accuracyAbsContainer" class="absolute inset-0 w-full h-full hidden">
+                     <canvas id="accuracyAbsChart" class="w-full h-full"></canvas>
+                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Accuracy by Model Row --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <!-- Accuracy NET -->
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col">
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-scale-unbalanced text-blue-500"></i>
-                    Accuracy Based on Customer - NET
+    {{-- ROW 2: Bottom Cards --}}
+    <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
+        <!-- Bottom-Left Card: Pareto Deviation by Part (2/3 width) -->
+        <div class="chart-card w-full lg:w-2/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+            <div class="flex-none flex justify-between items-center mb-1">
+                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                    <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i>
+                    <span class="truncate">Pareto Deviation by Part</span>
+                    <span id="tab1-event-badge" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">...</span>
+                </h3>
+                <div class="flex items-center gap-1 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-2">
+                    <button id="btnParetoPrev" onclick="prevParetoPage()" class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Previous page">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <span id="paretoPageIndicator" class="text-[10px] font-bold text-slate-500 dark:text-slate-400 min-w-[24px] text-center">1/1</span>
+                    <button id="btnParetoNext" onclick="nextParetoPage()" class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Next page">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="relative w-full flex-1 min-h-0">
+                <canvas id="paretoModelChart" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+        </div>
+
+        <!-- Bottom-Right Card: Problem Breakdown Frequency (1/3 width) -->
+        <div class="chart-card w-full lg:w-1/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+            <div class="flex-none flex justify-between items-center mb-1">
+                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-2 text-primary-500"></i>
+                    <span class="truncate">Problem Breakdown Frequency</span>
                 </h3>
             </div>
-            <div class="p-6 h-[300px]">
-                <canvas id="accuracyNetChart"></canvas>
+            <div class="relative w-full flex-1 min-h-0">
+                <canvas id="problemBreakdownChart" class="absolute inset-0 w-full h-full"></canvas>
             </div>
-        </div>
-
-        <!-- Accuracy ABS -->
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col">
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-scale-unbalanced text-rose-500"></i>
-                    Accuracy Based on Customer - ABS
-                </h3>
-            </div>
-            <div class="p-6 h-[300px]">
-                <canvas id="accuracyAbsChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- Pareto & Reason Row --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Pareto Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col">
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                        <i class="fa-solid fa-chart-column text-primary-500"></i>
-                        Pareto Deviation by Model
-                        <span id="activeEventBadge" class="ml-2 text-[9px] bg-primary-500 text-white px-2 py-0.5 rounded-xs font-black uppercase tracking-tighter shadow-sm">...</span>
-                    </h3>
-                    <p class="text-[10px] text-gray-400">Models sorted by cumulative absolute deviation value.</p>
-                </div>
-            </div>
-            <div class="p-6 h-[350px]">
-                <canvas id="paretoModelChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Reason Distribution Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm flex flex-col overflow-hidden">
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white">Reason Breakdown Analysis</h3>
-                <div class="flex items-center gap-1.5">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Grouping:</span>
-                    <button class="px-2.5 py-1 rounded-xs bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-[9px] font-black text-primary-600 shadow-sm transition-all hover:scale-105 active:scale-95">By Model</button>
-                </div>
-            </div>
-            <div class="flex-1 overflow-y-auto custom-scrollbar" style="max-height: 350px;">
-                <table class="w-full text-left border-collapse" id="reasonTable">
-                    <thead class="sticky top-0 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm z-10">
-                        <tr>
-                            <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 w-10 text-center">No</th>
-                            <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Cust-Model</th>
-                            <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Problem</th>
-                            <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Action Plan</th>
-                            <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 text-center w-20">PIC</th>
-                            <th class="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 text-center w-24">Due Date</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-[11px] font-medium text-slate-700 dark:text-gray-300 divide-y divide-slate-50 dark:divide-gray-800">
-                        <!-- Loaded via JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    {{-- Correction Log Section --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30 dark:bg-slate-900/20">
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                    <i class="fa-solid fa-history text-indigo-500"></i>
-                    Global Correction Log Summary
-                </h3>
-                <p class="text-[10px] text-gray-500">Aggregate audit adjustments across all finalized STO cycles.</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800 shadow-inner">
-                    <span class="text-[9px] font-bold text-emerald-600 uppercase">Plus:</span>
-                    <span id="totalIncPcs" class="text-xs font-black text-emerald-700 dark:text-emerald-400">+0 Pcs</span>
-                </div>
-                <div class="flex items-center gap-2 px-3 py-1.5 bg-rose-50 dark:bg-rose-900/20 rounded-xs border border-rose-100 dark:border-rose-800 shadow-inner">
-                    <span class="text-[9px] font-bold text-rose-600 uppercase">Minus:</span>
-                    <span id="totalDecPcs" class="text-xs font-black text-rose-700 dark:text-rose-400">-0 Pcs</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-left border-collapse" id="correctionLogTable">
-                <thead>
-                    <tr class="bg-gray-50/50 dark:bg-slate-900/50">
-                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Model Identification</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Events</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Affected Parts</th>
-                        <th class="px-6 py-4 text-right text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">ABS Adj. Value</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Quantity Balance (+/-)</th>
-                        <th class="px-6 py-4 text-right text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Net Impact</th>
-                        <th class="px-6 py-4 text-center text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 w-24">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-gray-800 text-[11px]">
-                    @foreach($correctionByModel as $model)
-                        <tr class="hover:bg-primary-50/30 dark:hover:bg-primary-900/10 transition-colors group">
-                            <td class="px-6 py-4">
-                                <div class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tighter group-hover:text-primary-600 transition-colors">{{ $model['model_name'] }}</div>
-                                <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Inventory Category</div>
-                            </td>
-                            <td class="px-6 py-4 text-center font-bold text-slate-600 dark:text-slate-400">{{ $model['event_count'] }}</td>
-                            <td class="px-6 py-4 text-center font-bold text-slate-600 dark:text-slate-400">{{ $model['affected_parts'] }}</td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="text-xs font-black text-slate-900 dark:text-white tracking-tight">Rp {{ number_format($model['total_correction']) }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center justify-center gap-2">
-                                    <span class="text-[10px] font-black text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-xs border border-emerald-100 dark:border-emerald-800">+{{ number_format($model['increment_pcs']) }}</span>
-                                    <span class="text-[10px] font-black text-rose-500 bg-rose-50 dark:bg-rose-900/20 px-2 py-0.5 rounded-xs border border-rose-100 dark:border-rose-800">-{{ number_format($model['decrement_pcs']) }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="text-xs font-black {{ $model['net_correction'] < 0 ? 'text-rose-600' : 'text-emerald-600' }}">
-                                    {{ $model['net_correction'] < 0 ? '-' : '+' }} Rp {{ number_format(abs($model['net_correction'])) }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" class="h-8 px-3 inline-flex items-center gap-2 rounded-xs bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-[10px] font-black text-slate-500 hover:text-primary-600 hover:border-primary-200 transition-all shadow-sm">
-                                    <i class="fa-solid fa-magnifying-glass-chart"></i>
-                                    DETAIL
-                                </button>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
-
-{{-- Modal: Correction Detail (Refined) --}}
-<div id="correctionDetailModal" class="fixed inset-0 z-50 hidden overflow-y-auto" role="dialog" aria-modal="true">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" onclick="closeCorrectionModal()"></div>
-        
-        <div class="relative bg-white dark:bg-gray-800 rounded-xs max-w-5xl w-full shadow-2xl border border-slate-200 dark:border-gray-700 flex flex-col max-h-[85vh] overflow-hidden transform transition-all animate-fade-in-up">
-            <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-xs bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 text-xl">
+{{-- Global Correction Log Modal (Original Audit Table Interface) --}}
+<div id="correctionDetailModal" class="fixed inset-0 z-50 hidden overflow-y-auto animate-fade-in" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 bg-slate-950/60 backdrop-blur-sm">
+        <div class="relative bg-white dark:bg-gray-900 rounded-xs max-w-5xl w-full shadow-2xl border border-slate-200 dark:border-gray-800 flex flex-col max-h-[85vh] overflow-hidden transform transition-all animate-fade-in-up">
+            <div class="px-5 py-4 border-b border-slate-150 dark:border-gray-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xs bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-lg shadow-xs">
                         <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-black text-slate-800 dark:text-white uppercase tracking-tighter">
-                            Correction Audit Log — <span id="modalModelName" class="text-primary-600">Model Name</span>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">
+                            Global STO Correction & Audit Log
                         </h3>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Detailed transaction history for selected model</p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Aggregate models adjustment log summary across cycles</p>
                     </div>
                 </div>
-                <button onclick="closeCorrectionModal()" class="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-all">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                <button onclick="closeCorrectionModal()" class="w-8 h-8 flex items-center justify-center text-slate-450 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xs transition-all outline-none">
+                    <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
             
-            <div class="overflow-y-auto custom-scrollbar flex-1">
-                <table class="w-full text-left border-collapse">
-                    <thead class="sticky top-0 bg-gray-50 dark:bg-gray-900 z-10 shadow-sm">
+            <div class="overflow-x-auto flex-1 custom-scrollbar">
+                <table class="custom-table w-full text-left border-collapse" id="correctionLogTable">
+                    <thead class="sticky top-0 bg-slate-50 dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 z-10">
                         <tr>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">STO Event</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Part No</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Reason Category</th>
-                            <th class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Quantity Adj.</th>
-                            <th class="px-6 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Value Impact</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700">Audit Remark</th>
+                            <th class="py-2.5 px-3 text-left text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase">Model Identification</th>
+                            <th class="py-2.5 px-2 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-16">Events</th>
+                            <th class="py-2.5 px-2 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-24">Affected Parts</th>
+                            <th class="py-2.5 px-3 text-right text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-36">ABS Adj. Value</th>
+                            <th class="py-2.5 px-2 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-32">Qty Balance (+/-)</th>
+                            <th class="py-2.5 px-3 text-right text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-32">Net Impact</th>
+                            <th class="py-2.5 px-3 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-16">Detail</th>
                         </tr>
                     </thead>
-                    <tbody id="correctionDetailBody" class="text-[11px] font-bold text-slate-600 dark:text-gray-300 divide-y divide-slate-50 dark:divide-gray-800">
-                        <!-- Loaded via JS -->
+                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
+                        @foreach($correctionByModel as $model)
+                            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors group">
+                                <td class="py-2.5 px-3">
+                                    <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">{{ $model['model_name'] }}</div>
+                                    <div class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">Inventory Category</div>
+                                </td>
+                                <td class="py-2.5 px-2 text-center">
+                                    <span class="inline-flex items-center justify-center font-bold text-[11px] text-indigo-600 dark:text-indigo-400">{{ $model['event_count'] }}</span>
+                                </td>
+                                <td class="py-2.5 px-2 text-center font-bold text-[11px] text-slate-700 dark:text-slate-300">{{ $model['affected_parts'] }}</td>
+                                <td class="py-2.5 px-3 text-right font-mono font-bold text-[11px] text-slate-800 dark:text-slate-200">
+                                    Rp {{ number_format($model['total_correction']) }}
+                                </td>
+                                <td class="py-2.5 px-2">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <span class="text-[9px] font-black text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-xs border border-emerald-200 dark:border-emerald-900/50">+{{ number_format($model['increment_pcs']) }}</span>
+                                        <span class="text-[9px] font-black text-rose-700 bg-rose-50 dark:bg-rose-950/30 px-1.5 py-0.5 rounded-xs border border-rose-200 dark:border-rose-900/50">-{{ number_format($model['decrement_pcs']) }}</span>
+                                    </div>
+                                </td>
+                                <td class="py-2.5 px-3 text-right font-mono font-extrabold text-[11px] {{ $model['net_correction'] < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                                    {{ $model['net_correction'] < 0 ? '−' : '+' }} Rp {{ number_format(abs($model['net_correction'])) }}
+                                </td>
+                                <td class="py-2.5 px-3 text-center">
+                                    <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="View detailed log" class="h-7 w-7 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-300 dark:hover:border-primary-700 transition-all shadow-sm group-hover:shadow-md">
+                                        <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
+
+            {{-- Audit Sub Modal --}}
+            <div id="subModalContainer" class="hidden absolute inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-6 z-30 animate-fade-in">
+                <div class="bg-white dark:bg-gray-900 w-full h-full rounded-xs shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-gray-800 transform transition-all animate-fade-in-up">
+                    <div class="px-5 py-4 border-b border-slate-150 dark:border-gray-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xs bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">
+                                    Audit Trail Log — <span id="modalModelName" class="text-primary-600 dark:text-primary-400">Model Name</span>
+                                </h3>
+                                <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Detailed correction items for this inventory category</p>
+                            </div>
+                        </div>
+                        <button onclick="closeSubModal()" class="w-8 h-8 flex items-center justify-center text-slate-450 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xs transition-all outline-none">
+                            <i class="fa-solid fa-xmark text-base"></i>
+                        </button>
+                    </div>
+                    <div class="overflow-y-auto flex-1 custom-scrollbar text-[10px]">
+                        <table class="custom-table w-full text-left border-collapse" id="correctionSubTable">
+                            <thead class="sticky top-0 bg-slate-50 dark:bg-gray-850 border-b border-slate-200 dark:border-gray-750 z-10">
+                                <tr>
+                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">STO Event</th>
+                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Part No</th>
+                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Reason Category</th>
+                                    <th class="text-right text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase w-24">Quantity Adj.</th>
+                                    <th class="text-right text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase w-32">Value Impact</th>
+                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Audit Remark</th>
+                                </tr>
+                            </thead>
+                            <tbody id="correctionDetailBody" class="divide-y divide-slate-100 dark:divide-gray-850 font-medium">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-5 py-3 bg-slate-50 dark:bg-gray-900/50 border-t border-slate-150 dark:border-gray-850 flex justify-end">
+                        <button onclick="closeSubModal()" class="px-5 py-1.5 bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-600 text-[10px] font-bold text-slate-600 dark:text-gray-300 rounded-xs transition-all shadow-xs outline-none">
+                            BACK TO OVERVIEW
+                        </button>
+                    </div>
+                </div>
+            </div>
             
-            <div class="px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-gray-700 flex justify-end">
-                <button onclick="closeCorrectionModal()" class="px-6 py-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 text-[10px] font-black text-slate-600 dark:text-gray-300 rounded-xs hover:bg-slate-50 transition-all shadow-sm">
+            <div class="px-5 py-3 bg-slate-50 dark:bg-gray-900/50 border-t border-slate-150 dark:border-gray-850 flex justify-end">
+                <button onclick="closeCorrectionModal()" class="px-5 py-1.5 bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-600 text-[10px] font-bold text-slate-600 dark:text-gray-300 rounded-xs transition-all shadow-xs outline-none">
                     CLOSE AUDIT LOG
                 </button>
             </div>
@@ -338,65 +290,529 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // --- Dashboard State ---
-    let trendChart = null;
+    // --- Global Chart.js Defaults (match Outfit layout theme) ---
+    (function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.font.size   = 10.5;
+        Chart.defaults.color       = isDark ? '#94a3b8' : '#64748b';
+        Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+        Chart.defaults.plugins.legend.labels.padding = 14;
+        Chart.defaults.plugins.legend.labels.usePointStyle = false;
+    })();
+
+    // --- Custom Chart.js Plugins ---
+    
+    // Custom plugin to draw yellow numeric value tags on lines/bars
+    // Custom plugin to draw yellow numeric value tags on lines/bars
+    const yellowDataLabelsPlugin = {
+        id: 'yellowDataLabels',
+        afterDatasetsDraw(chart, args, options) {
+            const { ctx } = chart;
+            const opt = options || {};
+            
+            if (!chart.data || !Array.isArray(chart.data.datasets)) return;
+            
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                if (!dataset || !dataset.yellowLabels) return;
+                
+                const meta = chart.getDatasetMeta(datasetIndex);
+                if (!meta || !Array.isArray(meta.data)) return;
+                
+                meta.data.forEach((element, index) => {
+                    if (!element) return;
+                    const value = dataset.data[index];
+                    if (value === undefined || value === null) return;
+                    
+                    let text = value;
+                    if (typeof value === 'number') {
+                        if (dataset.yellowLabelFormat && typeof dataset.yellowLabelFormat === 'function') {
+                            text = dataset.yellowLabelFormat(value, index);
+                        } else {
+                            text = value.toFixed(opt.precision !== undefined ? opt.precision : 2);
+                            if (text.endsWith('.00')) text = text.slice(0, -3);
+                            if (value < 0) {
+                                text = '(' + Math.abs(value).toFixed(opt.precision !== undefined ? opt.precision : 2) + ')';
+                                if (text.endsWith('.00)')) text = text.replace('.00)', ')');
+                            } else if (value === 0 && opt.zeroText) {
+                                text = opt.zeroText;
+                            }
+                        }
+                    }
+                    
+                    let x, y;
+                    if (element.tooltipPosition && typeof element.tooltipPosition === 'function') {
+                        try {
+                            const pos = element.tooltipPosition();
+                            x = pos ? pos.x : element.x;
+                            y = pos ? pos.y : element.y;
+                        } catch (err) {
+                            x = element.x;
+                            y = element.y;
+                        }
+                    } else {
+                        x = element.x;
+                        y = element.y;
+                    }
+                    if (x === undefined || y === undefined) {
+                        x = element.x;
+                        y = element.y;
+                    }
+                    ctx.save();
+                    ctx.font = "bold 10px 'Outfit', sans-serif";
+                    const textWidth = ctx.measureText(text).width;
+                    const rectWidth = textWidth + 8;
+                    const rectHeight = 14;
+                    
+                    ctx.fillStyle = '#fef08a'; // yellow-200
+                    ctx.strokeStyle = '#eab308'; // yellow-500
+                    ctx.lineWidth = 1;
+                    
+                    const rx = x - rectWidth / 2;
+                    let ry;
+                    if (element.base !== undefined) {
+                        const yCenter = (element.y + element.base) / 2;
+                        ry = yCenter - rectHeight / 2;
+                    } else {
+                        ry = y - 20;
+                    }
+                    
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(rx, ry, rectWidth, rectHeight, 2.5);
+                    } else {
+                        ctx.rect(rx, ry, rectWidth, rectHeight);
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#854d0e'; // yellow-800
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(text, x, ry + rectHeight / 2 + 0.5);
+                    ctx.restore();
+                });
+            });
+        }
+    };
+
+    // Custom plugin to draw target threshold lines
+    const targetLinesPlugin = {
+        id: 'targetLines',
+        afterDraw(chart) {
+            const { ctx, scales } = chart;
+            if (!scales || !scales.y) return;
+            const y = scales.y;
+            
+            const plugins = chart.options && chart.options.plugins;
+            if (!plugins) return;
+            const targets = plugins.targetLines;
+            if (!targets || !Array.isArray(targets)) return;
+            
+            targets.forEach(target => {
+                if (!target || typeof target.value !== 'number') return;
+                const yVal = y.getPixelForValue(target.value);
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(chart.chartArea.left, yVal);
+                ctx.lineTo(chart.chartArea.right, yVal);
+                ctx.strokeStyle = target.color || '#ef4444';
+                ctx.lineWidth = target.lineWidth || 1.25;
+                ctx.setLineDash(target.dash || [3, 3]);
+                ctx.stroke();
+                
+                if (target.label) {
+                    ctx.fillStyle = '#fef08a';
+                    ctx.strokeStyle = '#eab308';
+                    ctx.lineWidth = 1;
+                    ctx.font = "bold 10px 'Outfit', sans-serif";
+                    const textWidth = ctx.measureText(target.label).width;
+                    const rx = chart.chartArea.right - textWidth - 8;
+                    const ry = yVal - 7;
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(rx, ry, textWidth + 6, 14, 2.5);
+                    } else {
+                        ctx.rect(rx, ry, textWidth + 6, 14);
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = '#854d0e';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(target.label, rx + (textWidth + 6)/2, ry + 7.5);
+                }
+                ctx.restore();
+            });
+        }
+    };
+
+    Chart.register(yellowDataLabelsPlugin, targetLinesPlugin);
+
+    // --- State Variables ---
+    let loadedEventId = null;
+    let reasonBreakdownData = [];
+    let recentEvents = @json($recentEvents);
+    let statsData = @json($stats);
+    let stoReasons = @json($reasons ?? []);
+    
+    // Sub-Tabs State
+    let summaryActiveTab = 'amount';
+    let accuracyActiveTab = 'net';
+
+    // Pareto Client-Side Pagination
+    let paretoPage = 1;
+    const itemsPerPage = 15;
+
+    // Chart instances
     let paretoChart = null;
+    let problemBreakdownChart = null;
     let accuracyNetChart = null;
     let accuracyAbsChart = null;
-    const statsData = @json($stats);
-    const recentEventsData = @json($recentEvents);
-    const correctionByModel = @json($correctionByModel);
+    let summaryAmountChart = null;
+    let summaryNetChart = null;
+    let summaryAbsChart = null;
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', function() {
-        initTrendChart();
-        setupFilterToggle();
-        
-        // Auto-load first event
-        const firstEvent = document.querySelector('.event-item');
-        if (firstEvent) {
-            firstEvent.click();
+        // Initialize Select2 on #eventSelector with premium config
+        const $selector = $('#eventSelector');
+        if ($selector.length) {
+            $selector.select2({
+                minimumResultsForSearch: -1, // Clean view, no search needed for STO periods
+                dropdownAutoWidth: true,
+                width: '100%'
+            }).on('change', function() {
+                changeStoEvent($(this).val());
+            });
         }
-        
-        updateSummaryKPIs();
+
+        // Auto-select and load the first STO event
+        const selector = document.getElementById('eventSelector');
+        if (selector && selector.options.length > 0) {
+            selector.selectedIndex = 0;
+            changeStoEvent(selector.value);
+        }
+
+        // Initialize all Summary Trend charts
+        initSummaryTrendCharts();
+
+        // Switch to default tabs
+        switchSummaryTab('amount');
+        switchAccuracyTab('net');
     });
 
-    function setupFilterToggle() {
-        const btn = document.getElementById('btnToggleDashFilter');
-        const card = document.getElementById('dashboardFilterCard');
-        if (btn && card) {
-            btn.addEventListener('click', () => card.classList.toggle('hidden'));
-        }
+    // --- Tab Switchers ---
+    function switchSummaryTab(tabId) {
+        summaryActiveTab = tabId;
+        
+        // Tab buttons styling
+        ['amount', 'net', 'abs'].forEach(mode => {
+            const btn = document.getElementById(`summaryTabBtn-${mode}`);
+            if (btn) {
+                if (mode === tabId) {
+                    btn.className = 'segmented-tab active-tab';
+                } else {
+                    btn.className = 'segmented-tab inactive-tab';
+                }
+            }
+        });
+        
+        // Wrapper containers visibility
+        ['amount', 'net', 'abs'].forEach(mode => {
+            const containerId = 'summary' + mode.charAt(0).toUpperCase() + mode.slice(1) + 'Container';
+            const container = document.getElementById(containerId);
+            if (container) {
+                if (mode === tabId) {
+                    container.style.display = 'block';
+                    container.classList.remove('hidden');
+                } else {
+                    container.style.display = 'none';
+                    container.classList.add('hidden');
+                }
+            }
+        });
+        
+        // Resize chart to ensure correct width
+        setTimeout(() => {
+            if (tabId === 'amount' && summaryAmountChart) summaryAmountChart.resize();
+            if (tabId === 'net' && summaryNetChart) summaryNetChart.resize();
+            if (tabId === 'abs' && summaryAbsChart) summaryAbsChart.resize();
+        }, 50);
     }
 
-    function initTrendChart() {
-        const ctx = document.getElementById('eventTrendChart').getContext('2d');
+    function switchAccuracyTab(tabId) {
+        accuracyActiveTab = tabId;
         
-        trendChart = new Chart(ctx, {
+        // Tab buttons styling
+        ['net', 'abs'].forEach(mode => {
+            const btn = document.getElementById(`accuracyTabBtn-${mode}`);
+            if (btn) {
+                if (mode === tabId) {
+                    btn.className = 'segmented-tab active-tab';
+                } else {
+                    btn.className = 'segmented-tab inactive-tab';
+                }
+            }
+        });
+        
+        // Wrapper containers visibility
+        ['net', 'abs'].forEach(mode => {
+            const containerId = 'accuracy' + mode.charAt(0).toUpperCase() + mode.slice(1) + 'Container';
+            const container = document.getElementById(containerId);
+            if (container) {
+                if (mode === tabId) {
+                    container.style.display = 'block';
+                    container.classList.remove('hidden');
+                } else {
+                    container.style.display = 'none';
+                    container.classList.add('hidden');
+                }
+            }
+        });
+        
+        // Resize chart to ensure correct width
+        setTimeout(() => {
+            if (tabId === 'net' && accuracyNetChart) accuracyNetChart.resize();
+            if (tabId === 'abs' && accuracyAbsChart) accuracyAbsChart.resize();
+        }, 50);
+    }
+
+    // --- Dropdown Selector Listener ---
+    function changeStoEvent(hashId) {
+        if (!hashId) return;
+        loadedEventId = hashId;
+
+        // Sync Select2 value if programmatically triggered and differs
+        const $selector = $('#eventSelector');
+        if ($selector.length && $selector.val() !== hashId) {
+            $selector.val(hashId).trigger('change.select2');
+        }
+
+        // Find selected option attributes securely
+        const $option = $selector.find(`option[value="${hashId}"]`);
+        if (!$option.length) return;
+
+        const eventCode = $option.attr('data-code');
+        const periodStr = $option.attr('data-period');
+        
+        // Update Pareto badge
+        const badge = document.getElementById('tab1-event-badge');
+        if (badge) badge.innerText = eventCode;
+
+        fetch(`/inventory/sto/${hashId}/pareto-by-model`)
+            .then(res => res.json())
+            .then(data => {
+                reasonBreakdownData = data.reason_breakdown || [];
+                paretoPage = 1;
+
+                renderParetoDashboard(data);
+                renderCustomerAccuracyCharts(data);
+            });
+    }
+
+    // --- TAB 1 (PARETO ANALYSIS) RENDERING ---
+
+    function renderParetoDashboard(data) {
+        if (paretoChart) {
+            try { paretoChart.destroy(); } catch(e) {}
+            paretoChart = null;
+        }
+        let pCanvas = document.getElementById('paretoModelChart');
+        if (pCanvas) {
+            let newPCanvas = document.createElement('canvas');
+            newPCanvas.id = 'paretoModelChart';
+            newPCanvas.className = 'absolute inset-0 w-full h-full';
+            pCanvas.parentNode.replaceChild(newPCanvas, pCanvas);
+        }
+        const ctx = document.getElementById('paretoModelChart').getContext('2d');
+
+        // Sort reasoning parts by absolute deviation descending
+        const sortedBreakdown = [...reasonBreakdownData].sort((a, b) => b.abs_amount - a.abs_amount);
+        const totalAbsSum = sortedBreakdown.reduce((sum, item) => sum + item.abs_amount, 0);
+
+        // Precompute absolute cumulative percentages
+        let runningSum = 0;
+        const allCumPcts = sortedBreakdown.map(item => {
+            runningSum += item.abs_amount;
+            return totalAbsSum > 0 ? (runningSum / totalAbsSum) * 100 : 0;
+        });
+
+        // Sliced items for the current page
+        const startIdx = (paretoPage - 1) * itemsPerPage;
+        const slicedParts = sortedBreakdown.slice(startIdx, startIdx + itemsPerPage);
+        const slicedCumPcts = allCumPcts.slice(startIdx, startIdx + itemsPerPage);
+
+        const totalPages = Math.ceil(sortedBreakdown.length / itemsPerPage) || 1;
+        document.getElementById('paretoPageIndicator').innerText = `${paretoPage}/${totalPages}`;
+        document.getElementById('btnParetoPrev').disabled = (paretoPage === 1);
+        document.getElementById('btnParetoNext').disabled = (paretoPage === totalPages);
+
+        const labels = slicedParts.map(item => item.part_no);
+        const deviationValues = slicedParts.map(item => item.abs_amount);
+
+        paretoChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: recentEventsData.map(e => e.period),
+                labels: labels,
                 datasets: [
                     {
-                        label: 'ABS % Deviation',
-                        data: recentEventsData.map(e => e.abs_pct),
-                        backgroundColor: 'rgba(59, 130, 246, 0.85)',
-                        borderRadius: 3,
-                        barThickness: 40,
+                        label: 'Absolute Deviation',
+                        data: deviationValues,
+                        backgroundColor: '#6366f1',
+                        barPercentage: 0.45,
+                        categoryPercentage: 0.6,
+                        yAxisID: 'y',
+                        yellowLabels: true,
+                        yellowLabelFormat: v => {
+                            if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+                            if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+                            return v;
+                        },
                         order: 2
                     },
                     {
-                        label: 'Net % Deviation',
-                        data: recentEventsData.map(e => e.net_pct),
+                        label: 'Cumulative %',
+                        data: slicedCumPcts,
                         type: 'line',
-                        borderColor: '#10b981',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#10b981',
+                        borderColor: '#f59e0b',
+                        borderWidth: 1.5,
+                        pointBackgroundColor: '#f59e0b',
                         pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
+                        pointBorderWidth: 1,
+                        pointRadius: 3,
+                        fill: false,
+                        tension: 0.15,
+                        yAxisID: 'y1',
+                        yellowLabels: true,
+                        yellowLabelFormat: v => v.toFixed(0) + '%',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 10.5, weight: 'bold' }
+                        }
+                    },
+                    tooltip: {
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 10 },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 0) {
+                                    label += 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                                } else {
+                                    label += context.parsed.y.toFixed(1) + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    yellowDataLabels: { precision: 0 }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        position: 'left',
+                        grace: '30%',
+                        grid: { color: 'rgba(156, 163, 175, 0.12)', borderDash: [3, 3] },
+                        ticks: {
+                            font: { size: 10, weight: 'bold' },
+                            maxTicksLimit: 5,
+                            callback: v => {
+                                if (v >= 1000000) return (v / 1000000).toFixed(0) + 'M';
+                                if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+                                return v;
+                            }
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 110,
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            font: { size: 10, weight: 'bold' },
+                            maxTicksLimit: 5,
+                            callback: v => v.toFixed(0) + '%'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            font: { size: 9.5, weight: 'bold' },
+                            maxRotation: 45,
+                            minRotation: 45,
+                            autoSkip: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Render Problem Breakdown Frequency Chart (Bottom Right Panel)
+        const distribution = data.reason_distribution || [];
+        if (problemBreakdownChart) {
+            try { problemBreakdownChart.destroy(); } catch(e) {}
+            problemBreakdownChart = null;
+        }
+        let pbCanvas = document.getElementById('problemBreakdownChart');
+        if (pbCanvas) {
+            let newPbCanvas = document.createElement('canvas');
+            newPbCanvas.id = 'problemBreakdownChart';
+            newPbCanvas.className = 'absolute inset-0 w-full h-full';
+            pbCanvas.parentNode.replaceChild(newPbCanvas, pbCanvas);
+        }
+        const pbCtx = document.getElementById('problemBreakdownChart').getContext('2d');
+
+        // Dynamic names from database
+        const labelsPB = stoReasons.map(item => item.name);
+        const dataPB = stoReasons.map(item => {
+            const found = distribution.find(d => d.reason_name === item.name || d.reason_name.toUpperCase() === item.name.toUpperCase());
+            return found ? found.count : 0;
+        });
+
+        const maxValPB = Math.max(...dataPB) || 0;
+        const suggestedMaxPB = maxValPB > 0 ? Math.ceil(maxValPB * 1.4) : 10;
+        
+        problemBreakdownChart = new Chart(pbCtx, {
+            type: 'bar',
+            data: {
+                labels: labelsPB,
+                datasets: [
+                    {
+                        label: 'Problem Volume',
+                        data: dataPB,
+                        backgroundColor: '#6366f1',
+                        barPercentage: 0.45,
+                        categoryPercentage: 0.6,
+                        order: 2
+                    },
+                    {
+                        label: 'Trend',
+                        data: dataPB,
+                        type: 'line',
+                        borderColor: '#f59e0b',
+                        borderWidth: 1.5,
+                        pointBackgroundColor: '#f59e0b',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1.5,
                         pointRadius: 4,
                         fill: false,
-                        tension: 0.4,
+                        tension: 0.15,
+                        yellowLabels: true, // triggers custom yellow label tags
                         order: 1
                     }
                 ]
@@ -407,210 +823,374 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                        padding: 12,
                         titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 },
-                        callbacks: {
-                            label: (context) => `${context.dataset.label}: ${context.raw}%`
-                        }
-                    }
+                        bodyFont: { size: 10 }
+                    },
+                    yellowDataLabels: { precision: 0 }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { borderDash: [5, 5], color: 'rgba(156, 163, 175, 0.2)' },
-                        ticks: { font: { size: 9, weight: 'bold' }, callback: v => v + '%' }
+                        suggestedMax: suggestedMaxPB,
+                        grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] },
+                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 10, weight: 'black' } }
+                        ticks: { font: { size: 9, weight: 'black' }, maxRotation: 30 }
                     }
                 }
             }
         });
     }
 
-    function loadPareto(hashId, eventCode) {
-        document.querySelectorAll('.event-item').forEach(el => el.classList.remove('active-event', 'bg-primary-50/50', 'border-primary-200', 'dark:bg-primary-900/10'));
-        
-        // Find current target if called from click, or the element if called programmatically
-        const target = event && event.currentTarget ? event.currentTarget : document.querySelector(`[onclick*="${hashId}"]`);
-        
-        if (target) {
-            target.classList.add('active-event', 'bg-primary-50/50', 'border-primary-200', 'dark:bg-primary-900/10');
+    function prevParetoPage() {
+        if (paretoPage > 1) {
+            paretoPage--;
+            const selector = document.getElementById('eventSelector');
+            changeStoEvent(selector.value);
         }
-        
-        document.getElementById('activeEventBadge').innerText = eventCode;
-
-        fetch(`/inventory/sto/${hashId}/pareto-by-model`)
-            .then(res => res.json())
-            .then(data => {
-                renderAccuracyCharts(data.pareto);
-                renderParetoChart(data.pareto);
-                renderReasonTable(data.reason_breakdown);
-                
-                if (data.pareto.length > 0) {
-                    const top = data.pareto[0];
-                    document.getElementById('topDeviationModel').innerText = top.model_name;
-                }
-            });
     }
 
-    function renderAccuracyCharts(paretoData) {
-        const netCtx = document.getElementById('accuracyNetChart').getContext('2d');
-        const absCtx = document.getElementById('accuracyAbsChart').getContext('2d');
-        if (accuracyNetChart) accuracyNetChart.destroy();
-        if (accuracyAbsChart) accuracyAbsChart.destroy();
+    function nextParetoPage() {
+        const sortedBreakdown = [...reasonBreakdownData].sort((a, b) => b.abs_amount - a.abs_amount);
+        const totalPages = Math.ceil(sortedBreakdown.length / itemsPerPage) || 1;
+        if (paretoPage < totalPages) {
+            paretoPage++;
+            const selector = document.getElementById('eventSelector');
+            changeStoEvent(selector.value);
+        }
+    }
 
-        const labels = paretoData.map(d => [d.customer_code && d.customer_code !== 'Unknown' ? d.customer_code : 'Unknown', d.model_name]);
-        const sysData = paretoData.map(d => d.system_amount / 1000000);
-        const realData = paretoData.map(d => d.real_amount / 1000000);
-        const netData = paretoData.map(d => d.net_amount / 1000000);
-        const absData = paretoData.map(d => d.abs_amount / 1000000);
+    // --- TAB 2 (CUSTOMER ACCURACY) RENDERING ---
 
-        const commonOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)} Mio` }
-                }
+    function renderCustomerAccuracyCharts(data) {
+        const paretoData = data.pareto || [];
+        const labels = paretoData.map(d => [d.model_name, d.customer_code]);
+        
+        const amountCO = paretoData.map(d => d.system_amount / 1000000);
+        const amountSTO = paretoData.map(d => d.real_amount / 1000000);
+        const sumNET = paretoData.map(d => d.net_amount / 1000000);
+        const sumABS = paretoData.map(d => d.abs_amount / 1000000);
+
+        const commonScales = {
+            y: {
+                beginAtZero: true,
+                position: 'left',
+                grace: '35%',
+                grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] },
+                ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 },
+                title: { display: true, text: 'Millions', font: { size: 9, weight: 'bold' } }
             },
-            scales: {
-                y: { type: 'linear', position: 'left', title: { display: true, text: 'Millions', font: { size: 10 } }, ticks: { font: { size: 9 } } },
-                y1: { type: 'linear', position: 'right', title: { display: true, text: 'Millions', font: { size: 10 } }, ticks: { font: { size: 9 } }, grid: { drawOnChartArea: false } },
-                x: { ticks: { font: { size: 10, weight: 'bold' } } }
+            y1: {
+                beginAtZero: true,
+                position: 'right',
+                grace: '35%',
+                grid: { drawOnChartArea: false },
+                ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 },
+                title: { display: true, text: 'Millions', font: { size: 9, weight: 'bold' } }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { font: { size: 9.5, weight: 'black' } }
             }
         };
 
-        // Render NET Chart
+        const commonPluginOptions = {
+            legend: {
+                position: 'bottom',
+                labels: { boxWidth: 12, font: { size: 10.5, weight: 'bold' } }
+            },
+            tooltip: {
+                titleFont: { size: 11, weight: 'bold' },
+                bodyFont: { size: 10 }
+            },
+            yellowDataLabels: { precision: 2, zeroText: '-' }
+        };
+
+        // Render NET Chart (Left)
+        if (accuracyNetChart) {
+            try { accuracyNetChart.destroy(); } catch(e) {}
+            accuracyNetChart = null;
+        }
+        let netCanvas = document.getElementById('accuracyNetChart');
+        if (netCanvas) {
+            let newNetCanvas = document.createElement('canvas');
+            newNetCanvas.id = 'accuracyNetChart';
+            newNetCanvas.className = 'w-full h-full';
+            netCanvas.parentNode.replaceChild(newNetCanvas, netCanvas);
+        }
+        const netCtx = document.getElementById('accuracyNetChart').getContext('2d');
         accuracyNetChart = new Chart(netCtx, {
             type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Amount CO', data: sysData, backgroundColor: '#0f766e', barPercentage: 0.8, categoryPercentage: 0.8, order: 2, yAxisID: 'y' },
-                    { label: 'Amount STO', data: realData, backgroundColor: '#f97316', barPercentage: 0.8, categoryPercentage: 0.8, order: 2, yAxisID: 'y' },
-                    { label: 'Sum of NET', data: netData, type: 'line', borderColor: '#ef4444', borderWidth: 2, pointBackgroundColor: '#ef4444', fill: false, order: 1, yAxisID: 'y1' }
-                ]
-            },
-            options: commonOptions
-        });
-
-        // Render ABS Chart
-        accuracyAbsChart = new Chart(absCtx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    { label: 'Amount STO', data: realData, backgroundColor: '#0f766e', barPercentage: 0.8, categoryPercentage: 0.8, order: 2, yAxisID: 'y' },
-                    { label: 'Amount CO', data: sysData, backgroundColor: '#f97316', barPercentage: 0.8, categoryPercentage: 0.8, order: 2, yAxisID: 'y' },
-                    { label: 'Sum of ABS', data: absData, type: 'line', borderColor: '#ef4444', borderWidth: 2, pointBackgroundColor: '#ef4444', fill: false, order: 1, yAxisID: 'y1' }
-                ]
-            },
-            options: commonOptions
-        });
-    }
-
-    function renderParetoChart(paretoData) {
-        const ctx = document.getElementById('paretoModelChart').getContext('2d');
-        if (paretoChart) paretoChart.destroy();
-        
-        paretoChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: paretoData.map(d => d.model_name),
-                datasets: [
                     {
-                        label: 'ABS Deviation Value',
-                        data: paretoData.map(d => d.abs_amount),
-                        backgroundColor: paretoData.map(d => d.abs_pct > 25 ? 'rgba(244, 63, 94, 0.8)' : 'rgba(59, 130, 246, 0.7)'),
-                        borderRadius: 2,
-                        yAxisID: 'y'
+                        label: 'System Amount (CO)',
+                        data: amountCO,
+                        backgroundColor: '#6366f1',
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.7,
+                        yAxisID: 'y',
+                        order: 2
                     },
                     {
-                        label: 'Cumulative %',
-                        data: paretoData.map(d => d.cumulative_pct),
+                        label: 'Physical Amount (STO)',
+                        data: amountSTO,
+                        backgroundColor: '#10b981',
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.7,
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        label: 'Net Deviation',
+                        data: sumNET,
                         type: 'line',
-                        borderColor: '#f59e0b',
-                        borderWidth: 2,
+                        borderColor: '#ef4444',
+                        borderWidth: 1.5,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
                         pointRadius: 4,
-                        pointBackgroundColor: '#f59e0b',
-                        yAxisID: 'y1'
+                        fill: false,
+                        tension: 0.15,
+                        yellowLabels: true,
+                        yAxisID: 'y1',
+                        order: 1
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: commonPluginOptions,
+                scales: commonScales
+            }
+        });
+
+        // Render ABS Chart (Right)
+        if (accuracyAbsChart) {
+            try { accuracyAbsChart.destroy(); } catch(e) {}
+            accuracyAbsChart = null;
+        }
+        let absCanvas = document.getElementById('accuracyAbsChart');
+        if (absCanvas) {
+            let newAbsCanvas = document.createElement('canvas');
+            newAbsCanvas.id = 'accuracyAbsChart';
+            newAbsCanvas.className = 'w-full h-full';
+            absCanvas.parentNode.replaceChild(newAbsCanvas, absCanvas);
+        }
+        const absCtx = document.getElementById('accuracyAbsChart').getContext('2d');
+        accuracyAbsChart = new Chart(absCtx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Physical Amount (STO)',
+                        data: amountSTO,
+                        backgroundColor: '#10b981',
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.7,
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        label: 'System Amount (CO)',
+                        data: amountCO,
+                        backgroundColor: '#6366f1',
+                        barPercentage: 0.5,
+                        categoryPercentage: 0.7,
+                        yAxisID: 'y',
+                        order: 2
+                    },
+                    {
+                        label: 'Absolute Deviation',
+                        data: sumABS,
+                        type: 'line',
+                        borderColor: '#ef4444',
+                        borderWidth: 1.5,
+                        pointBackgroundColor: '#ef4444',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1,
+                        pointRadius: 4,
+                        fill: false,
+                        tension: 0.15,
+                        yellowLabels: true,
+                        yAxisID: 'y1',
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: commonPluginOptions,
+                scales: commonScales
+            }
+        });
+
+        // Force correct container visibility after recreating charts
+        switchAccuracyTab(accuracyActiveTab);
+    }
+
+    // --- TAB 3 (SUMMARY STO TRENDS) RENDERING ---
+
+    function initSummaryTrendCharts() {
+        const summaryCycles = [...recentEvents].slice(-3); // July 25, Aug 25, Dec 25
+        
+        const periods = summaryCycles.map(c => c.period);
+        const amounts = summaryCycles.map(c => c.total_amount);
+        const netPcts = summaryCycles.map(c => c.net_pct);
+        const absPcts = summaryCycles.map(c => c.abs_pct);
+
+        // 1. Amount IDR Chart
+        const amtCtx = document.getElementById('summaryAmountChart').getContext('2d');
+        if (summaryAmountChart) summaryAmountChart.destroy();
+        summaryAmountChart = new Chart(amtCtx, {
+            type: 'bar',
+            data: {
+                labels: periods,
+                datasets: [{
+                    label: 'Amount IDR',
+                    data: amounts.map(a => a / 1000000), // convert to Millions
+                    backgroundColor: '#10b981',
+                    barPercentage: 0.35,
+                    categoryPercentage: 0.6,
+                    yellowLabels: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 10 }
+                    },
+                    yellowDataLabels: { precision: 0 }
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { borderDash: [5, 5], color: 'rgba(156, 163, 175, 0.1)' },
-                        ticks: { font: { size: 9 }, callback: v => 'Rp ' + new Intl.NumberFormat('id-ID').format(v) }
+                        grace: '35%',
+                        title: { display: true, text: 'Millions', font: { size: 9, weight: 'bold' } },
+                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 },
+                        grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] }
                     },
-                    y1: {
-                        position: 'right',
-                        max: 100, min: 0,
-                        grid: { display: false },
-                        ticks: { font: { size: 9, weight: 'bold' }, callback: v => v + '%' }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 9, weight: 'black' }, autoSkip: false, maxRotation: 45 }
-                    }
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'black' } } }
                 }
             }
         });
+
+        // 2. Net % Chart (Target Dashed Lines +/- 1%)
+        const netCtx = document.getElementById('summaryNetChart').getContext('2d');
+        if (summaryNetChart) summaryNetChart.destroy();
+        summaryNetChart = new Chart(netCtx, {
+            type: 'bar',
+            data: {
+                labels: periods,
+                datasets: [{
+                    label: 'Net %',
+                    data: netPcts,
+                    backgroundColor: '#f59e0b',
+                    barPercentage: 0.35,
+                    categoryPercentage: 0.6,
+                    yellowLabels: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 10 }
+                    },
+                    yellowDataLabels: { precision: 2 },
+                    targetLines: [
+                        { value: 1.0, color: '#ef4444', dash: [3, 3], label: '1%' },
+                        { value: -1.0, color: '#ef4444', dash: [3, 3], label: '-1%' }
+                    ]
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grace: '35%',
+                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5, callback: v => v.toFixed(0) + '%' },
+                        grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] }
+                    },
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'black' } } }
+                }
+            }
+        });
+
+        // 3. ABS % Chart (Target Dashed Line 4%)
+        const absCtx = document.getElementById('summaryAbsChart').getContext('2d');
+        if (summaryAbsChart) summaryAbsChart.destroy();
+        summaryAbsChart = new Chart(absCtx, {
+            type: 'bar',
+            data: {
+                labels: periods,
+                datasets: [{
+                    label: 'ABS %',
+                    data: absPcts,
+                    backgroundColor: '#6366f1',
+                    barPercentage: 0.35,
+                    categoryPercentage: 0.6,
+                    yellowLabels: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        titleFont: { size: 11, weight: 'bold' },
+                        bodyFont: { size: 10 }
+                    },
+                    yellowDataLabels: { precision: 2 },
+                    targetLines: [
+                        { value: 4.0, color: '#ef4444', dash: [3, 3], label: '4%' }
+                    ]
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grace: '35%',
+                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5, callback: v => v.toFixed(0) + '%' },
+                        grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] }
+                    },
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'black' } } }
+                }
+            }
+        });
+
+        // Force correct container visibility on initialization
+        switchSummaryTab(summaryActiveTab);
     }
 
-    function renderReasonTable(reasons) {
-        const tbody = document.querySelector('#reasonTable tbody');
-        tbody.innerHTML = reasons.length ? '' : '<tr><td colspan="6" class="px-6 py-10 text-center italic text-slate-400">No records found.</td></tr>';
-
-        reasons.forEach((row, idx) => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors';
-            tr.innerHTML = `
-                <td class="px-4 py-3 text-center font-bold text-slate-500">${idx + 1}</td>
-                <td class="px-4 py-3 font-semibold text-slate-800 dark:text-white uppercase tracking-tight">${row.model_name} ${row.customer_code && row.customer_code !== 'Unknown' ? '- ' + row.customer_code : ''}</td>
-                <td class="px-4 py-3">
-                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-widest ${row.reason_category === 'SHORTAGE' ? 'bg-rose-100 text-rose-700 border border-rose-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}">
-                        ${row.reason_name}
-                    </span>
-                </td>
-                <td class="px-4 py-3 text-slate-500 italic text-[10px]">T.B.D</td>
-                <td class="px-4 py-3 text-center text-slate-500 text-[10px] font-bold">ME</td>
-                <td class="px-4 py-3 text-center text-slate-500 text-[10px]">T.B.D</td>
-            `;
-            tbody.appendChild(tr);
-        });
+    // --- CORRECTION AUDIT LOG MODAL HANDLERS ---
+    
+    function openGlobalAuditLogsModal() {
+        document.getElementById('correctionDetailModal').classList.remove('hidden');
     }
 
-    function updateSummaryKPIs() {
-        let totalInc = 0, totalDec = 0;
-        correctionByModel.forEach(m => {
-            totalInc += m.increment_pcs;
-            totalDec += m.decrement_pcs;
-        });
-        
-        document.getElementById('totalIncPcs').innerText = '+' + new Intl.NumberFormat('id-ID').format(totalInc) + ' Pcs';
-        document.getElementById('totalDecPcs').innerText = '-' + new Intl.NumberFormat('id-ID').format(totalDec) + ' Pcs';
-        document.getElementById('totalCorrectionPcs').innerText = new Intl.NumberFormat('id-ID').format(totalInc + totalDec);
+    function closeCorrectionModal() {
+        document.getElementById('correctionDetailModal').classList.add('hidden');
+        closeSubModal();
     }
 
     function showCorrectionDetail(modelName) {
         document.getElementById('modalModelName').innerText = modelName;
         const tbody = document.getElementById('correctionDetailBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="p-20 text-center"><i class="fa-solid fa-spinner fa-spin text-3xl text-primary-500"></i></td></tr>';
-        document.getElementById('correctionDetailModal').classList.remove('hidden');
+        tbody.innerHTML = '<tr><td colspan="6" class="p-20 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl text-primary-500"></i></td></tr>';
+        document.getElementById('subModalContainer').classList.remove('hidden');
 
         fetch(`/inventory/sto/dashboard/correction-log/${encodeURIComponent(modelName)}`)
             .then(res => res.json())
@@ -618,41 +1198,105 @@
                 tbody.innerHTML = data.detail.length ? '' : '<tr><td colspan="6" class="p-10 text-center italic text-slate-400">No logs found.</td></tr>';
                 data.detail.forEach(row => {
                     const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 dark:hover:bg-gray-800/50 transition-colors';
+                    tr.className = 'hover:bg-slate-50 dark:hover:bg-gray-850 transition-colors';
                     const date = new Date(row.period_end).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
                     tr.innerHTML = `
-                        <td class="px-6 py-4">
-                            <div class="text-primary-600 font-black tracking-tighter uppercase">${row.event_code}</div>
-                            <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">${date}</div>
+                        <td>
+                            <div class="text-[10px] font-bold text-primary-600 dark:text-primary-400 tracking-tight uppercase">${row.event_code}</div>
+                            <div class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">${date}</div>
                         </td>
-                        <td class="px-6 py-4 font-black text-slate-800 dark:text-white">${row.part_no}</td>
-                        <td class="px-6 py-4"><span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-[9px] font-black text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-gray-600">${row.reason_name}</span></td>
-                        <td class="px-6 py-4 text-right">
-                            <span class="font-black ${row.diff_qty < 0 ? 'text-rose-500' : 'text-emerald-500'}">
+                        <td class="font-mono font-bold text-xs text-slate-800 dark:text-slate-200">${row.part_no}</td>
+                        <td>
+                            <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-gray-800 rounded-xs text-[9px] font-semibold text-slate-650 dark:text-slate-350 border border-slate-200/60 dark:border-gray-700/60 tracking-wider uppercase">
+                                ${row.reason_name}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            <span class="font-bold text-xs ${row.diff_qty < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
                                 ${row.diff_qty > 0 ? '+' : ''}${new Intl.NumberFormat('id-ID').format(row.diff_qty)}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right font-black text-slate-800 dark:text-white">Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}</td>
-                        <td class="px-6 py-4 italic text-slate-400 font-medium">${row.remark || '-'}</td>
+                        <td class="text-right font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
+                            Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
+                        </td>
+                        <td class="italic text-slate-500 dark:text-slate-450 font-normal break-words max-w-[200px]">${row.remark || '-'}</td>
                     `;
                     tbody.appendChild(tr);
                 });
             });
     }
 
-    function closeCorrectionModal() {
-        document.getElementById('correctionDetailModal').classList.add('hidden');
+    function closeSubModal() {
+        document.getElementById('subModalContainer').classList.add('hidden');
     }
 </script>
 
 <style>
-    .active-event { position: relative; }
-    .active-event::after { content: ''; position: absolute; left: 0; top: 20%; height: 60%; width: 3px; background: #3b82f6; border-radius: 0 4px 4px 0; }
-    .animate-fade-in-down { animation: fadeInDown 0.3s ease-out; }
-    .animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-bounce-slow { animation: bounce 2s infinite; }
-    @keyframes bounce { 0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8,0,1,1); } 50% { transform: none; animation-timing-function: cubic-bezier(0,0,0.2,1); } }
+    /* ── Animations ───────────────────────────────────────── */
+    .animate-fade-in     { animation: fadeIn    0.25s ease-out forwards; }
+    .animate-fade-in-up  { animation: fadeInUp  0.25s ease-out forwards; }
+    @keyframes fadeIn    { from { opacity: 0; transform: scale(0.995); } to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    @keyframes spin-custom { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .animate-spin, .fa-spin { animation: spin-custom 1s linear infinite !important; display: inline-block !important; }
+
+    /* ── Custom Scrollbar ─────────────────────────────────── */
+    .custom-scrollbar::-webkit-scrollbar       { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156,163,175,0.4); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(156,163,175,0.65); }
+
+    /* ── KPI Card hover lift ──────────────────────────────── */
+    .kpi-card-hover {
+        transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    }
+    .kpi-card-hover:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px -2px rgba(0,0,0,0.08);
+        border-color: #bfdbfe;
+    }
+    .dark .kpi-card-hover:hover { border-color: #3b82f640; }
+
+    /* ── Chart Card hover lift ────────────────────────────── */
+    .chart-card-hover {
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .chart-card-hover:hover {
+        box-shadow: 0 4px 16px -4px rgba(0,0,0,0.1);
+        border-color: #e0e7ff;
+    }
+    .dark .chart-card-hover:hover { border-color: #4f46e520; }
+
+    /* ── Segmented Tab Controls ───────────────────────────── */
+    .segmented-tab {
+        padding: 3px 9px;
+        border-radius: 0.125rem;
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        transition: all 0.15s ease;
+        white-space: nowrap;
+    }
+    .segmented-tab.active-tab {
+        background: #ffffff;
+        color: #2563eb;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .dark .segmented-tab.active-tab {
+        background: #4b5563;
+        color: #93c5fd;
+    }
+    .segmented-tab.inactive-tab {
+        background: transparent;
+        color: #94a3b8;
+    }
+    .segmented-tab.inactive-tab:hover {
+        color: #475569;
+        background: rgba(255,255,255,0.5);
+    }
+    .dark .segmented-tab.inactive-tab { color: #94a3b8; }
+    .dark .segmented-tab.inactive-tab:hover { color: #e2e8f0; background: rgba(255,255,255,0.06); }
 </style>
 @endpush
