@@ -86,6 +86,7 @@
         let deleteUrl = '';
 
         window.masterTable = window.defaultDataTable('#toolCategoryTable', {
+            serverSide: true,
             ajax: { url: apiBase, type: 'GET' },
             columns: [
                 { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },

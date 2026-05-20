@@ -112,6 +112,7 @@
 <script>
     $(function() {
         const table = window.defaultDataTable('#stoEventTable', {
+            serverSide: true,
             ajax: "{{ route('inventory.tool.sto.index') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center' },

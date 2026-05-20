@@ -95,6 +95,7 @@
 <script>
     $(function() {
         const table = window.defaultDataTable('#sketchTable', {
+            serverSide: true,
             ajax: "{{ route('inventory.tool.sketch.index') }}",
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center' },

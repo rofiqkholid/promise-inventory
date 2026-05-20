@@ -171,6 +171,7 @@ $(document).ready(function() {
     let currentStatus = 'active';
 
     window.slowTable = window.defaultDataTable('#slowBatchTable', {
+        serverSide: true,
         ajax: {
             url: apiBase, type: 'GET',
             data: (d) => { d.status = currentStatus; }

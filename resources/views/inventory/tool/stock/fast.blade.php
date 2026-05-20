@@ -238,6 +238,7 @@ $(document).ready(function() {
     let hasLow = false;
 
     window.fastStockTable = window.defaultDataTable('#fastStockTable', {
+        serverSide: true,
         ajax: { url: apiList, type: 'GET' },
         order: [[3, 'asc']],
         columns: [
@@ -426,6 +427,8 @@ $(document).ready(function() {
 
         if (!historyTable) {
             historyTable = window.defaultDataTable('#historyTable', {
+                processing: true,
+                serverSide: true,
                 ajax: { 
                     url: "{{ route('inventory.tool.fast-stock.history') }}", 
                     type: 'GET',
@@ -433,8 +436,7 @@ $(document).ready(function() {
                         d.date_range = $('#filter_date_range').val();
                         d.tool_id = $('#filterHistToolId').val();
                         d.transaction_type = $('#filterHistType').val();
-                    },
-                    dataSrc: 'data'
+                    }
                 },
                 columns: [
                     { 

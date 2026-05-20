@@ -11,8 +11,33 @@ class ToolLocationController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
-            $data = TolLocation::where('is_active', true)->orderBy('code')->get();
-            return response()->json(['data' => $data]);
+            $draw   = (int) $request->input('draw');
+            $start  = (int) $request->input('start', 0);
+            $length = (int) $request->input('length', 10);
+            $search = $request->input('search.value');
+
+            $query = TolLocation::where('is_active', true);
+
+            $recordsTotal = (clone $query)->count();
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('code', 'like', "%$search%")
+                      ->orWhere('name', 'like', "%$search%")
+                      ->orWhere('category', 'like', "%$search%")
+                      ->orWhere('description', 'like', "%$search%");
+                });
+            }
+
+            $recordsFiltered = (clone $query)->count();
+            $data = $query->orderBy('code')->skip($start)->take($length)->get();
+
+            return response()->json([
+                'draw' => $draw,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $data
+            ]);
         }
         return view('inventory.tool.location.index');
     }

@@ -215,14 +215,31 @@ class ToolFastStockController extends Controller
             ->when($dateStart, fn($q) => $q->whereDate('transacted_at', '>=', $dateStart))
             ->when($dateEnd, fn($q) => $q->whereDate('transacted_at', '<=', $dateEnd))
             ->when($transType, fn($q) => $q->where('transaction_type', $transType))
-            ->when($searchTool, fn($q) => $q->whereHas('tool', fn($t) => $t->where('name', 'like', "%$searchTool%")))
-            ->orderBy('transacted_at', 'desc');
+            ->when($searchTool, fn($q) => $q->whereHas('tool', fn($t) => $t->where('name', 'like', "%$searchTool%")));
 
         if ($request->ajax()) {
-            $data = $query->paginate(50);
+            $draw   = (int) $request->input('draw', 1);
+            $start  = (int) $request->input('start', 0);
+            $length = (int) $request->input('length', 10);
+            $search = $request->input('search.value');
+
+            $recordsTotal = (clone $query)->count();
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->whereHas('tool', fn($t) => $t->where('name', 'like', "%$search%")->orWhere('brand', 'like', "%$search%"))
+                      ->orWhere('ref_doc', 'like', "%$search%")
+                      ->orWhere('note', 'like', "%$search%")
+                      ->orWhereHas('operator', fn($u) => $u->where('name', 'like', "%$search%"));
+                });
+            }
+
+            $recordsFiltered = (clone $query)->count();
+
+            $data = $query->orderBy('transacted_at', 'desc')->skip($start)->take($length)->get();
             
             // Transform to include qty_min and historical running stock balance for display
-            $data->getCollection()->transform(function($item) {
+            $data->transform(function($item) {
                 // Calculate historical running stock at the time of this transaction (SUM up to this transaction ID)
                 $runningStock = DB::table('tol_t_transactions')
                     ->where('tool_id', $item->tool_id)
@@ -235,7 +252,12 @@ class ToolFastStockController extends Controller
                 return $item;
             });
 
-            return response()->json($data);
+            return response()->json([
+                'draw'            => $draw,
+                'recordsTotal'    => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data'            => $data,
+            ]);
         }
 
         return response()->json(['status' => 'error', 'message' => 'AJAX only.'], 400);

@@ -11,8 +11,33 @@ class ToolCategoryController extends Controller
     public function index(Request $request)
     {
         if ($request->wantsJson() || $request->ajax()) {
-            $data = TolCategory::orderBy('name', 'asc')->get();
-            return response()->json(['data' => $data]);
+            $draw   = (int) $request->input('draw');
+            $start  = (int) $request->input('start', 0);
+            $length = (int) $request->input('length', 10);
+            $search = $request->input('search.value');
+
+            $query = TolCategory::query();
+
+            $recordsTotal = (clone $query)->count();
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                      ->orWhere('code_prefix', 'like', "%$search%")
+                      ->orWhere('moving_type', 'like', "%$search%")
+                      ->orWhere('description', 'like', "%$search%");
+                });
+            }
+
+            $recordsFiltered = (clone $query)->count();
+            $data = $query->orderBy('name', 'asc')->skip($start)->take($length)->get();
+
+            return response()->json([
+                'draw' => $draw,
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $data
+            ]);
         }
         return view('inventory.tool.category.index');
     }
