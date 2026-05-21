@@ -7,16 +7,54 @@
 <div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar select-none">
     {{-- Header, KPIs & Filters --}}
     <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 shrink-0">
-        <!-- Title & Subtitle Section -->
+        <!-- Section 1: Title & Subtitle Section -->
         <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-800 dark:text-white leading-tight mb-0.5 flex items-center gap-2">
-                Stock Opname (STO) Analytics
+                Stock Opname Analytics
             </h2>
             <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-tight">Deviation analysis, model concentration, and adjustment logs</p>
         </div>
 
-        <!-- Right Side Filter dropdown & Logs -->
-        <div class="flex items-center gap-3 shrink-0">
+        <!-- Section 2: KPI Cards & Filter Toggle -->
+        <div class="flex-1 flex flex-col md:flex-row gap-2 items-stretch lg:justify-end min-w-[100%] xl:min-w-[750px]">
+            <!-- KPI Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 flex-1">
+                @foreach([
+                    ['icon' => 'fa-calendar-check', 'color' => 'slate',   'label' => 'Total Events',   'val' => $stats['total_events'],   'unit' => 'STO cycles'],
+                    ['icon' => 'fa-lock',           'color' => 'indigo',  'label' => 'Closed Events',  'val' => $stats['closed_events'],  'unit' => 'completed'],
+                    ['icon' => 'fa-spinner',        'color' => 'emerald', 'label' => 'Open Events',    'val' => $stats['open_events'],    'unit' => 'in progress'],
+                    ['icon' => 'fa-tag',            'color' => 'amber',   'label' => 'Latest Event',   'val' => $stats['last_event'],     'unit' => ''],
+                    ['icon' => 'fa-calendar-days',  'color' => 'primary', 'label' => 'Latest Period',  'val' => $stats['last_period'],    'unit' => ''],
+                ] as $kpi)
+                <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 h-[52px] transition-all duration-200">
+                    <div class="w-8 h-8 rounded-xs bg-{{ $kpi['color'] }}-50 dark:bg-{{ $kpi['color'] }}-900/20 flex items-center justify-center text-{{ $kpi['color'] }}-600 dark:text-{{ $kpi['color'] }}-400 flex-shrink-0">
+                        <i class="fa-solid {{ $kpi['icon'] }} text-xs"></i>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none mb-0.5 truncate">{{ $kpi['label'] }}</p>
+                        <p class="text-xs font-extrabold text-slate-800 dark:text-white leading-none truncate">{{ $kpi['val'] }}
+                            @if($kpi['unit'])<span class="text-[8px] font-semibold text-slate-400 dark:text-slate-500 ml-0.5 normal-case">{{ $kpi['unit'] }}</span>@endif
+                        </p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+
+            <!-- Filter Toggle Section & Correction Logs -->
+            <div class="shrink-0 flex items-stretch gap-2">
+                <button onclick="openGlobalAuditLogsModal()" title="View Global Correction Log" class="px-3 flex items-center justify-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 dark:text-gray-300 dark:hover:text-white bg-white hover:bg-slate-50 dark:bg-gray-800 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs transition-all h-[52px] md:h-auto shadow-3xs hover:shadow-2xs">
+                    <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400"></i> <span class="hidden xl:inline uppercase tracking-widest text-[9px] font-black">Correction Log</span>
+                </button>
+                <button id="btnToggleDashFilter" title="Toggle Filters" class="group flex items-center justify-center w-full md:w-[52px] h-[52px] md:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs transition-all">
+                    <i class="fa-solid fa-filter text-slate-400 text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Collapsible Filter Card --}}
+    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-3 shrink-0 mb-1">
+        <div class="flex flex-wrap items-center gap-4">
             <div class="flex items-center gap-2">
                 <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">STO Period:</label>
                 <div class="w-[240px]">
@@ -27,55 +65,28 @@
                     </select>
                 </div>
             </div>
-            
-            <button onclick="openGlobalAuditLogsModal()" class="h-[38px] px-4 flex items-center gap-1.5 text-xs font-bold text-slate-650 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-gray-700">
-                <i class="fa-solid fa-clock-rotate-left"></i> Audit Logs
-            </button>
         </div>
-    </div>
-
-    {{-- KPI Metrics Row --}}
-    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 shrink-0">
-        @foreach([
-            ['icon' => 'fa-calendar-check', 'color' => 'slate',   'label' => 'Total Events',   'val' => $stats['total_events'],   'unit' => 'STO cycles'],
-            ['icon' => 'fa-lock',           'color' => 'indigo',  'label' => 'Closed Events',  'val' => $stats['closed_events'],  'unit' => 'completed'],
-            ['icon' => 'fa-spinner',        'color' => 'emerald', 'label' => 'Open Events',    'val' => $stats['open_events'],    'unit' => 'in progress'],
-            ['icon' => 'fa-tag',            'color' => 'amber',   'label' => 'Latest Event',   'val' => $stats['last_event'],     'unit' => ''],
-            ['icon' => 'fa-calendar-days',  'color' => 'primary', 'label' => 'Latest Period',  'val' => $stats['last_period'],    'unit' => ''],
-        ] as $kpi)
-        <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 shadow-sm px-3 py-2.5 flex items-center gap-3 kpi-card-hover">
-            <div class="w-9 h-9 rounded-xs bg-{{ $kpi['color'] }}-50 dark:bg-{{ $kpi['color'] }}-900/20 flex items-center justify-center text-{{ $kpi['color'] }}-600 dark:text-{{ $kpi['color'] }}-400 flex-shrink-0">
-                <i class="fa-solid {{ $kpi['icon'] }} text-sm"></i>
-            </div>
-            <div class="min-w-0 flex-1">
-                <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none mb-1 truncate">{{ $kpi['label'] }}</p>
-                <p class="text-sm font-extrabold text-slate-800 dark:text-white leading-none truncate">{{ $kpi['val'] }}
-                    @if($kpi['unit'])<span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 ml-1 normal-case">{{ $kpi['unit'] }}</span>@endif
-                </p>
-            </div>
-        </div>
-        @endforeach
     </div>
 
     {{-- ROW 1: Top Cards --}}
     <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
         <!-- Top-Left Card: Summary Result -->
-        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
             <div class="flex-none flex justify-between items-center mb-1">
                 <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 min-w-0 pr-2">
                     <i class="fa-solid fa-square-poll-vertical mr-1 text-primary-500"></i>
                     <span class="truncate">Summary Result</span>
-                    <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">(Target: Net ±1%, Abs 4%)</span>
+                    <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">(Target: Net ±1%, Abs 4%)</span>
                 </h3>
                 <!-- Inner Card Tabs -->
                 <div class="flex bg-gray-100 dark:bg-gray-700/80 p-0.5 rounded-xs shrink-0 gap-0.5">
-                    <button onclick="switchSummaryTab('amount')" id="summaryTabBtn-amount" class="segmented-tab active-tab">
+                    <button onclick="switchSummaryTab('amount')" id="summaryTabBtn-amount" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-gray-600 text-slate-800 dark:text-white shadow-sm">
                         Mio IDR
                     </button>
-                    <button onclick="switchSummaryTab('net')" id="summaryTabBtn-net" class="segmented-tab inactive-tab">
+                    <button onclick="switchSummaryTab('net')" id="summaryTabBtn-net" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-slate-400 hover:text-slate-650 hover:bg-white/50 dark:hover:text-slate-200 dark:hover:bg-white/5">
                         % Net
                     </button>
-                    <button onclick="switchSummaryTab('abs')" id="summaryTabBtn-abs" class="segmented-tab inactive-tab">
+                    <button onclick="switchSummaryTab('abs')" id="summaryTabBtn-abs" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-slate-400 hover:text-slate-650 hover:bg-white/50 dark:hover:text-slate-200 dark:hover:bg-white/5">
                         % Abs
                     </button>
                 </div>
@@ -85,20 +96,20 @@
                 <!-- Mini Chart Panel (full width) -->
                 <div class="w-full h-full relative min-w-0">
                      <div id="summaryAmountContainer" class="absolute inset-0 w-full h-full">
-                         <canvas id="summaryAmountChart" class="w-full h-full"></canvas>
+                          <canvas id="summaryAmountChart" class="w-full h-full"></canvas>
                      </div>
                      <div id="summaryNetContainer" class="absolute inset-0 w-full h-full hidden">
-                         <canvas id="summaryNetChart" class="w-full h-full"></canvas>
+                          <canvas id="summaryNetChart" class="w-full h-full"></canvas>
                      </div>
                      <div id="summaryAbsContainer" class="absolute inset-0 w-full h-full hidden">
-                         <canvas id="summaryAbsChart" class="w-full h-full"></canvas>
+                          <canvas id="summaryAbsChart" class="w-full h-full"></canvas>
                      </div>
                 </div>
             </div>
         </div>
 
         <!-- Top-Right Card: Accuracy Based on Cust -->
-        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
             <div class="flex-none flex justify-between items-center mb-1">
                 <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                     <i class="fa-solid fa-scale-unbalanced mr-2 text-primary-500"></i>
@@ -106,10 +117,10 @@
                 </h3>
                 <!-- Inner Card Tabs -->
                 <div class="flex bg-gray-100 dark:bg-gray-700/80 p-0.5 rounded-xs shrink-0 gap-0.5">
-                    <button onclick="switchAccuracyTab('net')" id="accuracyTabBtn-net" class="segmented-tab active-tab">
+                    <button onclick="switchAccuracyTab('net')" id="accuracyTabBtn-net" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-gray-600 text-slate-800 dark:text-white shadow-sm">
                         NET
                     </button>
-                    <button onclick="switchAccuracyTab('abs')" id="accuracyTabBtn-abs" class="segmented-tab inactive-tab">
+                    <button onclick="switchAccuracyTab('abs')" id="accuracyTabBtn-abs" class="px-2 py-1 rounded-xs text-[9px] font-bold uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-slate-400 hover:text-slate-650 hover:bg-white/50 dark:hover:text-slate-200 dark:hover:bg-white/5">
                         ABS
                     </button>
                 </div>
@@ -130,12 +141,12 @@
     {{-- ROW 2: Bottom Cards --}}
     <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
         <!-- Bottom-Left Card: Pareto Deviation by Part (2/3 width) -->
-        <div class="chart-card w-full lg:w-2/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+        <div class="chart-card w-full lg:w-2/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
             <div class="flex-none flex justify-between items-center mb-1">
                 <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                     <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i>
                     <span class="truncate">Pareto Deviation by Part</span>
-                    <span id="tab1-event-badge" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">...</span>
+                    <span id="tab1-event-badge" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">...</span>
                 </h3>
                 <div class="flex items-center gap-1 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-2">
                     <button id="btnParetoPrev" onclick="prevParetoPage()" class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Previous page">
@@ -153,7 +164,7 @@
         </div>
 
         <!-- Bottom-Right Card: Problem Breakdown Frequency (1/3 width) -->
-        <div class="chart-card w-full lg:w-1/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 shadow-sm overflow-hidden chart-card-hover">
+        <div class="chart-card w-full lg:w-1/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
             <div class="flex-none flex justify-between items-center mb-1">
                 <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                     <i class="fa-solid fa-triangle-exclamation mr-2 text-primary-500"></i>
@@ -165,123 +176,148 @@
             </div>
         </div>
     </div>
-</div>
-{{-- Global Correction Log Modal (Original Audit Table Interface) --}}
-<div id="correctionDetailModal" class="fixed inset-0 z-50 hidden overflow-y-auto animate-fade-in" role="dialog" aria-modal="true">
-    <div class="flex items-center justify-center min-h-screen p-4 bg-slate-950/60 backdrop-blur-sm">
-        <div class="relative bg-white dark:bg-gray-900 rounded-xs max-w-5xl w-full shadow-2xl border border-slate-200 dark:border-gray-800 flex flex-col max-h-[85vh] overflow-hidden transform transition-all animate-fade-in-up">
-            <div class="px-5 py-4 border-b border-slate-150 dark:border-gray-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xs bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 text-lg shadow-xs">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">
-                            Global STO Correction & Audit Log
-                        </h3>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Aggregate models adjustment log summary across cycles</p>
-                    </div>
+</div>{{-- Global Correction Log Modal (Original Audit Table Interface) --}}<div id="correctionDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/70 transition-all" role="dialog" aria-modal="true">
+    <div class="bg-white dark:bg-gray-800 rounded-xs shadow-xl w-full max-w-[92vw] 2xl:max-w-7xl overflow-hidden border border-slate-200 dark:border-gray-700 flex flex-col h-[80vh] max-h-[85vh] animate-fade-in-up relative">
+        <div class="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xs bg-slate-100 dark:bg-slate-900/45 flex items-center justify-center text-slate-700 dark:text-slate-350 text-lg shadow-xs flex-shrink-0 border border-slate-200 dark:border-slate-800/30">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
                 </div>
-                <button onclick="closeCorrectionModal()" class="w-8 h-8 flex items-center justify-center text-slate-450 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xs transition-all outline-none">
-                    <i class="fa-solid fa-xmark text-base"></i>
+                <div>
+                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-3 text-sm uppercase tracking-widest">
+                        Global STO Correction Log
+                    </h3>
+                    <p class="text-[9px] text-slate-450 dark:text-slate-550 font-bold uppercase tracking-wider mt-0.5">Aggregate models adjustment log summary across cycles</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="closeCorrectionModal()" class="text-slate-400 hover:text-rose-500 transition-colors">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            
-            <div class="overflow-x-auto flex-1 custom-scrollbar">
-                <table class="custom-table w-full text-left border-collapse" id="correctionLogTable">
-                    <thead class="sticky top-0 bg-slate-50 dark:bg-gray-800 border-b border-slate-200 dark:border-gray-700 z-10">
-                        <tr>
-                            <th class="py-2.5 px-3 text-left text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase">Model Identification</th>
-                            <th class="py-2.5 px-2 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-16">Events</th>
-                            <th class="py-2.5 px-2 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-24">Affected Parts</th>
-                            <th class="py-2.5 px-3 text-right text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-36">ABS Adj. Value</th>
-                            <th class="py-2.5 px-2 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-32">Qty Balance (+/-)</th>
-                            <th class="py-2.5 px-3 text-right text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-32">Net Impact</th>
-                            <th class="py-2.5 px-3 text-center text-[9px] font-black tracking-wider text-slate-500 dark:text-slate-400 uppercase w-16">Detail</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-gray-800">
-                        @foreach($correctionByModel as $model)
-                            <tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors group">
-                                <td class="py-2.5 px-3">
-                                    <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">{{ $model['model_name'] }}</div>
-                                    <div class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">Inventory Category</div>
-                                </td>
-                                <td class="py-2.5 px-2 text-center">
-                                    <span class="inline-flex items-center justify-center font-bold text-[11px] text-indigo-600 dark:text-indigo-400">{{ $model['event_count'] }}</span>
-                                </td>
-                                <td class="py-2.5 px-2 text-center font-bold text-[11px] text-slate-700 dark:text-slate-300">{{ $model['affected_parts'] }}</td>
-                                <td class="py-2.5 px-3 text-right font-mono font-bold text-[11px] text-slate-800 dark:text-slate-200">
-                                    Rp {{ number_format($model['total_correction']) }}
-                                </td>
-                                <td class="py-2.5 px-2">
-                                    <div class="flex items-center justify-center gap-1.5">
-                                        <span class="text-[9px] font-black text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 px-1.5 py-0.5 rounded-xs border border-emerald-200 dark:border-emerald-900/50">+{{ number_format($model['increment_pcs']) }}</span>
-                                        <span class="text-[9px] font-black text-rose-700 bg-rose-50 dark:bg-rose-950/30 px-1.5 py-0.5 rounded-xs border border-rose-200 dark:border-rose-900/50">-{{ number_format($model['decrement_pcs']) }}</span>
+        </div>
+        
+        <div class="overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-gray-800">
+            <table class="w-full text-left border-collapse" id="correctionLogTable">
+                <thead class="sticky top-0 bg-slate-50 dark:bg-gray-900 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 z-10">
+                    <tr>
+                        <th class="py-3 px-6 text-left">Model Identification</th>
+                        <th class="py-3 px-3 text-center w-24">Events</th>
+                        <th class="py-3 px-3 text-center w-28">Affected Parts</th>
+                        <th class="py-3 px-4 text-right w-40">ABS Adj. Value</th>
+                        <th class="py-3 px-3 text-center w-40">Qty Balance (+/-)</th>
+                        <th class="py-3 px-4 text-right w-40">Net Impact</th>
+                        <th class="py-3 px-6 text-center w-32">Detail</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-gray-700/60 text-[11px] font-medium text-slate-700 dark:text-slate-350">
+                    @foreach($correctionByModel as $model)
+                        <tr class="hover:bg-slate-50/80 dark:hover:bg-gray-700/30 transition-colors group">
+                            <td class="py-3 px-6">
+                                <div class="flex items-center gap-3">   
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">{{ $model['model_name'] }}</div>
                                     </div>
-                                </td>
-                                <td class="py-2.5 px-3 text-right font-mono font-extrabold text-[11px] {{ $model['net_correction'] < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400' }}">
-                                    {{ $model['net_correction'] < 0 ? '−' : '+' }} Rp {{ number_format(abs($model['net_correction'])) }}
-                                </td>
-                                <td class="py-2.5 px-3 text-center">
-                                    <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="View detailed log" class="h-7 w-7 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:border-primary-300 dark:hover:border-primary-700 transition-all shadow-sm group-hover:shadow-md">
-                                        <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </td>                            <td class="py-3 px-3 text-center">
+                                <span class="inline-flex items-center justify-center font-medium text-[10px] px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-305 border border-slate-200/60 dark:border-slate-700/60 shadow-3xs">
+                                    {{ $model['event_count'] }} <span class="text-[8px] font-medium ml-0.5 text-slate-450 dark:text-slate-500">events</span>
+                                </span>
+                            </td>
+                            <td class="py-3 px-3 text-center">
+                                <span class="inline-flex items-center justify-center font-medium text-[10px] px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-gray-900 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-3xs">
+                                    <i class="fa-solid fa-cube text-[8px] mr-1 text-slate-400 dark:text-slate-550"></i>{{ $model['affected_parts'] }} <span class="text-[8px] font-medium ml-0.5 text-slate-450 dark:text-slate-550">parts</span>
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="font-mono font-medium text-[11px] text-slate-800 dark:text-slate-200">
+                                    <span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mr-0.5">Rp</span>{{ number_format($model['total_correction']) }}
+                                </div>
+                            </td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-100/60 dark:border-emerald-900/30 shadow-3xs">
+                                        <i class="fa-solid fa-arrow-up text-[7px]"></i>{{ number_format($model['increment_pcs']) }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded border border-rose-100/60 dark:border-rose-900/30 shadow-3xs">
+                                        <i class="fa-solid fa-arrow-down text-[7px]"></i>{{ number_format($model['decrement_pcs']) }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    @if($model['net_correction'] < 0)
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-[9px]"><i class="fa-solid fa-caret-down"></i></span>
+                                        <span class="font-mono font-medium text-xs text-rose-600 dark:text-rose-400">
+                                            -Rp {{ number_format(abs($model['net_correction'])) }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[9px]"><i class="fa-solid fa-caret-up"></i></span>
+                                        <span class="font-mono font-medium text-xs text-emerald-600 dark:text-emerald-400">
+                                            +Rp {{ number_format(abs($model['net_correction'])) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="py-3 px-6 text-center">
+                                <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="Explore detailed correction logs" class="h-8 px-3 inline-flex items-center justify-center gap-1.5 rounded bg-white hover:bg-primary-50 dark:bg-gray-800 dark:hover:bg-primary-950/20 border border-slate-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-800 text-slate-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all shadow-xs hover:shadow text-[10px] font-bold uppercase tracking-wider outline-none whitespace-nowrap">
+                                    <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i> View Logs
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                    {{-- noModelMatchRow removed to prevent '_DT_CellIndex' jQuery DataTables initialization error --}}
+                </tbody>
+            </table>
+        </div>
 
-            {{-- Audit Sub Modal --}}
-            <div id="subModalContainer" class="hidden absolute inset-0 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-6 z-30 animate-fade-in">
-                <div class="bg-white dark:bg-gray-900 w-full h-full rounded-xs shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-gray-800 transform transition-all animate-fade-in-up">
-                    <div class="px-5 py-4 border-b border-slate-150 dark:border-gray-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
-                        <div class="flex items-center gap-2.5">
-                            <div class="w-8 h-8 rounded-xs bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400">
-                                <i class="fa-solid fa-receipt"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-tight">
-                                    Audit Trail Log — <span id="modalModelName" class="text-primary-600 dark:text-primary-400">Model Name</span>
-                                </h3>
-                                <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Detailed correction items for this inventory category</p>
-                            </div>
+        {{-- Audit Sub Modal --}}
+        <div id="subModalContainer" class="hidden absolute inset-0 z-30 animate-fade-in bg-white dark:bg-gray-800 flex flex-col">
+            <div class="w-full h-full flex flex-col overflow-hidden">
+                <div class="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xs bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-650 dark:text-slate-305 text-sm shadow-xs border border-slate-200 dark:border-slate-800">
+                            <i class="fa-solid fa-receipt"></i>
                         </div>
-                        <button onclick="closeSubModal()" class="w-8 h-8 flex items-center justify-center text-slate-450 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-gray-800 rounded-xs transition-all outline-none">
-                            <i class="fa-solid fa-xmark text-base"></i>
-                        </button>
+                        <div>
+                            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-3 text-sm uppercase tracking-widest">
+                                Correction Trail Log — <span id="modalModelName" class="text-slate-800 dark:text-slate-200 font-extrabold">Model Name</span>
+                            </h3>
+                            <p class="text-[9px] text-slate-450 dark:text-slate-550 font-bold uppercase tracking-wider mt-0.5">Detailed correction items for this inventory category</p>
+                        </div>
                     </div>
-                    <div class="overflow-y-auto flex-1 custom-scrollbar text-[10px]">
-                        <table class="custom-table w-full text-left border-collapse" id="correctionSubTable">
-                            <thead class="sticky top-0 bg-slate-50 dark:bg-gray-850 border-b border-slate-200 dark:border-gray-750 z-10">
-                                <tr>
-                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">STO Event</th>
-                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Part No</th>
-                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Reason Category</th>
-                                    <th class="text-right text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase w-24">Quantity Adj.</th>
-                                    <th class="text-right text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase w-32">Value Impact</th>
-                                    <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Audit Remark</th>
-                                </tr>
-                            </thead>
-                            <tbody id="correctionDetailBody" class="divide-y divide-slate-100 dark:divide-gray-850 font-medium">
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="px-5 py-3 bg-slate-50 dark:bg-gray-900/50 border-t border-slate-150 dark:border-gray-850 flex justify-end">
-                        <button onclick="closeSubModal()" class="px-5 py-1.5 bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-600 text-[10px] font-bold text-slate-600 dark:text-gray-300 rounded-xs transition-all shadow-xs outline-none">
-                            BACK TO OVERVIEW
-                        </button>
-                    </div>
+                    <button onclick="closeSubModal()" class="text-slate-400 hover:text-rose-500 transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="overflow-y-auto flex-1 custom-scrollbar">
+                    <table class="w-full text-left border-collapse" id="correctionSubTable">
+                        <thead class="sticky top-0 bg-slate-50 dark:bg-gray-900 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 z-10">
+                            <tr>
+                                <th class="py-3 px-6 text-left">STO Event</th>
+                                <th class="py-3 px-3 text-left">Part No</th>
+                                <th class="py-3 px-3 text-left">Reason Category</th>
+                                <th class="py-3 px-4 text-right w-32">Quantity Adj.</th>
+                                <th class="py-3 px-4 text-right w-36">Value Impact</th>
+                                <th class="py-3 px-6 text-left">Correction Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody id="correctionDetailBody" class="divide-y divide-slate-100 dark:divide-gray-700/60 text-[11px] font-medium text-slate-700 dark:text-slate-350">
+                        </tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-3 bg-slate-50 dark:bg-gray-900 border-t border-slate-200 dark:border-gray-700 shrink-0 flex justify-end">
+                    <button onclick="closeSubModal()" class="px-5 py-2 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-600 text-[10px] font-bold text-slate-650 dark:text-gray-300 rounded-xs transition-all uppercase tracking-widest shadow-xs">
+                        BACK TO OVERVIEW
+                    </button>
                 </div>
             </div>
-            
-            <div class="px-5 py-3 bg-slate-50 dark:bg-gray-900/50 border-t border-slate-150 dark:border-gray-850 flex justify-end">
-                <button onclick="closeCorrectionModal()" class="px-5 py-1.5 bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-600 text-[10px] font-bold text-slate-600 dark:text-gray-300 rounded-xs transition-all shadow-xs outline-none">
-                    CLOSE AUDIT LOG
-                </button>
-            </div>
+        </div>
+        
+        <div class="px-6 py-3 bg-slate-50 dark:bg-gray-900 border-t border-slate-200 dark:border-gray-700 shrink-0 flex justify-end">
+            <button onclick="closeCorrectionModal()" class="px-5 py-2 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-600 text-[10px] font-bold text-slate-650 dark:text-gray-300 rounded-xs transition-all uppercase tracking-widest shadow-xs">
+                CLOSE CORRECTION LOG
+            </button>
         </div>
     </div>
 </div>
@@ -473,13 +509,27 @@
     let summaryAmountChart = null;
     let summaryNetChart = null;
     let summaryAbsChart = null;
+    let subTable = null;
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', function() {
+        // Toggle Filter Logic
+        $('#btnToggleDashFilter').on('click', function(e) {
+            e.stopPropagation();
+            $('#dashboardFilterCard').slideToggle(200);
+            
+            // Toggle active styling
+            $(this).toggleClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700');
+            $(this).toggleClass('bg-slate-100 dark:bg-gray-750 border-slate-350 dark:border-gray-650');
+            $(this).find('i').toggleClass('text-slate-400');
+            $(this).find('i').toggleClass('text-slate-700 dark:text-slate-200');
+        });
+
         // Initialize Select2 on #eventSelector with premium config
         const $selector = $('#eventSelector');
         if ($selector.length) {
             $selector.select2({
+                dropdownParent: $selector.parent(),
                 minimumResultsForSearch: -1, // Clean view, no search needed for STO periods
                 dropdownAutoWidth: true,
                 width: '100%'
@@ -501,6 +551,64 @@
         // Switch to default tabs
         switchSummaryTab('amount');
         switchAccuracyTab('net');
+
+        // Initialize DataTable for main Correction Log Table using the premium helper
+        let correctionTable;
+        if (window.defaultDataTable) {
+            correctionTable = window.defaultDataTable('#correctionLogTable', {
+                order: [[0, 'asc']], // Alphabetical order by Model Name
+                pageLength: 10,
+                lengthMenu: [10, 25, 50],
+                dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-x-auto w-full relative't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                language: {
+                    search: "",
+                    searchPlaceholder: "Filter by model name...",
+                    emptyTable: `
+                        <div class="py-16 flex flex-col items-center justify-center text-center w-full">
+                            <div>
+                                <i class="fa-solid fa-folder-open text-3xl text-slate-350 dark:text-gray-650 m-4"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-slate-700 dark:text-white uppercase tracking-widest mb-2">No Correction Models Found</h4>
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">It looks like there are no correction models logged yet.</p>
+                        </div>
+                    `,
+                    zeroRecords: `
+                        <div class="py-16 flex flex-col items-center justify-center text-center w-full">
+                            <div>
+                                <i class="fa-solid fa-magnifying-glass text-3xl text-slate-350 dark:text-gray-650 m-4"></i>
+                            </div>
+                            <h4 class="text-xs font-bold text-slate-700 dark:text-white uppercase tracking-widest mb-2">No Matching Models</h4>
+                            <p class="text-[11px] text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium leading-relaxed">We couldn't find any models matching your search. Try using a different keyword.</p>
+                        </div>
+                    `
+                }
+            });
+        } else {
+            correctionTable = $('#correctionLogTable').DataTable({
+                processing: true,
+                serverSide: false,
+                scrollCollapse: true,
+                autoWidth: false,
+                ordering: true,
+                order: [[0, 'asc']], // Alphabetical order by Model Name
+                pageLength: 10,
+                lengthMenu: [10, 25, 50],
+                dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center text-slate-500'l><'text-slate-500'f>>t<'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                language: {
+                    search: "",
+                    searchPlaceholder: "Filter by model name...",
+                    paginate: { 
+                        previous: '<i class="fa-solid fa-chevron-left text-[9px]"></i>', 
+                        next: '<i class="fa-solid fa-chevron-right text-[9px]"></i>' 
+                    },
+                    emptyTable: '<div class="py-12 px-6 text-center italic text-slate-400 dark:text-slate-550">No matching correction models found.</div>'
+                }
+            });
+        }
+
+        // Style DataTables length dropdown and search input to match premium look
+        $('#correctionLogTable_wrapper .dataTables_filter input').addClass('bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-750 text-[10px] font-medium rounded-xs px-2.5 py-1 w-44 focus:ring-0 focus:border-slate-400 outline-none transition-all placeholder:text-slate-400 placeholder:uppercase placeholder:font-medium');
+        $('#correctionLogTable_wrapper .dataTables_length select').addClass('bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-[10px] font-medium rounded-xs px-2 py-1 mx-1.5 focus:ring-0 focus:border-slate-400 outline-none transition-all');
     });
 
     // --- Tab Switchers ---
@@ -512,9 +620,9 @@
             const btn = document.getElementById(`summaryTabBtn-${mode}`);
             if (btn) {
                 if (mode === tabId) {
-                    btn.className = 'segmented-tab active-tab';
+                    btn.className = 'px-2 py-1 rounded-xs text-[9px] font-medium uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-gray-600 text-slate-800 dark:text-white shadow-sm';
                 } else {
-                    btn.className = 'segmented-tab inactive-tab';
+                    btn.className = 'px-2 py-1 rounded-xs text-[9px] font-medium uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-slate-400 hover:text-slate-650 hover:bg-white/50 dark:hover:text-slate-200 dark:hover:bg-white/5';
                 }
             }
         });
@@ -550,9 +658,9 @@
             const btn = document.getElementById(`accuracyTabBtn-${mode}`);
             if (btn) {
                 if (mode === tabId) {
-                    btn.className = 'segmented-tab active-tab';
+                    btn.className = 'px-2 py-1 rounded-xs text-[9px] font-medium uppercase tracking-wider transition-all whitespace-nowrap bg-white dark:bg-gray-600 text-slate-800 dark:text-white shadow-sm';
                 } else {
-                    btn.className = 'segmented-tab inactive-tab';
+                    btn.className = 'px-2 py-1 rounded-xs text-[9px] font-medium uppercase tracking-wider transition-all whitespace-nowrap bg-transparent text-slate-400 hover:text-slate-650 hover:bg-white/50 dark:hover:text-slate-200 dark:hover:bg-white/5';
                 }
             }
         });
@@ -1178,16 +1286,29 @@
     // --- CORRECTION AUDIT LOG MODAL HANDLERS ---
     
     function openGlobalAuditLogsModal() {
-        document.getElementById('correctionDetailModal').classList.remove('hidden');
+        const modal = document.getElementById('correctionDetailModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if ($.fn.DataTable.isDataTable('#correctionLogTable')) {
+            $('#correctionLogTable').DataTable().columns.adjust().draw();
+        }
     }
 
     function closeCorrectionModal() {
-        document.getElementById('correctionDetailModal').classList.add('hidden');
+        const modal = document.getElementById('correctionDetailModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
         closeSubModal();
     }
 
     function showCorrectionDetail(modelName) {
         document.getElementById('modalModelName').innerText = modelName;
+        
+        if (subTable) {
+            subTable.destroy();
+            subTable = null;
+        }
+
         const tbody = document.getElementById('correctionDetailBody');
         tbody.innerHTML = '<tr><td colspan="6" class="p-20 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl text-primary-500"></i></td></tr>';
         document.getElementById('subModalContainer').classList.remove('hidden');
@@ -1195,108 +1316,119 @@
         fetch(`/inventory/sto/dashboard/correction-log/${encodeURIComponent(modelName)}`)
             .then(res => res.json())
             .then(data => {
-                tbody.innerHTML = data.detail.length ? '' : '<tr><td colspan="6" class="p-10 text-center italic text-slate-400">No logs found.</td></tr>';
+                tbody.innerHTML = '';
+
                 data.detail.forEach(row => {
                     const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 dark:hover:bg-gray-850 transition-colors';
+                    tr.className = 'hover:bg-slate-50/80 dark:hover:bg-gray-700/30 transition-colors duration-150 group';
                     const date = new Date(row.period_end).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+                    const diffQtyFormatted = new Intl.NumberFormat('id-ID').format(row.diff_qty);
+                    const isNegative = row.diff_qty < 0;
+                    const amountColorClass = isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+                    const sign = isNegative ? '-' : '+';
+                    
                     tr.innerHTML = `
-                        <td>
-                            <div class="text-[10px] font-bold text-primary-600 dark:text-primary-400 tracking-tight uppercase">${row.event_code}</div>
-                            <div class="text-[9px] text-slate-400 dark:text-slate-500 font-semibold uppercase mt-0.5">${date}</div>
+                        <td class="py-3 px-6">
+                            <div class="flex items-center gap-2.5">
+                                <span class="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full ${isNegative ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}"></span>
+                                <div>
+                                    <div class="text-[10px] font-bold text-slate-800 dark:text-white uppercase tracking-tight">${row.event_code}</div>
+                                    <div class="text-[9px] text-slate-450 dark:text-slate-550 font-medium uppercase tracking-wider mt-0.5">${date}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td class="font-mono font-bold text-xs text-slate-800 dark:text-slate-200">${row.part_no}</td>
-                        <td>
-                            <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-gray-800 rounded-xs text-[9px] font-semibold text-slate-650 dark:text-slate-350 border border-slate-200/60 dark:border-gray-700/60 tracking-wider uppercase">
-                                ${row.reason_name}
+                        <td class="py-3 px-3 font-mono font-medium text-[11px] text-slate-800 dark:text-slate-200">${row.part_no}</td>
+                        <td class="py-3 px-3">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 dark:bg-gray-900 rounded-sm text-[9px] font-medium text-slate-600 dark:text-slate-350 border border-slate-200/60 dark:border-gray-700/60 uppercase">
+                                <i class="fa-solid fa-tag text-[8px] text-slate-400 dark:text-slate-550"></i> ${row.reason_name}
                             </span>
                         </td>
-                        <td class="text-right">
-                            <span class="font-bold text-xs ${row.diff_qty < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
-                                ${row.diff_qty > 0 ? '+' : ''}${new Intl.NumberFormat('id-ID').format(row.diff_qty)}
+                        <td class="py-3 px-4 text-right">
+                            <span class="inline-flex items-center gap-1 text-[9px] font-medium ${isNegative ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded border border-rose-100/60 dark:border-rose-900/30 shadow-3xs' : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-100/60 dark:border-emerald-900/30 shadow-3xs'}">
+                                <i class="fa-solid ${isNegative ? 'fa-arrow-down' : 'fa-arrow-up'} text-[8px]"></i>
+                                ${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} <span class="text-[8px] font-medium opacity-85">pcs</span>
                             </span>
                         </td>
-                        <td class="text-right font-mono font-bold text-xs text-slate-800 dark:text-slate-200">
-                            Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
+                        <td class="py-3 px-4 text-right font-mono font-medium text-[11px] ${amountColorClass}">
+                            ${sign}<span class="text-[9px] font-semibold text-slate-450 dark:text-slate-550 mr-0.5">Rp</span>${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
                         </td>
-                        <td class="italic text-slate-500 dark:text-slate-450 font-normal break-words max-w-[200px]">${row.remark || '-'}</td>
+                        <td class="py-3 px-6">
+                            ${row.remark ? `
+                            <div class="relative bg-slate-50 dark:bg-gray-900 border-l-2 border-slate-400 px-2.5 py-1.5 rounded-r-md max-w-[240px]">
+                                <p class="text-[10px] text-slate-600 dark:text-slate-350 italic font-medium leading-relaxed break-words pr-2">
+                                    "${row.remark}"
+                                </p>
+                                <i class="fa-solid fa-quote-right absolute right-1.5 bottom-1 text-[8px] text-slate-400/20"></i>
+                            </div>
+                            ` : `
+                            <span class="text-[10px] text-slate-400 italic font-normal">-</span>
+                            `}
+                        </td>
                     `;
                     tbody.appendChild(tr);
                 });
+
+                // Initialize DataTable for subTable using the premium helper
+                if (window.defaultDataTable) {
+                    subTable = window.defaultDataTable('#correctionSubTable', {
+                        order: [[0, 'desc']],
+                        pageLength: 5,
+                        lengthMenu: [5, 10, 25],
+                        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-x-auto w-full relative't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                        language: {
+                            search: "",
+                            searchPlaceholder: "Search within log...",
+                            emptyTable: `
+                                <div class="py-12 flex flex-col items-center justify-center text-center w-full">
+                                    <div>
+                                        <i class="fa-solid fa-folder-open text-2xl text-slate-350 dark:text-gray-650 m-3"></i>
+                                    </div>
+                                    <h4 class="text-[11px] font-bold text-slate-700 dark:text-white uppercase tracking-widest mb-1">No Correction Records</h4>
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium">No logs were found for this inventory category.</p>
+                                </div>
+                            `,
+                            zeroRecords: `
+                                <div class="py-12 flex flex-col items-center justify-center text-center w-full">
+                                    <div>
+                                        <i class="fa-solid fa-magnifying-glass text-2xl text-slate-350 dark:text-gray-650 m-3"></i>
+                                    </div>
+                                    <h4 class="text-[11px] font-bold text-slate-700 dark:text-white uppercase tracking-widest mb-1">No Matching Logs</h4>
+                                    <p class="text-[10px] text-gray-400 dark:text-gray-500 max-w-xs mx-auto font-medium">Try search with a different keyword.</p>
+                                </div>
+                            `
+                        }
+                    });
+                } else {
+                    subTable = $('#correctionSubTable').DataTable({
+                        processing: true,
+                        serverSide: false,
+                        scrollCollapse: true,
+                        autoWidth: false,
+                        ordering: true,
+                        order: [[0, 'desc']],
+                        pageLength: 5,
+                        lengthMenu: [5, 10, 25],
+                        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center text-slate-500'l><'text-slate-500'f>>t<'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                        language: {
+                            search: "",
+                            searchPlaceholder: "Search within log...",
+                            paginate: { 
+                                previous: '<i class="fa-solid fa-chevron-left text-[9px]"></i>', 
+                                next: '<i class="fa-solid fa-chevron-right text-[9px]"></i>' 
+                            }
+                        }
+                    });
+                }
             });
     }
 
     function closeSubModal() {
         document.getElementById('subModalContainer').classList.add('hidden');
+        if (subTable) {
+            subTable.destroy();
+            subTable = null;
+        }
     }
 </script>
 
-<style>
-    /* ── Animations ───────────────────────────────────────── */
-    .animate-fade-in     { animation: fadeIn    0.25s ease-out forwards; }
-    .animate-fade-in-up  { animation: fadeInUp  0.25s ease-out forwards; }
-    @keyframes fadeIn    { from { opacity: 0; transform: scale(0.995); } to { opacity: 1; transform: scale(1); } }
-    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    @keyframes spin-custom { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .animate-spin, .fa-spin { animation: spin-custom 1s linear infinite !important; display: inline-block !important; }
-
-    /* ── Custom Scrollbar ─────────────────────────────────── */
-    .custom-scrollbar::-webkit-scrollbar       { width: 5px; height: 5px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(156,163,175,0.4); border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(156,163,175,0.65); }
-
-    /* ── KPI Card hover lift ──────────────────────────────── */
-    .kpi-card-hover {
-        transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-    }
-    .kpi-card-hover:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px -2px rgba(0,0,0,0.08);
-        border-color: #bfdbfe;
-    }
-    .dark .kpi-card-hover:hover { border-color: #3b82f640; }
-
-    /* ── Chart Card hover lift ────────────────────────────── */
-    .chart-card-hover {
-        transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-    .chart-card-hover:hover {
-        box-shadow: 0 4px 16px -4px rgba(0,0,0,0.1);
-        border-color: #e0e7ff;
-    }
-    .dark .chart-card-hover:hover { border-color: #4f46e520; }
-
-    /* ── Segmented Tab Controls ───────────────────────────── */
-    .segmented-tab {
-        padding: 3px 9px;
-        border-radius: 0.125rem;
-        font-size: 9px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        transition: all 0.15s ease;
-        white-space: nowrap;
-    }
-    .segmented-tab.active-tab {
-        background: #ffffff;
-        color: #2563eb;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    }
-    .dark .segmented-tab.active-tab {
-        background: #4b5563;
-        color: #93c5fd;
-    }
-    .segmented-tab.inactive-tab {
-        background: transparent;
-        color: #94a3b8;
-    }
-    .segmented-tab.inactive-tab:hover {
-        color: #475569;
-        background: rgba(255,255,255,0.5);
-    }
-    .dark .segmented-tab.inactive-tab { color: #94a3b8; }
-    .dark .segmented-tab.inactive-tab:hover { color: #e2e8f0; background: rgba(255,255,255,0.06); }
-</style>
 @endpush
