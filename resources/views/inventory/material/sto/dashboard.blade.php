@@ -225,8 +225,8 @@
             </button>
         </div>
         
-        <div class="overflow-y-auto px-6 py-6 flex-1 custom-scrollbar bg-white dark:bg-gray-900">
-            <x-table id="correctionLogTable">
+        <div class="flex-1 min-h-0 flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+            <table id="correctionLogTable" class="custom-table w-full text-left border-collapse">
                 <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                     <tr>
                         <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model Identification</th>
@@ -281,7 +281,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </x-table>
+            </table>
         </div>
 
         {{-- Audit Sub Modal --}}
@@ -295,8 +295,8 @@
                         <i class="fa-solid fa-arrow-left text-base"></i>
                     </button>
                 </div>
-                <div class="overflow-y-auto px-6 py-6 flex-1 custom-scrollbar bg-white dark:bg-gray-900">
-                    <x-table id="correctionSubTable">
+                <div class="flex-1 min-h-0 flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
+                    <table id="correctionSubTable" class="custom-table w-full text-left border-collapse">
                         <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                             <tr>
                                 <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">STO Event</th>
@@ -309,7 +309,7 @@
                         </thead>
                         <tbody id="correctionDetailBody" class="divide-y divide-gray-100 dark:divide-gray-800 text-[11px] font-medium text-gray-700 dark:text-gray-300">
                         </tbody>
-                    </x-table>
+                    </table>
                 </div>
                 <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 shrink-0 flex justify-end">
                     <button onclick="closeSubModal()" class="px-4 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
@@ -335,12 +335,29 @@
     #correctionSubTable_wrapper {
         display: flex;
         flex-direction: column;
+        flex: 1;
+        min-height: 0;
         height: 100%;
+    }
+    
+    #correctionLogTable th:first-child,
+    #correctionLogTable td:first-child,
+    #correctionSubTable th:first-child,
+    #correctionSubTable td:first-child {
+        padding-left: 1.5rem !important; /* px-6 equivalent */
+    }
+    
+    #correctionLogTable th:last-child,
+    #correctionLogTable td:last-child,
+    #correctionSubTable th:last-child,
+    #correctionSubTable td:last-child {
+        padding-right: 1.5rem !important; /* px-6 equivalent */
     }
     
     #correctionLogTable tbody tr,
     #correctionSubTable tbody tr {
         transition: all 0.15s ease-in-out;
+    }
     }
     
     #correctionLogTable tbody tr:nth-child(even),
@@ -798,7 +815,7 @@
                 order: [[0, 'asc']], // Alphabetical order by Model Name
                 pageLength: 10,
                 lengthMenu: [10, 25, 50],
-                dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-x-auto w-full relative't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-y-auto overflow-x-auto flex-1 min-h-0 w-full relative custom-scrollbar't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
                 language: {
                     search: "",
                     searchPlaceholder: "Filter by model name...",
@@ -832,7 +849,7 @@
                 order: [[0, 'asc']], // Alphabetical order by Model Name
                 pageLength: 10,
                 lengthMenu: [10, 25, 50],
-                dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center text-slate-500'l><'text-slate-500'f>>t<'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center text-slate-500'l><'text-slate-500'f>><'overflow-y-auto overflow-x-auto flex-1 min-h-0 w-full relative custom-scrollbar't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
                 language: {
                     search: "",
                     searchPlaceholder: "Filter by model name...",
@@ -1676,7 +1693,16 @@
         }
 
         const tbody = document.getElementById('correctionDetailBody');
-        tbody.innerHTML = '<tr><td colspan="6" class="p-20 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl text-primary-500"></i></td></tr>';
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="py-24 text-center">
+                    <div class="flex flex-col items-center justify-center gap-3">
+                        <i class="fa-solid fa-spinner animate-spin text-3xl text-primary-500"></i>
+                        <span class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-gray-500 uppercase">Fetching Trails...</span>
+                    </div>
+                </td>
+            </tr>
+        `;
         document.getElementById('subModalContainer').classList.remove('hidden');
 
         fetch(`/inventory/sto/dashboard/correction-log/${encodeURIComponent(modelName)}?event_id=${loadedEventId}`)
@@ -1732,7 +1758,7 @@
                         order: [[0, 'desc']],
                         pageLength: 5,
                         lengthMenu: [5, 10, 25],
-                        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-x-auto w-full relative't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center gap-3'l B><'w-full sm:w-auto'f>>r<'overflow-y-auto overflow-x-auto flex-1 min-h-0 w-full relative custom-scrollbar't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
                         language: {
                             search: "",
                             searchPlaceholder: "Search within log...",
@@ -1766,7 +1792,7 @@
                         order: [[0, 'desc']],
                         pageLength: 5,
                         lengthMenu: [5, 10, 25],
-                        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center text-slate-500'l><'text-slate-500'f>>t<'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
+                        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-3 gap-2 px-6 pt-3'<'flex items-center text-slate-500'l><'text-slate-500'f>><'overflow-y-auto overflow-x-auto flex-1 min-h-0 w-full relative custom-scrollbar't><'flex flex-col md:flex-row justify-between items-center gap-4 text-gray-500 py-3 px-6 border-t border-slate-100 dark:border-gray-700/60'i p>",
                         language: {
                             search: "",
                             searchPlaceholder: "Search within log...",
