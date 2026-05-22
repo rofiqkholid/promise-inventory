@@ -23,45 +23,100 @@ class ToolFastStockController extends Controller
             $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
 
-            $query = TolFastStock::with(['tool.category', 'tool.sketch', 'location']);
+            $query = TolTool::with(['category', 'sketch', 'fastStock.location'])
+                ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
+                ->where('is_active', true);
 
             $recordsTotal = (clone $query)->count();
 
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
-                    $q->whereHas('tool', fn($t) => $t->where('name', 'like', "%$search%")
-                        ->orWhere('brand', 'like', "%$search%")
-                        ->orWhere('spec_code', 'like', "%$search%"))
-                      ->orWhereHas('location', fn($l) => $l->where('name', 'like', "%$search%")
+                    $q->where('name', 'like', "%$search%")
+                      ->orWhere('brand', 'like', "%$search%")
+                      ->orWhere('spec_code', 'like', "%$search%")
+                      ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%$search%"))
+                      ->orWhereHas('fastStock.location', fn($l) => $l->where('name', 'like', "%$search%")
                         ->orWhere('code', 'like', "%$search%"));
                 });
             }
 
             $recordsFiltered = (clone $query)->count();
-            $data = $query->orderBy('created_at', 'desc')->skip($start)->take($length)->get();
+
+            // Handle Datatables sorting
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDirection = $request->input('order.0.dir', 'asc');
+            
+            $columnsMap = [
+                1 => 'category_id',
+                3 => 'name',
+                4 => 'brand',
+                5 => 'spec_code',
+                8 => 'qty_min',
+                9 => 'qty_max',
+            ];
+            
+            $orderBy = $columnsMap[$orderColumnIndex] ?? 'name';
+            $data = $query->orderBy($orderBy, $orderDirection)->skip($start)->take($length)->get();
 
             $formatted = $data->map(function ($row) {
-                $tool     = $row->tool;
-                $location = $row->location;
-                $belowLimit = $tool && $row->current_qty <= $tool->qty_min;
+                $category = $row->category;
+                $sketch = $row->sketch;
+                
+                // Get all active stocks (current_qty > 0)
+                $activeStocks = $row->fastStock->filter(fn($fs) => $fs->current_qty > 0);
+                
+                // Sum total current quantity across all active locations
+                $totalQty = $activeStocks->sum('current_qty');
+                
+                // Build a premium visual badge list for locations
+                $locationHtml = '';
+                if ($activeStocks->isEmpty()) {
+                    $locationHtml = '<span class="text-xs text-gray-400 italic font-normal">No Stock</span>';
+                } else {
+                    $locationHtml = '<div class="flex flex-wrap gap-1.5">';
+                    foreach ($activeStocks as $fs) {
+                        $locName = $fs->location?->name ?? 'Unknown';
+                        $locCode = $fs->location?->code ?? $locName;
+                        $locCategory = $fs->location?->category ?? 'storage';
+                        
+                        // Premium badge color system based on location category
+                        $badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30';
+                        if ($locCategory === 'machine') {
+                            $badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
+                        } elseif ($locCategory === 'subcont') {
+                            $badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+                        }
+                        
+                        $locationHtml .= sprintf(
+                            '<span class="inline-flex items-center px-1.5 py-0.5 rounded-xs text-[10px] font-bold border %s" title="%s">%s: <strong class="ml-1 font-mono text-[10px]">%d</strong></span>',
+                            $badgeColor,
+                            strtoupper($locCategory),
+                            $locCode,
+                            $fs->current_qty
+                        );
+                    }
+                    $locationHtml .= '</div>';
+                }
+
+                $belowLimit = $totalQty <= ($row->qty_min ?? 0);
+                $latestUpdated = $row->fastStock->max('last_updated_at');
 
                 return [
                     'id'           => $row->id,
-                    'tool_id'      => $row->tool_id,
-                    'tool_name'    => $tool?->name ?? '-',
-                    'brand'        => $tool?->brand ?? '-',
-                    'spec_code'    => $tool?->spec_code ?? '-',
-                    'sketch_image' => $tool?->sketch?->image_path ? asset('storage/'.$tool->sketch->image_path) : null,
-                    'category'     => $tool?->category?->name ?? '-',
-                    'moving_type'  => $tool?->category?->moving_type ?? '-',
-                    'location_id'  => $row->location_id,
-                    'location'     => $location?->name ?? '-',
-                    'current_qty'  => $row->current_qty,
-                    'qty_min'      => $tool?->qty_min ?? 0,
-                    'qty_max'      => $tool?->qty_max ?? 0,
-                    'uom'          => $tool?->uom ?? '-',
+                    'tool_id'      => $row->id,
+                    'tool_name'    => $row->name,
+                    'brand'        => $row->brand ?? '-',
+                    'spec_code'    => $row->spec_code ?? '-',
+                    'sketch_image' => $sketch?->image_path ? asset('storage/'.$sketch->image_path) : null,
+                    'category'     => $category?->name ?? '-',
+                    'moving_type'  => $category?->moving_type ?? '-',
+                    'location'     => $locationHtml,
+                    'current_qty'  => $totalQty,
+                    'qty_min'      => $row->qty_min ?? 0,
+                    'qty_max'      => $row->qty_max ?? 0,
+                    'uom'          => $row->uom ?? '-',
                     'below_limit'  => $belowLimit,
-                    'last_updated' => $row->last_updated_at ? Carbon::parse($row->last_updated_at)->format('d M Y H:i') : '-',
+                    'last_updated' => $latestUpdated ? Carbon::parse($latestUpdated)->format('d M Y H:i') : '-',
                     'action'       => '',
                 ];
             });

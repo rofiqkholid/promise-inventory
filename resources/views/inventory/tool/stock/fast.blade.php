@@ -102,7 +102,17 @@
                     <select name="tool_id" id="transToolId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Tool --</option>
                         @foreach($tools as $tool)
-                            <option value="{{ $tool->id }}" data-location-id="{{ $tool->fastStock->first()?->location_id }}">
+                            @php
+                                $activeStocks = $tool->fastStock->filter(fn($fs) => $fs->current_qty > 0)->map(fn($fs) => [
+                                    'location_id' => $fs->location_id,
+                                    'location_code' => $fs->location?->code ?? '?',
+                                    'location_name' => $fs->location?->name ?? '?',
+                                    'current_qty' => $fs->current_qty
+                                ])->values()->toArray();
+                            @endphp
+                            <option value="{{ $tool->id }}" 
+                                    data-location-id="{{ $tool->location_id }}"
+                                    data-stocks="{{ json_encode($activeStocks) }}">
                                 {{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})
                             </option>
                         @endforeach
@@ -252,7 +262,7 @@ $(document).ready(function() {
             { data: 'tool_name', render: d => `<span class="font-semibold text-gray-900 dark:text-white">${d}</span>` },
             { data: 'brand' },
             { data: 'spec_code', render: d => d ? `<span class="font-mono text-xs text-primary-600 dark:text-primary-400">${d}</span>` : '-' },
-            { data: 'location', render: d => `<span class="text-xs font-bold text-gray-700 dark:text-gray-300">${d}</span>` },
+            { data: 'location', render: d => d },
             {
                 data: 'current_qty', className: 'text-center',
                 render: (d, t, r) => `<span class="font-bold text-gray-900 dark:text-white">${d}</span>`
@@ -314,12 +324,19 @@ $(document).ready(function() {
         $('#modal-preview').addClass('hidden');
     });
 
+    // Save original full locations options
+    const originalLocationsHTML = $('#transLocationId').html();
+
     function updateLocationInputState() {
         const type = $('input[name="transaction_type"]:checked').val();
         const selectedTool = $('#transToolId option:selected');
         const defaultLocId = selectedTool.data('location-id');
+        const stocks = selectedTool.data('stocks') || [];
         
         if (type === 'IN') {
+            // Restore all original locations
+            $('#transLocationId').html(originalLocationsHTML);
+            
             // Untuk IN, wajib masuk ke default Storage location
             if (defaultLocId) {
                 $('#transLocationId').val(defaultLocId).trigger('change');
@@ -329,12 +346,30 @@ $(document).ready(function() {
                 $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
             }
         } else {
-            // Untuk OUT, bebaskan user memilih lokasi asal (bisa Storage, bisa Machine)
-            // Tapi kita default-kan valuenya ke defaultLocId agar tetap user-friendly
-            if (defaultLocId && !$('#transLocationId').val()) {
-                $('#transLocationId').val(defaultLocId).trigger('change');
-            }
+            // Untuk OUT, hanya tampilkan lokasi yang memiliki stok untuk tool terpilih
             $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
+            
+            let outOptionsHTML = '<option value="">-- Select Source Location --</option>';
+            if (stocks.length === 0) {
+                outOptionsHTML += '<option value="" disabled>No stock available in any location</option>';
+            } else {
+                stocks.forEach(item => {
+                    outOptionsHTML += `<option value="${item.location_id}">${item.location_code} — ${item.location_name} (${item.current_qty} pcs available)</option>`;
+                });
+            }
+            $('#transLocationId').html(outOptionsHTML);
+            
+            // Auto-select the default location if it has stock, otherwise select the first location with stock
+            if (stocks.length > 0) {
+                const hasDefaultInStocks = stocks.some(item => item.location_id == defaultLocId);
+                if (hasDefaultInStocks) {
+                    $('#transLocationId').val(defaultLocId).trigger('change');
+                } else {
+                    $('#transLocationId').val(stocks[0].location_id).trigger('change');
+                }
+            } else {
+                $('#transLocationId').val('').trigger('change');
+            }
         }
     }
 
