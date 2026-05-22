@@ -909,7 +909,7 @@ $(function() {
                         <span class="px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-gray-700 text-[11px] font-medium text-slate-600 dark:text-gray-400 uppercase">${item.model_name}</span>
                     </td>
                     <td class="py-2 px-3">
-                        <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">${item.sq_version || '-'}</span>
+                        <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">${item.ebd_version || '-'}</span>
                     </td>
                     <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.plan_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td>
                     <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.actual_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td>
