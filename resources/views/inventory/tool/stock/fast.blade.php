@@ -314,6 +314,30 @@ $(document).ready(function() {
         $('#modal-preview').addClass('hidden');
     });
 
+    function updateLocationInputState() {
+        const type = $('input[name="transaction_type"]:checked').val();
+        const selectedTool = $('#transToolId option:selected');
+        const defaultLocId = selectedTool.data('location-id');
+        
+        if (type === 'IN') {
+            // Untuk IN, wajib masuk ke default Storage location
+            if (defaultLocId) {
+                $('#transLocationId').val(defaultLocId).trigger('change');
+                $('#transLocationId').addClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', true);
+            } else {
+                $('#transLocationId').val('').trigger('change');
+                $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
+            }
+        } else {
+            // Untuk OUT, bebaskan user memilih lokasi asal (bisa Storage, bisa Machine)
+            // Tapi kita default-kan valuenya ke defaultLocId agar tetap user-friendly
+            if (defaultLocId && !$('#transLocationId').val()) {
+                $('#transLocationId').val(defaultLocId).trigger('change');
+            }
+            $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
+        }
+    }
+
     // Handle transaction type toggle UI
     $('input[name="transaction_type"]').on('change', function() {
         const type = $(this).val(); // IN or OUT
@@ -337,20 +361,12 @@ $(document).ready(function() {
             $('#destinationGroup').removeClass('hidden');
             $('#to_location_id').prop('required', isOut);
         }
+        updateLocationInputState();
     });
 
     // Auto-select location from selected Tool (read-only from Master data)
     $('#transToolId').on('change', function() {
-        const selected = $('option:selected', this);
-        const locId = selected.data('location-id');
-        
-        if (locId) {
-            $('#transLocationId').val(locId).trigger('change');
-            $('#transLocationId').addClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', true);
-        } else {
-            $('#transLocationId').val('').trigger('change');
-            $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
-        }
+        updateLocationInputState();
     });
 
     $('#btnNewTransaction').on('click', () => { 
@@ -377,9 +393,7 @@ $(document).ready(function() {
         // Temporarily enable location_id so it gets serialized correctly
         $('#transLocationId').prop('disabled', false);
         const formData = $('#formTransaction').serialize();
-        if ($('#transToolId').val() && $('option:selected', '#transToolId').data('location-id')) {
-            $('#transLocationId').prop('disabled', true);
-        }
+        updateLocationInputState();
         
         $.ajax({
             url: url, 

@@ -81,9 +81,9 @@ class ToolFastStockController extends Controller
                         ->get();
         $locations = TolLocation::where('is_active', true)->orderBy('code')->get();
         
-        // Group locations by category for easier selection (only Machine and Subcont for OUT)
+        // Group locations by category for easier selection (Machine, Subcont, Scrap, and Lost for OUT)
         $destinations = TolLocation::where('is_active', true)
-                        ->whereIn('category', ['machine', 'subcont'])
+                        ->whereIn('category', ['machine', 'subcont', 'scrap', 'lost'])
                         ->orderBy('category')
                         ->orderBy('name')
                         ->get()
@@ -104,12 +104,22 @@ class ToolFastStockController extends Controller
         ]);
 
         $tool = TolTool::findOrFail($validated['tool_id']);
-        if (!$tool->location_id) {
-            return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
+        
+        // Prioritaskan location_id manual dari input user jika dikirimkan
+        $selectedLocationId = $validated['location_id'] ?? $tool->location_id;
+        
+        if (!$selectedLocationId) {
+            return response()->json(['status' => 'error', 'message' => 'Please select a location or set a default location in Master Tool.'], 422);
         }
-        $validated['location_id'] = $tool->location_id;
+        $validated['location_id'] = $selectedLocationId;
 
-        DB::transaction(function () use ($validated) {
+        DB::transaction(function () use ($validated, $tool) {
+            // Jika tool di master belum memiliki default location, set otomatis ke lokasi transaksi ini
+            if (!$tool->location_id) {
+                $tool->location_id = $validated['location_id'];
+                $tool->save();
+            }
+
             $stock = TolFastStock::firstOrCreate(
                 ['tool_id' => $validated['tool_id'], 'location_id' => $validated['location_id']],
                 ['current_qty' => 0]
@@ -150,33 +160,55 @@ class ToolFastStockController extends Controller
     {
         $validated = $request->validate([
             'tool_id'        => 'required|exists:tol_m_tools,id',
-            'to_location_id' => 'required|exists:tol_m_locations,id',
+            'location_id'    => 'nullable|exists:tol_m_locations,id', // Source location
+            'to_location_id' => 'required|exists:tol_m_locations,id', // Destination
             'qty'            => 'required|integer|min:1',
             'note'           => 'nullable|string',
         ]);
 
         $tool = TolTool::findOrFail($validated['tool_id']);
-        if (!$tool->location_id) {
+        $sourceLocationId = $validated['location_id'] ?? $tool->location_id;
+        if (!$sourceLocationId) {
             return response()->json(['status' => 'error', 'message' => 'Tool has no default location. Please set it in Master Tool.'], 422);
         }
-        $validated['location_id'] = $tool->location_id;
+        $validated['location_id'] = $sourceLocationId;
 
         $stock = TolFastStock::where('tool_id', $validated['tool_id'])
             ->where('location_id', $validated['location_id'])
-            ->firstOrFail();
+            ->first();
 
-        if ($stock->current_qty < $validated['qty']) {
+        if (!$stock || $stock->current_qty < $validated['qty']) {
+            $currentQty = $stock ? $stock->current_qty : 0;
             return response()->json([
                 'status'  => 'error',
-                'message' => "Insufficient stock. Current: {$stock->current_qty}, Requested: {$validated['qty']}",
+                'message' => "Insufficient stock at selected source. Current: {$currentQty}, Requested: {$validated['qty']}",
             ], 422);
         }
 
         DB::transaction(function () use ($validated, $stock) {
+            // 1. Kurangi dari lokasi asal
             $stock->current_qty   -= $validated['qty'];
             $stock->last_updated_at = now();
             $stock->save();
 
+            // 2. Cek kategori lokasi tujuan
+            $destination = TolLocation::findOrFail($validated['to_location_id']);
+
+            // Jika tujuan adalah lokasi penyimpanan aktif (storage, machine, subcont), tambahkan stoknya
+            if (in_array($destination->category, ['storage', 'machine', 'subcont'])) {
+                $destStock = TolFastStock::firstOrCreate(
+                    [
+                        'tool_id'     => $validated['tool_id'],
+                        'location_id' => $validated['to_location_id']
+                    ],
+                    ['current_qty' => 0]
+                );
+                $destStock->current_qty   += $validated['qty'];
+                $destStock->last_updated_at = now();
+                $destStock->save();
+            }
+
+            // 3. Catat riwayat transaksi
             TolTransaction::create([
                 'tool_id'          => $validated['tool_id'],
                 'location_id'      => $validated['location_id'],

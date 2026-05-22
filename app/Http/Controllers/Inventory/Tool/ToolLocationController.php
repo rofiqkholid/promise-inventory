@@ -47,7 +47,7 @@ class ToolLocationController extends Controller
         $validated = $request->validate([
             'code'        => 'required|string|max:50|unique:tol_m_locations,code',
             'name'        => 'required|string|max:100',
-            'category'    => 'required|in:storage,machine,subcont',
+            'category'    => 'required|in:storage,machine,subcont,scrap,lost',
             'description' => 'nullable|string',
         ]);
 
@@ -61,7 +61,7 @@ class ToolLocationController extends Controller
         $validated = $request->validate([
             'code'        => 'required|string|max:50|unique:tol_m_locations,code,' . $id,
             'name'        => 'required|string|max:100',
-            'category'    => 'required|in:storage,machine,subcont',
+            'category'    => 'required|in:storage,machine,subcont,scrap,lost',
             'description' => 'nullable|string',
         ]);
 

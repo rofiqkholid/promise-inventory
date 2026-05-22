@@ -59,6 +59,8 @@
                         <option value="storage">Storage</option>
                         <option value="machine">Machine</option>
                         <option value="subcont">Subcont</option>
+                        <option value="scrap">Scrap / NG Box</option>
+                        <option value="lost">Lost</option>
                     </select>
                 </div>
                 <div class="mb-4">
@@ -97,7 +99,9 @@ $(document).ready(function() {
                     const colors = {
                         storage: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
                         machine: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-                        subcont: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        subcont: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+                        scrap: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
+                        lost: 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400'
                     };
                     return `<span class="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest ${colors[d] || 'bg-gray-100 text-gray-600'}">${d}</span>`;
                 }
