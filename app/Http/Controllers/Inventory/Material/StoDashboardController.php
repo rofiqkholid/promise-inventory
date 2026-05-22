@@ -80,14 +80,36 @@ class StoDashboardController extends Controller
      */
     public function paretoByModel(Request $request, $id)
     {
-        $stoEvent = StoEvent::findByHashOrFail($id);
+        if (in_array($id, ['all', '3m', '6m', '12m'])) {
+            $query = StoEvent::where('status', 'CLOSED');
+            if ($id === '3m') {
+                $query->where('period_end', '>=', now()->subMonths(3));
+            } elseif ($id === '6m') {
+                $query->where('period_end', '>=', now()->subMonths(6));
+            } elseif ($id === '12m') {
+                $query->where('period_end', '>=', now()->subMonths(12));
+            }
+            $eventIds = $query->pluck('id')->toArray();
+            
+            // Fallback: if no events exist in date range, fetch last N events
+            if (empty($eventIds)) {
+                $limit = $id === '3m' ? 1 : ($id === '6m' ? 3 : 6);
+                $eventIds = StoEvent::where('status', 'CLOSED')->orderBy('period_end', 'desc')->limit($limit)->pluck('id')->toArray();
+            }
+            
+            $eventCode = $id === 'all' ? 'All STO Events (Overall)' : ($id === '3m' ? 'Last 3 Months (Overall)' : ($id === '6m' ? 'Last 6 Months (Overall)' : 'Last 1 Year (Overall)'));
+        } else {
+            $stoEvent = StoEvent::findByHashOrFail($id);
+            $eventIds = [$stoEvent->id];
+            $eventCode = $stoEvent->code;
+        }
 
         // Step 1: Get deviation aggregated per model
         $modelDeviation = DB::table('inv_t_sto_detail as sd')
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 'sd.product_detail_id')
             ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
             ->leftJoin('customers as c', 'c.id', '=', 'm.customer_id')
-            ->where('sd.event_id', $stoEvent->id)
+            ->whereIn('sd.event_id', $eventIds)
             ->select(
                 DB::raw("ISNULL(m.name, 'No Model') as model_name"),
                 DB::raw("ISNULL(c.code, 'Unknown') as customer_code"),
@@ -133,7 +155,7 @@ class StoDashboardController extends Controller
             ->leftJoin('customers as c', 'c.id', '=', 'm.customer_id')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
             ->join('products as p', 'p.id', '=', 'pd.product_id')
-            ->where('sd.event_id', $stoEvent->id)
+            ->whereIn('sd.event_id', $eventIds)
             ->whereNotNull('sd.reason_id')
             ->select(
                 DB::raw("ISNULL(m.name, 'No Model') as model_name"),
@@ -155,7 +177,7 @@ class StoDashboardController extends Controller
         // Reason distribution summary (for mini bar/donut chart)
         $reasonDistribution = DB::table('inv_t_sto_detail as sd')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
-            ->where('sd.event_id', $stoEvent->id)
+            ->whereIn('sd.event_id', $eventIds)
             ->whereNotNull('sd.reason_id')
             ->select(
                 DB::raw("ISNULL(r.name, 'Unknown') as reason_name"),
@@ -166,7 +188,7 @@ class StoDashboardController extends Controller
             ->get();
 
         return response()->json([
-            'event_code'         => $stoEvent->code,
+            'event_code'         => $eventCode,
             'pareto'             => $paretoData,
             'reason_breakdown'   => $reasonBreakdown,
             'reason_distribution' => $reasonDistribution,
@@ -175,14 +197,19 @@ class StoDashboardController extends Controller
     }
 
     /**
-     * API: Correction Log grouped by model across all CLOSED STO events.
-     * Shows historical stock adjustments made per model.
+     * API: Correction Log grouped by model across active STO events.
+     * Shows stock adjustments made per model.
      */
     public function correctionLogByModel(Request $request)
     {
         $limit = $request->input('limit', 10); // top N models
+        
+        $eventIds = null;
+        if ($request->filled('event_id')) {
+            $eventIds = $this->resolveEventIds($request->input('event_id'));
+        }
 
-        $data = $this->getCorrectionSummaryByModel($limit);
+        $data = $this->getCorrectionSummaryByModel($limit, $eventIds);
 
         return response()->json([
             'data' => $data,
@@ -194,15 +221,25 @@ class StoDashboardController extends Controller
      */
     public function correctionLogDetail(Request $request, $modelName)
     {
-        $detail = DB::table('inv_t_sto_detail as sd')
+        $eventIds = null;
+        if ($request->filled('event_id')) {
+            $eventIds = $this->resolveEventIds($request->input('event_id'));
+        }
+
+        $query = DB::table('inv_t_sto_detail as sd')
             ->join('inv_t_sto_event as se', 'se.id', '=', 'sd.event_id')
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 'sd.product_detail_id')
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
             ->where('se.status', 'CLOSED')
-            ->where(DB::raw("ISNULL(m.name, 'No Model')"), $modelName)
-            ->select(
+            ->where(DB::raw("ISNULL(m.name, 'No Model')"), $modelName);
+
+        if (!empty($eventIds)) {
+            $query->whereIn('sd.event_id', $eventIds);
+        }
+
+        $detail = $query->select(
                 'se.code as event_code',
                 'se.period_end',
                 'p.part_no',
@@ -277,16 +314,21 @@ class StoDashboardController extends Controller
     }
 
     /**
-     * Build correction summary grouped by model (across all CLOSED events).
+     * Build correction summary grouped by model (across active STO events).
      */
-    private function getCorrectionSummaryByModel(int $limit = 20): \Illuminate\Support\Collection
+    private function getCorrectionSummaryByModel(int $limit = 20, ?array $eventIds = null): \Illuminate\Support\Collection
     {
-        return DB::table('inv_t_sto_detail as sd')
+        $query = DB::table('inv_t_sto_detail as sd')
             ->join('inv_t_sto_event as se', 'se.id', '=', 'sd.event_id')
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 'sd.product_detail_id')
             ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
-            ->where('se.status', 'CLOSED')
-            ->select(
+            ->where('se.status', 'CLOSED');
+
+        if (!empty($eventIds)) {
+            $query->whereIn('sd.event_id', $eventIds);
+        }
+
+        return $query->select(
                 DB::raw("ISNULL(m.name, 'No Model') as model_name"),
                 DB::raw("COUNT(DISTINCT se.id) as event_count"),
                 DB::raw("COUNT(DISTINCT pd.id) as affected_parts"),
@@ -315,5 +357,38 @@ class StoDashboardController extends Controller
                     'decrement_pcs'    => round((float) $row->decrement_pcs, 0),
                 ];
             });
+    }
+
+    /**
+     * Resolve event IDs based on dashboard filter parameter.
+     */
+    private function resolveEventIds(string $id): array
+    {
+        if (in_array($id, ['all', '3m', '6m', '12m'])) {
+            $query = StoEvent::where('status', 'CLOSED');
+            if ($id === '3m') {
+                $query->where('period_end', '>=', now()->subMonths(3));
+            } elseif ($id === '6m') {
+                $query->where('period_end', '>=', now()->subMonths(6));
+            } elseif ($id === '12m') {
+                $query->where('period_end', '>=', now()->subMonths(12));
+            }
+            $eventIds = $query->pluck('id')->toArray();
+            
+            // Fallback: if no events exist in date range, fetch last N events
+            if (empty($eventIds)) {
+                $limit = $id === '3m' ? 1 : ($id === '6m' ? 3 : 6);
+                $eventIds = StoEvent::where('status', 'CLOSED')->orderBy('period_end', 'desc')->limit($limit)->pluck('id')->toArray();
+            }
+            return $eventIds;
+        }
+
+        $stoEvent = StoEvent::findByHash($id);
+        if ($stoEvent) {
+            return [$stoEvent->id];
+        }
+        
+        // Fallback
+        return StoEvent::where('status', 'CLOSED')->orderBy('period_end', 'desc')->limit(6)->pluck('id')->toArray();
     }
 }

@@ -10,34 +10,48 @@
         <!-- Section 1: Title & Subtitle Section -->
         <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-800 dark:text-white leading-tight mb-0.5 flex items-center gap-2">
-                Stock Opname Analytics
+                STO Analytics
             </h2>
-            <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-tight">Deviation analysis, model concentration, and adjustment logs</p>
+            <p class="text-[11px] text-slate-500 dark:text-gray-400 leading-tight">Stock Opname Analysis Deviations</p>
         </div>
 
         <!-- Section 2: KPI Cards & Filter Toggle -->
         <div class="flex-1 flex flex-col md:flex-row gap-2 items-stretch lg:justify-end min-w-[100%] xl:min-w-[750px]">
             <!-- KPI Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2 flex-1">
+            <div class="grid grid-cols-2 xl:grid-cols-5 gap-2 flex-1">
                 @foreach([
                     ['icon' => 'fa-calendar-check', 'color' => 'slate',   'label' => 'Total Events',   'val' => $stats['total_events'],   'unit' => 'STO cycles'],
                     ['icon' => 'fa-lock',           'color' => 'indigo',  'label' => 'Closed Events',  'val' => $stats['closed_events'],  'unit' => 'completed'],
                     ['icon' => 'fa-spinner',        'color' => 'emerald', 'label' => 'Open Events',    'val' => $stats['open_events'],    'unit' => 'in progress'],
-                    ['icon' => 'fa-tag',            'color' => 'amber',   'label' => 'Latest Event',   'val' => $stats['last_event'],     'unit' => ''],
-                    ['icon' => 'fa-calendar-days',  'color' => 'primary', 'label' => 'Latest Period',  'val' => $stats['last_period'],    'unit' => ''],
                 ] as $kpi)
                 <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 h-[52px] transition-all duration-200">
                     <div class="w-8 h-8 rounded-xs bg-{{ $kpi['color'] }}-50 dark:bg-{{ $kpi['color'] }}-900/20 flex items-center justify-center text-{{ $kpi['color'] }}-600 dark:text-{{ $kpi['color'] }}-400 flex-shrink-0">
                         <i class="fa-solid {{ $kpi['icon'] }} text-xs"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-none mb-0.5 truncate">{{ $kpi['label'] }}</p>
+                        <p class="text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider leading-none mb-0.5 truncate">{{ $kpi['label'] }}</p>
                         <p class="text-xs font-extrabold text-slate-800 dark:text-white leading-none truncate">{{ $kpi['val'] }}
                             @if($kpi['unit'])<span class="text-[8px] font-semibold text-slate-400 dark:text-slate-500 ml-0.5 normal-case">{{ $kpi['unit'] }}</span>@endif
                         </p>
                     </div>
                 </div>
                 @endforeach
+
+                <!-- Latest Event Card (Spans 1 column on mobile, 2 columns on desktop) -->
+                <div class="col-span-1 xl:col-span-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 h-[52px] transition-all duration-200">
+                    <div class="w-8 h-8 rounded-xs bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
+                        <i class="fa-solid fa-tag text-xs"></i>
+                    </div>
+                    <div class="min-w-0 flex-1 flex flex-col justify-center">
+                        <p class="text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider leading-none mb-0.5">Latest Event</p>
+                        <div class="flex flex-wrap items-baseline gap-x-1.5 min-w-0">
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-white leading-none truncate">{{ $stats['last_event'] }}</span>
+                            @if($stats['last_period'] && $stats['last_period'] !== '-')
+                                <span class="text-[8.5px] font-semibold text-slate-400 dark:text-slate-500 truncate">({{ $stats['last_period'] }})</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Filter Toggle Section & Correction Logs -->
@@ -54,14 +68,39 @@
 
     {{-- Collapsible Filter Card --}}
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-3 shrink-0 mb-1">
-        <div class="flex flex-wrap items-center gap-4">
+        <div class="flex flex-wrap items-center gap-6">
+            <!-- Filter Mode Select -->
             <div class="flex items-center gap-2">
-                <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">STO Period:</label>
+                <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">Filter Scope:</label>
+                <div class="w-[180px]">
+                    <select id="filterScope" class="w-full">
+                        <option value="event" selected>Single STO Event</option>
+                        <option value="range">Aggregate Range</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Single STO Event Container -->
+            <div id="divEventSelector" class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">STO Cycle:</label>
                 <div class="w-[240px]">
                     <select id="eventSelector" class="w-full">
                         @foreach($recentEvents as $e)
                             <option value="{{ $e['hash_id'] }}" data-code="{{ $e['code'] }}" data-period="{{ $e['period'] }}">{{ $e['code'] }} ({{ $e['period'] }})</option>
                         @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Time Range Container (Hidden by default) -->
+            <div id="divRangeSelector" class="flex items-center gap-2 hidden">
+                <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">Aggregate Range:</label>
+                <div class="w-[200px]">
+                    <select id="rangeSelector" class="w-full">
+                        <option value="3m" data-code="Last 3 Months (Overall)" data-period="3 Months">Last 3 Months</option>
+                        <option value="6m" data-code="Last 6 Months (Overall)" data-period="6 Months">Last 6 Months</option>
+                        <option value="12m" data-code="Last 1 Year (Overall)" data-period="1 Year">Last 1 Year</option>
+                        <option value="all" data-code="All STO Events (Overall)" data-period="All Time">All STO Events</option>
                     </select>
                 </div>
             </div>
@@ -174,173 +213,323 @@
             <div class="relative w-full flex-1 min-h-0">
                 <canvas id="problemBreakdownChart" class="absolute inset-0 w-full h-full"></canvas>
             </div>
-        </div>
-    </div>
-</div>{{-- Global Correction Log Modal (Original Audit Table Interface) --}}<div id="correctionDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-slate-900/70 transition-all" role="dialog" aria-modal="true">
-    <div class="bg-white dark:bg-gray-800 rounded-xs shadow-xl w-full max-w-[92vw] 2xl:max-w-7xl overflow-hidden border border-slate-200 dark:border-gray-700 flex flex-col h-[80vh] max-h-[85vh] animate-fade-in-up relative">
-        <div class="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shrink-0">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xs bg-slate-100 dark:bg-slate-900/45 flex items-center justify-center text-slate-700 dark:text-slate-350 text-lg shadow-xs flex-shrink-0 border border-slate-200 dark:border-slate-800/30">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-3 text-sm uppercase tracking-widest">
-                        Global STO Correction Log
-                    </h3>
-                    <p class="text-[9px] text-slate-450 dark:text-slate-550 font-bold uppercase tracking-wider mt-0.5">Aggregate models adjustment log summary across cycles</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-                <button onclick="closeCorrectionModal()" class="text-slate-400 hover:text-rose-500 transition-colors">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
+        </div>    </div></div>{{-- Global Correction Log Modal (Original Audit Table Interface) --}}
+<div id="correctionDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 p-0 md:p-4" role="dialog" aria-modal="true">
+    <div class="relative w-full h-full md:h-[95vh] md:w-[95vw] transform overflow-hidden md:rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col shadow-2xl transition-all">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left text-primary-500"></i> Global STO Correction Log
+            </h3>
+            <button onclick="closeCorrectionModal()" class="text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Close Modal">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
         
-        <div class="overflow-y-auto flex-1 custom-scrollbar bg-white dark:bg-gray-800">
-            <table class="w-full text-left border-collapse" id="correctionLogTable">
-                <thead class="sticky top-0 bg-slate-50 dark:bg-gray-900 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 z-10">
+        <div class="overflow-y-auto px-6 py-6 flex-1 custom-scrollbar bg-white dark:bg-gray-900">
+            <x-table id="correctionLogTable">
+                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                     <tr>
-                        <th class="py-3 px-6 text-left">Model Identification</th>
-                        <th class="py-3 px-3 text-center w-24">Events</th>
-                        <th class="py-3 px-3 text-center w-28">Affected Parts</th>
-                        <th class="py-3 px-4 text-right w-40">ABS Adj. Value</th>
-                        <th class="py-3 px-3 text-center w-40">Qty Balance (+/-)</th>
-                        <th class="py-3 px-4 text-right w-40">Net Impact</th>
-                        <th class="py-3 px-6 text-center w-32">Detail</th>
+                        <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model Identification</th>
+                        <th class="py-3 px-3 text-center w-28 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Events</th>
+                        <th class="py-3 px-3 text-center w-32 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Affected Parts</th>
+                        <th class="py-3 px-4 text-right w-44 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">ABS Adj. Value</th>
+                        <th class="py-3 px-3 text-center w-48 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Qty Balance (+/-)</th>
+                        <th class="py-3 px-4 text-right w-44 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Net Impact</th>
+                        <th class="py-3 px-6 text-center w-36 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Detail</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-gray-700/60 text-[11px] font-medium text-slate-700 dark:text-slate-350">
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-[11px] font-medium text-gray-700 dark:text-gray-300">
                     @foreach($correctionByModel as $model)
-                        <tr class="hover:bg-slate-50/80 dark:hover:bg-gray-700/30 transition-colors group">
-                            <td class="py-3 px-6">
-                                <div class="flex items-center gap-3">   
-                                    <div>
-                                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-tight">{{ $model['model_name'] }}</div>
-                                    </div>
-                                </div>
-                            </td>                            <td class="py-3 px-3 text-center">
-                                <span class="inline-flex items-center justify-center font-medium text-[10px] px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-305 border border-slate-200/60 dark:border-slate-700/60 shadow-3xs">
-                                    {{ $model['event_count'] }} <span class="text-[8px] font-medium ml-0.5 text-slate-450 dark:text-slate-500">events</span>
+                        <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150">
+                            <td class="py-3 px-4">
+                                <span class="font-semibold text-gray-900 dark:text-white uppercase tracking-tight">{{ $model['model_name'] }}</span>
+                            </td>
+                            <td class="py-3 px-3 text-center">
+                                <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">
+                                    {{ $model['event_count'] }} events
                                 </span>
                             </td>
                             <td class="py-3 px-3 text-center">
-                                <span class="inline-flex items-center justify-center font-medium text-[10px] px-2.5 py-0.5 rounded-full bg-slate-50 dark:bg-gray-900 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-3xs">
-                                    <i class="fa-solid fa-cube text-[8px] mr-1 text-slate-400 dark:text-slate-550"></i>{{ $model['affected_parts'] }} <span class="text-[8px] font-medium ml-0.5 text-slate-450 dark:text-slate-550">parts</span>
+                                <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">
+                                    {{ $model['affected_parts'] }} parts
                                 </span>
                             </td>
                             <td class="py-3 px-4 text-right">
-                                <div class="font-mono font-medium text-[11px] text-slate-800 dark:text-slate-200">
-                                    <span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mr-0.5">Rp</span>{{ number_format($model['total_correction']) }}
+                                <div class="font-mono font-bold text-xs text-gray-900 dark:text-white">
+                                    <span class="text-[9.5px] font-semibold text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>{{ number_format($model['total_correction']) }}
                                 </div>
                             </td>
-                            <td class="py-3 px-3">
-                                <div class="flex items-center justify-center gap-1.5">
-                                    <span class="inline-flex items-center gap-1 text-[9px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-100/60 dark:border-emerald-900/30 shadow-3xs">
-                                        <i class="fa-solid fa-arrow-up text-[7px]"></i>{{ number_format($model['increment_pcs']) }}
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 text-[9px] font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded border border-rose-100/60 dark:border-rose-900/30 shadow-3xs">
-                                        <i class="fa-solid fa-arrow-down text-[7px]"></i>{{ number_format($model['decrement_pcs']) }}
-                                    </span>
+                            <td class="py-3 px-3 text-center">
+                                <div class="flex items-center justify-center gap-2 font-mono font-bold text-xs">
+                                    <span class="text-emerald-600 dark:text-emerald-400">+{{ number_format($model['increment_pcs']) }}</span>
+                                    <span class="text-gray-300 dark:text-gray-700">/</span>
+                                    <span class="text-rose-600 dark:text-rose-400">-{{ number_format($model['decrement_pcs']) }}</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    @if($model['net_correction'] < 0)
-                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-[9px]"><i class="fa-solid fa-caret-down"></i></span>
-                                        <span class="font-mono font-medium text-xs text-rose-600 dark:text-rose-400">
-                                            -Rp {{ number_format(abs($model['net_correction'])) }}
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[9px]"><i class="fa-solid fa-caret-up"></i></span>
-                                        <span class="font-mono font-medium text-xs text-emerald-600 dark:text-emerald-400">
-                                            +Rp {{ number_format(abs($model['net_correction'])) }}
-                                        </span>
-                                    @endif
-                                </div>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-xs">
+                                @if($model['net_correction'] < 0)
+                                    <span class="text-rose-600 dark:text-rose-400">-Rp {{ number_format(abs($model['net_correction'])) }}</span>
+                                @else
+                                    <span class="text-emerald-600 dark:text-emerald-400">+Rp {{ number_format(abs($model['net_correction'])) }}</span>
+                                @endif
                             </td>
                             <td class="py-3 px-6 text-center">
-                                <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="Explore detailed correction logs" class="h-8 px-3 inline-flex items-center justify-center gap-1.5 rounded bg-white hover:bg-primary-50 dark:bg-gray-800 dark:hover:bg-primary-950/20 border border-slate-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-800 text-slate-600 hover:text-primary-600 dark:text-gray-300 dark:hover:text-primary-400 transition-all shadow-xs hover:shadow text-[10px] font-bold uppercase tracking-wider outline-none whitespace-nowrap">
-                                    <i class="fa-solid fa-magnifying-glass-chart text-[10px]"></i> View Logs
+                                <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                    View Logs
                                 </button>
                             </td>
                         </tr>
                     @endforeach
-                    {{-- noModelMatchRow removed to prevent '_DT_CellIndex' jQuery DataTables initialization error --}}
                 </tbody>
-            </table>
+            </x-table>
         </div>
 
         {{-- Audit Sub Modal --}}
-        <div id="subModalContainer" class="hidden absolute inset-0 z-30 animate-fade-in bg-white dark:bg-gray-800 flex flex-col">
+        <div id="subModalContainer" class="hidden absolute inset-0 z-35 bg-white dark:bg-gray-900 flex flex-col rounded-xs overflow-hidden">
             <div class="w-full h-full flex flex-col overflow-hidden">
-                <div class="px-6 py-4 bg-slate-50 dark:bg-gray-900 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center shrink-0">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xs bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-650 dark:text-slate-305 text-sm shadow-xs border border-slate-200 dark:border-slate-800">
-                            <i class="fa-solid fa-receipt"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-3 text-sm uppercase tracking-widest">
-                                Correction Trail Log — <span id="modalModelName" class="text-slate-800 dark:text-slate-200 font-extrabold">Model Name</span>
-                            </h3>
-                            <p class="text-[9px] text-slate-450 dark:text-slate-550 font-bold uppercase tracking-wider mt-0.5">Detailed correction items for this inventory category</p>
-                        </div>
-                    </div>
-                    <button onclick="closeSubModal()" class="text-slate-400 hover:text-rose-500 transition-colors">
-                        <i class="fa-solid fa-xmark text-lg"></i>
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
+                    <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-primary-500"></i> Correction Trail Log — <span id="modalModelName" class="text-primary-600 dark:text-primary-400 font-bold">Model Name</span>
+                    </h3>
+                    <button onclick="closeSubModal()" class="text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Back to Overview">
+                        <i class="fa-solid fa-arrow-left text-base"></i>
                     </button>
                 </div>
-                <div class="overflow-y-auto flex-1 custom-scrollbar">
-                    <table class="w-full text-left border-collapse" id="correctionSubTable">
-                        <thead class="sticky top-0 bg-slate-50 dark:bg-gray-900 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-gray-700 z-10">
+                <div class="overflow-y-auto px-6 py-6 flex-1 custom-scrollbar bg-white dark:bg-gray-900">
+                    <x-table id="correctionSubTable">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                             <tr>
-                                <th class="py-3 px-6 text-left">STO Event</th>
-                                <th class="py-3 px-3 text-left">Part No</th>
-                                <th class="py-3 px-3 text-left">Reason Category</th>
-                                <th class="py-3 px-4 text-right w-32">Quantity Adj.</th>
-                                <th class="py-3 px-4 text-right w-36">Value Impact</th>
-                                <th class="py-3 px-6 text-left">Correction Remark</th>
+                                <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">STO Event</th>
+                                <th class="py-3 px-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Part No</th>
+                                <th class="py-3 px-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Reason Category</th>
+                                <th class="py-3 px-4 text-right w-36 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Quantity Adj.</th>
+                                <th class="py-3 px-4 text-right w-40 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Value Impact</th>
+                                <th class="py-3 px-6 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Correction Remark</th>
                             </tr>
                         </thead>
-                        <tbody id="correctionDetailBody" class="divide-y divide-slate-100 dark:divide-gray-700/60 text-[11px] font-medium text-slate-700 dark:text-slate-350">
+                        <tbody id="correctionDetailBody" class="divide-y divide-gray-100 dark:divide-gray-800 text-[11px] font-medium text-gray-700 dark:text-gray-300">
                         </tbody>
-                    </table>
+                    </x-table>
                 </div>
-                <div class="px-6 py-3 bg-slate-50 dark:bg-gray-900 border-t border-slate-200 dark:border-gray-700 shrink-0 flex justify-end">
-                    <button onclick="closeSubModal()" class="px-5 py-2 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-600 text-[10px] font-bold text-slate-650 dark:text-gray-300 rounded-xs transition-all uppercase tracking-widest shadow-xs">
-                        BACK TO OVERVIEW
+                <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 shrink-0 flex justify-end">
+                    <button onclick="closeSubModal()" class="px-4 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to Overview
                     </button>
                 </div>
             </div>
         </div>
         
-        <div class="px-6 py-3 bg-slate-50 dark:bg-gray-900 border-t border-slate-200 dark:border-gray-700 shrink-0 flex justify-end">
-            <button onclick="closeCorrectionModal()" class="px-5 py-2 bg-white hover:bg-slate-50 border border-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-600 text-[10px] font-bold text-slate-650 dark:text-gray-300 rounded-xs transition-all uppercase tracking-widest shadow-xs">
-                CLOSE CORRECTION LOG
+        <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 shrink-0 flex justify-end">
+            <button onclick="closeCorrectionModal()" class="px-5 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-xmark text-[10px]"></i> Close Correction Log
             </button>
         </div>
     </div>
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Custom DataTable styles for Correction Log and Sub-table */
+    #correctionLogTable_wrapper,
+    #correctionSubTable_wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    #correctionLogTable tbody tr,
+    #correctionSubTable tbody tr {
+        transition: all 0.15s ease-in-out;
+    }
+    
+    #correctionLogTable tbody tr:nth-child(even),
+    #correctionSubTable tbody tr:nth-child(even) {
+        background-color: rgba(248, 250, 252, 0.4);
+    }
+    .dark #correctionLogTable tbody tr:nth-child(even),
+    .dark #correctionSubTable tbody tr:nth-child(even) {
+        background-color: rgba(17, 24, 39, 0.2);
+    }
+
+    /* Align and style search input and length menu */
+    .dataTables_wrapper .dataTables_length select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+        background-position: right 0.5rem center !important;
+        background-repeat: no-repeat !important;
+        background-size: 1.25em 1.25em !important;
+        padding-right: 2rem !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        appearance: none !important;
+        border-radius: 0.125rem !important;
+        border: 1px solid rgba(203, 213, 225, 0.6) !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #475569 !important;
+        transition: all 0.2s !important;
+        background-color: #f8fafc !important;
+    }
+    .dark .dataTables_wrapper .dataTables_length select {
+        background-color: #111827 !important;
+        border-color: rgba(75, 85, 99, 0.6) !important;
+        color: #d1d5db !important;
+    }
+    .dataTables_wrapper .dataTables_length select:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15) !important;
+        outline: none !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        border-radius: 0.125rem !important;
+        border: 1px solid rgba(203, 213, 225, 0.6) !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        padding: 0.5rem 0.75rem !important;
+        width: 220px !important;
+        transition: all 0.2s !important;
+        outline: none !important;
+        background-color: #f8fafc !important;
+    }
+    .dark .dataTables_wrapper .dataTables_filter input {
+        background-color: #111827 !important;
+        border-color: rgba(75, 85, 99, 0.6) !important;
+        color: #f3f4f6 !important;
+    }
+    .dataTables_wrapper .dataTables_filter input:focus {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    }
+
+    /* Pagination container styling */
+    .dataTables_wrapper .dataTables_paginate {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 0.5rem !important;
+    }
+
+    /* Pagination button styling */
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 28px !important;
+        height: 28px !important;
+        padding: 0 8px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        border-radius: 0.125rem !important;
+        cursor: pointer !important;
+        color: #64748b !important;
+        background: #f8fafc !important;
+        border: 1px solid rgba(226, 232, 240, 0.8) !important;
+        transition: all 0.2s !important;
+        user-select: none !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.025em !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+        color: #94a3b8 !important;
+        background: #111827 !important;
+        border-color: rgba(55, 65, 81, 0.8) !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        color: #4f46e5 !important;
+        background: #e0e7ff !important;
+        border-color: rgba(99, 102, 241, 0.3) !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        color: #818cf8 !important;
+        background: rgba(99, 102, 241, 0.1) !important;
+        border-color: rgba(129, 140, 248, 0.3) !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+        color: #ffffff !important;
+        background: #4f46e5 !important;
+        border-color: #4f46e5 !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+        color: #ffffff !important;
+        background: #6366f1 !important;
+        border-color: #6366f1 !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+        opacity: 0.4 !important;
+        background: #f8fafc !important;
+        border-color: rgba(226, 232, 240, 0.8) !important;
+        color: #94a3b8 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+        background: #1f2937 !important;
+        border-color: rgba(55, 65, 81, 0.8) !important;
+        color: #4b5563 !important;
+    }
+
+    /* Info text */
+    .dataTables_wrapper .dataTables_info {
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        display: inline-block !important;
+    }
+    .dark .dataTables_wrapper .dataTables_info {
+        color: #94a3b8 !important;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // --- Global Chart.js Defaults (match Outfit layout theme) ---
+    // --- Global Chart.js Defaults (match Inter layout theme) ---
     (function() {
         const isDark = document.documentElement.classList.contains('dark');
-        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.font.family = "'Inter', sans-serif";
         Chart.defaults.font.size   = 10.5;
         Chart.defaults.color       = isDark ? '#94a3b8' : '#64748b';
-        Chart.defaults.borderColor = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
-        Chart.defaults.plugins.legend.labels.padding = 14;
-        Chart.defaults.plugins.legend.labels.usePointStyle = false;
+        Chart.defaults.borderColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+        Chart.defaults.plugins.legend.labels.padding = 15;
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
     })();
+
+    // --- Dynamic Currency/Numeric Suffix Formatter ---
+    const formatSuffix = (v) => {
+        const absVal = Math.abs(v);
+        const sign = v < 0 ? '-' : '';
+        if (absVal >= 1000000000) {
+            let res = (absVal / 1000000000).toFixed(1);
+            if (res.endsWith('.0')) res = res.slice(0, -2);
+            return sign + res + 'B';
+        }
+        if (absVal >= 1000000) {
+            let res = (absVal / 1000000).toFixed(1);
+            if (res.endsWith('.0')) res = res.slice(0, -2);
+            return sign + res + 'M';
+        }
+        if (absVal >= 1000) {
+            return sign + (absVal / 1000).toFixed(0) + 'k';
+        }
+        return sign + absVal;
+    };
 
     // --- Custom Chart.js Plugins ---
     
-    // Custom plugin to draw yellow numeric value tags on lines/bars
-    // Custom plugin to draw yellow numeric value tags on lines/bars
+    // Custom plugin to draw premium numeric value tags on lines/bars
     const yellowDataLabelsPlugin = {
         id: 'yellowDataLabels',
         afterDatasetsDraw(chart, args, options) {
@@ -349,8 +538,11 @@
             
             if (!chart.data || !Array.isArray(chart.data.datasets)) return;
             
+            const isDark = document.documentElement.classList.contains('dark');
+            
             chart.data.datasets.forEach((dataset, datasetIndex) => {
                 if (!dataset || !dataset.yellowLabels) return;
+                if (!chart.isDatasetVisible(datasetIndex)) return;
                 
                 const meta = chart.getDatasetMeta(datasetIndex);
                 if (!meta || !Array.isArray(meta.data)) return;
@@ -361,16 +553,17 @@
                     if (value === undefined || value === null) return;
                     
                     let text = value;
-                    if (typeof value === 'number') {
+                    let valNum = typeof value === 'number' ? value : parseFloat(value);
+                    if (!isNaN(valNum)) {
                         if (dataset.yellowLabelFormat && typeof dataset.yellowLabelFormat === 'function') {
-                            text = dataset.yellowLabelFormat(value, index);
+                            text = dataset.yellowLabelFormat(valNum, index);
                         } else {
-                            text = value.toFixed(opt.precision !== undefined ? opt.precision : 2);
+                            text = valNum.toFixed(opt.precision !== undefined ? opt.precision : 2);
                             if (text.endsWith('.00')) text = text.slice(0, -3);
-                            if (value < 0) {
-                                text = '(' + Math.abs(value).toFixed(opt.precision !== undefined ? opt.precision : 2) + ')';
-                                if (text.endsWith('.00)')) text = text.replace('.00)', ')');
-                            } else if (value === 0 && opt.zeroText) {
+                            if (valNum < 0) {
+                                text = '-' + Math.abs(valNum).toFixed(opt.precision !== undefined ? opt.precision : 2);
+                                if (text.endsWith('.00')) text = text.slice(0, -3);
+                            } else if (valNum === 0 && opt.zeroText) {
                                 text = opt.zeroText;
                             }
                         }
@@ -395,13 +588,13 @@
                         y = element.y;
                     }
                     ctx.save();
-                    ctx.font = "bold 10px 'Outfit', sans-serif";
+                    ctx.font = "bold 9.5px 'Inter', sans-serif";
                     const textWidth = ctx.measureText(text).width;
                     const rectWidth = textWidth + 8;
                     const rectHeight = 14;
                     
-                    ctx.fillStyle = '#fef08a'; // yellow-200
-                    ctx.strokeStyle = '#eab308'; // yellow-500
+                    ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+                    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
                     ctx.lineWidth = 1;
                     
                     const rx = x - rectWidth / 2;
@@ -422,7 +615,7 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    ctx.fillStyle = '#854d0e'; // yellow-800
+                    ctx.fillStyle = isDark ? '#f8fafc' : '#1e293b';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(text, x, ry + rectHeight / 2 + 0.5);
@@ -445,6 +638,8 @@
             const targets = plugins.targetLines;
             if (!targets || !Array.isArray(targets)) return;
             
+            const isDark = document.documentElement.classList.contains('dark');
+            
             targets.forEach(target => {
                 if (!target || typeof target.value !== 'number') return;
                 const yVal = y.getPixelForValue(target.value);
@@ -458,10 +653,10 @@
                 ctx.stroke();
                 
                 if (target.label) {
-                    ctx.fillStyle = '#fef08a';
-                    ctx.strokeStyle = '#eab308';
+                    ctx.fillStyle = isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+                    ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
                     ctx.lineWidth = 1;
-                    ctx.font = "bold 10px 'Outfit', sans-serif";
+                    ctx.font = "bold 9.5px 'Inter', sans-serif";
                     const textWidth = ctx.measureText(target.label).width;
                     const rx = chart.chartArea.right - textWidth - 8;
                     const ry = yVal - 7;
@@ -474,7 +669,7 @@
                     ctx.fill();
                     ctx.stroke();
                     
-                    ctx.fillStyle = '#854d0e';
+                    ctx.fillStyle = isDark ? '#f8fafc' : '#1e293b';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(target.label, rx + (textWidth + 6)/2, ry + 7.5);
@@ -510,6 +705,7 @@
     let summaryNetChart = null;
     let summaryAbsChart = null;
     let subTable = null;
+    let correctionTable = null;
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', function() {
@@ -525,12 +721,34 @@
             $(this).find('i').toggleClass('text-slate-700 dark:text-slate-200');
         });
 
-        // Initialize Select2 on #eventSelector with premium config
-        const $selector = $('#eventSelector');
-        if ($selector.length) {
-            $selector.select2({
-                dropdownParent: $selector.parent(),
-                minimumResultsForSearch: -1, // Clean view, no search needed for STO periods
+        // Initialize Select2 on #filterScope
+        const $scope = $('#filterScope');
+        if ($scope.length) {
+            $scope.select2({
+                dropdownParent: $scope.parent(),
+                minimumResultsForSearch: -1,
+                dropdownAutoWidth: true,
+                width: '100%'
+            }).on('change', function() {
+                const val = $(this).val();
+                if (val === 'range') {
+                    $('#divEventSelector').addClass('hidden');
+                    $('#divRangeSelector').removeClass('hidden');
+                    changeStoEvent($('#rangeSelector').val());
+                } else {
+                    $('#divRangeSelector').addClass('hidden');
+                    $('#divEventSelector').removeClass('hidden');
+                    changeStoEvent($('#eventSelector').val());
+                }
+            });
+        }
+
+        // Initialize Select2 on #rangeSelector
+        const $range = $('#rangeSelector');
+        if ($range.length) {
+            $range.select2({
+                dropdownParent: $range.parent(),
+                minimumResultsForSearch: -1,
                 dropdownAutoWidth: true,
                 width: '100%'
             }).on('change', function() {
@@ -538,11 +756,32 @@
             });
         }
 
-        // Auto-select and load the first STO event
-        const selector = document.getElementById('eventSelector');
-        if (selector && selector.options.length > 0) {
-            selector.selectedIndex = 0;
-            changeStoEvent(selector.value);
+        // Initialize Select2 on #eventSelector with premium config
+        const $selector = $('#eventSelector');
+        if ($selector.length) {
+            $selector.select2({
+                dropdownParent: $selector.parent(),
+                dropdownAutoWidth: true,
+                width: '100%'
+            }).on('change', function() {
+                changeStoEvent($(this).val());
+            });
+        }
+
+        // Auto-select and load the default STO selector
+        const scopeVal = $('#filterScope').val();
+        if (scopeVal === 'range') {
+            const rangeSelector = document.getElementById('rangeSelector');
+            if (rangeSelector && rangeSelector.options.length > 0) {
+                rangeSelector.selectedIndex = 0;
+                changeStoEvent(rangeSelector.value);
+            }
+        } else {
+            const eventSelector = document.getElementById('eventSelector');
+            if (eventSelector && eventSelector.options.length > 0) {
+                eventSelector.selectedIndex = 0;
+                changeStoEvent(eventSelector.value);
+            }
         }
 
         // Initialize all Summary Trend charts
@@ -553,7 +792,7 @@
         switchAccuracyTab('net');
 
         // Initialize DataTable for main Correction Log Table using the premium helper
-        let correctionTable;
+        correctionTable = null;
         if (window.defaultDataTable) {
             correctionTable = window.defaultDataTable('#correctionLogTable', {
                 order: [[0, 'asc']], // Alphabetical order by Model Name
@@ -693,13 +932,15 @@
         loadedEventId = hashId;
 
         // Sync Select2 value if programmatically triggered and differs
-        const $selector = $('#eventSelector');
-        if ($selector.length && $selector.val() !== hashId) {
-            $selector.val(hashId).trigger('change.select2');
+        const scopeVal = $('#filterScope').val();
+        const targetSelectorId = scopeVal === 'range' ? '#rangeSelector' : '#eventSelector';
+        const $targetSelector = $(targetSelectorId);
+        if ($targetSelector.length && $targetSelector.val() !== hashId) {
+            $targetSelector.val(hashId).trigger('change.select2');
         }
 
         // Find selected option attributes securely
-        const $option = $selector.find(`option[value="${hashId}"]`);
+        const $option = $targetSelector.find(`option[value="${hashId}"]`);
         if (!$option.length) return;
 
         const eventCode = $option.attr('data-code');
@@ -712,11 +953,27 @@
         fetch(`/inventory/sto/${hashId}/pareto-by-model`)
             .then(res => res.json())
             .then(data => {
-                reasonBreakdownData = data.reason_breakdown || [];
+                const rawBreakdown = data.reason_breakdown || [];
+                
+                // Aggregate deviation value by part_no to eliminate duplicate bars in Pareto chart
+                const aggregatedMap = {};
+                rawBreakdown.forEach(item => {
+                    const partNo = item.part_no || 'Unknown';
+                    if (!aggregatedMap[partNo]) {
+                        aggregatedMap[partNo] = {
+                            part_no: partNo,
+                            abs_amount: 0
+                        };
+                    }
+                    aggregatedMap[partNo].abs_amount += parseFloat(item.abs_amount) || 0;
+                });
+                
+                reasonBreakdownData = Object.values(aggregatedMap);
                 paretoPage = 1;
 
                 renderParetoDashboard(data);
                 renderCustomerAccuracyCharts(data);
+                fetchAndRenderCorrectionLog(hashId);
             });
     }
 
@@ -773,12 +1030,9 @@
                         categoryPercentage: 0.6,
                         yAxisID: 'y',
                         yellowLabels: true,
-                        yellowLabelFormat: v => {
-                            if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
-                            if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
-                            return v;
-                        },
-                        order: 2
+                        yellowLabelFormat: v => formatSuffix(v),
+                        order: 2,
+                        pointStyle: 'rect'
                     },
                     {
                         label: 'Cumulative %',
@@ -795,7 +1049,8 @@
                         yAxisID: 'y1',
                         yellowLabels: true,
                         yellowLabelFormat: v => v.toFixed(0) + '%',
-                        order: 1
+                        order: 1,
+                        pointStyle: 'circle'
                     }
                 ]
             },
@@ -806,8 +1061,9 @@
                     legend: {
                         position: 'bottom',
                         labels: {
+                            usePointStyle: true,
                             boxWidth: 12,
-                            font: { size: 10.5, weight: 'bold' }
+                            font: { size: 10.5, weight: 'normal' }
                         }
                     },
                     tooltip: {
@@ -837,13 +1093,9 @@
                         grace: '30%',
                         grid: { color: 'rgba(156, 163, 175, 0.12)', borderDash: [3, 3] },
                         ticks: {
-                            font: { size: 10, weight: 'bold' },
+                            font: { size: 10, weight: 'normal' },
                             maxTicksLimit: 5,
-                            callback: v => {
-                                if (v >= 1000000) return (v / 1000000).toFixed(0) + 'M';
-                                if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
-                                return v;
-                            }
+                            callback: v => formatSuffix(v)
                         }
                     },
                     y1: {
@@ -852,7 +1104,7 @@
                         max: 110,
                         grid: { drawOnChartArea: false },
                         ticks: {
-                            font: { size: 10, weight: 'bold' },
+                            font: { size: 10, weight: 'normal' },
                             maxTicksLimit: 5,
                             callback: v => v.toFixed(0) + '%'
                         }
@@ -860,9 +1112,9 @@
                     x: {
                         grid: { display: false },
                         ticks: {
-                            font: { size: 9.5, weight: 'bold' },
+                            font: { size: 9.5, weight: 'normal' },
                             maxRotation: 45,
-                            minRotation: 45,
+                            minRotation: 0,
                             autoSkip: false
                         }
                     }
@@ -906,7 +1158,8 @@
                         backgroundColor: '#6366f1',
                         barPercentage: 0.45,
                         categoryPercentage: 0.6,
-                        order: 2
+                        order: 2,
+                        pointStyle: 'rect'
                     },
                     {
                         label: 'Trend',
@@ -921,7 +1174,8 @@
                         fill: false,
                         tension: 0.15,
                         yellowLabels: true, // triggers custom yellow label tags
-                        order: 1
+                        order: 1,
+                        pointStyle: 'circle'
                     }
                 ]
             },
@@ -941,11 +1195,11 @@
                         beginAtZero: true,
                         suggestedMax: suggestedMaxPB,
                         grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] },
-                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 }
+                        ticks: { font: { size: 10, weight: 'normal' }, maxTicksLimit: 5 }
                     },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 9, weight: 'black' }, maxRotation: 30 }
+                        ticks: { font: { size: 9, weight: 'normal' }, maxRotation: 30, minRotation: 0 }
                     }
                 }
             }
@@ -955,8 +1209,9 @@
     function prevParetoPage() {
         if (paretoPage > 1) {
             paretoPage--;
-            const selector = document.getElementById('eventSelector');
-            changeStoEvent(selector.value);
+            const scopeVal = $('#filterScope').val();
+            const activeVal = scopeVal === 'range' ? $('#rangeSelector').val() : $('#eventSelector').val();
+            changeStoEvent(activeVal);
         }
     }
 
@@ -965,8 +1220,9 @@
         const totalPages = Math.ceil(sortedBreakdown.length / itemsPerPage) || 1;
         if (paretoPage < totalPages) {
             paretoPage++;
-            const selector = document.getElementById('eventSelector');
-            changeStoEvent(selector.value);
+            const scopeVal = $('#filterScope').val();
+            const activeVal = scopeVal === 'range' ? $('#rangeSelector').val() : $('#eventSelector').val();
+            changeStoEvent(activeVal);
         }
     }
 
@@ -976,10 +1232,10 @@
         const paretoData = data.pareto || [];
         const labels = paretoData.map(d => [d.model_name, d.customer_code]);
         
-        const amountCO = paretoData.map(d => d.system_amount / 1000000);
-        const amountSTO = paretoData.map(d => d.real_amount / 1000000);
-        const sumNET = paretoData.map(d => d.net_amount / 1000000);
-        const sumABS = paretoData.map(d => d.abs_amount / 1000000);
+        const amountCO = paretoData.map(d => d.system_amount);
+        const amountSTO = paretoData.map(d => d.real_amount);
+        const sumNET = paretoData.map(d => d.net_amount);
+        const sumABS = paretoData.map(d => d.abs_amount);
 
         const commonScales = {
             y: {
@@ -987,33 +1243,49 @@
                 position: 'left',
                 grace: '35%',
                 grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] },
-                ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 },
-                title: { display: true, text: 'Millions', font: { size: 9, weight: 'bold' } }
+                ticks: {
+                    font: { size: 10, weight: 'normal' },
+                    maxTicksLimit: 5,
+                    callback: v => formatSuffix(v)
+                }
             },
             y1: {
                 beginAtZero: true,
                 position: 'right',
                 grace: '35%',
                 grid: { drawOnChartArea: false },
-                ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 },
-                title: { display: true, text: 'Millions', font: { size: 9, weight: 'bold' } }
+                ticks: {
+                    font: { size: 10, weight: 'normal' },
+                    maxTicksLimit: 5,
+                    callback: v => formatSuffix(v)
+                }
             },
             x: {
                 grid: { display: false },
-                ticks: { font: { size: 9.5, weight: 'black' } }
+                ticks: { font: { size: 9.5, weight: 'normal' } }
             }
         };
 
         const commonPluginOptions = {
             legend: {
                 position: 'bottom',
-                labels: { boxWidth: 12, font: { size: 10.5, weight: 'bold' } }
+                labels: { boxWidth: 12, font: { size: 10.5, weight: 'normal' } }
             },
             tooltip: {
                 titleFont: { size: 11, weight: 'bold' },
-                bodyFont: { size: 10 }
+                bodyFont: { size: 10 },
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                        return label;
+                    }
+                }
             },
-            yellowDataLabels: { precision: 2, zeroText: '-' }
+            yellowDataLabels: { precision: 0, zeroText: '-' }
         };
 
         // Render NET Chart (Left)
@@ -1038,19 +1310,25 @@
                         label: 'System Amount (CO)',
                         data: amountCO,
                         backgroundColor: '#6366f1',
-                        barPercentage: 0.5,
-                        categoryPercentage: 0.7,
+                        barPercentage: 0.9,
+                        categoryPercentage: 0.85,
                         yAxisID: 'y',
-                        order: 2
+                        yellowLabels: true,
+                        yellowLabelFormat: v => formatSuffix(v),
+                        order: 2,
+                        pointStyle: 'rect'
                     },
                     {
                         label: 'Physical Amount (STO)',
                         data: amountSTO,
                         backgroundColor: '#10b981',
-                        barPercentage: 0.5,
-                        categoryPercentage: 0.7,
+                        barPercentage: 0.9,
+                        categoryPercentage: 0.85,
                         yAxisID: 'y',
-                        order: 2
+                        yellowLabels: true,
+                        yellowLabelFormat: v => formatSuffix(v),
+                        order: 2,
+                        pointStyle: 'rect'
                     },
                     {
                         label: 'Net Deviation',
@@ -1065,15 +1343,26 @@
                         fill: false,
                         tension: 0.15,
                         yellowLabels: true,
+                        yellowLabelFormat: v => formatSuffix(v),
                         yAxisID: 'y1',
-                        order: 1
+                        order: 1,
+                        pointStyle: 'circle'
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: commonPluginOptions,
+                plugins: {
+                    ...commonPluginOptions,
+                    legend: {
+                        ...commonPluginOptions.legend,
+                        labels: {
+                            ...commonPluginOptions.legend.labels,
+                            usePointStyle: true
+                        }
+                    }
+                },
                 scales: commonScales
             }
         });
@@ -1100,19 +1389,25 @@
                         label: 'Physical Amount (STO)',
                         data: amountSTO,
                         backgroundColor: '#10b981',
-                        barPercentage: 0.5,
-                        categoryPercentage: 0.7,
+                        barPercentage: 0.9,
+                        categoryPercentage: 0.85,
                         yAxisID: 'y',
-                        order: 2
+                        yellowLabels: true,
+                        yellowLabelFormat: v => formatSuffix(v),
+                        order: 2,
+                        pointStyle: 'rect'
                     },
                     {
                         label: 'System Amount (CO)',
                         data: amountCO,
                         backgroundColor: '#6366f1',
-                        barPercentage: 0.5,
-                        categoryPercentage: 0.7,
+                        barPercentage: 0.9,
+                        categoryPercentage: 0.85,
                         yAxisID: 'y',
-                        order: 2
+                        yellowLabels: true,
+                        yellowLabelFormat: v => formatSuffix(v),
+                        order: 2,
+                        pointStyle: 'rect'
                     },
                     {
                         label: 'Absolute Deviation',
@@ -1127,8 +1422,10 @@
                         fill: false,
                         tension: 0.15,
                         yellowLabels: true,
+                        yellowLabelFormat: v => formatSuffix(v),
                         yAxisID: 'y1',
-                        order: 1
+                        order: 1,
+                        pointStyle: 'circle'
                     }
                 ]
             },
@@ -1163,11 +1460,13 @@
                 labels: periods,
                 datasets: [{
                     label: 'Amount IDR',
-                    data: amounts.map(a => a / 1000000), // convert to Millions
+                    data: amounts,
                     backgroundColor: '#10b981',
                     barPercentage: 0.35,
                     categoryPercentage: 0.6,
-                    yellowLabels: true
+                    yellowLabels: true,
+                    yellowLabelFormat: v => formatSuffix(v),
+                    pointStyle: 'rect'
                 }]
             },
             options: {
@@ -1177,7 +1476,17 @@
                     legend: { display: false },
                     tooltip: {
                         titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 }
+                        bodyFont: { size: 10 },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                                return label;
+                            }
+                        }
                     },
                     yellowDataLabels: { precision: 0 }
                 },
@@ -1185,11 +1494,14 @@
                     y: {
                         beginAtZero: true,
                         grace: '35%',
-                        title: { display: true, text: 'Millions', font: { size: 9, weight: 'bold' } },
-                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5 },
+                        ticks: {
+                            font: { size: 10, weight: 'normal' },
+                            maxTicksLimit: 5,
+                            callback: v => formatSuffix(v)
+                        },
                         grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] }
                     },
-                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'black' } } }
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'normal' } } }
                 }
             }
         });
@@ -1207,7 +1519,9 @@
                     backgroundColor: '#f59e0b',
                     barPercentage: 0.35,
                     categoryPercentage: 0.6,
-                    yellowLabels: true
+                    yellowLabels: true,
+                    yellowLabelFormat: v => (v < 0 ? '-' : '') + Math.abs(v).toFixed(2) + '%',
+                    pointStyle: 'rect'
                 }]
             },
             options: {
@@ -1229,10 +1543,10 @@
                     y: {
                         beginAtZero: true,
                         grace: '35%',
-                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5, callback: v => v.toFixed(0) + '%' },
+                        ticks: { font: { size: 10, weight: 'normal' }, maxTicksLimit: 5, callback: v => v.toFixed(0) + '%' },
                         grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] }
                     },
-                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'black' } } }
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'normal' } } }
                 }
             }
         });
@@ -1250,7 +1564,9 @@
                     backgroundColor: '#6366f1',
                     barPercentage: 0.35,
                     categoryPercentage: 0.6,
-                    yellowLabels: true
+                    yellowLabels: true,
+                    yellowLabelFormat: v => (v < 0 ? '-' : '') + Math.abs(v).toFixed(2) + '%',
+                    pointStyle: 'rect'
                 }]
             },
             options: {
@@ -1271,10 +1587,10 @@
                     y: {
                         beginAtZero: true,
                         grace: '35%',
-                        ticks: { font: { size: 10, weight: 'bold' }, maxTicksLimit: 5, callback: v => v.toFixed(0) + '%' },
+                        ticks: { font: { size: 10, weight: 'normal' }, maxTicksLimit: 5, callback: v => v.toFixed(0) + '%' },
                         grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] }
                     },
-                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'black' } } }
+                    x: { grid: { display: false }, ticks: { font: { size: 9.5, weight: 'normal' } } }
                 }
             }
         });
@@ -1284,6 +1600,56 @@
     }
 
     // --- CORRECTION AUDIT LOG MODAL HANDLERS ---
+
+    const escapeSingleQuotes = (str) => {
+        return str.replace(/'/g, "\\'");
+    };
+
+    function fetchAndRenderCorrectionLog(hashId) {
+        if (!correctionTable) return;
+        
+        fetch(`/inventory/sto/dashboard/correction-log?event_id=${hashId}`)
+            .then(res => res.json())
+            .then(res => {
+                const data = res.data || [];
+                
+                // Clear the DataTable
+                correctionTable.clear();
+                
+                data.forEach(model => {
+                    // Format adjustment value
+                    const absValFormatted = new Intl.NumberFormat('id-ID').format(model.total_correction);
+                    
+                    // Format increment and decrement pcs
+                    const incPcs = new Intl.NumberFormat('id-ID').format(model.increment_pcs);
+                    const decPcs = new Intl.NumberFormat('id-ID').format(model.decrement_pcs);
+                    
+                    // Format net correction impact
+                    let netImpactHtml = '';
+                    const absNet = Math.abs(model.net_correction);
+                    const formattedNet = new Intl.NumberFormat('id-ID').format(absNet);
+                    if (model.net_correction < 0) {
+                        netImpactHtml = `<span class="text-rose-600 dark:text-rose-400">-Rp ${formattedNet}</span>`;
+                    } else {
+                        netImpactHtml = `<span class="text-emerald-600 dark:text-emerald-400">+Rp ${formattedNet}</span>`;
+                    }
+                    
+                    const rowNode = correctionTable.row.add([
+                        `<span class="font-semibold text-gray-900 dark:text-white uppercase tracking-tight">${model.model_name}</span>`,
+                        `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${model.event_count} events</span>`,
+                        `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">${model.affected_parts} parts</span>`,
+                        `<div class="font-mono font-bold text-xs text-gray-900 dark:text-white"><span class="text-[9.5px] font-semibold text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>${absValFormatted}</div>`,
+                        `<div class="flex items-center justify-center gap-2 font-mono font-bold text-xs"><span class="text-emerald-600 dark:text-emerald-400">+${incPcs}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="text-rose-600 dark:text-rose-400">-${decPcs}</span></div>`,
+                        netImpactHtml,
+                        `<button onclick="showCorrectionDetail('${escapeSingleQuotes(model.model_name)}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View Logs</button>`
+                    ]).node();
+                    
+                    $(rowNode).addClass('hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150');
+                });
+                
+                correctionTable.draw();
+            });
+    }
     
     function openGlobalAuditLogsModal() {
         const modal = document.getElementById('correctionDetailModal');
@@ -1313,55 +1679,47 @@
         tbody.innerHTML = '<tr><td colspan="6" class="p-20 text-center"><i class="fa-solid fa-spinner fa-spin text-2xl text-primary-500"></i></td></tr>';
         document.getElementById('subModalContainer').classList.remove('hidden');
 
-        fetch(`/inventory/sto/dashboard/correction-log/${encodeURIComponent(modelName)}`)
+        fetch(`/inventory/sto/dashboard/correction-log/${encodeURIComponent(modelName)}?event_id=${loadedEventId}`)
             .then(res => res.json())
             .then(data => {
                 tbody.innerHTML = '';
 
                 data.detail.forEach(row => {
                     const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50/80 dark:hover:bg-gray-700/30 transition-colors duration-150 group';
+                    tr.className = 'hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150';
                     const date = new Date(row.period_end).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
                     const diffQtyFormatted = new Intl.NumberFormat('id-ID').format(row.diff_qty);
                     const isNegative = row.diff_qty < 0;
                     const amountColorClass = isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
                     const sign = isNegative ? '-' : '+';
-                    
-                    tr.innerHTML = `
-                        <td class="py-3 px-6">
-                            <div class="flex items-center gap-2.5">
-                                <span class="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full ${isNegative ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}"></span>
-                                <div>
-                                    <div class="text-[10px] font-bold text-slate-800 dark:text-white uppercase tracking-tight">${row.event_code}</div>
-                                    <div class="text-[9px] text-slate-450 dark:text-slate-550 font-medium uppercase tracking-wider mt-0.5">${date}</div>
-                                </div>
+                                      tr.innerHTML = `
+                        <td class="py-3 px-4">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-gray-900 dark:text-white uppercase tracking-tight">${row.event_code}</span>
+                                <span class="text-[10px] text-gray-500 font-medium">${date}</span>
                             </div>
                         </td>
-                        <td class="py-3 px-3 font-mono font-medium text-[11px] text-slate-800 dark:text-slate-200">${row.part_no}</td>
                         <td class="py-3 px-3">
-                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-50 dark:bg-gray-900 rounded-sm text-[9px] font-medium text-slate-600 dark:text-slate-350 border border-slate-200/60 dark:border-gray-700/60 uppercase">
-                                <i class="fa-solid fa-tag text-[8px] text-slate-400 dark:text-slate-550"></i> ${row.reason_name}
-                            </span>
+                            <span class="font-mono text-xs text-gray-900 dark:text-white font-semibold">${row.part_no}</span>
+                        </td>
+                        <td class="py-3 px-3">
+                            <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase tracking-wider">${row.reason_name}</span>
                         </td>
                         <td class="py-3 px-4 text-right">
-                            <span class="inline-flex items-center gap-1 text-[9px] font-medium ${isNegative ? 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-2 py-0.5 rounded border border-rose-100/60 dark:border-rose-900/30 shadow-3xs' : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-100/60 dark:border-emerald-900/30 shadow-3xs'}">
-                                <i class="fa-solid ${isNegative ? 'fa-arrow-down' : 'fa-arrow-up'} text-[8px]"></i>
-                                ${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} <span class="text-[8px] font-medium opacity-85">pcs</span>
+                            <span class="font-bold font-mono ${isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                                ${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} pcs
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono font-medium text-[11px] ${amountColorClass}">
-                            ${sign}<span class="text-[9px] font-semibold text-slate-450 dark:text-slate-550 mr-0.5">Rp</span>${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
+                        <td class="py-3 px-4 text-right font-mono font-bold text-xs ${amountColorClass}">
+                            ${sign}Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
                         </td>
                         <td class="py-3 px-6">
                             ${row.remark ? `
-                            <div class="relative bg-slate-50 dark:bg-gray-900 border-l-2 border-slate-400 px-2.5 py-1.5 rounded-r-md max-w-[240px]">
-                                <p class="text-[10px] text-slate-600 dark:text-slate-350 italic font-medium leading-relaxed break-words pr-2">
-                                    "${row.remark}"
-                                </p>
-                                <i class="fa-solid fa-quote-right absolute right-1.5 bottom-1 text-[8px] text-slate-400/20"></i>
-                            </div>
+                            <span class="text-xs text-gray-600 dark:text-gray-400 italic font-medium leading-relaxed break-words">
+                                "${row.remark}"
+                            </span>
                             ` : `
-                            <span class="text-[10px] text-slate-400 italic font-normal">-</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">-</span>
                             `}
                         </td>
                     `;
