@@ -48,6 +48,44 @@
         clear: both;
         display: table;
     }
+    /* Reset paginate float when moved to custom header container */
+    #tablePaginateWrapper .dataTables_paginate {
+        float: none !important;
+        padding-top: 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+    }
+    #tablePaginateWrapper .dataTables_paginate .paginate_button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 26px;
+        height: 26px;
+        padding: 0 6px;
+        font-size: 11px;
+        border-radius: 3px;
+        cursor: pointer;
+        color: #64748b;
+        border: 1px solid transparent;
+    }
+    #tablePaginateWrapper .dataTables_paginate .paginate_button:hover {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+        color: #334155;
+    }
+    #tablePaginateWrapper .dataTables_paginate .paginate_button.current {
+        background: #e0e0e0ff;
+        border-color: #e0e0e0ff;
+        color: #475569 !important;
+        font-weight: 700;
+    }
+    #tablePaginateWrapper .dataTables_paginate .paginate_button.disabled {
+        opacity: 0.35;
+        border: 1px solid;
+        cursor: default;
+        pointer-events: none;
+    }
 </style>
 
 <div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar lg:pb-0">
@@ -101,15 +139,15 @@
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Analysis Mode</label>
                         <select id="filterMode" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                             <option value="monthly">Monthly View</option>
-                            <option value="yearly">Yearly Trend</option>
+                            <option value="yearly" selected>Yearly Trend</option>
                             <option value="comparison">Yearly Comparison</option>
                         </select>
                     </div>
-                    <div class="space-y-1.5" id="divFilterPeriod">
+                    <div class="space-y-1.5 hidden" id="divFilterPeriod">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Period</label>
                         <input type="month" id="filterPeriod" value="{{ date('Y-m') }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
-                    <div class="space-y-1.5 hidden" id="divFilterYear">
+                    <div class="space-y-1.5" id="divFilterYear">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Year</label>
                         <input type="number" id="filterYear" value="{{ date('Y') }}" min="2000" max="{{ date('Y') + 5 }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
@@ -178,17 +216,26 @@
 
         {{-- Detailed Data Table --}}
         <div class="table-container bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative flex-1 min-h-0">
-            <div class="flex-none flex justify-between items-center mb-2">
+            <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-2">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis (Regular Model)
                 </h3>
-                <button id="btnExportExcel" class="text-[9px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wider flex items-center gap-1.5 px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all">
-                    <i class="fa-solid fa-file-excel"></i> Export Excel
-                </button>
+                <div class="flex items-center gap-2">
+                    {{-- Search with icon inside --}}
+                    <div class="relative">
+                        <input type="text" id="vaveTableSearch" placeholder="Search Part... " class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-[11px] rounded-xs h-[30px] pl-8 pr-3 w-44 focus:ring-1 focus:ring-primary-500 outline-none transition-all text-slate-700 dark:text-slate-200">
+                    </div>
+                    {{-- Pagination inline --}}
+                    <div id="tablePaginateWrapper" class="flex items-center"></div>
+                    {{-- Export --}}
+                    <button id="btnExportExcel" class="h-[30px] px-3 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wide flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all whitespace-nowrap">
+                        <i class="fa-solid fa-file-excel text-[10px]"></i> Export Excel
+                    </button>
+                </div>
             </div>
             
-            <div class="flex-1 overflow-hidden custom-scrollbar">
-                <table id="vaveDetailTable" class="w-full text-left">
+            <div class="flex-1 overflow-auto custom-scrollbar" style="min-height:0">
+                <table id="vaveDetailTable" class="w-full text-left" style="min-width:700px">
                     <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
                         <tr>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Part No</th>
@@ -207,6 +254,10 @@
                     </tbody>
                 </table>
             </div>
+            {{-- Info Row (Showing X to Y of Z) --}}
+            <div class="flex-none pt-1.5 mt-1">
+                <div id="vaveTableInfo" class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -220,7 +271,7 @@ $(function() {
     let paretoChart, combinedModelChart;
     let mainTable = null;
     let currentChartType = 'benefit';
-    let currentChartMode = 'monthly';
+    let currentChartMode = 'yearly';
     let currentChartData = {
         meritModels: null,
         trendIdr: null,
@@ -303,16 +354,15 @@ $(function() {
         display: (context) => context.dataset.data[context.dataIndex] !== 0 ? 'auto' : false
     };
 
-    const commonLegend = { 
+     const commonLegend = { 
         position: 'bottom', 
         labels: { 
             color: isDark ? '#94a3b8' : '#64748b',
             font: { size: 11 },
             usePointStyle: true,
-            pointStyle: 'rect',
             padding: 15
         } 
-    };
+     };
 
     // Format IDR helper
     const formatIDR = (val) => {
@@ -374,7 +424,7 @@ $(function() {
         });
 
         $('#btnReset').on('click', function() {
-            $('#filterMode').val('monthly').trigger('change');
+            $('#filterMode').val('yearly').trigger('change');
             $('#filterCustomer').val('').trigger('change');
             $('#filterModel').val('').trigger('change');
             $('#filterSqVersion').val('').trigger('change');
@@ -558,6 +608,7 @@ $(function() {
                         tension: 0.4,
                         pointRadius: 4,
                         pointHoverRadius: 6,
+                        pointStyle: 'circle',
                         datalabels: { 
                             ...commonDataLabels,
                             anchor: 'end',
@@ -572,6 +623,7 @@ $(function() {
                         backgroundColor: chartColors.emerald,
                         yAxisID: 'y',
                         borderRadius: 2,
+                        pointStyle: 'rect',
                         datalabels: { 
                             ...commonDataLabels,
                             formatter: (v) => v === 0 ? '' : (Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000).toFixed(0) + 'k')
@@ -592,7 +644,7 @@ $(function() {
                             color: Chart.defaults.color, 
                             font: { size: 12 }, 
                             maxTicksLimit: 6,
-                            callback: (v) => v >= 1000000 ? (v/1000000).toFixed(1) + 'M' : v.toLocaleString() 
+                            callback: (v) => Math.abs(v) >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (Math.abs(v) >= 1000 ? (v/1000).toFixed(0) + 'k' : v) 
                         }
                     },
                     y1: { 
@@ -750,9 +802,21 @@ $(function() {
                             beginAtZero: true, 
                             grace: '20%',
                             grid: { borderDash: [5, 5], drawBorder: false },
-                            ticks: { color: Chart.defaults.color, font: { size: 12 }, callback: (val) => isCurrency ? val.toLocaleString() : val } 
+                            ticks: {
+                                color: Chart.defaults.color,
+                                font: { size: 11 },
+                                maxTicksLimit: 5,
+                                callback: (val) => {
+                                    if (isCurrency) {
+                                        if (Math.abs(val) >= 1000000) return (val/1000000).toFixed(1) + 'M';
+                                        if (Math.abs(val) >= 1000) return (val/1000).toFixed(0) + 'k';
+                                        return val;
+                                    }
+                                    return val;
+                                }
+                            }
                         },
-                        x: { grid: { display: false }, ticks: { color: Chart.defaults.color, font: { size: 12 } } }
+                        x: { grid: { display: false }, ticks: { color: Chart.defaults.color, font: { size: 11 } } }
                     },
                     plugins: { legend: { display: false }, tooltip: commonTooltip }
                 }
@@ -874,15 +938,13 @@ $(function() {
         });
 
         mainTable = $('#vaveDetailTable').DataTable({
-            pageLength: 5, 
-            lengthMenu: [5, 10, 25], 
+            pageLength: 10,
+            lengthMenu: [5, 10, 25],
             ordering: true,
             autoWidth: false,
-            responsive: true,
-            dom: '<"flex items-center justify-between gap-4 mb-2"lf>rtip',
-            language: { 
-                search: "", 
-                searchPlaceholder: "Search Part...",
+            searching: true,
+            dom: 'rtp',
+            language: {
                 paginate: {
                     previous: "<i class='fa-solid fa-chevron-left'></i>",
                     next: "<i class='fa-solid fa-chevron-right'></i>"
@@ -890,12 +952,19 @@ $(function() {
             }
         });
 
-        // Force column adjustment to prevent shifting
-        setTimeout(() => {
-            mainTable.columns.adjust().draw();
-        }, 100);
+        // Wire custom search input
+        $('#vaveTableSearch').off('keyup').on('keyup', function() {
+            mainTable.search(this.value).draw();
+        });
 
-        $('.dataTables_filter input').addClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 text-[11px] rounded-xs px-3 py-1.5 w-48 focus:ring-1 focus:ring-primary-500 outline-none transition-all');
+        // Move pagination & info to custom containers
+        setTimeout(() => {
+            mainTable.columns.adjust();
+            const paginateEl = $('#vaveDetailTable_wrapper .dataTables_paginate').detach();
+            const infoEl = $('#vaveDetailTable_wrapper .dataTables_info').detach();
+            $('#tablePaginateWrapper').empty().append(paginateEl);
+            $('#vaveTableInfo').empty().append(infoEl);
+        }, 150);
     }
 
 
