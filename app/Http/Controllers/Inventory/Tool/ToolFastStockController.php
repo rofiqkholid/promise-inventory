@@ -134,7 +134,7 @@ class ToolFastStockController extends Controller
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
-        $locations = TolLocation::where('is_active', true)->orderBy('code')->get();
+        $locations = TolLocation::where('is_active', true)->where('category', 'storage')->orderBy('code')->get();
         
         // Group locations by category for easier selection (Machine, Subcont, Scrap, and Lost for OUT)
         $destinations = TolLocation::where('is_active', true)
