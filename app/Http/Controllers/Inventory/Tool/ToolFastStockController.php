@@ -49,8 +49,7 @@ class ToolFastStockController extends Controller
             $columnsMap = [
                 1 => 'category_id',
                 3 => 'name',
-                4 => 'brand',
-                5 => 'spec_code',
+                7 => 'total_qty',
                 8 => 'qty_min',
                 9 => 'qty_max',
             ];
@@ -66,58 +65,139 @@ class ToolFastStockController extends Controller
                 $activeStocks = $row->fastStock->filter(fn($fs) => $fs->current_qty > 0);
                 
                 // Sum total current quantity across all active locations
-                $totalQty = $activeStocks->sum('current_qty');
+                $totalQty = $row->total_qty;
                 
-                // Build a premium visual badge list for locations
-                $locationHtml = '';
-                if ($activeStocks->isEmpty()) {
-                    $locationHtml = '<span class="text-xs text-gray-400 italic font-normal">No Stock</span>';
-                } else {
-                    $locationHtml = '<div class="flex flex-wrap gap-1.5">';
-                    foreach ($activeStocks as $fs) {
-                        $locName = $fs->location?->name ?? 'Unknown';
-                        $locCode = $fs->location?->code ?? $locName;
-                        $locCategory = $fs->location?->category ?? 'storage';
-                        
-                        // Premium badge color system based on location category
-                        $badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30';
-                        if ($locCategory === 'machine') {
-                            $badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
-                        } elseif ($locCategory === 'subcont') {
-                            $badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+                // --- 1. STORAGE / RACK ---
+                $storageStocks = $activeStocks->filter(fn($fs) => $fs->location?->category === 'storage');
+                $storageQty = $storageStocks->sum('current_qty');
+                $locationStorageHtml = '<div class="flex flex-col"><span class="text-xs text-gray-400 font-medium">0 PCS</span><span class="text-[10px] text-gray-400">-</span></div>';
+                if ($storageStocks->isNotEmpty()) {
+                    if ($storageStocks->count() === 1) {
+                        $fs = $storageStocks->first();
+                        $locCode = $fs->location?->code ?? $fs->location?->name ?? 'Unknown';
+                        $locationStorageHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><span class="text-[10px] text-gray-500 font-medium">%s</span></div>',
+                            $fs->current_qty,
+                            $row->uom ?? 'PCS',
+                            $locCode
+                        );
+                    } else {
+                        $details = [];
+                        foreach ($storageStocks as $fs) {
+                            $details[] = [
+                                'code' => $fs->location?->code ?? '?',
+                                'name' => $fs->location?->name ?? '?',
+                                'category' => 'storage',
+                                'qty' => $fs->current_qty
+                            ];
                         }
-                        
-                        $locationHtml .= sprintf(
-                            '<span class="inline-flex items-center px-1.5 py-0.5 rounded-xs text-[10px] font-bold border %s" title="%s">%s: <strong class="ml-1 font-mono text-[10px]">%d</strong></span>',
-                            $badgeColor,
-                            strtoupper($locCategory),
-                            $locCode,
-                            $fs->current_qty
+                        $locationStorageHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><button class="location-click-trigger text-[10px] text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-bold flex items-center gap-0.5 cursor-pointer bg-transparent border-0 p-0 active:scale-95 transition-all text-left" data-locations="%s" data-popup-title="Storage / Rack Locations" data-popup-icon="fa-boxes-stacked">%d Locations <i class="fa-solid fa-chevron-down text-[8px] opacity-70"></i></button></div>',
+                            $storageQty,
+                            $row->uom ?? 'PCS',
+                            htmlspecialchars(json_encode($details), ENT_QUOTES, 'UTF-8'),
+                            $storageStocks->count()
                         );
                     }
-                    $locationHtml .= '</div>';
+                }
+
+                // --- 2. IN USE ---
+                $useStocks = $activeStocks->filter(fn($fs) => in_array($fs->location?->category, ['machine', 'subcont']));
+                $useQty = $useStocks->sum('current_qty');
+                $locationUseHtml = '<div class="flex flex-col"><span class="text-xs text-gray-400 font-medium">0 PCS</span><span class="text-[10px] text-gray-400">-</span></div>';
+                if ($useStocks->isNotEmpty()) {
+                    if ($useStocks->count() === 1) {
+                        $fs = $useStocks->first();
+                        $locCode = $fs->location?->code ?? $fs->location?->name ?? 'Unknown';
+                        $locationUseHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><span class="text-[10px] text-gray-500 font-medium">%s</span></div>',
+                            $fs->current_qty,
+                            $row->uom ?? 'PCS',
+                            $locCode
+                        );
+                    } else {
+                        $details = [];
+                        foreach ($useStocks as $fs) {
+                            $details[] = [
+                                'code' => $fs->location?->code ?? '?',
+                                'name' => $fs->location?->name ?? '?',
+                                'category' => $fs->location?->category ?? 'machine',
+                                'qty' => $fs->current_qty
+                            ];
+                        }
+                        $locationUseHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><button class="location-click-trigger text-[10px] text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-bold flex items-center gap-0.5 cursor-pointer bg-transparent border-0 p-0 active:scale-95 transition-all text-left" data-locations="%s" data-popup-title="In Use Locations" data-popup-icon="fa-gears">%d Locations <i class="fa-solid fa-chevron-down text-[8px] opacity-70"></i></button></div>',
+                            $useQty,
+                            $row->uom ?? 'PCS',
+                            htmlspecialchars(json_encode($details), ENT_QUOTES, 'UTF-8'),
+                            $useStocks->count()
+                        );
+                    }
+                }
+
+                // --- 3. OUT (SCRAP & LOST) ---
+                $outLocations = DB::table('tol_t_transactions as t')
+                    ->join('tol_m_locations as l', 'l.id', '=', 't.to_location_id')
+                    ->where('t.tool_id', $row->id)
+                    ->whereIn('l.category', ['scrap', 'lost'])
+                    ->select('l.code', 'l.name', 'l.category', DB::raw('ABS(SUM(t.qty)) as qty'))
+                    ->groupBy('l.code', 'l.name', 'l.category')
+                    ->get();
+
+                $outQty = $outLocations->sum('qty');
+                $locationOutHtml = '<div class="flex flex-col"><span class="text-xs text-gray-400 font-medium">0 PCS</span><span class="text-[10px] text-gray-400">-</span></div>';
+                if ($outLocations->isNotEmpty()) {
+                    if ($outLocations->count() === 1) {
+                        $loc = $outLocations->first();
+                        $locCode = $loc->code ?? $loc->name ?? 'Unknown';
+                        $locationOutHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><span class="text-[10px] text-gray-500 font-medium">%s</span></div>',
+                            $loc->qty,
+                            $row->uom ?? 'PCS',
+                            $locCode
+                        );
+                    } else {
+                        $details = [];
+                        foreach ($outLocations as $loc) {
+                            $details[] = [
+                                'code' => $loc->code,
+                                'name' => $loc->name,
+                                'category' => $loc->category,
+                                'qty' => $loc->qty
+                            ];
+                        }
+                        $locationOutHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><button class="location-click-trigger text-[10px] text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-bold flex items-center gap-0.5 cursor-pointer bg-transparent border-0 p-0 active:scale-95 transition-all text-left" data-locations="%s" data-popup-title="Scrap & Lost History" data-popup-icon="fa-trash-can">%d Locations <i class="fa-solid fa-chevron-down text-[8px] opacity-70"></i></button></div>',
+                            $outQty,
+                            $row->uom ?? 'PCS',
+                            htmlspecialchars(json_encode($details), ENT_QUOTES, 'UTF-8'),
+                            $outLocations->count()
+                        );
+                    }
                 }
 
                 $belowLimit = $totalQty <= ($row->qty_min ?? 0);
                 $latestUpdated = $row->fastStock->max('last_updated_at');
 
                 return [
-                    'id'           => $row->id,
-                    'tool_id'      => $row->id,
-                    'tool_name'    => $row->name,
-                    'brand'        => $row->brand ?? '-',
-                    'spec_code'    => $row->spec_code ?? '-',
-                    'sketch_image' => $sketch?->image_path ? asset('storage/'.$sketch->image_path) : null,
-                    'category'     => $category?->name ?? '-',
-                    'moving_type'  => $category?->moving_type ?? '-',
-                    'location'     => $locationHtml,
-                    'current_qty'  => $totalQty,
-                    'qty_min'      => $row->qty_min ?? 0,
-                    'qty_max'      => $row->qty_max ?? 0,
-                    'uom'          => $row->uom ?? '-',
-                    'below_limit'  => $belowLimit,
-                    'last_updated' => $latestUpdated ? Carbon::parse($latestUpdated)->format('d M Y H:i') : '-',
-                    'action'       => '',
+                    'id'               => $row->id,
+                    'tool_id'          => $row->id,
+                    'tool_name'        => $row->name,
+                    'brand'            => $row->brand ?? '-',
+                    'spec_code'        => $row->spec_code ?? '-',
+                    'sketch_image'     => $sketch?->image_path ? asset('storage/'.$sketch->image_path) : null,
+                    'category'         => $category?->name ?? '-',
+                    'moving_type'      => $category?->moving_type ?? '-',
+                    'location_storage' => $locationStorageHtml,
+                    'location_use'     => $locationUseHtml,
+                    'location_out'     => $locationOutHtml,
+                    'current_qty'      => $totalQty,
+                    'qty_min'          => $row->qty_min ?? 0,
+                    'qty_max'          => $row->qty_max ?? 0,
+                    'uom'              => $row->uom ?? '-',
+                    'below_limit'      => $belowLimit,
+                    'last_updated'     => $latestUpdated ? Carbon::parse($latestUpdated)->format('d M Y H:i') : '-',
+                    'action'           => '',
                 ];
             });
 
@@ -181,17 +261,6 @@ class ToolFastStockController extends Controller
             );
 
             $stock->current_qty   += $validated['qty'];
-            
-            // Auto-cleanup Action Plan if stock goes above warning threshold
-            if ($tool) {
-                $qtyMin = $tool->qty_min ?? 0;
-                $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
-                if ($stock->current_qty > $limitStock) {
-                    $stock->action_status = null;
-                    $stock->action_remark = null;
-                }
-            }
-
             $stock->last_updated_at = now();
             $stock->save();
 

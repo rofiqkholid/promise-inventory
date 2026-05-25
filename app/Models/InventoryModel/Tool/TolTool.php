@@ -12,6 +12,7 @@ class TolTool extends Model
         'dimension', 'length', 'material_type', 'hrc',
         'uom', 'pcs_per_unit', 'price_per_unit',
         'limit_stock', 'qty_min', 'qty_max', 'std_lifetime_yrs', 'is_active',
+        'action_status', 'action_remark', 'total_qty',
     ];
 
     protected $casts = [
@@ -24,6 +25,7 @@ class TolTool extends Model
         'qty_max'         => 'integer',
         'std_lifetime_yrs'=> 'integer',
         'is_active'       => 'boolean',
+        'total_qty'       => 'integer',
     ];
 
     public function category()

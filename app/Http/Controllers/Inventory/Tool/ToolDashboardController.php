@@ -81,7 +81,11 @@ class ToolDashboardController extends Controller
 
 
         // 3. Stock Status - Fast Moving - Group by Category (Critical, Warning, Over, Safe)
-        $fastStockList = TolFastStock::with(['tool.category'])->get();
+        $tools = TolTool::with(['category', 'fastStock.location'])
+            ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
+            ->where('is_active', true)
+            ->get();
+            
         $groupedStockStatus = [];
 
         // Prepopulate with all existing categories for consistent keys
@@ -97,10 +101,7 @@ class ToolDashboardController extends Controller
             ];
         }
 
-        foreach ($fastStockList as $stock) {
-            $tool = $stock->tool;
-            if (!$tool) continue;
-
+        foreach ($tools as $tool) {
             $catName = $tool->category?->name ?? 'Uncategorized';
             if (!isset($groupedStockStatus[$catName])) {
                 $groupedStockStatus[$catName] = [
@@ -113,16 +114,16 @@ class ToolDashboardController extends Controller
                 ];
             }
 
-            $qty = $stock->current_qty;
+            // Sum quantity across all locations
+            $qty = $tool->total_qty;
             $qtyMin = $tool->qty_min ?? 0;
-            $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
-            $qtyMax = $tool->qty_max ?? ($qtyMin > 0 ? $qtyMin * 3 : 20);
+            $qtyMax = $tool->qty_max ?? 0;
 
             if ($qty < $qtyMin) {
                 $status = 'critical';
-            } elseif ($qty <= $limitStock) {
+            } elseif ($qty == $qtyMin) {
                 $status = 'warning';
-            } elseif ($qty > $qtyMax && $qtyMax > 0) {
+            } elseif ($qtyMax > 0 && $qty > $qtyMax) {
                 $status = 'over';
             } else {
                 $status = 'safe';
@@ -151,30 +152,36 @@ class ToolDashboardController extends Controller
 
         // 4. Balance Warnings List
         $balanceWarnings = [];
-        foreach ($fastStockList as $stock) {
-            $tool = $stock->tool;
-            if (!$tool) continue;
-
-            $qty = $stock->current_qty;
+        foreach ($tools as $tool) {
+            $qty = $tool->total_qty;
             $qtyMin = $tool->qty_min ?? 0;
-            $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
+            $qtyMax = $tool->qty_max ?? 0;
 
-            if ($qty <= $limitStock || $qty < $qtyMin) {
+            if ($qty <= $qtyMin) {
                 $status = $qty < $qtyMin ? 'Critical' : 'Warning';
+
+                // Format location as comma-separated active locations
+                $activeStocks = $tool->fastStock->filter(fn($fs) => $fs->current_qty > 0);
+                if ($activeStocks->isEmpty()) {
+                    $locStr = $tool->location?->code ?? '-';
+                } else {
+                    $locStr = $activeStocks->map(fn($fs) => $fs->location?->code ?? 'Unknown')->implode(', ');
+                }
+
                 $balanceWarnings[] = [
-                    'id' => $stock->id,
+                    'id' => $tool->id,
                     'tool_name' => $tool->name,
                     'brand' => $tool->brand ?? '-',
                     'spec_code' => $tool->spec_code ?? '-',
                     'category' => $tool->category?->name ?? 'Uncategorized',
-                    'location' => $stock->location?->name ?? '-',
+                    'location' => $locStr,
                     'current_qty' => $qty,
                     'qty_min' => $qtyMin,
-                    'limit_stock' => $limitStock,
+                    'limit_stock' => $qtyMin,
                     'status' => $status,
                     'action' => $status === 'Critical' ? 'Restock Immediately' : 'Schedule Restock',
-                    'action_status' => $stock->action_status,
-                    'action_remark' => $stock->action_remark
+                    'action_status' => $tool->action_status,
+                    'action_remark' => $tool->action_remark
                 ];
             }
         }
@@ -369,7 +376,7 @@ class ToolDashboardController extends Controller
 
     public function updateActionStatus(Request $request, $id)
     {
-        $stock = TolFastStock::findOrFail($id);
+        $tool = TolTool::findOrFail($id);
         
         $updateData = [];
         if ($request->has('action_status')) {
@@ -381,7 +388,7 @@ class ToolDashboardController extends Controller
         }
 
         if (!empty($updateData)) {
-            $stock->update($updateData);
+            $tool->update($updateData);
         }
 
         return response()->json(['success' => true, 'message' => 'Action information updated.']);
@@ -405,41 +412,37 @@ class ToolDashboardController extends Controller
             $categoryName = $label;
             $title = "Stock Detail — {$categoryName}";
 
-            $query = TolFastStock::with(['tool.category', 'location']);
+            $query = TolTool::with(['category', 'fastStock.location', 'location'])
+                ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
+                ->where('is_active', true);
 
             if ($categoryName === 'Uncategorized') {
-                $query->whereHas('tool', function($q) {
-                    $q->whereNull('category_id');
-                });
+                $query->whereNull('category_id');
             } else {
-                $query->whereHas('tool.category', function($q) use ($categoryName) {
+                $query->whereHas('category', function($q) use ($categoryName) {
                     $q->where('name', $categoryName);
                 });
             }
 
             if ($search) {
-                $query->whereHas('tool', function($q) use ($search) {
+                $query->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                       ->orWhere('spec_code', 'like', "%{$search}%")
                       ->orWhere('brand', 'like', "%{$search}%");
                 });
             }
 
-            $items = $query->get();
+            $tools = $query->get();
 
             $processed = [];
-            foreach ($items as $stock) {
-                $tool = $stock->tool;
-                if (!$tool) continue;
-
-                $qty = $stock->current_qty;
+            foreach ($tools as $tool) {
+                $qty = $tool->total_qty;
                 $qtyMin = $tool->qty_min ?? 0;
-                $limitStock = ($qtyMin > 0 ? $qtyMin * 1.5 : 5);
-                $qtyMax = $tool->qty_max ?? ($qtyMin > 0 ? $qtyMin * 3 : 20);
+                $qtyMax = $tool->qty_max ?? 0;
 
                 if ($qty < $qtyMin) {
                     $statusRaw = 'critical';
-                } elseif ($qty <= $limitStock) {
+                } elseif ($qty == $qtyMin) {
                     $statusRaw = 'warning';
                 } elseif ($qty > $qtyMax && $qtyMax > 0) {
                     $statusRaw = 'over';
@@ -451,17 +454,51 @@ class ToolDashboardController extends Controller
                     continue;
                 }
 
+                // Build consolidated active Location HTML
+                $activeStocks = $tool->fastStock->filter(fn($fs) => $fs->current_qty > 0);
+                $locationHtml = '<div class="flex flex-col"><span class="text-[10px] text-gray-400 font-medium">0 PCS</span><span class="text-[8px] text-gray-400">-</span></div>';
+                
+                if ($activeStocks->isNotEmpty()) {
+                    if ($activeStocks->count() === 1) {
+                        $fs = $activeStocks->first();
+                        $locCode = $fs->location?->code ?? $fs->location?->name ?? 'Unknown';
+                        $locationHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-[10px]">%d %s</span><span class="text-[8px] text-gray-500 font-medium">%s</span></div>',
+                            $fs->current_qty,
+                            $tool->uom ?? 'PCS',
+                            $locCode
+                        );
+                    } else {
+                        $details = [];
+                        foreach ($activeStocks as $fs) {
+                            $details[] = [
+                                'code' => $fs->location?->code ?? '?',
+                                'name' => $fs->location?->name ?? '?',
+                                'category' => $fs->location?->category ?? 'storage',
+                                'qty' => $fs->current_qty
+                            ];
+                        }
+                        $locationHtml = sprintf(
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-[10px]">%d %s</span><button class="location-click-trigger text-[8px] text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-bold flex items-center gap-0.5 cursor-pointer bg-transparent border-0 p-0 active:scale-95 transition-all text-left" data-locations="%s" data-popup-title="Tool Locations" data-popup-icon="fa-map-location-dot">%d Locations <i class="fa-solid fa-chevron-down text-[7px] opacity-70"></i></button></div>',
+                            $qty,
+                            $tool->uom ?? 'PCS',
+                            htmlspecialchars(json_encode($details), ENT_QUOTES, 'UTF-8'),
+                            $activeStocks->count()
+                        );
+                    }
+                }
+
                 $processed[] = [
-                    'id'            => $stock->id,
-                    'part_no'       => $tool->name, // Using tool name as primary identifier
-                    'spec_code'     => $tool->spec_code ?? '-',
-                    'brand'         => $tool->brand ?? '-',
-                    'stock'         => number_format($qty) . ' ' . ($tool->uom ?? 'PCS'),
-                    'min_stock'     => number_format($qtyMin) . ' ' . ($tool->uom ?? 'PCS'),
-                    'location'      => $stock->location?->name ?? '-',
-                    'status'        => ucfirst($statusRaw),
-                    'action_status' => $stock->action_status,
-                    'action_remark' => $stock->action_remark,
+                    'id'               => $tool->id,
+                    'part_no'          => $tool->name,
+                    'spec_code'        => $tool->spec_code ?? '-',
+                    'brand'            => $tool->brand ?? '-',
+                    'stock'            => number_format($qty) . ' ' . ($tool->uom ?? 'PCS'),
+                    'min_stock'        => number_format($qtyMin) . ' ' . ($tool->uom ?? 'PCS'),
+                    'location'         => $locationHtml,
+                    'status'           => ucfirst($statusRaw),
+                    'action_status'    => $tool->action_status,
+                    'action_remark'    => $tool->action_remark,
                 ];
             }
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TolFastStock extends Model
 {
     protected $table = 'tol_t_fast_stock';
-    protected $fillable = ['tool_id', 'location_id', 'current_qty', 'last_updated_at', 'action_status', 'action_remark'];
+    protected $fillable = ['tool_id', 'location_id', 'current_qty', 'last_updated_at'];
 
     protected $casts = [
         'current_qty'     => 'integer',

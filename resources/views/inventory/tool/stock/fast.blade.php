@@ -54,10 +54,10 @@
                 <th class="px-4 py-4 w-12 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">No</th>
                 <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Category</th>
                 <th class="px-4 py-4 text-center w-16 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Sketch</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 180px;">Tool Name</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Brand</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 250px;">Spec Code</th>
-                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Location</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 260px;">Tool Information</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 140px;">Storage / Rack</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 140px;">In Use</th>
+                <th class="px-4 py-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700" style="min-width: 140px;">Out (Scrap/Lost)</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Stock</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Min. Stock</th>
                 <th class="px-4 py-4 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Max. Stock</th>
@@ -227,11 +227,90 @@
         <button class="close-preview absolute top-4 right-4 text-white text-3xl hover:text-red-400 hover:scale-110 active:scale-95 transition-all drop-shadow-lg" title="Close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 </div>
+{{-- Location Tooltip Portal --}}
+<div id="location-tooltip-portal" class="fixed z-[9999] bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 p-3.5 w-60 text-left hidden font-sans scale-in"></div>
 @endsection
 
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // Location Click Popover Listener
+    $(document).on('click', '.location-click-trigger', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const el = $(this);
+        let details = el.attr('data-locations');
+        if (!details) return;
+
+        try {
+            if (typeof details === 'string') {
+                details = JSON.parse(details);
+            }
+        } catch (err) {
+            console.error("Failed to parse locations data:", err);
+            return;
+        }
+
+        if (!Array.isArray(details) || details.length === 0) return;
+
+        const portal = $('#location-tooltip-portal');
+        // Dynamic portal settings
+        const title = el.attr('data-popup-title') || 'Location Details';
+        const icon = el.attr('data-popup-icon') || 'fa-map-location-dot';
+
+        let content = `
+            <h4 class="font-bold text-slate-900 dark:text-white mb-3 border-b border-slate-100 dark:border-gray-700 pb-2 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+                <i class="fa-solid ${icon} text-primary-500"></i> ${title}
+            </h4>
+            <div class="space-y-1 max-h-[250px] overflow-y-auto custom-scrollbar">`;
+
+        details.forEach(item => {
+            let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30';
+            if (item.category === 'machine') {
+                badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
+            } else if (item.category === 'subcont') {
+                badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+            } else if (item.category === 'scrap' || item.category === 'lost') {
+                badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30';
+            }
+            
+            content += `
+                <div class="flex items-center justify-between py-1 border-b border-slate-50 dark:border-gray-800/40 last:border-0 gap-4">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-xs text-[9px] font-bold border ${badgeColor}" title="${item.category.toUpperCase()}">${item.code}</span>
+                    <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px] truncate max-w-[120px]" title="${item.name}">${item.name}</span>
+                    <span class="font-mono font-bold text-slate-800 dark:text-white text-[11px]">${item.qty} PCS</span>
+                </div>`;
+        });
+
+        content += `</div>`;
+
+        portal.html(content).removeClass('hidden').data('trigger-el', this).show();
+        
+        const rect = this.getBoundingClientRect();
+        const tipWidth = portal.outerWidth();
+        const tipHeight = portal.outerHeight();
+        
+        let top = rect.bottom + 5;
+        let left = rect.left;
+
+        if (top + tipHeight > window.innerHeight) top = rect.top - tipHeight - 5;
+        if (left + tipWidth > window.innerWidth) left = window.innerWidth - tipWidth - 10;
+        if (left < 10) left = 10;
+
+        portal.css({
+            top: top + 'px',
+            left: left + 'px',
+            position: 'fixed'
+        });
+    });
+
+    // Close when clicking anywhere outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.location-click-trigger, #location-tooltip-portal').length) {
+            $('#location-tooltip-portal').addClass('hidden').hide();
+        }
+    });
     const csrf    = $('meta[name="csrf-token"]').attr('content');
     const baseUrl = "{{ url('/') }}";
     const apiIn   = "{{ route('inventory.tool.fast-stock.store') }}";
@@ -259,10 +338,24 @@ $(document).ready(function() {
                 className: 'text-center',
                 render: d => d ? `<img src="${d}" class="h-8 w-8 object-cover mx-auto rounded-xs border border-gray-200 cursor-pointer hover:scale-150 transition-all" onclick="window.previewImg('${d}')">` : `<div class="h-8 w-8 flex items-center justify-center mx-auto bg-gray-50 border border-gray-100 text-gray-300 rounded-xs"><i class="fa-solid fa-image text-[8px]"></i></div>`
             },
-            { data: 'tool_name', render: d => `<span class="font-semibold text-gray-900 dark:text-white">${d}</span>` },
-            { data: 'brand' },
-            { data: 'spec_code', render: d => d ? `<span class="font-mono text-xs text-primary-600 dark:text-primary-400">${d}</span>` : '-' },
-            { data: 'location', render: d => d },
+            { 
+                data: null,
+                render: (d, t, r) => {
+                    const brandStr = r.brand && r.brand !== '-' ? r.brand : 'No Brand';
+                    const specStr = r.spec_code && r.spec_code !== '-' ? r.spec_code : '';
+                    
+                    const subText = specStr ? `${brandStr} — ${specStr}` : brandStr;
+                    
+                    return `
+                        <div class="flex flex-col gap-0.5">
+                            <span class="font-bold text-gray-900 dark:text-white text-xs">${r.tool_name}</span>
+                            <span class="text-[10px] text-slate-500 dark:text-gray-400 font-medium">${subText}</span>
+                        </div>`;
+                }
+            },
+            { data: 'location_storage', render: d => d },
+            { data: 'location_use', render: d => d },
+            { data: 'location_out', render: d => d },
             {
                 data: 'current_qty', className: 'text-center',
                 render: (d, t, r) => `<span class="font-bold text-gray-900 dark:text-white">${d}</span>`

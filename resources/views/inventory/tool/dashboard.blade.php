@@ -377,13 +377,13 @@
         <div class="flex-none flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div>
                 <div class="flex items-center gap-2 mb-0.5">
-                    <p class="text-sm font-semibold text-primary-500 tracking-wider">Detail Explorer</p>
-                    <span id="drilldownCountBadge" class="px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-[11px] font-bold">0</span>
+                    <p class="text-xs font-bold text-primary-500 tracking-wider">Detail Explorer</p>
+                    <span id="drilldownCountBadge" class="px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400 text-[10px] font-bold">0</span>
                 </div>
-                <h2 id="drilldownTitle" class="text-lg font-extrabold text-gray-800 dark:text-gray-100 truncate max-w-[600px]">Loading...</h2>
+                <h2 id="drilldownTitle" class="text-sm font-extrabold text-gray-800 dark:text-gray-100 truncate max-w-[600px]">Loading...</h2>
             </div>
-            <button onclick="closeDrilldownModal()" class="w-8 h-8 flex items-center justify-center rounded-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
-                <i class="fa-solid fa-xmark text-sm"></i>
+            <button onclick="closeDrilldownModal()" class="w-7 h-7 flex items-center justify-center rounded-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 transition-colors">
+                <i class="fa-solid fa-xmark text-xs"></i>
             </button>
         </div>
         {{-- Loader --}}
@@ -398,7 +398,7 @@
             {{-- Quick Filters --}}
             <div id="drilldownLegendContainer" class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-800/20">
                 <div class="flex items-center justify-between mb-2">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Filter by status</p>
+                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Filter by status</p>
                 </div>
                 <div id="drilldownLegendButtons" class="inline-flex p-1 bg-gray-100 dark:bg-gray-800/80 rounded-lg gap-1">
                     {{-- Buttons injected by JS --}}
@@ -407,19 +407,19 @@
 
             <div class="px-5 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-20 flex flex-col md:flex-row gap-3 items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Show</span>
-                    <select id="drilldownPageSize" onchange="resetDrilldownAndFetch()" class="h-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-sm font-medium focus:ring-1 focus:ring-primary-500 outline-none cursor-pointer py-0" style="min-width: 64px; padding-top: 0px; padding-bottom: 0px; padding-left: 8px; padding-right: 20px; height: 32px; line-height: normal;">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">Show</span>
+                    <select id="drilldownPageSize" onchange="resetDrilldownAndFetch()" class="h-7 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium focus:ring-1 focus:ring-primary-500 outline-none cursor-pointer py-0" style="min-width: 60px; padding-top: 0px; padding-bottom: 0px; padding-left: 6px; padding-right: 16px; height: 28px; line-height: normal;">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
                     </select>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">entries</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">entries</span>
                 </div>
-                <div class="relative w-full md:w-60">
-                    <input type="text" id="drilldownSearch" placeholder="Search Name or Spec..." class="w-full h-8 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-gray-400/80" style="padding-left: 30px; padding-right: 16px;">
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                <div class="relative w-full md:w-56">
+                    <input type="text" id="drilldownSearch" placeholder="Search Name or Spec..." class="w-full h-7 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-gray-400/80" style="padding-left: 26px; padding-right: 12px; height: 28px;">
+                    <div class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
                     </div>
                 </div>
             </div>
@@ -432,7 +432,7 @@
                 </div>
 
                 <div class="h-full overflow-y-auto custom-scrollbar">
-                    <table class="w-full text-left text-xs">
+                    <table class="w-full text-left text-[11px]">
                         <thead id="drilldownHead" class="bg-gray-50 dark:bg-gray-800 sticky top-0 z-10">
                         </thead>
                         <tbody id="drilldownBody" class="divide-y divide-slate-100 dark:divide-gray-700">
@@ -440,21 +440,23 @@
                     </table>
                 </div>
             </div>
-            <div class="flex-none px-5 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex items-center justify-between">
-                <span class="text-sm font-semibold text-slate-600 dark:text-slate-300">Showing <span id="ddPageStart" class="font-bold text-gray-800 dark:text-gray-100">0</span> to <span id="ddPageEnd" class="font-bold text-gray-800 dark:text-gray-100">0</span> of <span id="ddTotal" class="font-bold text-gray-800 dark:text-gray-100">0</span> entries</span>
-                <div class="flex items-center gap-1.5">
-                    <button id="ddPrev" onclick="changeDrilldownPage(-1)" disabled class="w-9 h-9 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-xs flex items-center justify-center flex-shrink-0" title="Previous Page">
-                        <i class="fa-solid fa-chevron-left text-[11px]"></i>
+            <div class="flex-none px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 flex items-center justify-between">
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-300">Showing <span id="ddPageStart" class="font-bold text-gray-800 dark:text-gray-100">0</span> to <span id="ddPageEnd" class="font-bold text-gray-800 dark:text-gray-100">0</span> of <span id="ddTotal" class="font-bold text-gray-800 dark:text-gray-100">0</span> entries</span>
+                <div class="flex items-center gap-1">
+                    <button id="ddPrev" onclick="changeDrilldownPage(-1)" disabled class="w-7 h-7 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-xs flex items-center justify-center flex-shrink-0" title="Previous Page">
+                        <i class="fa-solid fa-chevron-left text-[10px]"></i>
                     </button>
-                    <span id="ddCurrentPage" class="w-9 h-9 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700/50 rounded-xs text-sm font-extrabold text-primary-600 dark:text-primary-400 flex items-center justify-center flex-shrink-0">1</span>
-                    <button id="ddNext" onclick="changeDrilldownPage(1)" disabled class="w-9 h-9 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-xs flex items-center justify-center flex-shrink-0" title="Next Page">
-                        <i class="fa-solid fa-chevron-right text-[11px]"></i>
+                    <span id="ddCurrentPage" class="w-7 h-7 bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700/50 rounded-xs text-xs font-extrabold text-primary-600 dark:text-primary-400 flex items-center justify-center flex-shrink-0">1</span>
+                    <button id="ddNext" onclick="changeDrilldownPage(1)" disabled class="w-7 h-7 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-xs flex items-center justify-center flex-shrink-0" title="Next Page">
+                        <i class="fa-solid fa-chevron-right text-[10px]"></i>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{{-- Location Tooltip Portal --}}
+<div id="location-tooltip-portal" class="fixed z-[9999] bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 p-3.5 w-60 text-left hidden font-sans scale-in"></div>
 @endsection
 
 @push('scripts')
@@ -462,6 +464,91 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
     Chart.register(ChartDataLabels);
+
+    // Location Click Popover Listener
+    $(document).on('click', '.location-click-trigger', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const el = $(this);
+        let details = el.attr('data-locations');
+        if (!details) return;
+
+        try {
+            if (typeof details === 'string') {
+                details = JSON.parse(details);
+            }
+        } catch (err) {
+            console.error("Failed to parse locations data:", err);
+            return;
+        }
+
+        if (!Array.isArray(details) || details.length === 0) return;
+
+        const portal = $('#location-tooltip-portal');
+        
+        // If clicking the same button that is currently open, close it
+        if (!portal.hasClass('hidden') && portal.data('trigger-el') === this) {
+            portal.addClass('hidden').hide();
+            return;
+        }
+
+        // Dynamic portal settings
+        const title = el.attr('data-popup-title') || 'Location Details';
+        const icon = el.attr('data-popup-icon') || 'fa-map-location-dot';
+
+        let content = `
+            <h4 class="font-bold text-slate-900 dark:text-white mb-3 border-b border-slate-100 dark:border-gray-700 pb-2 text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+                <i class="fa-solid ${icon} text-primary-500"></i> ${title}
+            </h4>
+            <div class="space-y-1 max-h-[250px] overflow-y-auto custom-scrollbar">`;
+
+        details.forEach(item => {
+            let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30';
+            if (item.category === 'machine') {
+                badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
+            } else if (item.category === 'subcont') {
+                badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+            } else if (item.category === 'scrap' || item.category === 'lost') {
+                badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30';
+            }
+            
+            content += `
+                <div class="flex items-center justify-between py-1 border-b border-slate-50 dark:border-gray-800/40 last:border-0 gap-4">
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded-xs text-[9px] font-bold border ${badgeColor}" title="${item.category.toUpperCase()}">${item.code}</span>
+                    <span class="text-slate-500 dark:text-slate-400 font-medium text-[11px] truncate max-w-[120px]" title="${item.name}">${item.name}</span>
+                    <span class="font-mono font-bold text-slate-800 dark:text-white text-[11px]">${item.qty} PCS</span>
+                </div>`;
+        });
+
+        content += `</div>`;
+
+        portal.html(content).removeClass('hidden').data('trigger-el', this).show();
+        
+        const rect = this.getBoundingClientRect();
+        const tipWidth = portal.outerWidth();
+        const tipHeight = portal.outerHeight();
+        
+        let top = rect.bottom + 5;
+        let left = rect.left;
+
+        if (top + tipHeight > window.innerHeight) top = rect.top - tipHeight - 5;
+        if (left + tipWidth > window.innerWidth) left = window.innerWidth - tipWidth - 10;
+        if (left < 10) left = 10;
+
+        portal.css({
+            top: top + 'px',
+            left: left + 'px',
+            position: 'fixed'
+        });
+    });
+
+    // Close when clicking anywhere outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.location-click-trigger, #location-tooltip-portal').length) {
+            $('#location-tooltip-portal').addClass('hidden').hide();
+        }
+    });
 
     function handlePeriodChange(val) {
         const customGroup = document.getElementById('customDateRangeGroup');
@@ -904,14 +991,13 @@
 
         const DRILLDOWN_COLS = {
             stock: [
-                { key: 'part_no',   label: 'Tool Name',      cls: 'text-left py-2 px-3' },
-                { key: 'spec_code', label: 'Spec',           cls: 'text-left py-2 px-3' },
-                { key: 'stock',     label: 'Stock',          cls: 'text-right py-2 px-2' },
-                { key: 'min_stock', label: 'Min',            cls: 'text-right py-2 px-2' },
-                { key: 'location',  label: 'Location',       cls: 'text-center py-2 px-2' },
-                { key: 'status',    label: 'Status',         cls: 'text-center py-2 px-3' },
-                { key: 'action_status', label: 'Action',     cls: 'text-center py-2 px-3' },
-                { key: 'action_remark', label: 'Note',       cls: 'text-left py-2 px-3 max-w-[200px]' },
+                { key: 'part_no',          label: 'Tool Information', cls: 'text-left py-2 px-3', style: 'min-width: 200px;' },
+                { key: 'stock',            label: 'Stock',            cls: 'text-right py-2 px-2' },
+                { key: 'min_stock',        label: 'Min',              cls: 'text-right py-2 px-2' },
+                { key: 'location',         label: 'Location',         cls: 'text-left py-2 px-2', style: 'min-width: 140px;' },
+                { key: 'status',           label: 'Status',           cls: 'text-center py-2 px-3' },
+                { key: 'action_status',    label: 'Action',           cls: 'text-center py-2 px-3' },
+                { key: 'action_remark',    label: 'Note',             cls: 'text-left py-2 px-3 max-w-[200px]' },
             ]
         };
 
@@ -980,7 +1066,7 @@
                 
                 // Header
                 document.getElementById('drilldownHead').innerHTML = '<tr>' + cols.map(c =>
-                    `<th class="${c.cls} text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-gray-800/40">${c.label}</th>`
+                    `<th class="${c.cls} text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/50 dark:bg-gray-800/40" ${c.style ? `style="${c.style}"` : ''}>${c.label}</th>`
                 ).join('') + '</tr>';
 
                 // Body
@@ -989,9 +1075,26 @@
                 } else {
                     tbody.innerHTML = res.data.map(row => {
                         return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
+                            if (c.key === 'part_no') {
+                                const brandStr = row.brand && row.brand !== '-' ? row.brand : 'No Brand';
+                                const specStr = row.spec_code && row.spec_code !== '-' ? row.spec_code : '';
+                                const subText = specStr ? `${brandStr} — ${specStr}` : brandStr;
+                                return `<td class="${c.cls}">
+                                    <div class="flex flex-col gap-0.5 text-left">
+                                        <span class="font-bold text-gray-900 dark:text-white text-[11px]">${row.part_no}</span>
+                                        <span class="text-[9px] text-slate-500 dark:text-gray-400 font-medium">${subText}</span>
+                                    </div>
+                                </td>`;
+                            }
+
+                            if (c.key === 'location') {
+                                const val = row[c.key] ?? '';
+                                return `<td class="${c.cls}">${val}</td>`;
+                            }
+
                             if (c.key === 'action_status') {
                                 const isCritical = row.status === 'Critical' || row.status === 'Warning';
-                                if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[11px] font-medium">N/A</span></td>`;
+                                if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[10px] font-medium">N/A</span></td>`;
 
                                 const current = row[c.key] || '';
                                 const statusMap = {
@@ -1016,7 +1119,7 @@
                                     <div class="relative inline-block text-left dropdown-action-container">
                                         <div class="flex items-center justify-center">
                                             <button onclick="toggleStatusDropdown(event, '${row.id}')" 
-                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-extrabold border transition-all hover:bg-slate-50 dark:hover:bg-gray-700 ${st.cls}">
+                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold border transition-all hover:bg-slate-50 dark:hover:bg-gray-700 ${st.cls}">
                                                 <span class="w-1.5 h-1.5 rounded-full bg-current mr-1.5"></span>
                                                 ${st.label}
                                                 <i class="fa-solid fa-chevron-down ml-1 opacity-50 text-[8px]"></i>
@@ -1045,7 +1148,7 @@
 
                             if (c.key === 'action_remark') {
                                 const isCritical = row.status === 'Critical' || row.status === 'Warning';
-                                if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[11px] font-medium">N/A</span></td>`;
+                                if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[10px] font-medium">N/A</span></td>`;
                                 
                                 const displayNote = val || 'Add note...';
                                 const noteCls = val ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400/70 italic';
@@ -1055,7 +1158,7 @@
                                         <button onclick="toggleNoteDropdown(event, '${row.id}')" 
                                             class="group flex items-start gap-1.5 w-full p-1.5 rounded-xs hover:bg-slate-50 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-700 text-left">
                                             <i class="fa-solid fa-pen-to-square text-[11px] mt-0.5 opacity-30 group-hover:opacity-100 transition-opacity flex-shrink-0"></i>
-                                            <span class="text-xs font-medium ${noteCls} break-words line-clamp-2 leading-snug">${displayNote}</span>
+                                            <span class="text-[10px] font-medium ${noteCls} break-words line-clamp-2 leading-snug">${displayNote}</span>
                                         </button>
                                         
                                         <div id="note-dropdown-${row.id}" class="hidden absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 z-[110] p-4">
@@ -1141,7 +1244,7 @@
 
         function createLegendBtn(label, isActive) {
             const btn = document.createElement('button');
-            btn.className = `legend-btn px-4 py-1.5 rounded-md text-xs font-extrabold uppercase transition-all duration-200 ${
+            btn.className = `legend-btn px-4 py-1.5 rounded-md text-[10px] font-extrabold uppercase transition-all duration-200 ${
                 isActive 
                 ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm' 
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'

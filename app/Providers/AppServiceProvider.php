@@ -25,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \App\Models\InventoryModel\Tool\TolFastStock::observe(\App\Observers\TolFastStockObserver::class);
+
         if (config('app.url')) {
             URL::forceRootUrl(config('app.url'));
         }
