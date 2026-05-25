@@ -495,6 +495,7 @@ class ToolDashboardController extends Controller
                     'brand'            => $tool->brand ?? '-',
                     'stock'            => number_format($qty) . ' ' . ($tool->uom ?? 'PCS'),
                     'min_stock'        => number_format($qtyMin) . ' ' . ($tool->uom ?? 'PCS'),
+                    'max_stock'        => $qtyMax > 0 ? (number_format($qtyMax) . ' ' . ($tool->uom ?? 'PCS')) : '-',
                     'location'         => $locationHtml,
                     'status'           => ucfirst($statusRaw),
                     'action_status'    => $tool->action_status,

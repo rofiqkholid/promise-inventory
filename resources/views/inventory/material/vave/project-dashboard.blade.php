@@ -911,12 +911,12 @@ $(function() {
                     <td class="py-2 px-3">
                         <span class="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-tight">${item.ebd_version || '-'}</span>
                     </td>
-                    <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.plan_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td>
-                    <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400">${item.actual_kg.toFixed(3)} <span class="text-[9px] opacity-50">kg</span></td>
-                    <td class="py-2 px-2 text-center font-bold text-[12px] ${gapPerUnit >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${gapPerUnit.toFixed(3)} <span class="text-[10px] font-medium opacity-70">kg</span></td>
-                    <td class="py-2 px-2 text-center text-[12px] text-slate-400">Rp ${item.idr_per_kg.toLocaleString()}</td>
-                    <td class="py-2 px-2 text-center font-medium text-[12px] text-slate-700 dark:text-gray-300">${item.qty_usage.toLocaleString()}</td>
-                    <td class="py-2 px-3 text-right font-bold text-[12px] ${item.gap_benefit_idr >= 0 ? 'text-emerald-600' : 'text-rose-600'}">${formatIDR(item.gap_benefit_idr)}</td>
+                    <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400" data-order="${item.plan_kg}">${item.plan_kg.toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 })} <span class="text-[9px] opacity-50">kg</span></td>
+                    <td class="py-2 px-2 text-center font-mono text-[12px] text-slate-500 dark:text-gray-400" data-order="${item.actual_kg}">${item.actual_kg.toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 })} <span class="text-[9px] opacity-50">kg</span></td>
+                    <td class="py-2 px-2 text-center font-bold text-[12px] ${gapPerUnit >= 0 ? 'text-emerald-600' : 'text-rose-600'}" data-order="${gapPerUnit}">${gapPerUnit.toLocaleString('id-ID', { minimumFractionDigits: 3, maximumFractionDigits: 3 })} <span class="text-[10px] font-medium opacity-70">kg</span></td>
+                    <td class="py-2 px-2 text-center text-[12px] text-slate-400" data-order="${item.idr_per_kg}">${formatIDR(item.idr_per_kg)}</td>
+                    <td class="py-2 px-2 text-center font-medium text-[12px] text-slate-700 dark:text-gray-300" data-order="${item.qty_usage}">${item.qty_usage.toLocaleString('id-ID')}</td>
+                    <td class="py-2 px-3 text-right font-bold text-[12px] ${item.gap_benefit_idr >= 0 ? 'text-emerald-600' : 'text-rose-600'}" data-order="${item.gap_benefit_idr}">${formatIDR(item.gap_benefit_idr)}</td>
                     <td class="py-2 px-3 text-center">
                         <span class="inline-flex px-2 py-0.5 rounded-xs border text-[10px] font-bold tracking-widest ${statusClass} leading-none uppercase">${statusText}</span>
                     </td>
@@ -931,6 +931,9 @@ $(function() {
             autoWidth: false,
             searching: true,
             dom: 'rtp',
+            columnDefs: [
+                { targets: [3, 4, 5, 6, 7, 8], type: 'num' }
+            ],
             language: {
                 paginate: {
                     previous: "<i class='fa-solid fa-chevron-left'></i>",
@@ -980,10 +983,29 @@ $(function() {
                 let text = $(this).text().trim();
                 if (i === 0) text = $(this).find('div').text().trim(); // Part No
                 
-                // Clean numeric values
-                if (i >= 3 && i <= 8) {
-                    text = text.replace(/Rp/g, '').replace(/kg/g, '').replace(/\./g, '').replace(/,/g, '.');
-                    row.push(parseFloat(text) || 0);
+                // Clean numeric values using data-order attribute if present (locale-independent)
+                let orderVal = $(this).attr('data-order');
+                if (orderVal !== undefined) {
+                    const num = parseFloat(orderVal) || 0;
+                    if (i >= 3 && i <= 5) {
+                        row.push({ v: num, t: 'n', z: '#,##0.000' });
+                    } else if (i === 6 || i === 8) {
+                        row.push({ v: num, t: 'n', z: '"Rp "#,##0' });
+                    } else {
+                        row.push({ v: num, t: 'n', z: '#,##0' });
+                    }
+                } else if (i >= 3 && i <= 8) {
+                    // Fallback in case data-order is missing
+                    if (i >= 3 && i <= 5) {
+                        text = text.replace(/[^0-9.-]/g, '');
+                        row.push({ v: parseFloat(text) || 0, t: 'n', z: '#,##0.000' });
+                    } else if (i === 6 || i === 8) {
+                        text = text.replace(/[^0-9-]/g, '');
+                        row.push({ v: parseFloat(text) || 0, t: 'n', z: '"Rp "#,##0' });
+                    } else {
+                        text = text.replace(/[^0-9-]/g, '');
+                        row.push({ v: parseFloat(text) || 0, t: 'n', z: '#,##0' });
+                    }
                 } else {
                     row.push(text);
                 }
