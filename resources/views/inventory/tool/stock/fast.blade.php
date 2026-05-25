@@ -206,10 +206,10 @@
                     <tr>
                         <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Date</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Tool</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Type</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Qty</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Min Stock</th>
-                        <th class="px-4 py-3 text-center text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Current Stock</th>
+                        <th class="px-4 py-3 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400" style="text-align: center !important;">Type</th>
+                        <th class="px-4 py-3 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400" style="text-align: center !important;">Qty</th>
+                        <th class="px-4 py-3 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400" style="text-align: center !important;">Min Stock</th>
+                        <th class="px-4 py-3 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400" style="text-align: center !important;">Current Stock</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Ref / Destination</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
                     </tr>
@@ -586,52 +586,56 @@ $(document).ready(function() {
                         render: (d, type) => {
                             if (type === 'sort' || type === 'type') return d;
                             const date = new Date(d);
-                            return `<span class="text-[11px] text-gray-500 font-mono">${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>`;
+                            return `<span class="text-xs text-gray-500 font-mono">${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</span>`;
                         } 
                     },
                     { 
                         data: 'tool', 
                         render: d => `
-                            <div class="flex flex-col">
+                            <div class="flex flex-col gap-0.5">
                                 <span class="text-xs font-bold text-gray-900 dark:text-white">${d.name}</span>
-                                <span class="text-[10px] text-gray-500">${d.brand}</span>
+                                <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">${d.brand}</span>
                             </div>` 
                     },
                     { 
                         data: 'transaction_type', className: 'text-center',
                         render: d => {
                             const isIn = d.toLowerCase() === 'in';
-                            const cls = isIn ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700';
-                            return `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${cls}">${d}</span>`;
+                            const cls = isIn ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                            return `<div class="flex justify-center w-full"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}">${d}</span></div>`;
                         }
                     },
                     { 
                         data: 'qty', className: 'text-center',
                         render: (d, t, r) => {
                             const isIn = r.transaction_type.toLowerCase() === 'in';
-                            const color = isIn ? 'text-emerald-600' : 'text-red-600';
-                            return `<span class="font-bold font-mono ${color}">${d > 0 ? '+' : ''}${d}</span>`;
+                            const color = isIn ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+                            return `<div class="flex justify-center w-full"><span class="text-xs font-bold font-mono ${color}">${d > 0 ? '+' : ''}${d}</span></div>`;
                         }
                     },
-                    { data: 'qty_min', className: 'text-center', render: d => `<span class="text-xs font-bold text-gray-500">${d}</span>` },
-                    { data: 'current_stock', className: 'text-center', render: d => `<span class="text-xs font-bold text-primary-600">${d}</span>` },
+                    { data: 'qty_min', className: 'text-center', render: d => `<div class="flex justify-center w-full"><span class="text-xs font-bold text-gray-500 dark:text-gray-400">${d}</span></div>` },
+                    { data: 'current_stock', className: 'text-center', render: d => `<div class="flex justify-center w-full"><span class="text-xs font-bold text-primary-600 dark:text-primary-400">${d}</span></div>` },
                     { 
                         data: null, 
                         render: r => {
                             if (r.transaction_type.toLowerCase() === 'in') {
-                                return `<span class="text-[10px] font-mono text-gray-600">Ref: ${r.ref_doc || '-'}</span>`;
+                                return `
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="text-xs font-bold text-gray-900 dark:text-white">Restock / Inward</span>
+                                        <span class="text-[10px] font-mono text-gray-500 dark:text-gray-400">Ref: ${r.ref_doc || '-'}</span>
+                                    </div>`;
                             } else {
                                 const loc = r.destination;
                                 if (!loc) return '-';
                                 return `
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] font-bold text-blue-600"><i class="fa-solid fa-location-dot mr-1 opacity-50"></i>${loc.name}</span>
-                                        <span class="text-[8px] uppercase text-gray-400 font-bold tracking-tighter">${loc.category}</span>
+                                    <div class="flex flex-col gap-0.5">
+                                        <span class="text-xs font-bold text-blue-600 dark:text-blue-400">${loc.code}</span>
+                                        <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">${loc.name} (${loc.category.toUpperCase()})</span>
                                     </div>`;
                             }
                         }
                     },
-                    { data: 'operator.name', render: d => `<span class="text-[10px]">${d || '-'}</span>` },
+                    { data: 'operator.name', render: d => `<span class="text-xs text-gray-700 dark:text-gray-300 font-medium">${d || '-'}</span>` },
                 ],
                 order: [[0, 'desc']],
                 pageLength: 10,
