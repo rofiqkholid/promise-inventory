@@ -977,7 +977,8 @@ $(function() {
         ]);
 
         // 3. Table Content
-        $('#vaveDetailTable tbody tr').each(function() {
+        const rows = mainTable ? mainTable.rows({ search: 'applied' }).nodes() : $('#vaveDetailTable tbody tr');
+        $(rows).each(function() {
             const row = [];
             $(this).find('td').each(function(i) {
                 let text = $(this).text().trim();
