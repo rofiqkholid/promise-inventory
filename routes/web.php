@@ -44,18 +44,6 @@ use App\Http\Controllers\Inventory\Material\LocationController;
 use App\Http\Controllers\Inventory\ProfileController;
 use App\Http\Controllers\Inventory\UserAccessController;
 
-// Route for redirecting to Central SSO Portal
-Route::get('/debug-sso', function () {
-    return [
-        'app' => 'inventory',
-        'session_id' => session()->getId(),
-        'cookie_val' => request()->cookie('promise_auth_session'),
-        'auth_check' => Auth::check(),
-        'user_id' => Auth::id(),
-        'sessions_in_db' => DB::table('sessions')->where('id', session()->getId())->first(),
-    ];
-});
-
 Route::get('/login', function () {
     if (request()->has('redirect')) {
         session()->put('url.intended', request()->get('redirect'));
@@ -80,7 +68,7 @@ Route::post('/login', function () { return redirect()->route('login'); })->name(
 Route::post('/logout', function () { 
     Auth::logout();
     session()->invalidate();
-    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('logout');
 
 // Public Scan Info (No Login Required)
