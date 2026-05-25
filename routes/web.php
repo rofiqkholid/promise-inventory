@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 use App\Http\Controllers\Inventory\Material\CoilCenterController;
 use App\Http\Controllers\Inventory\Material\MaterialSpecController;
@@ -52,7 +53,7 @@ Route::get('/login', function () {
 })->name('login');
 
 Route::get('/', function () {
-    \Log::info('Inventory SSO Check', [
+    Log::info('Inventory SSO Check', [
         'session_id' => session()->getId(),
         'cookie_val' => request()->cookie('promise_auth_session'),
         'auth_check' => Auth::check(),
