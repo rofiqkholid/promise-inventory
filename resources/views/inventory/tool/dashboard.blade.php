@@ -992,9 +992,9 @@
         const DRILLDOWN_COLS = {
             stock: [
                 { key: 'part_no',          label: 'Tool Information', cls: 'text-left py-2 px-3', style: 'min-width: 200px;' },
-                { key: 'stock',            label: 'Stock',            cls: 'text-right py-2 px-2' },
+                { key: 'location',         label: 'Stock / Location', cls: 'text-left py-2 px-2', style: 'min-width: 140px;' },
                 { key: 'min_stock',        label: 'Min',              cls: 'text-right py-2 px-2' },
-                { key: 'location',         label: 'Location',         cls: 'text-left py-2 px-2', style: 'min-width: 140px;' },
+                { key: 'max_stock',        label: 'Max',              cls: 'text-right py-2 px-2' },
                 { key: 'status',           label: 'Status',           cls: 'text-center py-2 px-3' },
                 { key: 'action_status',    label: 'Action',           cls: 'text-center py-2 px-3' },
                 { key: 'action_remark',    label: 'Note',             cls: 'text-left py-2 px-3 max-w-[200px]' },
