@@ -29,6 +29,29 @@ class ToolFastStockController extends Controller
 
             $recordsTotal = (clone $query)->count();
 
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->input('category_id'));
+            }
+
+            if ($request->filled('stock_status')) {
+                $status = $request->input('stock_status');
+                if ($status === 'critical') {
+                    $query->whereColumn('total_qty', '<', 'qty_min');
+                } elseif ($status === 'warning') {
+                    $query->whereColumn('total_qty', '=', 'qty_min');
+                } elseif ($status === 'safe') {
+                    $query->whereColumn('total_qty', '>', 'qty_min')
+                          ->where(function($q) {
+                              $q->whereNull('qty_max')
+                                ->orWhere('qty_max', 0)
+                                ->orWhereColumn('total_qty', '<=', 'qty_max');
+                          });
+                } elseif ($status === 'over') {
+                    $query->where('qty_max', '>', 0)
+                          ->whereColumn('total_qty', '>', 'qty_max');
+                }
+            }
+
             if (!empty($search)) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%$search%")
@@ -392,7 +415,19 @@ class ToolFastStockController extends Controller
 
             $recordsFiltered = (clone $query)->count();
 
-            $data = $query->orderBy('transacted_at', 'desc')->skip($start)->take($length)->get();
+            // Handle Datatables sorting dynamically
+            $orderColumnIndex = $request->input('order.0.column');
+            $orderDirection = $request->input('order.0.dir', 'desc');
+            
+            $columnsMap = [
+                0 => 'transacted_at',
+                2 => 'transaction_type',
+                3 => 'qty',
+            ];
+            
+            $orderBy = $columnsMap[$orderColumnIndex] ?? 'transacted_at';
+
+            $data = $query->orderBy($orderBy, $orderDirection)->skip($start)->take($length)->get();
             
             // Transform to include qty_min and historical running stock balance for display
             $data->transform(function($item) {

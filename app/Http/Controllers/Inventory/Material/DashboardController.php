@@ -146,6 +146,7 @@ class DashboardController extends Controller
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
 
         $queryTrans = clone $recentTransQuery;
+        $queryTrans->where('t.transaction_date', 'like', "{$monthYear}%");
         if (!empty($selectedModels)) $queryTrans->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $queryTrans->whereIn('prod.customer_id', $selectedCustomers);
         $applyProjectStatusFilter($queryTrans, $selectedProjectStatus);

@@ -3,6 +3,31 @@
 @section('title', 'Fast Moving Stock')
 
 @section('content')
+@php
+    $totalTools = $tools->count();
+    $safeCount = 0;
+    $warningCount = 0;
+    $criticalCount = 0;
+    $overCount = 0;
+
+    foreach ($tools as $tool) {
+        $qty = $tool->fastStock->sum('current_qty');
+        $min = $tool->qty_min ?? 0;
+        $max = $tool->qty_max ?? 0;
+
+        if ($qty < $min) {
+            $criticalCount++;
+        } elseif ($qty == $min) {
+            $warningCount++;
+        } elseif ($max > 0 && $qty > $max) {
+            $overCount++;
+        } else {
+            $safeCount++;
+        }
+    }
+
+    $categories = $tools->map(fn($t) => $t->category)->filter()->unique('id');
+@endphp
 <div class="text-gray-900 dark:text-gray-100">
 
     {{-- Header --}}
@@ -11,38 +36,147 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Fast Moving Stock</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Stock monitoring and IN/OUT transactions for fast moving tools (e.g. Endmill, Drill).</p>
         </div>
-        <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnHistory" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+        <div class="mt-4 sm:mt-0 flex gap-2 relative items-center">
+            <button type="button" id="btnHistory" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white border border-transparent rounded-xs text-[10px] font-bold uppercase tracking-widest transition-all font-sans shadow-sm active:scale-95">
                 <i class="fa-solid fa-clock-rotate-left"></i> History
             </button>
-            <button type="button" id="btnNewTransaction" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all">
+
+            <button type="button" id="btnToggleFilter" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-sans" title="Toggle Filters">
+                <i class="fa-solid fa-filter"></i> Filters
+            </button>
+            
+            <div class="relative">
+                <button type="button" id="toggleLegend" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-sans" title="Legend & Help">
+                    <i class="fa-solid fa-circle-question"></i> Legend
+                </button>
+
+                {{-- Legend Popover Content --}}
+                <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-6 z-50 shadow-xl">
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-3 uppercase">Stock Status</h4>
+                    <div class="space-y-2.5">
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Critical <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &lt; Min Stock)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Warning <span class="text-gray-400 text-[10px] tracking-tighter">(Stock = Min Stock)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Safe <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock &lt; Stock &le; Max Stock)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Over <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &gt; Max Stock)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="btnNewTransaction" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all font-sans">
                 <i class="fa-solid fa-plus"></i> New Transaction
             </button>
         </div>
     </div>
 
-    {{-- Status Legend --}}
-    <div class="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xs p-4 mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-2">
-            <i class="fa-solid fa-circle-info text-slate-400 text-xs"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Stock Status Legend:</span>
+    {{-- Collapsible Filter Card --}}
+    <div id="filterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-4 mb-6 relative">
+        <div class="absolute -top-2 right-44 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-slate-200 dark:border-b-gray-700"></div>
+        <div class="absolute -top-[7px] right-44 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white dark:border-b-gray-800"></div>
+        
+        <div class="flex flex-col xl:flex-row gap-3 xl:items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
+                <!-- Category -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Category</label>
+                    <div class="w-full">
+                        <select id="filter_category" class="select2 w-full">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Stock Status -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Stock Status</label>
+                    <div class="w-full">
+                        <select id="filter_status" class="select2 w-full">
+                            <option value="">All Status</option>
+                            <option value="safe">Safe</option>
+                            <option value="warning">Warning</option>
+                            <option value="critical">Critical</option>
+                            <option value="over">Over</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 xl:pt-0">
+                <button type="button" id="reset_filters" class="h-9 px-4 flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-slate-500 hover:text-primary-600 border border-slate-200 dark:border-gray-700 rounded-xs transition-all text-xs font-medium active:scale-95 shadow-xs">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+            </div>
         </div>
-        <div class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">CRITICAL</span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Stock &lt; Min</span>
+    </div>
+
+    {{-- Individual KPI Cards - Forced Single Row --}}
+    <div class="flex flex-nowrap gap-3 mb-6 overflow-x-auto scrollbar-hide">
+        <!-- Total -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
+                <i class="fa-solid fa-layer-group"></i>
             </div>
-            <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">WARNING</span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Stock = Min</span>
+            <div>
+                <div class="text-[11px] font-bold text-slate-400 dark:text-gray-500 tracking-tight mb-1">Total Tools</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($totalTools) }}</div>
             </div>
-            <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">SAFE</span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Min &lt; Stock &le; Max</span>
+        </div>
+
+        <!-- Safe -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg">
+                <i class="fa-solid fa-circle-check"></i>
             </div>
-            <div class="flex items-center gap-1.5">
-                <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">OVER</span>
-                <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Stock &gt; Max</span>
+            <div>
+                <div class="text-[11px] font-bold text-emerald-600 dark:text-emerald-500 tracking-tight mb-1">Safe stock</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($safeCount) }}</div>
+            </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-lg">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">Warning</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($warningCount) }}</div>
+            </div>
+        </div>
+
+        <!-- Critical -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center text-red-600 dark:text-red-400 text-lg">
+                <i class="fa-solid fa-bell"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-red-600 dark:text-red-500 tracking-tight mb-1">Critical</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($criticalCount) }}</div>
+            </div>
+        </div>
+
+        <!-- Over Stock -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-lg">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-indigo-600 dark:text-indigo-500 tracking-tight mb-1">Over stock</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($overCount) }}</div>
             </div>
         </div>
     </div>
@@ -120,21 +254,21 @@
                 </div>
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Location <span class="text-red-500">*</span></label>
-                    <select name="location_id" id="transLocationId" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                    <select name="location_id" id="transLocationId" required class="select2-modal bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
                         <option value="">-- Select Location --</option>
                         @foreach($locations as $loc)
-                            <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                            <option value="{{ $loc->id }}" data-category="{{ $loc->category }}">{{ $loc->code }} — {{ $loc->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-4 hidden" id="destinationGroup">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Destination <span class="text-red-500">*</span></label>
-                    <select name="to_location_id" id="to_location_id" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                    <select name="to_location_id" id="to_location_id" class="select2-modal bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Destination --</option>
                         @foreach($destinations as $category => $locs)
                             <optgroup label="{{ strtoupper($category) }}">
                                 @foreach($locs as $loc)
-                                    <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                                    <option value="{{ $loc->id }}" data-category="{{ $loc->category }}">{{ $loc->code }} — {{ $loc->name }}</option>
                                 @endforeach
                             </optgroup>
                         @endforeach
@@ -179,7 +313,8 @@
                         <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 text-[10px] pointer-events-none transition-colors z-10"></i>
                         <input type="text" id="filter_date_range" readonly 
                             class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xs h-9 text-[10px] text-gray-600 dark:text-white focus:ring-0 focus:border-primary-500 cursor-pointer w-full pl-10 transition-all font-medium" 
-                            placeholder="Select Date Range">
+                            placeholder="Select Date Range"
+                            value="{{ date('01-m-Y') . ' - ' . date('t-m-Y') }}">
                     </div>
                 </div>
                 <div>
@@ -230,6 +365,41 @@
 {{-- Location Tooltip Portal --}}
 <div id="location-tooltip-portal" class="fixed z-[9999] bg-white dark:bg-gray-800 rounded-xs shadow-2xl border border-slate-200 dark:border-gray-700 p-3.5 w-60 text-left hidden font-sans scale-in"></div>
 @endsection
+
+@push('style')
+<style>
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    /* Select2 Single Selection Styling Overrides for Badges */
+    .select2-container .select2-selection--single {
+        height: auto !important;
+        min-height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: normal !important;
+        padding-left: 8px !important;
+        padding-right: 20px !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -328,7 +498,14 @@ $(document).ready(function() {
 
     window.fastStockTable = window.defaultDataTable('#fastStockTable', {
         serverSide: true,
-        ajax: { url: apiList, type: 'GET' },
+        ajax: { 
+            url: apiList, 
+            type: 'GET',
+            data: function(d) {
+                d.category_id = $('#filter_category').val();
+                d.stock_status = $('#filter_status').val();
+            }
+        },
         order: [[3, 'asc']],
         columns: [
             { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
@@ -447,10 +624,10 @@ $(document).ready(function() {
                 outOptionsHTML += '<option value="" disabled>No stock available in any location</option>';
             } else {
                 stocks.forEach(item => {
-                    outOptionsHTML += `<option value="${item.location_id}">${item.location_code} — ${item.location_name} (${item.current_qty} pcs available)</option>`;
+                    outOptionsHTML += `<option value="${item.location_id}" data-category="storage">${item.location_code} — ${item.location_name} (${item.current_qty} pcs available)</option>`;
                 });
             }
-            $('#transLocationId').html(outOptionsHTML);
+            $('#transLocationId').html(outOptionsHTML).trigger('change');
             
             // Auto-select the default location if it has stock, otherwise select the first location with stock
             if (stocks.length > 0) {
@@ -507,9 +684,14 @@ $(document).ready(function() {
     // Auto-trigger transaction modal if tool_id is passed in query string
     const urlParams = new URLSearchParams(window.location.search);
     const preselectedToolId = urlParams.get('tool_id');
+    const preselectedAction = urlParams.get('action');
     if (preselectedToolId) {
         $('#formTransaction')[0].reset(); 
-        $('input[name="transaction_type"][value="IN"]').prop('checked', true).trigger('change');
+        if (preselectedAction === 'out') {
+            $('input[name="transaction_type"][value="OUT"]').prop('checked', true).trigger('change');
+        } else {
+            $('input[name="transaction_type"][value="IN"]').prop('checked', true).trigger('change');
+        }
         $('#transToolId').val(preselectedToolId).trigger('change');
         showMdl('modal-tool-transaction'); 
     }
@@ -553,12 +735,17 @@ $(document).ready(function() {
         
         // Init Litepicker if not exists
         if (!histDateRangePicker) {
+            const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+            const lastDay = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+
             histDateRangePicker = new Litepicker({
                 element: document.getElementById('filter_date_range'),
                 singleMode: false,
                 autoApply: true,
                 format: 'DD-MM-YYYY',
                 delimiter: ' - ',
+                startDate: firstDay,
+                endDate: lastDay,
                 setup: (picker) => {
                     picker.on('selected', (date1, date2) => {
                         if (historyTable) historyTable.ajax.reload();
@@ -656,6 +843,93 @@ $(document).ready(function() {
         const toolId = $(this).data('tool-id');
         window.open(`{{ url('inventory/tool/fast-stock/print-qr') }}/${toolId}`, '_blank');
     });
+
+    // Toggle Legend Popover
+    $('#toggleLegend').click(function(e) {
+        e.stopPropagation();
+        $('#legendPopover').toggleClass('hidden');
+    });
+
+    $(document).click(function() {
+        $('#legendPopover').addClass('hidden');
+    });
+
+    $('#legendPopover').click(function(e) {
+        e.stopPropagation();
+    });
+
+    // Custom Select2 Formatter for segmented modal options
+    function formatLocationState(state) {
+        if (!state.id) {
+            return state.text;
+        }
+        const element = $(state.element);
+        const category = element.data('category') || 'storage';
+        
+        let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30';
+        if (category === 'machine') {
+            badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
+        } else if (category === 'subcont') {
+            badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+        } else if (category === 'scrap' || category === 'lost') {
+            badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30';
+        }
+
+        const badgeText = category.toUpperCase();
+
+        return $(
+            `<div class="flex items-center">
+                <div class="flex items-center h-5 mr-2">
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-xs text-[9px] font-bold border ${badgeColor} leading-none">${badgeText}</span>
+                </div>
+                <span class="text-xs font-medium text-slate-700 dark:text-gray-300 truncate">${state.text}</span>
+            </div>`
+        );
+    }
+
+    $('.select2-modal').select2({
+        dropdownParent: $('#modal-tool-transaction'),
+        width: '100%',
+        templateResult: formatLocationState,
+        templateSelection: formatLocationState
+    });
+
+    // Filter Toggle Logic
+    $('#btnToggleFilter').on('click', function(e) {
+        e.stopPropagation();
+        const btn = $(this);
+        const card = $('#filterCard');
+        
+        card.slideToggle(200);
+        btn.toggleClass('bg-primary-50 text-primary-600 ring-2 ring-primary-500/50');
+        
+        // Close Legend if open
+        if (!$('#legendPopover').hasClass('hidden')) {
+            $('#legendPopover').addClass('hidden');
+        }
+    });
+    
+    // Close Filter Card when clicking outside
+    $(document).click(function(e) {
+        if (!$(e.target).closest('#filterCard, #btnToggleFilter, .select2-container').length) {
+            $('#filterCard').slideUp(200);
+            $('#btnToggleFilter').removeClass('bg-primary-50 text-primary-600 ring-2 ring-primary-500/50');
+        }
+    });
+
+    // Reactive Filters
+    $('#filter_category, #filter_status').on('change', function() {
+        fastStockTable.ajax.reload();
+    });
+
+    // Reset Filters
+    $('#reset_filters').on('click', function() {
+        $('#filter_category').val('').trigger('change');
+        $('#filter_status').val('').trigger('change');
+        fastStockTable.ajax.reload();
+    });
 });
 </script>
 @endpush
+
+

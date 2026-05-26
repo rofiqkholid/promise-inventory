@@ -3,6 +3,9 @@
 @section('title', 'Slow Moving Asset Register')
 
 @section('content')
+@php
+    $categories = $tools->map(fn($t) => $t->category)->filter()->unique('id');
+@endphp
 <div class="text-gray-900 dark:text-gray-100">
 
     {{-- Header --}}
@@ -11,32 +14,150 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Slow Moving Assets</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Asset register for slow moving tools (Arbor, Collet, Holder). Tracked per purchase batch with depreciation.</p>
         </div>
-        <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnAddBatch" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest transition-all">
+        <div class="mt-4 sm:mt-0 flex gap-2 relative items-center">
+            <button type="button" id="btnToggleFilter" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-sans" title="Toggle Filters">
+                <i class="fa-solid fa-filter"></i> Filters
+            </button>
+            
+            <div class="relative">
+                <button type="button" id="toggleLegend" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-sans" title="Legend & Help">
+                    <i class="fa-solid fa-circle-question"></i> Legend
+                </button>
+
+                {{-- Legend Popover Content --}}
+                <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-6 z-50 shadow-xl">
+                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-3 uppercase">Condition Status</h4>
+                    <div class="space-y-2.5">
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">OK <span class="text-gray-400 text-[10px] tracking-tighter">(100% Rate)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Good <span class="text-gray-400 text-[10px] tracking-tighter">(75% Rate)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Still Good <span class="text-gray-400 text-[10px] tracking-tighter">(50% Rate)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-orange-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Warning <span class="text-gray-400 text-[10px] tracking-tighter">(25% Rate)</span></div>
+                        </div>
+                        <div class="flex items-center text-xs">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
+                            <div class="text-gray-600 dark:text-gray-300 font-medium">Retired <span class="text-gray-400 text-[10px] tracking-tighter">(0% Rate or Retired)</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="btnAddBatch" class="h-9 inline-flex items-center justify-center gap-2 px-6 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all font-sans">
                 <i class="fa-solid fa-plus"></i> Register Asset
             </button>
         </div>
     </div>
 
-    {{-- Total Asset Value Summary --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-900 rounded-xs border border-gray-200 dark:border-gray-800 p-5">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Total Active Items</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="statTotalBatches">—</p>
-        </div>
-        <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-200 dark:border-emerald-800 p-5">
-            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">Total Asset Value</p>
-            <p class="text-2xl font-bold text-emerald-700 dark:text-emerald-400" id="statTotalValue">—</p>
+    {{-- Collapsible Filter Card --}}
+    <div id="filterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-4 mb-6 relative">
+        <div class="absolute -top-2 right-44 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-slate-200 dark:border-b-gray-700"></div>
+        <div class="absolute -top-[7px] right-44 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white dark:border-b-gray-800"></div>
+        
+        <div class="flex flex-col xl:flex-row gap-3 xl:items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
+                <!-- Category -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Category</label>
+                    <div class="w-full">
+                        <select id="filter_category" class="select2 w-full">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Condition -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Condition Status</label>
+                    <div class="w-full">
+                        <select id="filter_condition" class="select2 w-full">
+                            <option value="">All Conditions</option>
+                            <option value="100">100% — OK</option>
+                            <option value="75">75% — GOOD</option>
+                            <option value="50">50% — STILL GOOD</option>
+                            <option value="25">25% — WARNING</option>
+                            <option value="0">0% — RETIRED</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2 xl:pt-0">
+                <button type="button" id="reset_filters" class="h-9 px-4 flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-slate-500 hover:text-primary-600 border border-slate-200 dark:border-gray-700 rounded-xs transition-all text-xs font-medium active:scale-95 shadow-xs">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+            </div>
         </div>
     </div>
 
-    {{-- Status Filter --}}
-    <div class="flex items-center gap-2 mb-4">
-        <span class="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Filter:</span>
-        <button data-status="active"  class="status-filter-btn px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wider bg-emerald-600 text-white">Active</button>
-        <button data-status="nok"     class="status-filter-btn px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wider bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50">NOK</button>
-        <button data-status="retired" class="status-filter-btn px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wider bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50">Retired</button>
-        <button data-status="all"     class="status-filter-btn px-3 py-1.5 rounded-xs text-[10px] font-bold uppercase tracking-wider bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50">All</button>
+    {{-- Expanded Premium KPI Row --}}
+    <div class="flex flex-nowrap gap-3 mb-6 overflow-x-auto scrollbar-hide">
+        <!-- Total Active Items -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-slate-400 dark:text-gray-500 tracking-tight mb-1 uppercase">Active Items</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter" id="statTotalBatches">—</div>
+            </div>
+        </div>
+
+        <!-- Total Asset Value -->
+        <div class="flex-none w-[220px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg">
+                <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-emerald-600 dark:text-emerald-500 tracking-tight mb-1 uppercase">Asset Value</div>
+                <div class="text-sm font-bold text-emerald-700 dark:text-emerald-400 leading-none tracking-tighter" id="statTotalValue">—</div>
+            </div>
+        </div>
+
+        <!-- OK / Good / Still Good Condition (>= 50%) -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-lg">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-blue-600 dark:text-blue-500 tracking-tight mb-1 uppercase">OK/Good/Still Good</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter" id="statOkGood">—</div>
+            </div>
+        </div>
+
+        <!-- Warning (== 25%) -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-lg">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1 uppercase">Warning (25%)</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter" id="statWarning">—</div>
+            </div>
+        </div>
+
+        <!-- NOK / Retired (== 0% or Status != active) -->
+        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
+            <div class="w-10 h-10 rounded-xs bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/50 flex items-center justify-center text-rose-600 dark:text-rose-400 text-lg">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+            <div>
+                <div class="text-[11px] font-bold text-rose-600 dark:text-rose-500 tracking-tight mb-1 uppercase">NOK / Retired</div>
+                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter" id="statRetired">—</div>
+            </div>
+        </div>
     </div>
 
     {{-- Table --}}
@@ -118,10 +239,10 @@
                 </div>
                 <div class="mb-4">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Current Location <span class="text-red-500">*</span></label>
-                    <select name="location_id" id="batchLocationId" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                    <select name="location_id" id="batchLocationId" required class="select2-modal bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
                         <option value="">-- Select Location --</option>
                         @foreach($locations as $loc)
-                            <option value="{{ $loc->id }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                            <option value="{{ $loc->id }}" data-category="{{ $loc->category }}">{{ $loc->code }} — {{ $loc->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -157,9 +278,123 @@
 </div>
 @endsection
 
+@push('style')
+<style>
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    
+    /* Select2 Single Selection Styling Overrides for Badges */
+    .select2-container .select2-selection--single {
+        height: auto !important;
+        min-height: 38px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: normal !important;
+        padding-left: 8px !important;
+        padding-right: 20px !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 $(document).ready(function() {
+    // Custom Select2 Formatter for segmented modal options
+    function formatLocationState(state) {
+        if (!state.id) {
+            return state.text;
+        }
+        const element = $(state.element);
+        const category = element.data('category') || 'storage';
+        
+        let badgeColor = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30';
+        if (category === 'machine') {
+            badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
+        } else if (category === 'subcont') {
+            badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+        } else if (category === 'scrap' || category === 'lost') {
+            badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30';
+        }
+
+        const badgeText = category.toUpperCase();
+
+        return $(
+            `<div class="flex items-center">
+                <div class="flex items-center h-5 mr-2">
+                    <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-xs text-[9px] font-bold border ${badgeColor} leading-none">${badgeText}</span>
+                </div>
+                <span class="text-xs font-medium text-slate-700 dark:text-gray-300 truncate">${state.text}</span>
+            </div>`
+        );
+    }
+
+    // Initialize category & condition Select2 filters
+    $('#filter_category, #filter_condition').select2({
+        width: '100%'
+    });
+
+    // Toggle filters visibility
+    $('#btnToggleFilter').on('click', function(e) {
+        e.stopPropagation();
+        $('#filterCard').toggleClass('hidden');
+    });
+
+    // Toggle legend popover visibility
+    $('#toggleLegend').on('click', function(e) {
+        e.stopPropagation();
+        $('#legendPopover').toggleClass('hidden');
+    });
+
+    // Close popovers/filters when clicking outside
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#legendPopover, #toggleLegend').length) {
+            $('#legendPopover').addClass('hidden');
+        }
+        if (!$(e.target).closest('#filterCard, #btnToggleFilter, .select2-container').length) {
+            $('#filterCard').addClass('hidden');
+        }
+    });
+
+    // Filter change listeners
+    $('#filter_category, #filter_condition').on('change', function() {
+        window.slowTable.ajax.reload();
+    });
+
+    // Reset filters
+    $('#reset_filters').on('click', function() {
+        $('#filter_category').val('').trigger('change');
+        $('#filter_condition').val('').trigger('change');
+    });
+
+    $('select[name="tool_id"]', '#modal-batch-form').select2({
+        dropdownParent: $('#modal-batch-form'),
+        width: '100%'
+    });
+
+    $('.select2-modal', '#modal-batch-form').select2({
+        dropdownParent: $('#modal-batch-form'),
+        width: '100%',
+        templateResult: formatLocationState,
+        templateSelection: formatLocationState
+    });
+
     const apiBase = "{{ route('inventory.tool.slow-batch.index') }}";
     const idr = (v) => 'Rp ' + parseFloat(v || 0).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
@@ -174,7 +409,11 @@ $(document).ready(function() {
         serverSide: true,
         ajax: {
             url: apiBase, type: 'GET',
-            data: (d) => { d.status = currentStatus; }
+            data: (d) => {
+                d.status = currentStatus;
+                d.category_id = $('#filter_category').val();
+                d.condition = $('#filter_condition').val();
+            }
         },
         order: [[1, 'desc']],
         columns: [
@@ -267,27 +506,22 @@ $(document).ready(function() {
                     </div>`
             }
         ],
-        drawCallback: function() {
-            const api = this.api();
-            let totalItems = 0, totalValue = 0;
-            api.rows().every(function() {
-                const d = this.data();
-                if (d.status === 'active') { 
-                    totalItems++; 
-                    totalValue += parseFloat(d.live_asset_value || 0); 
-                }
-            });
-            $('#statTotalBatches').text(totalItems);
-            $('#statTotalValue').text(idr(totalValue));
+        drawCallback: function(settings) {
+            const res = settings.json;
+            if (res && res.stats) {
+                $('#statTotalBatches').text(res.stats.total_active_items);
+                $('#statTotalValue').text(idr(res.stats.total_asset_value));
+                $('#statOkGood').text(res.stats.ok_good_still_good_count);
+                $('#statWarning').text(res.stats.warning_count);
+                $('#statRetired').text(res.stats.retired_count);
+            } else {
+                $('#statTotalBatches').text('0');
+                $('#statTotalValue').text(idr(0));
+                $('#statOkGood').text('0');
+                $('#statWarning').text('0');
+                $('#statRetired').text('0');
+            }
         }
-    });
-
-    // Status filter
-    $('.status-filter-btn').on('click', function() {
-        currentStatus = $(this).data('status');
-        $('.status-filter-btn').removeClass('bg-emerald-600 text-white').addClass('bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50');
-        $(this).addClass('bg-emerald-600 text-white').removeClass('bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50');
-        slowTable.ajax.reload();
     });
 
     const showMdl = (id) => { $('.modal-container').addClass('hidden'); $(`#${id}`).removeClass('hidden'); };
@@ -407,8 +641,8 @@ $(document).ready(function() {
         $('input[name="purchase_price"]', '#batchForm').val(btn.data('purchase-price'));
         $('[name="physical_rate"]', '#batchForm').val(Math.round(btn.data('physical-rate'))).trigger('change');
         $('input[name="std_lifetime_yrs"]', '#batchForm').val(btn.data('lifetime'));
-        $('select[name="location_id"]', '#batchForm').val(btn.data('location-id'));
-        $('select[name="status"]', '#batchForm').val(btn.data('status'));
+        $('select[name="location_id"]', '#batchForm').val(btn.data('location-id')).trigger('change');
+        $('select[name="status"]', '#batchForm').val(btn.data('status')).trigger('change');
         $('input[name="_method"]').val('PUT');
         $('#batchModalTitle').text('Edit Asset');
         updatePreview();

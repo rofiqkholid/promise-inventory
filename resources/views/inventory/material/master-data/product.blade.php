@@ -7,7 +7,7 @@
 <div class="text-gray-900 dark:text-gray-100">
     <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
-            <h2 class="text-xl xl:text-2xl font-medium text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Inventory Product</h2>
+            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Inventory Product</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">

@@ -20,11 +20,21 @@ class ToolSlowBatchController extends Controller
             $length = (int) $request->input('length', 10);
             $search = $request->input('search.value');
             $status = $request->input('status', 'active'); // filter by status
+            $category_id = $request->input('category_id');
+            $condition   = $request->input('condition');
 
             $query = TolSlowBatch::with(['tool.category', 'tool.sketch', 'location']);
 
             if ($status !== 'all') {
                 $query->where('status', $status);
+            }
+
+            if (!empty($category_id)) {
+                $query->whereHas('tool', fn($t) => $t->where('category_id', $category_id));
+            }
+
+            if ($condition !== null && $condition !== '') {
+                $query->where('physical_rate', $condition);
             }
 
             $recordsTotal = (clone $query)->count();
@@ -41,8 +51,47 @@ class ToolSlowBatchController extends Controller
             }
 
             $recordsFiltered = (clone $query)->count();
-            $data = $query->orderBy('purchase_date', 'desc')->skip($start)->take($length)->get();
+
+            // Calculate stats for all filtered items before skip/take pagination limits
+            $statsQuery = clone $query;
+            $allFilteredRecords = $statsQuery->get();
+
+            $totalActiveItems = 0;
+            $totalAssetValue = 0;
+            $okGoodStillGoodCount = 0;
+            $warningCount = 0;
+            $retiredCount = 0;
+
             $today = Carbon::today();
+
+            foreach ($allFilteredRecords as $row) {
+                $purchase = Carbon::parse($row->purchase_date);
+                $ageYears = round($purchase->diffInDays($today) / 365.25, 2);
+                $remainYrs = max(0, $row->std_lifetime_yrs - $ageYears);
+                
+                $depFactor = $row->std_lifetime_yrs > 0 ? ($remainYrs / $row->std_lifetime_yrs) : 0;
+                $physFactor = $row->physical_rate / 100;
+                $assetValue = $row->status === 'active'
+                    ? round($row->qty_current * $row->purchase_price * $depFactor * $physFactor, 2)
+                    : 0;
+
+                if ($row->status === 'active') {
+                    $totalActiveItems++;
+                    $totalAssetValue += $assetValue;
+
+                    if ($row->physical_rate >= 50) {
+                        $okGoodStillGoodCount++;
+                    } elseif ($row->physical_rate == 25 || $row->physical_rate == 20) {
+                        $warningCount++;
+                    } else {
+                        $retiredCount++;
+                    }
+                } else {
+                    $retiredCount++;
+                }
+            }
+
+            $data = $query->orderBy('purchase_date', 'desc')->skip($start)->take($length)->get();
 
             $formatted = $data->map(function ($row) use ($today) {
                 $tool     = $row->tool;
@@ -51,7 +100,7 @@ class ToolSlowBatchController extends Controller
                 $remainYrs = max(0, $row->std_lifetime_yrs - $ageYears);
                 
                 // Asset Value calculation using depreciation * physical_rate
-                $depFactor = $remainYrs / $row->std_lifetime_yrs;
+                $depFactor = $row->std_lifetime_yrs > 0 ? ($remainYrs / $row->std_lifetime_yrs) : 0;
                 $physFactor = $row->physical_rate / 100;
                 $assetValue = $row->status === 'active'
                     ? round($row->qty_current * $row->purchase_price * $depFactor * $physFactor, 2)
@@ -91,6 +140,13 @@ class ToolSlowBatchController extends Controller
                 'recordsTotal'    => $recordsTotal,
                 'recordsFiltered' => $recordsFiltered,
                 'data'            => $formatted,
+                'stats'           => [
+                    'total_active_items'       => $totalActiveItems,
+                    'total_asset_value'        => $totalAssetValue,
+                    'ok_good_still_good_count' => $okGoodStillGoodCount,
+                    'warning_count'            => $warningCount,
+                    'retired_count'            => $retiredCount,
+                ]
             ]);
         }
 

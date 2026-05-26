@@ -77,7 +77,7 @@
                         <div>
                             <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Tool Sketch</label>
                             <div class="flex gap-2">
-                                <select name="sketch_id" id="sketch_id" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
+                                <select name="sketch_id" id="sketch_id" class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 transition-all">
                                     <option value="">Select Sketch</option>
                                 </select>
                                 <div id="sketch-preview-container" class="w-10 h-10 border border-gray-200 dark:border-gray-700 rounded-xs flex-shrink-0 flex items-center justify-center bg-gray-50 dark:bg-gray-800 overflow-hidden cursor-pointer hover:scale-110 transition-all">
@@ -161,7 +161,7 @@
                             <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">Machining Parameter Settings</h4>
                             <p class="text-[10px] text-gray-500 dark:text-gray-400">Configure spindle speed, table feed, depth of cut (ap), and step over per material category</p>
                         </div>
-                        <button type="button" id="addSettingRowBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-300 rounded-xs text-[10px] font-bold uppercase tracking-wider transition-all">
+                        <button type="button" id="addSettingRowBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xs text-[10px] font-bold uppercase tracking-widest active:scale-95 transition-all shadow-sm">
                             <i class="fa-solid fa-plus text-[9px]"></i> Add Row
                         </button>
                     </div>
@@ -211,6 +211,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#sketch_id').select2({
+            dropdownParent: $('#modal-master-form'),
+            width: '100%'
+        });
+
         const csrf = $('meta[name="csrf-token"]').attr('content');
         const apiBase = "{{ route('inventory.tool.master.index') }}";
         let deleteUrl = '';

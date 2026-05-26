@@ -52,7 +52,7 @@
         <div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             @php
                 $txRoute = $tool->category?->moving_type === 'fast'
-                    ? route('inventory.tool.fast-stock.index', ['tool_id' => $tool->id])
+                    ? route('inventory.tool.fast-stock.index', ['tool_id' => $tool->id, 'action' => 'out'])
                     : route('inventory.tool.slow-batch.index', ['tool_id' => $tool->id]);
                 
                 $stoUrl = $activeStoId 
