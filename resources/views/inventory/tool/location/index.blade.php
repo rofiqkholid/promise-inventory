@@ -61,6 +61,8 @@
                         <option value="subcont">Subcont</option>
                         <option value="scrap">Scrap / NG Box</option>
                         <option value="lost">Lost</option>
+                        <option value="borrow">Borrow</option>
+                        <option value="return">Return</option>
                     </select>
                 </div>
                 <div class="mb-4">
@@ -101,7 +103,9 @@ $(document).ready(function() {
                         machine: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
                         subcont: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
                         scrap: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
-                        lost: 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400'
+                        lost: 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400',
+                        borrow: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+                        return: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
                     };
                     return `<span class="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-widest ${colors[d] || 'bg-gray-100 text-gray-600'}">${d}</span>`;
                 }

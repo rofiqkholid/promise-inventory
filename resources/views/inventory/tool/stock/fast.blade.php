@@ -219,14 +219,22 @@
                 @csrf
                 <div class="mb-6">
                     <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Transaction Type <span class="text-red-500">*</span></label>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="relative flex items-center justify-center p-3 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50/50 dark:has-[:checked]:bg-primary-900/20">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50/50 dark:has-[:checked]:bg-primary-900/20">
                             <input type="radio" name="transaction_type" value="IN" class="hidden peer" checked>
-                            <span class="text-xs font-bold text-gray-500 peer-checked:text-primary-600 dark:peer-checked:text-primary-400 uppercase tracking-wide">Stock IN</span>
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-primary-600 dark:peer-checked:text-primary-400 uppercase tracking-wide text-center">Stock IN</span>
                         </label>
-                        <label class="relative flex items-center justify-center p-3 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-red-600 has-[:checked]:bg-red-50/50 dark:has-[:checked]:bg-red-900/20">
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-red-600 has-[:checked]:bg-red-50/50 dark:has-[:checked]:bg-red-900/20">
                             <input type="radio" name="transaction_type" value="OUT" class="hidden peer">
-                            <span class="text-xs font-bold text-gray-500 peer-checked:text-red-600 dark:peer-checked:text-red-400 uppercase tracking-wide">Stock OUT</span>
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-red-600 dark:peer-checked:text-red-400 uppercase tracking-wide text-center">Stock OUT</span>
+                        </label>
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/50 dark:has-[:checked]:bg-indigo-900/20">
+                            <input type="radio" name="transaction_type" value="borrow" class="hidden peer">
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-indigo-600 dark:peer-checked:text-indigo-400 uppercase tracking-wide text-center">Borrow</span>
+                        </label>
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                            <input type="radio" name="transaction_type" value="return" class="hidden peer">
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-emerald-600 dark:peer-checked:text-emerald-400 uppercase tracking-wide text-center">Return</span>
                         </label>
                     </div>
                 </div>
@@ -596,6 +604,34 @@ $(document).ready(function() {
 
     // Save original full locations options
     const originalLocationsHTML = $('#transLocationId').html();
+    const originalDestinationsHTML = $('#to_location_id').html();
+
+    function filterDestinations(allowedCategories, excludeLocationId) {
+        const tempDiv = $('<div>').html(originalDestinationsHTML);
+        tempDiv.find('option').each(function() {
+            const cat = $(this).data('category');
+            const val = $(this).val();
+            if ((cat && !allowedCategories.includes(cat)) || (excludeLocationId && val == excludeLocationId)) {
+                $(this).remove();
+            }
+        });
+        // Clean up empty optgroups
+        tempDiv.find('optgroup').each(function() {
+            if ($(this).find('option').length === 0) {
+                $(this).remove();
+            }
+        });
+        
+        // Destroy select2, update HTML, and re-initialize select2 to ensure it is redrawn properly
+        $('#to_location_id').select2('destroy');
+        $('#to_location_id').html(tempDiv.html());
+        $('#to_location_id').select2({
+            dropdownParent: $('#modal-tool-transaction'),
+            width: '100%',
+            templateResult: formatLocationState,
+            templateSelection: formatLocationState
+        }).trigger('change');
+    }
 
     function updateLocationInputState() {
         const type = $('input[name="transaction_type"]:checked').val();
@@ -604,8 +640,22 @@ $(document).ready(function() {
         const stocks = selectedTool.data('stocks') || [];
         
         if (type === 'IN') {
-            // Restore all original locations
-            $('#transLocationId').html(originalLocationsHTML);
+            // Restore only storage locations
+            const tempDiv = $('<div>').html(originalLocationsHTML);
+            tempDiv.find('option').each(function() {
+                const cat = $(this).data('category');
+                if (cat && cat !== 'storage') {
+                    $(this).remove();
+                }
+            });
+            $('#transLocationId').select2('destroy');
+            $('#transLocationId').html(tempDiv.html());
+            $('#transLocationId').select2({
+                dropdownParent: $('#modal-tool-transaction'),
+                width: '100%',
+                templateResult: formatLocationState,
+                templateSelection: formatLocationState
+            });
             
             // Untuk IN, wajib masuk ke default Storage location
             if (defaultLocId) {
@@ -616,26 +666,62 @@ $(document).ready(function() {
                 $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
             }
         } else {
-            // Untuk OUT, hanya tampilkan lokasi yang memiliki stok untuk tool terpilih
             $('#transLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
             
-            let outOptionsHTML = '<option value="">-- Select Source Location --</option>';
-            if (stocks.length === 0) {
-                outOptionsHTML += '<option value="" disabled>No stock available in any location</option>';
+            let sourceOptionsHTML = '<option value="">-- Select Source Location --</option>';
+            let filteredStocks = [];
+            
+            // Get category for each stock item based on the original locations html
+            const tempLocs = $('<div>').html(originalLocationsHTML);
+            stocks.forEach(item => {
+                const locOpt = tempLocs.find(`option[value="${item.location_id}"]`);
+                const category = locOpt.data('category') || 'storage';
+                item.category = category;
+            });
+            
+            if (type === 'OUT') {
+                // Source can be any active stock location where tool exists
+                filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
+                
+                // Destination can be all categories except storage
+                filterDestinations(['machine', 'subcont', 'scrap', 'lost', 'borrow', 'return']);
+            } else if (type === 'borrow') {
+                // Source can be any active stock location where tool exists
+                filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
+                
+                // Destination must be borrow category
+                filterDestinations(['borrow']);
+            } else if (type === 'return') {
+                // Source must be where the tool is borrowed (category: borrow only)
+                filteredStocks = stocks.filter(item => item.category === 'borrow');
+                
+                // Destination must be Return
+                filterDestinations(['return']);
+            }
+            
+            if (filteredStocks.length === 0) {
+                sourceOptionsHTML += '<option value="" disabled>No stock available in allowed locations</option>';
             } else {
-                stocks.forEach(item => {
-                    outOptionsHTML += `<option value="${item.location_id}" data-category="storage">${item.location_code} — ${item.location_name} (${item.current_qty} pcs available)</option>`;
+                filteredStocks.forEach(item => {
+                    sourceOptionsHTML += `<option value="${item.location_id}" data-category="${item.category}">${item.location_code} — ${item.location_name} (${item.current_qty} pcs available)</option>`;
                 });
             }
-            $('#transLocationId').html(outOptionsHTML).trigger('change');
+            $('#transLocationId').select2('destroy');
+            $('#transLocationId').html(sourceOptionsHTML);
+            $('#transLocationId').select2({
+                dropdownParent: $('#modal-tool-transaction'),
+                width: '100%',
+                templateResult: formatLocationState,
+                templateSelection: formatLocationState
+            }).trigger('change');
             
-            // Auto-select the default location if it has stock, otherwise select the first location with stock
-            if (stocks.length > 0) {
-                const hasDefaultInStocks = stocks.some(item => item.location_id == defaultLocId);
+            // Auto-select
+            if (filteredStocks.length > 0) {
+                const hasDefaultInStocks = filteredStocks.some(item => item.location_id == defaultLocId);
                 if (hasDefaultInStocks) {
                     $('#transLocationId').val(defaultLocId).trigger('change');
                 } else {
-                    $('#transLocationId').val(stocks[0].location_id).trigger('change');
+                    $('#transLocationId').val(filteredStocks[0].location_id).trigger('change');
                 }
             } else {
                 $('#transLocationId').val('').trigger('change');
@@ -645,10 +731,10 @@ $(document).ready(function() {
 
     // Handle transaction type toggle UI
     $('input[name="transaction_type"]').on('change', function() {
-        const type = $(this).val(); // IN or OUT
-        const isOut = (type === 'OUT');
+        const type = $(this).val(); // IN, OUT, borrow, return
+        
         if (type === 'IN') {
-            $('#saveTransaction').removeClass('bg-red-600 hover:bg-red-700').addClass('bg-primary-600 hover:bg-primary-700').text('Submit Stock IN');
+            $('#saveTransaction').removeClass('bg-red-600 hover:bg-red-700 bg-indigo-600 hover:bg-indigo-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-primary-600 hover:bg-primary-700').text('Submit Stock IN');
             $('#labelQty').text('Qty IN *');
             
             // Show Ref Doc, Hide Destination
@@ -656,15 +742,33 @@ $(document).ready(function() {
             $('#transRefDoc').prop('required', true);
             $('#destinationGroup').addClass('hidden');
             $('#to_location_id').prop('required', false);
-        } else {
-            $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700').addClass('bg-red-600 hover:bg-red-700').text('Submit Stock OUT');
+        } else if (type === 'OUT') {
+            $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-indigo-600 hover:bg-indigo-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-red-600 hover:bg-red-700').text('Submit Stock OUT');
             $('#labelQty').text('Qty OUT *');
             
             // Hide Ref Doc, Show Destination
             $('#refDocGroup').addClass('hidden');
             $('#transRefDoc').prop('required', false);
             $('#destinationGroup').removeClass('hidden');
-            $('#to_location_id').prop('required', isOut);
+            $('#to_location_id').prop('required', true);
+        } else if (type === 'borrow') {
+            $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-red-600 hover:bg-red-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-indigo-600 hover:bg-indigo-700').text('Submit Borrow');
+            $('#labelQty').text('Qty Borrow *');
+            
+            // Hide Ref Doc, Show Destination
+            $('#refDocGroup').addClass('hidden');
+            $('#transRefDoc').prop('required', false);
+            $('#destinationGroup').removeClass('hidden');
+            $('#to_location_id').prop('required', true);
+        } else if (type === 'return') {
+            $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-red-600 hover:bg-red-700 bg-indigo-600 hover:bg-indigo-700').addClass('bg-emerald-600 hover:bg-emerald-700').text('Submit Return');
+            $('#labelQty').text('Qty Return *');
+            
+            // Hide Ref Doc, Show Destination
+            $('#refDocGroup').addClass('hidden');
+            $('#transRefDoc').prop('required', false);
+            $('#destinationGroup').removeClass('hidden');
+            $('#to_location_id').prop('required', true);
         }
         updateLocationInputState();
     });
@@ -672,6 +776,21 @@ $(document).ready(function() {
     // Auto-select location from selected Tool (read-only from Master data)
     $('#transToolId').on('change', function() {
         updateLocationInputState();
+    });
+
+    // Update destination choices when source location is chosen (prevent selecting the same location as destination)
+    $('#transLocationId').on('change', function() {
+        const type = $('input[name="transaction_type"]:checked').val();
+        if (type !== 'IN') {
+            const excludeId = $(this).val();
+            if (type === 'OUT') {
+                filterDestinations(['machine', 'subcont', 'scrap', 'lost', 'borrow', 'return'], excludeId);
+            } else if (type === 'borrow') {
+                filterDestinations(['borrow'], excludeId);
+            } else if (type === 'return') {
+                filterDestinations(['return'], excludeId);
+            }
+        }
     });
 
     $('#btnNewTransaction').on('click', () => { 
@@ -689,6 +808,10 @@ $(document).ready(function() {
         $('#formTransaction')[0].reset(); 
         if (preselectedAction === 'out') {
             $('input[name="transaction_type"][value="OUT"]').prop('checked', true).trigger('change');
+        } else if (preselectedAction === 'borrow') {
+            $('input[name="transaction_type"][value="borrow"]').prop('checked', true).trigger('change');
+        } else if (preselectedAction === 'return') {
+            $('input[name="transaction_type"][value="return"]').prop('checked', true).trigger('change');
         } else {
             $('input[name="transaction_type"][value="IN"]').prop('checked', true).trigger('change');
         }
@@ -710,7 +833,7 @@ $(document).ready(function() {
             method: 'POST', 
             data: formData,
             success: (res) => { 
-                toast('success', `Stock ${type}`, res.message); 
+                toast('success', `Stock ${type.toUpperCase()}`, res.message); 
                 hideMdl('modal-tool-transaction'); 
                 fastStockTable.ajax.reload(); 
             },
@@ -787,16 +910,27 @@ $(document).ready(function() {
                     { 
                         data: 'transaction_type', className: 'text-center',
                         render: d => {
-                            const isIn = d.toLowerCase() === 'in';
-                            const cls = isIn ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-                            return `<div class="flex justify-center w-full"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${cls}">${d}</span></div>`;
+                            const type = d.toLowerCase();
+                            let cls = 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+                            let label = d.toUpperCase();
+                            if (type === 'in') {
+                                cls = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+                            } else if (type === 'borrow') {
+                                cls = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
+                                label = 'BORROW';
+                            } else if (type === 'return') {
+                                cls = 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400';
+                                label = 'RETURN';
+                            }
+                            return `<div class="flex justify-center w-full"><span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider ${cls}">${label}</span></div>`;
                         }
                     },
                     { 
                         data: 'qty', className: 'text-center',
                         render: (d, t, r) => {
-                            const isIn = r.transaction_type.toLowerCase() === 'in';
-                            const color = isIn ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+                            const type = r.transaction_type.toLowerCase();
+                            const isPlus = type === 'in' || type === 'return';
+                            const color = isPlus ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
                             return `<div class="flex justify-center w-full"><span class="text-xs font-bold font-mono ${color}">${d > 0 ? '+' : ''}${d}</span></div>`;
                         }
                     },
@@ -805,7 +939,8 @@ $(document).ready(function() {
                     { 
                         data: null, 
                         render: r => {
-                            if (r.transaction_type.toLowerCase() === 'in') {
+                            const type = r.transaction_type.toLowerCase();
+                            if (type === 'in') {
                                 return `
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-xs font-bold text-gray-900 dark:text-white">Restock / Inward</span>
@@ -814,6 +949,7 @@ $(document).ready(function() {
                             } else {
                                 const loc = r.destination;
                                 if (!loc) return '-';
+                                let textPrefix = type === 'borrow' ? 'To' : (type === 'return' ? 'From' : 'To');
                                 return `
                                     <div class="flex flex-col gap-0.5">
                                         <span class="text-xs font-bold text-blue-600 dark:text-blue-400">${loc.code}</span>
@@ -871,6 +1007,10 @@ $(document).ready(function() {
             badgeColor = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800/30';
         } else if (category === 'subcont') {
             badgeColor = 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800/30';
+        } else if (category === 'borrow') {
+            badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800/30';
+        } else if (category === 'return') {
+            badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30';
         } else if (category === 'scrap' || category === 'lost') {
             badgeColor = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30';
         }

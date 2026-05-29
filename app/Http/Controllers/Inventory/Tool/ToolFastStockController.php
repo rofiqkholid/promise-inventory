@@ -125,7 +125,7 @@ class ToolFastStockController extends Controller
                 }
 
                 // --- 2. IN USE ---
-                $useStocks = $activeStocks->filter(fn($fs) => in_array($fs->location?->category, ['machine', 'subcont']));
+                $useStocks = $activeStocks->filter(fn($fs) => in_array($fs->location?->category, ['machine', 'subcont', 'borrow', 'return']));
                 $useQty = $useStocks->sum('current_qty');
                 $locationUseHtml = '<div class="flex flex-col"><span class="text-xs text-gray-400 font-medium">0 PCS</span><span class="text-[10px] text-gray-400">-</span></div>';
                 if ($useStocks->isNotEmpty()) {
@@ -149,7 +149,7 @@ class ToolFastStockController extends Controller
                             ];
                         }
                         $locationUseHtml = sprintf(
-                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><button class="location-click-trigger text-[10px] text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-bold flex items-center gap-0.5 cursor-pointer bg-transparent border-0 p-0 active:scale-95 transition-all text-left" data-locations="%s" data-popup-title="In Use Locations" data-popup-icon="fa-gears">%d Locations <i class="fa-solid fa-chevron-down text-[8px] opacity-70"></i></button></div>',
+                            '<div class="flex flex-col"><span class="font-bold text-gray-900 dark:text-white text-xs">%d %s</span><button class="location-click-trigger text-[10px] text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-bold flex items-center gap-0.5 cursor-pointer bg-transparent border-0 p-0 active:scale-95 transition-all text-left" data-locations="%s" data-popup-title="In Use / Borrowed Locations" data-popup-icon="fa-gears">%d Locations <i class="fa-solid fa-chevron-down text-[8px] opacity-70"></i></button></div>',
                             $useQty,
                             $row->uom ?? 'PCS',
                             htmlspecialchars(json_encode($details), ENT_QUOTES, 'UTF-8'),
@@ -237,11 +237,11 @@ class ToolFastStockController extends Controller
                         ->where('is_active', true)
                         ->orderBy('name')
                         ->get();
-        $locations = TolLocation::where('is_active', true)->where('category', 'storage')->orderBy('code')->get();
+        $locations = TolLocation::where('is_active', true)->orderBy('code')->get();
         
-        // Group locations by category for easier selection (Machine, Subcont, Scrap, and Lost for OUT)
+        // Group locations by category for easier selection (Machine, Subcont, Scrap, Lost, Storage, Return, and Borrow for OUT)
         $destinations = TolLocation::where('is_active', true)
-                        ->whereIn('category', ['machine', 'subcont', 'scrap', 'lost'])
+                        ->whereIn('category', ['storage', 'machine', 'subcont', 'scrap', 'lost', 'borrow', 'return'])
                         ->orderBy('category')
                         ->orderBy('name')
                         ->get()
@@ -302,15 +302,16 @@ class ToolFastStockController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Stock added successfully.']);
     }
 
-    /** Transaksi OUT */
+    /** Transaksi OUT (termasuk Borrow dan Return) */
     public function out(Request $request)
     {
         $validated = $request->validate([
-            'tool_id'        => 'required|exists:tol_m_tools,id',
-            'location_id'    => 'nullable|exists:tol_m_locations,id', // Source location
-            'to_location_id' => 'required|exists:tol_m_locations,id', // Destination
-            'qty'            => 'required|integer|min:1',
-            'note'           => 'nullable|string',
+            'tool_id'          => 'required|exists:tol_m_tools,id',
+            'location_id'      => 'nullable|exists:tol_m_locations,id', // Source location
+            'to_location_id'   => 'required|exists:tol_m_locations,id', // Destination
+            'qty'              => 'required|integer|min:1',
+            'transaction_type' => 'nullable|string|in:out,borrow,return',
+            'note'             => 'nullable|string',
         ]);
 
         $tool = TolTool::findOrFail($validated['tool_id']);
@@ -341,8 +342,8 @@ class ToolFastStockController extends Controller
             // 2. Cek kategori lokasi tujuan
             $destination = TolLocation::findOrFail($validated['to_location_id']);
 
-            // Jika tujuan adalah lokasi penyimpanan aktif (storage, machine, subcont), tambahkan stoknya
-            if (in_array($destination->category, ['storage', 'machine', 'subcont'])) {
+            // Jika tujuan adalah lokasi penyimpanan aktif (storage, machine, subcont, borrow, return), tambahkan stoknya
+            if (in_array($destination->category, ['storage', 'machine', 'subcont', 'borrow', 'return'])) {
                 $destStock = TolFastStock::firstOrCreate(
                     [
                         'tool_id'     => $validated['tool_id'],
@@ -356,11 +357,13 @@ class ToolFastStockController extends Controller
             }
 
             // 3. Catat riwayat transaksi
+            $transType = $validated['transaction_type'] ?? 'out';
+            
             TolTransaction::create([
                 'tool_id'          => $validated['tool_id'],
                 'location_id'      => $validated['location_id'],
                 'to_location_id'   => $validated['to_location_id'],
-                'transaction_type' => 'out',
+                'transaction_type' => $transType,
                 'qty'              => -$validated['qty'],
                 'note'             => $validated['note'] ?? null,
                 'transacted_by'    => Auth::user()->id,
@@ -368,7 +371,14 @@ class ToolFastStockController extends Controller
             ]);
         });
 
-        return response()->json(['status' => 'success', 'message' => 'Stock OUT recorded successfully.']);
+        $message = 'Stock OUT recorded successfully.';
+        if (($validated['transaction_type'] ?? '') === 'borrow') {
+            $message = 'Tool borrowing recorded successfully.';
+        } elseif (($validated['transaction_type'] ?? '') === 'return') {
+            $message = 'Tool return recorded successfully.';
+        }
+
+        return response()->json(['status' => 'success', 'message' => $message]);
     }
 
     /** Riwayat transaksi per tool+lokasi */
@@ -431,12 +441,18 @@ class ToolFastStockController extends Controller
             
             // Transform to include qty_min and historical running stock balance for display
             $data->transform(function($item) {
-                // Calculate historical running stock at the time of this transaction (SUM up to this transaction ID)
-                $runningStock = DB::table('tol_t_transactions')
-                    ->where('tool_id', $item->tool_id)
-                    ->where('location_id', $item->location_id)
-                    ->where('id', '<=', $item->id)
-                    ->sum('qty');
+                // Calculate historical global active stock at the time of this transaction.
+                // Stock is only globally added on 'IN' transactions, and globally reduced on 'OUT' to 'scrap' or 'lost' locations.
+                // Movements between other active locations (borrow, return, storage transfers) do not change the global active stock.
+                $runningStock = DB::table('tol_t_transactions as t')
+                    ->leftJoin('tol_m_locations as l', 'l.id', '=', 't.to_location_id')
+                    ->where('t.tool_id', $item->tool_id)
+                    ->where('t.id', '<=', $item->id)
+                    ->where(function($q) {
+                        $q->where('t.transaction_type', 'in')
+                          ->orWhereIn('l.category', ['scrap', 'lost']);
+                    })
+                    ->sum('t.qty');
                 
                 $item->qty_min = $item->tool?->qty_min ?? 0;
                 $item->current_stock = (int) $runningStock;
