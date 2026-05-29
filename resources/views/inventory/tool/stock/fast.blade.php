@@ -683,8 +683,8 @@ $(document).ready(function() {
                 // Source can be any active stock location where tool exists
                 filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
                 
-                // Destination can be all categories except storage
-                filterDestinations(['machine', 'subcont', 'scrap', 'lost', 'borrow', 'return']);
+                // Destination can be machine, subcont, scrap, or lost (excluding storage, borrow, return)
+                filterDestinations(['machine', 'subcont', 'scrap', 'lost']);
             } else if (type === 'borrow') {
                 // Source can be any active stock location where tool exists
                 filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
@@ -784,7 +784,7 @@ $(document).ready(function() {
         if (type !== 'IN') {
             const excludeId = $(this).val();
             if (type === 'OUT') {
-                filterDestinations(['machine', 'subcont', 'scrap', 'lost', 'borrow', 'return'], excludeId);
+                filterDestinations(['machine', 'subcont', 'scrap', 'lost'], excludeId);
             } else if (type === 'borrow') {
                 filterDestinations(['borrow'], excludeId);
             } else if (type === 'return') {
