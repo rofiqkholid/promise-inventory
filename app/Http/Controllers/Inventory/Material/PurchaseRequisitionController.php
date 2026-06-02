@@ -24,7 +24,7 @@ class PurchaseRequisitionController extends Controller
 
         foreach ($products as $p) {
             $currentPCS = InventoryProduct::calculatePcs($p->current_stock_qty, $p->weight_kg, $p->pcs_per_unit, $p->unit_name, $p->top_coil, $p->end_coil, $p->pitch, $p->pcs_per_pitch, $p->gross_coil);
-            $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status);
+            $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status, $p->product_status);
             if (isset($stats[$status])) {
                 $stats[$status]++;
             }
@@ -178,7 +178,7 @@ class PurchaseRequisitionController extends Controller
                 'current_stock' => number_format($currentPCS, 0),
                 'shortage' => number_format($shortage, 0),
                 'shortage_raw' => $shortage,
-                'status' => InventoryProduct::calculateStockStatus($currentPCS, $item->min_stock, $item->product_status ?: $item->project_status),
+                'status' => InventoryProduct::calculateStockStatus($currentPCS, $item->min_stock, $item->project_status, $item->product_status),
                 'unit_name' => $item->unit_code,
                 'pcs_per_unit' => $item->pcs_per_unit ?? 1,
                 'unit_per_car' => $item->unit_per_car ?? 1,

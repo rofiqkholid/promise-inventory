@@ -205,7 +205,7 @@ class DashboardController extends Controller
             $currentPcs = (int)$prd->current_stock_pcs;
 
             $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                $currentPcs, $prd->min_stock, $prd->project_status ?: $prd->product_status
+                $currentPcs, $prd->min_stock, $prd->project_status, $prd->product_status
             );
 
             if (isset($stockDataGrouped[$key][$status])) {
@@ -377,7 +377,7 @@ class DashboardController extends Controller
                   $currentPcs = (int)$item->current_stock_pcs;
                  
                   $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                     $currentPcs, $item->min_stock, $item->project_status ?: $item->product_status
+                     $currentPcs, $item->min_stock, $item->project_status, $item->product_status
                   );
 
                  $item->status = ucfirst($status);
@@ -590,7 +590,7 @@ class DashboardController extends Controller
                 $currentPcs = (int)$row->current_stock_pcs;
 
                 $statusRaw = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                    $currentPcs, $row->min_stock, $row->project_status ?: $row->product_status
+                    $currentPcs, $row->min_stock, $row->project_status, $row->product_status
                 );
 
                 if ($statusFilter && strcasecmp($statusRaw, $statusFilter) !== 0) {

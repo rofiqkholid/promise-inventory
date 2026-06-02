@@ -158,7 +158,7 @@ class InventoryProduct extends Model
     /**
      * Consolidated logic to determine stock status color/label.
      */
-    public static function calculateStockStatus($currentPcs, $minStock, $projectStatus = null)
+    public static function calculateStockStatus($currentPcs, $minStock, $projectStatus = null, $productStatus = null)
     {
         $minStock = (float)$minStock;
         $currentPcs = (float)$currentPcs;
@@ -171,7 +171,7 @@ class InventoryProduct extends Model
         
         // Skip Warning/Critical for Regular projects or specific Oldstock overrides
         $safeStatuses = ['Regular', 'Oldstock OK', 'Oldstock NG'];
-        if ($projectStatus && in_array($projectStatus, $safeStatuses)) {
+        if (($projectStatus && in_array($projectStatus, $safeStatuses)) || ($productStatus && in_array($productStatus, $safeStatuses))) {
             return 'safe';
         }
 

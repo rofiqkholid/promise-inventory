@@ -51,7 +51,7 @@ class StockMonitoringController extends Controller
 
         foreach ($products as $p) {
             $currentPCS = $p->current_stock_pcs;
-            $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status);
+            $status = InventoryProduct::calculateStockStatus($currentPCS, $p->min_stock, $p->project_status, $p->product_status);
             if (isset($stats['balance'][$status])) {
                 $stats['balance'][$status]++;
             }
@@ -342,7 +342,7 @@ class StockMonitoringController extends Controller
                     'pcs_per_unit' => $pcsPerUnit
                 ],
                 'total_amount' => $balancePcsVal * floatval($item->material_price),
-                'stock_status' => InventoryProduct::calculateStockStatus($balancePcsVal, $item->min_stock, $item->product_status ?: $item->model_project_status),
+                'stock_status' => InventoryProduct::calculateStockStatus($balancePcsVal, $item->min_stock, $item->model_project_status, $item->product_status),
                 'project_status' => $item->product_status ?: ($item->model_project_status ?? 'Project'),
                 
                 // Material Usage Fields
@@ -403,7 +403,7 @@ class StockMonitoringController extends Controller
                 }
             }
 
-            $row['stock_status'] = InventoryProduct::calculateStockStatus($balancePcsVal, $item->min_stock, $item->product_status ?: $item->model_project_status);
+            $row['stock_status'] = InventoryProduct::calculateStockStatus($balancePcsVal, $item->min_stock, $item->model_project_status, $item->product_status);
             $row['project_status'] = $item->product_status ?: ($item->model_project_status ?? 'Project');
 
             return $row;
@@ -587,7 +587,8 @@ class StockMonitoringController extends Controller
         $status = InventoryProduct::calculateStockStatus(
             $balancePcs, 
             $data->min_stock, 
-            $data->product_status ?: ($data->model_project_status ?? 'Project')
+            $data->model_project_status ?? 'Project',
+            $data->product_status
         );
 
         // Format dimension dynamically

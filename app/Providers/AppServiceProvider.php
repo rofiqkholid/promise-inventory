@@ -83,7 +83,8 @@ class AppServiceProvider extends ServiceProvider
                         $item->status = ucfirst(\App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
                             $currentPCS, 
                             $item->min_stock, 
-                            $item->product_status ?: $item->project_status
+                            $item->project_status,
+                            $item->product_status
                         ));
 
                         // Update values for display in the modal

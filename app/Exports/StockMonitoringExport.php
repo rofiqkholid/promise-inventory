@@ -113,7 +113,8 @@ class StockMonitoringExport implements FromCollection, WithHeadings, WithMapping
         $stockStatus = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
             $balancePcs, 
             $row->min_stock, 
-            $row->product_status ?: $row->model_project_status
+            $row->model_project_status,
+            $row->product_status
         );
 
         $mapped = [
