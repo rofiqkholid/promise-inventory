@@ -60,8 +60,8 @@
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Data Mode</label>
                         <select id="filterAccumulate" name="accumulate" class="w-full text-xs">
-                            <option value="single" {{ ($filters['accumulate'] ?? 'single') === 'single' ? 'selected' : '' }}>Single Month</option>
-                            <option value="ytd" {{ ($filters['accumulate'] ?? '') === 'ytd' ? 'selected' : '' }}>Accumulated (YTD)</option>
+                            <option value="single" {{ ($filters['accumulate'] ?? '') === 'single' ? 'selected' : '' }}>Single Month</option>
+                            <option value="ytd" {{ ($filters['accumulate'] ?? 'ytd') === 'ytd' ? 'selected' : '' }}>Accumulated (YTD)</option>
                             <option value="all" {{ ($filters['accumulate'] ?? '') === 'all' ? 'selected' : '' }}>Accumulated (All-Time)</option>
                         </select>
                     </div>
@@ -151,13 +151,13 @@
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 id="usageChartTitle" class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                         <i class="fa-solid fa-chart-pie mr-2 text-amber-500 flex-shrink-0"></i> 
-                        <span class="truncate">Usage by Models</span> 
+                        <span class="truncate">Supply by Makers</span> 
                         <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item Part</span>
                     </h3>
                     <div class="flex items-center gap-2 flex-shrink-0">
                         <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs">
-                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all bg-white dark:bg-gray-600 text-primary-600 dark:hover:text-gray-300 shadow-sm">Model</button>
-                            <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Maker</button>
+                            <button type="button" onclick="switchUsageChart('model')" id="btnUsageModel" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Model</button>
+                            <button type="button" onclick="switchUsageChart('maker')" id="btnUsageMaker" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all bg-white dark:bg-gray-600 text-primary-600 dark:hover:text-gray-300 shadow-sm">Maker</button>
                         </div>
                         <div class="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-2">
                             <button id="usageChartPrev" onclick="paginateActiveUsageChart(-1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
@@ -166,8 +166,8 @@
                     </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
-                    <div id="containerUsageModel" class="h-full"><canvas id="usageModelChart"></canvas></div>
-                    <div id="containerUsageMaker" class="h-full hidden"><canvas id="makerChart"></canvas></div>
+                    <div id="containerUsageModel" class="h-full hidden"><canvas id="usageModelChart"></canvas></div>
+                    <div id="containerUsageMaker" class="h-full"><canvas id="makerChart"></canvas></div>
                 </div>
             </div>
 
@@ -657,7 +657,7 @@
                 
                 // Reset Form
                 $('#month_picker').val('{{ date("Y-m") }}'); // Default to current month
-                $('#filterAccumulate').val('single').trigger('change');
+                $('#filterAccumulate').val('ytd').trigger('change');
                 $('#filterCustomer').val(null).trigger('change');
                 $('#filterModel').val(null).trigger('change');
                 $('#filterBalance').val(null).trigger('change');
@@ -1205,6 +1205,9 @@
             if (stockStatusChart) updateChartData(stockStatusChart, chartsData.stockLabels, chartsData.stockData.map(d => d.critical), chartsData.stockWarning, chartsData.stockData.map(d => d.over), chartsData.stockData.map(d => d.safe));
             if (usageModelChart) updateChartData(usageModelChart, chartsData.usageModelLabels, chartsData.usageModelEvent, chartsData.usageModelPP, chartsData.usageModelTrial);
             if (makerChart) updateChartData(makerChart, chartsData.makerLabels, chartsData.makerOnBudget, chartsData.makerNearLoss, chartsData.makerLoss);
+            
+            // Set Maker as the default active tab on page load
+            switchUsageChart('maker');
         }
 
         // --- DYNAMIC THEME OBSERVER ---

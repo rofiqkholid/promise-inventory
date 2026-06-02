@@ -13,7 +13,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $monthYear = $request->input('month_year', date('Y-m'));
-        $accumulate = $request->input('accumulate', 'single');
+        $accumulate = $request->input('accumulate', 'ytd');
         $selectedModels = $request->input('model', []);
         $selectedCustomers = $request->input('customer', []);
         $selectedStatusBalance = $request->input('status_balance', []);
