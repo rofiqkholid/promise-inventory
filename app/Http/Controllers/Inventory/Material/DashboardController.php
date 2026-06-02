@@ -212,6 +212,11 @@ class DashboardController extends Controller
                 $stockDataGrouped[$key][$status]++;
             }
         }
+        uasort($stockDataGrouped, function($a, $b) {
+            $totalA = ($a['critical'] ?? 0) + ($a['warning'] ?? 0) + ($a['over'] ?? 0) + ($a['safe'] ?? 0);
+            $totalB = ($b['critical'] ?? 0) + ($b['warning'] ?? 0) + ($b['over'] ?? 0) + ($b['safe'] ?? 0);
+            return $totalB <=> $totalA;
+        });
 
         // Usage by Model (Item Part) - Grouped for Stacked Chart
         $usageByModelData = (clone $queryTrans)
@@ -241,6 +246,11 @@ class DashboardController extends Controller
                 'trial' => $counts['OUT-TRIAL']
             ];
         }
+        usort($usageByModel, function($a, $b) {
+            $totalA = ($a['event'] ?? 0) + ($a['pp'] ?? 0) + ($a['trial'] ?? 0);
+            $totalB = ($b['event'] ?? 0) + ($b['pp'] ?? 0) + ($b['trial'] ?? 0);
+            return $totalB <=> $totalA;
+        });
 
         // Trendline (Item Part) - Always 12 months
         $trendYear = substr($monthYear, 0, 4) ?: date('Y');
@@ -338,6 +348,11 @@ class DashboardController extends Controller
         foreach ($makerData as $maker => $counts) {
             $usageByMaker[] = ['maker' => $maker, 'on_budget' => $counts['on_budget'], 'near_loss' => $counts['near_loss'], 'loss' => $counts['loss']];
         }
+        usort($usageByMaker, function($a, $b) {
+            $totalA = ($a['on_budget'] ?? 0) + ($a['near_loss'] ?? 0) + ($a['loss'] ?? 0);
+            $totalB = ($b['on_budget'] ?? 0) + ($b['near_loss'] ?? 0) + ($b['loss'] ?? 0);
+            return $totalB <=> $totalA;
+        });
 
         // Sort Usage Table by Status (Loss -> Near Loss -> On Budget)
         usort($usageTable, function($a, $b) {
