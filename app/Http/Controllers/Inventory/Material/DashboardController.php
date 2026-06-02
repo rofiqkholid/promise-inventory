@@ -13,6 +13,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $monthYear = $request->input('month_year', date('Y-m'));
+        $accumulate = $request->input('accumulate', 'single');
         $selectedModels = $request->input('model', []);
         $selectedCustomers = $request->input('customer', []);
         $selectedStatusBalance = $request->input('status_balance', []);
@@ -146,7 +147,17 @@ class DashboardController extends Controller
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id');
 
         $queryTrans = clone $recentTransQuery;
-        $queryTrans->where('t.transaction_date', 'like', "{$monthYear}%");
+        if ($accumulate === 'ytd') {
+            $year = substr($monthYear, 0, 4);
+            $startOfYear = "{$year}-01-01";
+            $endOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+            $queryTrans->whereBetween('t.transaction_date', [$startOfYear, $endOfMonth]);
+        } elseif ($accumulate === 'all') {
+            $endOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+            $queryTrans->where('t.transaction_date', '<=', $endOfMonth);
+        } else {
+            $queryTrans->where('t.transaction_date', 'like', "{$monthYear}%");
+        }
         if (!empty($selectedModels)) $queryTrans->whereIn('p.model_id', $selectedModels);
         if (!empty($selectedCustomers)) $queryTrans->whereIn('prod.customer_id', $selectedCustomers);
         $applyProjectStatusFilter($queryTrans, $selectedProjectStatus);
@@ -407,6 +418,7 @@ class DashboardController extends Controller
                 'selected_customers' => $selectedCustomers,
                 'selected_status_balance' => $selectedStatusBalance,
                 'selected_status_usage' => $selectedStatusUsage,
+                'accumulate' => $accumulate,
                 'month_year' => $monthYear
             ]
         ];
@@ -463,6 +475,7 @@ class DashboardController extends Controller
         $chartType  = $request->input('chart');
         $label      = $request->input('label');
         $monthYear  = $request->input('month_year', date('Y-m'));
+        $accumulate = $request->input('accumulate', 'single');
         $statusFilter = $request->input('status');
         $search     = $request->input('search');
         $pageSize   = $request->input('pageSize', 10);
@@ -660,9 +673,19 @@ class DashboardController extends Controller
             $modelName = $parts[0] ?? '';
             $custCode  = $parts[1] ?? '';
 
-            $query = (clone $baseTrans)
-                ->where('t.transaction_date', 'like', "{$monthYear}%")
-                ->whereIn('tc.code', $outCategories)
+            $query = (clone $baseTrans);
+            if ($accumulate === 'ytd') {
+                $year = substr($monthYear, 0, 4);
+                $startOfYear = "{$year}-01-01";
+                $endOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+                $query->whereBetween('t.transaction_date', [$startOfYear, $endOfMonth]);
+            } elseif ($accumulate === 'all') {
+                $endOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+                $query->where('t.transaction_date', '<=', $endOfMonth);
+            } else {
+                $query->where('t.transaction_date', 'like', "{$monthYear}%");
+            }
+            $query->whereIn('tc.code', $outCategories)
                 ->where(DB::raw('ISNULL(m.name, \'N/A\')'), $modelName)
                 ->where(DB::raw('ISNULL(c.code, \'N/A\')'), $custCode);
             
@@ -705,9 +728,19 @@ class DashboardController extends Controller
         } elseif ($chartType === 'maker') {
             $title = "Maker Detail — {$label}";
 
-            $query = (clone $baseTrans)
-                ->where('t.transaction_date', 'like', "{$monthYear}%")
-                ->where('tc.code', 'OUT-TRIAL')
+            $query = (clone $baseTrans);
+            if ($accumulate === 'ytd') {
+                $year = substr($monthYear, 0, 4);
+                $startOfYear = "{$year}-01-01";
+                $endOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+                $query->whereBetween('t.transaction_date', [$startOfYear, $endOfMonth]);
+            } elseif ($accumulate === 'all') {
+                $endOfMonth = date('Y-m-t', strtotime($monthYear . '-01'));
+                $query->where('t.transaction_date', '<=', $endOfMonth);
+            } else {
+                $query->where('t.transaction_date', 'like', "{$monthYear}%");
+            }
+            $query->where('tc.code', 'OUT-TRIAL')
                 ->where('s.code', $label);
             
             $applyProjectStatusFilter($query, $selectedProjectStatus);

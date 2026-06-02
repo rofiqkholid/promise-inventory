@@ -31,8 +31,8 @@
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 whitespace-nowrap">{{ $stat['label'] }}</p>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
-                            {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
+                        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap">
+                            <span id="{{ $stat['id'] }}">{{ $stat['val'] }}</span> <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
                         </h3>
                     </div>
                 </div>
@@ -52,10 +52,18 @@
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4">
         <form id="filterForm">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 flex-1">
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Period</label>
                         <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Data Mode</label>
+                        <select id="filterAccumulate" name="accumulate" class="w-full text-xs">
+                            <option value="single" {{ ($filters['accumulate'] ?? 'single') === 'single' ? 'selected' : '' }}>Single Month</option>
+                            <option value="ytd" {{ ($filters['accumulate'] ?? '') === 'ytd' ? 'selected' : '' }}>Accumulated (YTD)</option>
+                            <option value="all" {{ ($filters['accumulate'] ?? '') === 'all' ? 'selected' : '' }}>Accumulated (All-Time)</option>
+                        </select>
                     </div>
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Customer</label>
@@ -561,6 +569,11 @@
             width: '100%'
         });
 
+        $('#filterAccumulate').select2({
+            minimumResultsForSearch: -1,
+            width: '100%'
+        });
+
             function fetchDashboardData(formData, btn = null) {
                 let originalText = '';
                 if (btn && btn.length) {
@@ -633,7 +646,7 @@
             let isResetting = false;
 
             // Auto-apply logic
-            $('#month_picker, #filterCustomer, #filterModel, #filterBalance, #filterUsage, #filterProjectStatus').on('change', function() {
+            $('#month_picker, #filterAccumulate, #filterCustomer, #filterModel, #filterBalance, #filterUsage, #filterProjectStatus').on('change', function() {
                 if (isResetting) return;
                 fetchDashboardData($('#filterForm').serialize());
             });
@@ -644,6 +657,7 @@
                 
                 // Reset Form
                 $('#month_picker').val('{{ date("Y-m") }}'); // Default to current month
+                $('#filterAccumulate').val('single').trigger('change');
                 $('#filterCustomer').val(null).trigger('change');
                 $('#filterModel').val(null).trigger('change');
                 $('#filterBalance').val(null).trigger('change');
@@ -1348,6 +1362,7 @@
             label: drilldownCurrentLabel, 
             status: drilldownCurrentStatus, 
             month_year: my,
+            accumulate: $('#filterAccumulate').val(),
             search: search,
             project_status: $('#filterProjectStatus').val(),
             page: drilldownPage,
