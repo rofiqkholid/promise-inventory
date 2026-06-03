@@ -208,8 +208,8 @@
                         <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Contribution</span>
                     </h3>
                     <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-xs p-0.5 shrink-0">
-                        <button type="button" class="pareto-chart-switch active px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all bg-white dark:bg-gray-600 shadow-sm text-primary-600 dark:text-primary-400" data-by="model" data-color="primary">Model</button>
-                        <button type="button" class="pareto-chart-switch px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" data-by="part" data-color="primary">Part No</button>
+                        <button type="button" class="pareto-chart-switch px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" data-by="model" data-color="primary">Model</button>
+                        <button type="button" class="pareto-chart-switch active px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all bg-white dark:bg-gray-600 shadow-sm text-primary-600 dark:text-primary-400" data-by="part" data-color="primary">Part No</button>
                     </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
@@ -276,7 +276,7 @@ $(function() {
     let mainTable = null;
     let currentChartType = 'benefit';
     let currentChartMode = 'yearly';
-    let currentParetoBy = 'model';
+    let currentParetoBy = 'part';
     let currentChartData = {
         meritModels: null,
         trendIdr: null,

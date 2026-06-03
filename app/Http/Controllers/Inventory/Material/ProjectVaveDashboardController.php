@@ -248,12 +248,8 @@ class ProjectVaveDashboardController extends Controller
         if ($customerId) $query->where('p.customer_id', $customerId);
         if ($modelId)    $query->where('pd.model_id', $modelId);
 
-        $by = $request->input('by');
-        if (!$by) {
-            $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
-        } else {
-            $labelColumn = $by === 'part' ? 'p.part_no' : 'm.name';
-        }
+        $by = $request->input('by', 'part');
+        $labelColumn = $by === 'part' ? 'p.part_no' : 'm.name';
 
         $data = $query->select([
                 DB::raw("$labelColumn as label_name"),

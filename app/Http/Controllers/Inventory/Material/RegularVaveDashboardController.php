@@ -281,12 +281,8 @@ class RegularVaveDashboardController extends Controller
         if ($customerId) $baselinesQuery->where('p.customer_id', $customerId);
         if ($modelId)    $baselinesQuery->where('pd.model_id', $modelId);
 
-        $by = $request->input('by');
-        if (!$by) {
-            $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
-        } else {
-            $labelColumn = $by === 'part' ? 'p.part_no' : 'm.name';
-        }
+        $by = $request->input('by', 'part');
+        $labelColumn = $by === 'part' ? 'p.part_no' : 'm.name';
         $baselines = $baselinesQuery->select([
                 DB::raw("$labelColumn as label_name"),
                 'p.part_no',
