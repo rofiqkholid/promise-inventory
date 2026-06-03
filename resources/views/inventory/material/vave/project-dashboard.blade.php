@@ -202,11 +202,15 @@
 
             {{-- Pareto Chart --}}
             <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
-                <div class="flex-none flex justify-between items-center mb-1">
+                <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-1">
                     <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-chart-simple mr-2 text-primary-500"></i> Pareto Analysis
                         <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Contribution</span>
                     </h3>
+                    <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-xs p-0.5 shrink-0">
+                        <button type="button" class="pareto-chart-switch active px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all bg-white dark:bg-gray-600 shadow-sm text-primary-600 dark:text-primary-400" data-by="model" data-color="primary">Model</button>
+                        <button type="button" class="pareto-chart-switch px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" data-by="part" data-color="primary">Part No</button>
+                    </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0">
                     <canvas id="paretoChart"></canvas>
@@ -272,6 +276,7 @@ $(function() {
     let mainTable = null;
     let currentChartType = 'benefit';
     let currentChartMode = 'yearly';
+    let currentParetoBy = 'model';
     let currentChartData = {
         meritModels: null,
         trendIdr: null,
@@ -538,12 +543,52 @@ $(function() {
             restoreBtn();
         });
 
-        // UPDATED: Point to projectVaveDashboard routes
+        refreshParetoData();
+    }
+
+    function refreshParetoData() {
+        const mode = $('#filterMode').val();
+        let year, month;
+
+        if (mode === 'yearly' || mode === 'comparison') {
+            year = $('#filterYear').val();
+            month = null;
+        } else {
+            const periodValue = $('#filterPeriod').val();
+            if (!periodValue) return;
+            [year, month] = periodValue.split('-');
+            month = parseInt(month);
+        }
+
+        const params = {
+            year: year,
+            month: month,
+            customer_id: $('#filterCustomer').val(),
+            model_id: $('#filterModel').val(),
+            ebd_version: $('#filterEbdVersion').val(),
+            by: currentParetoBy
+        };
+
         $.get('{{ route("inventory.projectVaveDashboard.paretoData") }}', params, function(res) {
             const meritPareto = res.pareto.filter(p => p.gap_benefit_idr > 0);
             renderParetoChart(meritPareto);
         });
     }
+
+    $('.pareto-chart-switch').on('click', function() {
+        const by = $(this).data('by');
+        const color = $(this).data('color');
+        
+        currentParetoBy = by;
+
+        $('.pareto-chart-switch').removeClass('active bg-white dark:bg-gray-600 shadow-sm text-primary-600 dark:text-primary-400')
+            .addClass('text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200');
+        
+        $(this).removeClass('text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200')
+            .addClass(`active bg-white dark:bg-gray-600 shadow-sm text-${color}-600 dark:text-${color}-400`);
+
+        refreshParetoData();
+    });
 
     $('.combined-chart-switch').on('click', function() {
         const type = $(this).data('type');

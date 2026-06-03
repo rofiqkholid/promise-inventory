@@ -281,7 +281,12 @@ class RegularVaveDashboardController extends Controller
         if ($customerId) $baselinesQuery->where('p.customer_id', $customerId);
         if ($modelId)    $baselinesQuery->where('pd.model_id', $modelId);
 
-        $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
+        $by = $request->input('by');
+        if (!$by) {
+            $labelColumn = empty($modelId) ? 'm.name' : 'p.part_no';
+        } else {
+            $labelColumn = $by === 'part' ? 'p.part_no' : 'm.name';
+        }
         $baselines = $baselinesQuery->select([
                 DB::raw("$labelColumn as label_name"),
                 'p.part_no',
@@ -308,7 +313,7 @@ class RegularVaveDashboardController extends Controller
             }
         }
 
-        $data = collect(array_values($aggData))->sortByDesc('gap_benefit_idr')->take($limit);
+        $data = collect(array_values($aggData))->sortByDesc('gap_benefit_idr')->take($limit)->values();
 
         $totalAbs = $data->sum(fn($r) => abs((float)$r['gap_benefit_idr']));
         $cumulative = 0;
@@ -323,6 +328,6 @@ class RegularVaveDashboardController extends Controller
             ];
         });
 
-        return response()->json(['pareto' => $result]);
+        return response()->json(['pareto' => $result->values()]);
     }
 }
