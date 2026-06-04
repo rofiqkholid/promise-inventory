@@ -535,6 +535,87 @@ class InventoryProductController extends Controller
     }
 
     /**
+     * Get all old revisions of products.
+     */
+    public function getOldRevisions(Request $request)
+    {
+        $query = DB::table('inv_t_product_detail as p')
+            ->join('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
+            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
+            ->leftJoin('inv_m_revision as r_master', 'r_master.id', '=', 'p.revision_id')
+            ->where('p.is_active', 1)
+            ->where('prod.is_delete', 0)
+            ->whereRaw("p.revision_id != (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+
+        if ($request->filled('customer_id')) {
+            $query->where('prod.customer_id', $request->customer_id);
+        }
+        if ($request->filled('model_id')) {
+            $selectedModel = DB::table('models')->where('id', $request->model_id)->first();
+            if ($selectedModel) {
+                 $query->where('model.name', $selectedModel->name);
+            }
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('prod.part_no', 'like', "%{$search}%")
+                  ->orWhere('prod.part_name', 'like', "%{$search}%")
+                  ->orWhere('model.name', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->select([
+            'p.id',
+            'prod.part_no',
+            'prod.part_name',
+            'cust.code as customer_code',
+            'model.name as model_name',
+            'r_master.code as revision_code',
+            'p.product_status',
+            'p.product_status_remark'
+        ])
+        ->orderBy('prod.part_no')
+        ->orderBy('model.name')
+        ->get()
+        ->map(fn($r) => [
+            'id' => InventoryProduct::encodeHash($r->id),
+            'part_no' => $r->part_no . ($r->revision_code ? '-' . $r->revision_code : ''),
+            'part_name' => $r->part_name,
+            'customer' => $r->customer_code,
+            'model' => $r->model_name,
+            'product_status' => $r->product_status,
+            'product_status_remark' => $r->product_status_remark
+        ]);
+
+        return response()->json(['success' => true, 'data' => $items]);
+    }
+
+    /**
+     * Update product status and status remark.
+     */
+    public function updateProductStatus(Request $request, $id)
+    {
+        $product = InventoryProduct::findByHashOrFail($id);
+        $product->update([
+            'product_status' => $request->product_status ?: null,
+            'product_status_remark' => $request->product_status_remark ?: null,
+        ]);
+        return response()->json(['success' => true, 'message' => 'Product status updated successfully.']);
+    }
+
+    /**
      * Print Label for the specified resource.
      */
     public function printLabel($id, ProductService $productService)

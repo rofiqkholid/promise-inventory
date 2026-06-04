@@ -11,6 +11,10 @@
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage inventory product details.</p>
         </div>
         <div class="mt-4 sm:mt-0 flex gap-2">
+            <button type="button" id="btnOldRevisions" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-amber-600 hover:bg-amber-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Old Revisions Status
+            </button>
             <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
@@ -427,6 +431,70 @@
     </div>
 </div>
 
+{{-- Old Revisions Modal --}}
+<div id="oldRevisionsModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
+    <div class="relative p-4 w-full max-w-6xl max-h-[95vh] h-full md:h-auto">
+        <div class="relative bg-white rounded-xs shadow-2xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-amber-50/80 dark:bg-amber-950/20">
+                <h3 class="text-base font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-amber-600"></i> Old Revisions Status Manager
+                </h3>
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">Manage the status of older revision parts inline. Changes are saved automatically on edit.</p>
+            </div>
+
+            <div class="px-6 py-3 border-b border-gray-50 dark:border-gray-700/50 bg-slate-50/30 dark:bg-slate-900/10 flex flex-wrap gap-3 items-center justify-between">
+                <div class="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                    Showing only old revisions.
+                </div>
+                <div id="oldRevModelFilterPlaceholder" class="hidden">
+                    <select id="oldRevModelFilter" class="w-48 font-normal">
+                        <option value="">All Models</option>
+                        @foreach($filterModels as $m)
+                            <option value="{{ $m->id }}">{{ $m->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto min-h-0 custom-scrollbar relative p-6">
+                <div id="oldRevTableLoader" class="hidden absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-30 flex items-center justify-center backdrop-blur-[1px]">
+                    <div class="flex flex-col items-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-xl text-amber-600 mb-2"></i>
+                        <span class="text-[10px] font-medium text-slate-500 tracking-wider">Loading Old Revisions...</span>
+                    </div>
+                </div>
+
+                <x-table id="oldRevisionsTable">
+                    <thead>
+                        <tr>
+                            <th class="text-left min-w-[200px]">Part No / Info</th>
+                            <th class="text-left">Model</th>
+                            <th class="text-left">Customer</th>
+                            <th class="text-center w-48">Product Status</th>
+                            <th class="text-center w-48">Status Remark</th>
+                        </tr>
+                    </thead>
+                    <tbody id="oldRevisionsTableBody" class="divide-y divide-slate-100 dark:divide-gray-700 text-xs">
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-slate-400 italic">No old revisions found.</td>
+                        </tr>
+                    </tbody>
+                </x-table>
+            </div>
+
+            <div class="flex-none flex items-center justify-end gap-3 px-8 py-4 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50">
+                <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-xs font-medium px-6 py-2.5 transition-all active:scale-95">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('styles')
@@ -463,6 +531,8 @@ $(function() {
                 export: '{{ route("inventory.master.product.exportExcel") }}',
                 import: '{{ route("inventory.master.product.importExcel") }}',
                 sheetNames: '{{ route("inventory.master.product.getSheetNames") }}',
+                oldRevisions: '{{ route("inventory.master.product.oldRevisions") }}',
+                updateProductStatus: '{{ url("inventory/master/product/update-product-status") }}',
                 base: '{{ url("inventory/master/product") }}'
             }
         },
@@ -471,11 +541,13 @@ $(function() {
             isEditMode: false,
             isDuplicateMode: false,
             isAutoFilling: false,
+            isLoadingOldRevisions: false,
             dropdownData: {},
             modelCache: {},
             modelLoadPromise: Promise.resolve(),
             deleteId: null,
-            table: null
+            table: null,
+            searchDebounceTimer: null
         },
 
         elements: {
@@ -488,7 +560,9 @@ $(function() {
             customerSelect: $('#customer_id'),
             modelSelect: $('#model_id'),
             productSelect: $('#product_id'),
-            unitSelect: $('#unit_id')
+            unitSelect: $('#unit_id'),
+            oldRevisionsModal: $('#oldRevisionsModal'),
+            oldRevisionsTableBody: $('#oldRevisionsTableBody')
         },
 
         init: function() {
@@ -681,6 +755,15 @@ $(function() {
                 this.ui.showModal($('#importModal'));
             });
 
+            $('#btnOldRevisions').on('click', () => {
+                this.showOldRevisionsModal();
+            });
+
+            $(document).on('change', '#oldRevModelFilter', () => {
+                if (this.state.isLoadingOldRevisions) return;
+                this.loadOldRevisions();
+            });
+
             $('#import_file').on('change', function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -772,6 +855,9 @@ $(function() {
                 this.ui.showModal(this.elements.deleteModal);
             });
             $('#confirmDelete').on('click', () => this.handleDelete());
+            $(document).on('change', '.old-rev-status-select, .old-rev-remark-select', e => {
+                this.updateOldRevisionStatus(e.currentTarget);
+            });
         },
 
         /**
@@ -1005,6 +1091,164 @@ $(function() {
                     if (wasDuplicate) this.ui.toggleDuplicateMode(false);
                 },
                 error: (xhr) => this.handleAjaxError(xhr)
+            });
+        },
+
+        showOldRevisionsModal: function() {
+            const val = this.elements.modelFilter.val() || '';
+            $('#oldRevModelFilter').val(val);
+
+            this.ui.showModal(this.elements.oldRevisionsModal);
+            this.loadOldRevisions();
+        },
+
+        loadOldRevisions: function() {
+            const loader = $('#oldRevTableLoader');
+            const tbody = this.elements.oldRevisionsTableBody;
+            
+            loader.removeClass('hidden');
+            this.state.isLoadingOldRevisions = true;
+
+            // Destroy existing DataTable and return Model Filter to placeholder
+            if ($.fn.DataTable.isDataTable('#oldRevisionsTable')) {
+                if ($('#oldRevModelFilter').data('select2')) {
+                    $('#oldRevModelFilter').select2('destroy');
+                }
+                $('#oldRevModelFilter').appendTo('#oldRevModelFilterPlaceholder');
+                $('#oldRevisionsTable_filter .model-filter-wrapper').remove();
+                $('#oldRevisionsTable').DataTable().destroy();
+            }
+            
+            $.get(this.config.routes.oldRevisions, {
+                customer_id: this.elements.customerFilter.val(),
+                model_id: $('#oldRevModelFilter').val() || this.elements.modelFilter.val()
+            })
+            .done((res) => {
+                tbody.empty();
+                if (!res.data || res.data.length === 0) {
+                    tbody.append('<tr><td colspan="5" class="py-10 text-center text-slate-400 italic">No old revisions found.</td></tr>');
+                } else {
+                    res.data.forEach(row => {
+                        const statusOptions = [
+                            { value: '', text: 'None' },
+                            { value: 'Oldstock OK', text: 'Oldstock OK' },
+                            { value: 'Oldstock NG', text: 'Oldstock NG' }
+                        ].map(opt => `<option value="${opt.value}" ${row.product_status === opt.value ? 'selected' : ''}>${opt.text}</option>`).join('');
+
+                        const remarkOptions = [
+                            { value: '', text: 'No Remark' },
+                            { value: 'Drawing Change', text: 'Drawing Change' },
+                            { value: 'Damage', text: 'Damage' },
+                            { value: 'Other', text: 'Other' }
+                        ].map(opt => `<option value="${opt.value}" ${row.product_status_remark === opt.value ? 'selected' : ''}>${opt.text}</option>`).join('');
+
+                        tbody.append(`
+                            <tr class="hover:bg-slate-50 dark:hover:bg-gray-700/30 transition-colors">
+                                <td>
+                                    <div class="font-medium text-slate-800 dark:text-gray-200">${row.part_no}</div>
+                                    <div class="text-[10px] text-gray-400">${row.part_name || '-'}</div>
+                                </td>
+                                <td class="text-slate-600 dark:text-gray-300 font-medium">${row.model}</td>
+                                <td class="text-slate-600 dark:text-gray-300 font-medium">${row.customer}</td>
+                                <td>
+                                    <select data-id="${row.id}" class="old-rev-status-select w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-xs rounded-xs px-2.5 py-1.5 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium">
+                                        ${statusOptions}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select data-id="${row.id}" class="old-rev-remark-select w-full bg-white dark:bg-gray-700 border border-slate-200 dark:border-gray-600 text-xs rounded-xs px-2.5 py-1.5 focus:ring-1 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium">
+                                        ${remarkOptions}
+                                    </select>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                // Initialize client-side DataTable on oldRevisionsTable using default helper
+                window.defaultDataTable('#oldRevisionsTable', {
+                    buttons: [],
+                    pageLength: 10,
+                    lengthMenu: [5, 10, 20, 50],
+                    ordering: true,
+                    order: [[0, 'asc']],
+                    searching: true,
+                    info: true,
+                    lengthChange: true,
+                    autoWidth: false,
+                    drawCallback: function() {
+                        // Re-initialize select2 on status/remark selects inside modal on each draw
+                        $('.old-rev-status-select, .old-rev-remark-select').select2({
+                            dropdownParent: $('#oldRevisionsModal'),
+                            width: '100%'
+                        });
+                    }
+                });
+
+                // Position the model filter select in front of the Search input
+                const $searchContainer = $('#oldRevisionsTable_filter');
+                if ($searchContainer.length) {
+                    $searchContainer.addClass('flex items-center gap-3');
+                    
+                    const $filterWrapper = $('<div class="model-filter-wrapper flex items-center gap-2"></div>');
+                    $filterWrapper.append('<span class="text-xs text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Model:</span>');
+                    
+                    const $select = $('#oldRevModelFilter');
+                    $filterWrapper.append($select);
+                    
+                    $searchContainer.prepend($filterWrapper);
+                    
+                    $select.select2({
+                        dropdownParent: $('#oldRevisionsModal'),
+                        width: '150px',
+                        placeholder: 'All Models',
+                        allowClear: true
+                    });
+                }
+            })
+            .fail(() => {
+                window.showToast('Failed to load old revisions.', 'error');
+            })
+            .always(() => {
+                loader.addClass('hidden');
+                this.state.isLoadingOldRevisions = false;
+            });
+        },
+
+        updateOldRevisionStatus: function(selectEl) {
+            const $select = $(selectEl);
+            const id = $select.data('id');
+            
+            // Find Select2 container and selection element for visual feedback
+            const $select2Container = $select.next('.select2-container');
+            const $selection = $select2Container.find('.select2-selection');
+            
+            $selection.css('border-color', '#d97706'); // Amber glow during save
+            
+            const tr = $select.closest('tr');
+            const statusVal = tr.find('.old-rev-status-select').val();
+            const remarkVal = tr.find('.old-rev-remark-select').val();
+
+            $.ajax({
+                url: `${this.config.routes.updateProductStatus}/${id}`,
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': this.config.csrfToken },
+                data: {
+                    product_status: statusVal,
+                    product_status_remark: remarkVal
+                },
+                success: (res) => {
+                    window.showToast(res.message, 'success');
+                    $selection.css('border-color', '#10b981'); // Emerald green for success
+                    setTimeout(() => $selection.css('border-color', ''), 1000);
+                    // Reload main table to reflect status change
+                    this.state.table.ajax.reload(null, false);
+                },
+                error: (xhr) => {
+                    window.showToast('Failed to update status.', 'error');
+                    $selection.css('border-color', '#ef4444'); // Red for error
+                    setTimeout(() => $selection.css('border-color', ''), 2000);
+                }
             });
         },
 

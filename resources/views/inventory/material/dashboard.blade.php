@@ -51,6 +51,7 @@
     {{-- Collapsible Filter Card --}}
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4">
         <form id="filterForm">
+            <input type="hidden" name="stock_mode" id="stock_mode" value="current">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 flex-1">
                     <div class="space-y-1.5">
@@ -112,9 +113,15 @@
                         <span class="truncate">Stock status</span> 
                         <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[9px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Item part</span>
                     </h3>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <button id="stockStatusChartPrev" onclick="paginateChart('stockStatusChart', -1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-xs"></i></button>
-                        <button id="stockStatusChartNext" onclick="paginateChart('stockStatusChart', 1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs">
+                            <button type="button" onclick="switchStockMode('current')" id="btnStockCurrent" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all bg-white dark:bg-gray-600 text-primary-600 shadow-sm">Usage</button>
+                            <button type="button" onclick="switchStockMode('old')" id="btnStockOld" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Old</button>
+                        </div>
+                        <div class="flex items-center gap-1 border-l border-gray-200 dark:border-gray-700 pl-2">
+                            <button id="stockStatusChartPrev" onclick="paginateChart('stockStatusChart', -1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-left text-xs"></i></button>
+                            <button id="stockStatusChartNext" onclick="paginateChart('stockStatusChart', 1)" disabled class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fa-solid fa-chevron-right text-xs"></i></button>
+                        </div>
                     </div>
                 </div>
                 <div class="relative w-full flex-1 min-h-0"><canvas id="stockStatusChart"></canvas></div>
@@ -438,6 +445,17 @@
                 $('#usageChartNext').prop('disabled', end >= store.labels.length);
             }
         };
+        
+        window.switchStockMode = function(mode) {
+            const isCurrent = mode === 'current';
+            $('#btnStockCurrent').toggleClass('bg-white dark:bg-gray-600 text-primary-600 shadow-sm', isCurrent)
+                .toggleClass('text-slate-500 hover:text-slate-700', !isCurrent);
+            $('#btnStockOld').toggleClass('bg-white dark:bg-gray-600 text-primary-600 shadow-sm', !isCurrent)
+                .toggleClass('text-slate-500 hover:text-slate-700', isCurrent);
+                
+            $('#stock_mode').val(mode);
+            fetchDashboardData($('#filterForm').serialize());
+        };
 
         const chartColors = {
             primary: {
@@ -596,13 +614,7 @@
                         $('#stat_out_trial').text(new Intl.NumberFormat().format(response.stats.out_trial));
 
                         // Update Charts
-                        updateChartData(stockStatusChart, 
-                             Object.keys(response.charts.stock_grouped).map(l => l.split('|')), 
-                             Object.values(response.charts.stock_grouped).map(d => d.critical),
-                             Object.values(response.charts.stock_grouped).map(d => d.warning),
-                             Object.values(response.charts.stock_grouped).map(d => d.over),
-                             Object.values(response.charts.stock_grouped).map(d => d.safe)
-                        );
+                        updateStockChartData(response);
                         
                         updateChartData(usageModelChart, 
                             response.charts.usage_model.map(i => i.label.split('|')), 
@@ -776,6 +788,69 @@
                 chartStore[id].page = 0;
                 renderChartPage(id);
             }
+
+            function updateStockChartData(response) {
+                if (!stockStatusChart) return;
+                const labels = Object.keys(response.charts.stock_grouped).map(l => l.split('|'));
+                const dataValues = Object.values(response.charts.stock_grouped);
+                const isOld = $('#stock_mode').val() === 'old';
+
+                if (isOld) {
+                    stockStatusChart.data.datasets = [
+                        {
+                            label: 'Oldstock OK',
+                            data: dataValues.map(d => d.oldstock_ok || 0),
+                            backgroundColor: chartColors.emerald.solid,
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Oldstock NG',
+                            data: dataValues.map(d => d.oldstock_ng || 0),
+                            backgroundColor: chartColors.rose.solid,
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Other',
+                            data: dataValues.map(d => d.other || 0),
+                            backgroundColor: '#64748b',
+                            borderRadius: 2
+                        }
+                    ];
+                } else {
+                    stockStatusChart.data.datasets = [
+                        {
+                            label: 'Critical',
+                            data: dataValues.map(d => d.critical || 0),
+                            backgroundColor: chartColors.rose.solid,
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Warning',
+                            data: dataValues.map(d => d.warning || 0),
+                            backgroundColor: chartColors.amber.solid,
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Over',
+                            data: dataValues.map(d => d.over || 0),
+                            backgroundColor: chartColors.primary.solid,
+                            borderRadius: 2
+                        },
+                        {
+                            label: 'Safe',
+                            data: dataValues.map(d => d.safe || 0),
+                            backgroundColor: chartColors.emerald.solid,
+                            borderRadius: 2
+                        }
+                    ];
+                }
+
+                chartStore['stockStatusChart'] = chartStore['stockStatusChart'] || { page: 0, pageSize: 6 };
+                chartStore['stockStatusChart'].labels = labels;
+                chartStore['stockStatusChart'].datasets = stockStatusChart.data.datasets.map(ds => ds.data);
+                chartStore['stockStatusChart'].page = 0;
+                renderChartPage('stockStatusChart');
+            }
             function updateChartDataSingle(chart, labels, data) {
                  updateChartData(chart, labels, data);
             }
@@ -797,12 +872,18 @@
                      'Critical': 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-red-100 dark:border-red-800',
                      'Warning': 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400 border-amber-100 dark:border-amber-800',
                      'Over': 'bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 border-primary-100 dark:border-primary-800',
-                     'Safe': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800'
+                     'Safe': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
+                     'Oldstock OK': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
+                     'Oldstock ok': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800',
+                     'Oldstock NG': 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-red-100 dark:border-red-800',
+                     'Oldstock ng': 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 border-red-100 dark:border-red-800',
+                     'Unknown': 'bg-slate-50 text-slate-600 dark:bg-slate-900/30 dark:text-slate-400 border-slate-100 dark:border-slate-800'
                  };
-                 const colorClass = statusColors[row.status] || statusColors['Safe'];
+                 const colorClass = statusColors[row.status] || statusColors['Unknown'];
                  
                  let actionIcon = '';
-                 if (row.status === 'Critical' || row.status === 'Warning') {
+                 const isOldMode = $('#stock_mode').val() === 'old';
+                 if (!isOldMode && (row.status === 'Critical' || row.status === 'Warning')) {
                      if (row.action_status === 'Process') {
                          actionIcon = '<i class="fa-solid fa-clock text-amber-500 ml-1.5" title="In Process"></i>';
                      } else if (row.action_status === 'Ordered') {
@@ -1202,7 +1283,13 @@
 
         // Initial Scroll Width Calculations
         if (typeof chartsData !== 'undefined') {
-            if (stockStatusChart) updateChartData(stockStatusChart, chartsData.stockLabels, chartsData.stockData.map(d => d.critical), chartsData.stockWarning, chartsData.stockData.map(d => d.over), chartsData.stockData.map(d => d.safe));
+            if (stockStatusChart) {
+                updateStockChartData({
+                    charts: {
+                        stock_grouped: @json($charts['stock_grouped'] ?? [])
+                    }
+                });
+            }
             if (usageModelChart) updateChartData(usageModelChart, chartsData.usageModelLabels, chartsData.usageModelEvent, chartsData.usageModelPP, chartsData.usageModelTrial);
             if (makerChart) updateChartData(makerChart, chartsData.makerLabels, chartsData.makerOnBudget, chartsData.makerNearLoss, chartsData.makerLoss);
             
@@ -1314,6 +1401,10 @@
         'OUT-EVENT':  'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
         'OUT-PP':     'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
         'OUT-TRIAL':  'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+        'Oldstock OK': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+        'Oldstock NG': 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+        'Other':       'bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300',
+        'Unknown':     'bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300',
     };
 
     let drilldownPage = 1;
@@ -1369,7 +1460,8 @@
             search: search,
             project_status: $('#filterProjectStatus').val(),
             page: drilldownPage,
-            pageSize: pageSize
+            pageSize: pageSize,
+            stock_mode: $('#stock_mode').val()
         })
         .done(function(res) {
             document.getElementById('drilldownTitle').textContent = res.title;
@@ -1388,7 +1480,7 @@
                 tbody.innerHTML = res.data.map(row => {
                     return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
                         if (c.key === 'action_status') {
-                            const isCritical = row.status === 'Critical' || row.status === 'Warning';
+                            const isCritical = row.status === 'Critical' || row.status === 'Warning' || row.status === 'Over';
                             if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
 
                             const current = row[c.key] || '';
@@ -1400,7 +1492,8 @@
                             const st = statusMap[current] || statusMap[''];
 
                             let actionIcon = '';
-                            if (row.status === 'Critical' || row.status === 'Warning') {
+                            const isOldMode = $('#stock_mode').val() === 'old';
+                            if (!isOldMode && (row.status === 'Critical' || row.status === 'Warning')) {
                                 if (row.action_status === 'Process') {
                                     actionIcon = '<i class="fa-solid fa-clock text-amber-500 ml-1.5" title="In Process"></i>';
                                 } else if (row.action_status === 'Ordered') {
@@ -1471,7 +1564,7 @@
                         }
 
                         if (c.key === 'action_remark') {
-                            const isCritical = row.status === 'Critical' || row.status === 'Warning';
+                            const isCritical = row.status === 'Critical' || row.status === 'Warning' || row.status === 'Over';
                             if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
                             
                             const displayNote = val || 'Add note...';
@@ -1552,8 +1645,9 @@
         const container = document.getElementById('drilldownLegendButtons');
         container.innerHTML = '';
         
+        const isOld = $('#stock_mode').val() === 'old';
         const legends = {
-            'stock': ['Critical', 'Warning', 'Over', 'Safe'],
+            'stock': isOld ? ['Oldstock OK', 'Oldstock NG', 'Other'] : ['Critical', 'Warning', 'Over', 'Safe'],
             'usage_model': ['OUT-EVENT', 'OUT-PP', 'OUT-TRIAL'],
             'maker': ['On Budget', 'Near Loss', 'Loss'],
             'trendline': ['IN', 'OUT-EVENT', 'OUT-PP', 'OUT-TRIAL']

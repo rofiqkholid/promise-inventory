@@ -19,6 +19,7 @@ class DashboardController extends Controller
         $selectedStatusBalance = $request->input('status_balance', []);
         $selectedStatusUsage = $request->input('status_usage', []);
         $selectedProjectStatus = $request->input('project_status');
+        $stockMode = $request->input('stock_mode', 'current');
 
         $inCategories = TransactionCategory::where('effect', 1)->pluck('code');
         $outCategories = TransactionCategory::where('effect', -1)->pluck('code');
@@ -136,7 +137,6 @@ class DashboardController extends Controller
         $totalStockPcs = (clone $stockQuery)->selectRaw("SUM({$pcsSql}) as total")->value('total') ?? 0;
         $totalStockAmount = (clone $stockQuery)->selectRaw("SUM({$amountSql}) as total")->value('total') ?? 0;
 
-        // 2. Transaction Query Base
         $recentTransQuery = DB::table('inv_t_inventory_transaction as t')
             ->join('inv_m_transaction_category as tc', 'tc.id', '=', 't.transaction_category_id')
             ->join('inv_t_product_detail as p', 'p.id', '=', 't.product_detail_id')
@@ -178,8 +178,34 @@ class DashboardController extends Controller
             'out_trial' => $materialOutTrialCount,
         ];
 
-        // Stock Data for Bar Chart (Item Count per Status)
-        $allProducts = $stockQuery->select(
+        $allProductsQuery = (clone $stockQuery);
+        if ($stockMode === 'old') {
+            $allProductsQuery->whereRaw("p.revision_id != (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+        } else {
+            $allProductsQuery->whereRaw("p.revision_id = (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+        }
+
+        $allProducts = $allProductsQuery->select(
             'p.id',
             'm.name as model_name', 
             'c.code as customer_code', 
@@ -198,23 +224,39 @@ class DashboardController extends Controller
         foreach ($allProducts as $prd) {
             $key = ($prd->model_name ?? 'N/A') . '|' . ($prd->customer_code ?? 'N/A');
             if (!isset($stockDataGrouped[$key])) {
-                $stockDataGrouped[$key] = ['critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0];
+                if ($stockMode === 'old') {
+                    $stockDataGrouped[$key] = ['oldstock_ok' => 0, 'oldstock_ng' => 0, 'other' => 0];
+                } else {
+                    $stockDataGrouped[$key] = ['critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0];
+                }
             }
 
             // Use pre-calculated PCS for accurate comparison
             $currentPcs = (int)$prd->current_stock_pcs;
 
-            $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                $currentPcs, $prd->min_stock, $prd->project_status, $prd->product_status
-            );
+            if ($stockMode === 'old') {
+                $status = strtolower(str_replace(' ', '_', $prd->product_status ?: 'other'));
+                if (isset($stockDataGrouped[$key][$status])) {
+                    $stockDataGrouped[$key][$status]++;
+                }
+            } else {
+                $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                    $currentPcs, $prd->min_stock, $prd->project_status, $prd->product_status
+                );
 
-            if (isset($stockDataGrouped[$key][$status])) {
-                $stockDataGrouped[$key][$status]++;
+                if (isset($stockDataGrouped[$key][$status])) {
+                    $stockDataGrouped[$key][$status]++;
+                }
             }
         }
-        uasort($stockDataGrouped, function($a, $b) {
-            $totalA = ($a['critical'] ?? 0) + ($a['warning'] ?? 0) + ($a['over'] ?? 0) + ($a['safe'] ?? 0);
-            $totalB = ($b['critical'] ?? 0) + ($b['warning'] ?? 0) + ($b['over'] ?? 0) + ($b['safe'] ?? 0);
+        uasort($stockDataGrouped, function($a, $b) use ($stockMode) {
+            if ($stockMode === 'old') {
+                $totalA = ($a['oldstock_ok'] ?? 0) + ($a['oldstock_ng'] ?? 0) + ($a['other'] ?? 0);
+                $totalB = ($b['oldstock_ok'] ?? 0) + ($b['oldstock_ng'] ?? 0) + ($b['other'] ?? 0);
+            } else {
+                $totalA = ($a['critical'] ?? 0) + ($a['warning'] ?? 0) + ($a['over'] ?? 0) + ($a['safe'] ?? 0);
+                $totalB = ($b['critical'] ?? 0) + ($b['warning'] ?? 0) + ($b['over'] ?? 0) + ($b['safe'] ?? 0);
+            }
             return $totalB <=> $totalA;
         });
 
@@ -360,8 +402,34 @@ class DashboardController extends Controller
             return ($order[$a['status']] ?? 99) <=> ($order[$b['status']] ?? 99);
         });
 
-        // Tables
-        $balanceStatusTable = (clone $stockQuery)
+        $balanceStatusTableQuery = (clone $stockQuery);
+        if ($stockMode === 'old') {
+            $balanceStatusTableQuery->whereRaw("p.revision_id != (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+        } else {
+            $balanceStatusTableQuery->whereRaw("p.revision_id = (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+        }
+
+        $balanceStatusTable = $balanceStatusTableQuery
             ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
             ->select(
                 'p.id', 'prod.part_no', 'r.code as revision', 'c.code as customer_code', 
@@ -373,22 +441,26 @@ class DashboardController extends Controller
                 'ms.project_status', 'p.product_status', 'p.action_status', 'p.action_remark'
             )
             ->get()
-            ->map(function ($item) {
-                  $currentPcs = (int)$item->current_stock_pcs;
-                 
-                  $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                     $currentPcs, $item->min_stock, $item->project_status, $item->product_status
-                  );
+            ->map(function ($item) use ($stockMode) {
+                  if ($stockMode === 'old') {
+                      $item->status = $item->product_status ? ucfirst($item->product_status) : 'Unknown';
+                  } else {
+                      $currentPcs = (int)$item->current_stock_pcs;
+                      $status = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                         $currentPcs, $item->min_stock, $item->project_status, $item->product_status
+                      );
+                      $item->status = ucfirst($status);
+                  }
+                  return $item;
+            });
 
-                 $item->status = ucfirst($status);
-                 return $item;
-            })
-            ->filter(function($item) {
-                // Only show Critical and Warning in the Balance Warnings table
+        if ($stockMode !== 'old') {
+            $balanceStatusTable = $balanceStatusTable->filter(function($item) {
                 return in_array($item->status, ['Critical', 'Warning']);
-            })
-            ->values()
-            ->take(15);
+            });
+        }
+
+        $balanceStatusTable = $balanceStatusTable->values()->take(15);
 
         $usageStatusTable = (clone $balanceStatusTable);
 
@@ -497,6 +569,7 @@ class DashboardController extends Controller
         $page       = $request->input('page', 1);
         $offset     = ($page - 1) * $pageSize;
         $selectedProjectStatus = $request->input('project_status');
+        $stockMode = $request->input('stock_mode', 'current');
 
         $outCategories = \App\Models\InventoryModel\Material\TransactionCategory::where('effect', -1)->pluck('code');
 
@@ -513,7 +586,7 @@ class DashboardController extends Controller
             }
         };
 
-        $baseProduct = DB::table('inv_t_product_detail as p')
+        $baseProductQuery = DB::table('inv_t_product_detail as p')
             ->join('products as prod', 'prod.id', '=', 'p.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
             ->leftJoin('customers as c', 'c.id', '=', 'prod.customer_id')
@@ -521,6 +594,33 @@ class DashboardController extends Controller
             ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
             ->leftJoin('inv_m_model_status as ms', 'ms.model_id', '=', 'p.model_id')
             ->where('p.is_active', 1);
+
+        if ($stockMode === 'old') {
+            $baseProductQuery->whereRaw("p.revision_id != (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+        } else {
+            $baseProductQuery->whereRaw("p.revision_id = (
+                SELECT TOP 1 sub_p.revision_id
+                FROM inv_t_product_detail sub_p
+                JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                WHERE sub_p.product_id = p.product_id
+                  AND sub_p.model_id = p.model_id
+                  AND sub_p.is_active = 1
+                ORDER BY 
+                  CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                  sub_r.sort_order DESC
+            )");
+        }
+        $baseProduct = $baseProductQuery;
 
         if ($isHistorical) {
             $netChangeSubquery = DB::table('inv_t_inventory_transaction as t')
@@ -589,9 +689,13 @@ class DashboardController extends Controller
                 // Use the calculated historical PCS
                 $currentPcs = (int)$row->current_stock_pcs;
 
-                $statusRaw = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                    $currentPcs, $row->min_stock, $row->project_status, $row->product_status
-                );
+                if ($stockMode === 'old') {
+                    $statusRaw = $row->product_status ?: 'Unknown';
+                } else {
+                    $statusRaw = \App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
+                        $currentPcs, $row->min_stock, $row->project_status, $row->product_status
+                    );
+                }
 
                 if ($statusFilter && strcasecmp($statusRaw, $statusFilter) !== 0) {
                     continue;
@@ -611,14 +715,21 @@ class DashboardController extends Controller
                 ];
             }
 
-            // Sort by Status Priority (Critical -> Warning -> Over -> Safe) then Part No
-            usort($processed, function($a, $b) {
-                $order = ['Critical' => 1, 'Warning' => 2, 'Over' => 3, 'Safe' => 4];
-                $oA = $order[$a['status']] ?? 99;
-                $oB = $order[$b['status']] ?? 99;
-                if ($oA === $oB) return strcasecmp($a['part_no'], $b['part_no']);
-                return $oA <=> $oB;
-            });
+            if ($stockMode === 'old') {
+                // Sort by part no
+                usort($processed, function($a, $b) {
+                    return strcasecmp($a['part_no'], $b['part_no']);
+                });
+            } else {
+                // Sort by Status Priority (Critical -> Warning -> Over -> Safe) then Part No
+                usort($processed, function($a, $b) {
+                    $order = ['Critical' => 1, 'Warning' => 2, 'Over' => 3, 'Safe' => 4];
+                    $oA = $order[$a['status']] ?? 99;
+                    $oB = $order[$b['status']] ?? 99;
+                    if ($oA === $oB) return strcasecmp($a['part_no'], $b['part_no']);
+                    return $oA <=> $oB;
+                });
+            }
 
             $total = count($processed);
             $result = array_slice($processed, $offset, $pageSize);
