@@ -55,12 +55,12 @@ class AppServiceProvider extends ServiceProvider
                     ->leftJoin('inv_m_revision as r', 'r.id', '=', 'p.revision_id')
                     ->leftJoin('inv_m_unit as u', 'u.id', '=', 'p.unit_id')
                     ->select([
-                        'prod.part_no', 
-                        'r.code as revision', 
-                        'c.code as customer_code', 
-                        'm.name as model_name', 
-                        'p.current_stock_qty', 
-                        'p.min_stock', 
+                        'prod.part_no',
+                        'r.code as revision',
+                        'c.code as customer_code',
+                        'm.name as model_name',
+                        'p.current_stock_qty',
+                        'p.min_stock',
                         'p.pcs_per_unit',
                         'p.product_status',
                         'ms.project_status',
@@ -69,31 +69,23 @@ class AppServiceProvider extends ServiceProvider
                         'u.name as unit_name'
                     ])
                     ->where('p.is_active', 1)
-                    ->whereRaw("p.revision_id = (
-                        SELECT TOP 1 sub_p.revision_id
-                        FROM inv_t_product_detail sub_p
-                        JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
-                        WHERE sub_p.product_id = p.product_id
-                          AND sub_p.model_id = p.model_id
-                          AND sub_p.is_active = 1
-                        ORDER BY 
-                          CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
-                          sub_r.sort_order DESC
-                    )")
                     ->get()
                     ->map(function ($item) {
                         $currentPCS = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
-                            $item->current_stock_qty, 
-                            $item->weight_kg, 
-                            $item->pcs_per_unit, 
+                            $item->current_stock_qty,
+                            $item->weight_kg,
+                            $item->pcs_per_unit,
                             $item->unit_name,
-                            0, 0, 0, 1, // Defaults for top, end, pitch, pcsPerPitch
+                            0,
+                            0,
+                            0,
+                            1, // Defaults for top, end, pitch, pcsPerPitch
                             $item->gross_coil
                         );
 
                         $item->status = ucfirst(\App\Models\InventoryModel\Material\InventoryProduct::calculateStockStatus(
-                            $currentPCS, 
-                            $item->min_stock, 
+                            $currentPCS,
+                            $item->min_stock,
                             $item->project_status,
                             $item->product_status
                         ));
@@ -115,17 +107,17 @@ class AppServiceProvider extends ServiceProvider
             // Only handle auto-open logic for the modal component
             if (str_contains($view->getName(), 'stock-alert-modal')) {
                 $stockAlertAutoOpen = false;
-                
+
                 // Only auto-open if alerts exist AND the flag isn't set in the session yet
                 if (count($cachedStockAlerts) > 0 && !Session::has('stock_alert_auto_shown')) {
                     $stockAlertAutoOpen = true;
                     Session::put('stock_alert_auto_shown', true);
-                    
+
                     // Explicitly save session because View::composers can run late in the request lifecycle
                     // where auto-saving might not reliably pick up changes for the next request.
                     Session::save();
                 }
-                
+
                 $view->with('stockAlertAutoOpen', $stockAlertAutoOpen);
             }
         });
@@ -139,35 +131,48 @@ class AppServiceProvider extends ServiceProvider
                 $user = auth()->user();
                 $roles = $user->roles;
                 $userRole = $roles->pluck('code')->first(); // Just for compatibility if needed elsewhere
-                
+
                 // Get menu IDs from all roles
                 $roleMenuIds = $roles->pluck('menus')->flatten()->pluck('id')->unique()->toArray();
-                
-                // Get menu IDs from specific user permissions
-                $specificMenuIds = $user->specificMenus()->pluck('menus.id')->toArray();
-                
-                $allowedMenuIds = array_unique(array_merge($roleMenuIds, $specificMenuIds));
+
+                // Get menu IDs from specific user permissions (ALLOW)
+                $allowedOverrides = DB::table('user_scope_permissions')
+                    ->where('user_id', $user->id)
+                    ->where('scope_id', 'app_inventory')
+                    ->where('access_type', 'ALLOW')
+                    ->pluck('menu_id')
+                    ->toArray();
+
+                // Get menu IDs from specific user permissions (DENY)
+                $deniedOverrides = DB::table('user_scope_permissions')
+                    ->where('user_id', $user->id)
+                    ->where('scope_id', 'app_inventory')
+                    ->where('access_type', 'DENY')
+                    ->pluck('menu_id')
+                    ->toArray();
+
+                $allowedMenuIds = array_diff(array_unique(array_merge($roleMenuIds, $allowedOverrides)), $deniedOverrides);
 
                 if (!empty($allowedMenuIds)) {
                     $sidebarMenus = \App\Models\InventoryModel\Menu::where('is_active', true)
                         ->whereNull('parent_id')
-                        ->where(function($query) use ($allowedMenuIds) {
+                        ->where(function ($query) use ($allowedMenuIds) {
                             $query->whereIn('id', $allowedMenuIds)
-                                  ->orWhereHas('children', function($q) use ($allowedMenuIds) {
-                                      $q->whereIn('id', $allowedMenuIds)->where('is_active', true);
-                                  });
+                                ->orWhereHas('children', function ($q) use ($allowedMenuIds) {
+                                    $q->whereIn('id', $allowedMenuIds)->where('is_active', true);
+                                });
                         })
-                        ->with(['children' => function($q) use ($allowedMenuIds) {
+                        ->with(['children' => function ($q) use ($allowedMenuIds) {
                             $q->whereIn('id', $allowedMenuIds)->where('is_active', true);
                         }])
                         ->orderBy('sort_order')
                         ->get();
 
                     // Filter out menus whose routes are not defined in this application to prevent RouteNotFoundException
-                    $sidebarMenus = $sidebarMenus->filter(function($menu) {
+                    $sidebarMenus = $sidebarMenus->filter(function ($menu) {
                         // 1. Filter children first
                         if ($menu->children->isNotEmpty()) {
-                            $menu->setRelation('children', $menu->children->filter(function($child) {
+                            $menu->setRelation('children', $menu->children->filter(function ($child) {
                                 if ($child->route && $child->route !== '#' && !str_contains($child->route, '*')) {
                                     return \Route::has($child->route);
                                 }
@@ -184,7 +189,7 @@ class AppServiceProvider extends ServiceProvider
                         if ($menu->route && $menu->route !== '#') {
                             return \Route::has($menu->route);
                         }
-                        
+
                         return true;
                     });
                 }
