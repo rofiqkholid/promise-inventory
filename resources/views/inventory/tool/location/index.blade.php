@@ -93,7 +93,7 @@ $(document).ready(function() {
         ajax: { url: apiBase, type: 'GET' },
         columns: [
             { data: null, orderable: false, searchable: false, render: (d, t, r, meta) => meta.row + meta.settings._iDisplayStart + 1 },
-            { data: 'code', render: d => `<span class="font-mono font-semibold text-primary-600 dark:text-primary-400">${d}</span>` },
+            { data: 'code', render: d => `<span class="font-mono text-slate-900 dark:text-slate-100">${d}</span>` },
             { data: 'name' },
             { 
                 data: 'category', 

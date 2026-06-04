@@ -6,12 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Menu extends Model
 {
-    protected $table = 'inv_m_menus';
-    protected $fillable = ['title', 'route', 'icon', 'order', 'is_active', 'parent_id', 'type'];
+    protected $table = 'menus';
+    protected $fillable = ['title', 'route', 'icon', 'sort_order', 'is_active', 'parent_id', 'is_visible'];
 
     public function roles()
     {
-        return $this->belongsToMany(InvRole::class, 'inv_role_menus', 'menu_id', 'role_id');
+        return $this->belongsToMany(InvRole::class, 'role_scope_permissions', 'menu_id', 'role_id')
+            ->wherePivot('scope_id', 'app_inventory');
     }
 
     public function parent()
@@ -21,11 +22,12 @@ class Menu extends Model
 
     public function children()
     {
-        return $this->hasMany(Menu::class, 'parent_id')->with('children')->orderBy('order');
+        return $this->hasMany(Menu::class, 'parent_id')->with('children')->orderBy('sort_order');
     }
 
     public function userSpecific()
     {
-        return $this->belongsToMany(\App\Models\User::class, 'inv_user_menus', 'menu_id', 'user_id');
+        return $this->belongsToMany(\App\Models\User::class, 'user_scope_permissions', 'menu_id', 'user_id')
+            ->wherePivot('scope_id', 'app_inventory');
     }
 }

@@ -52,9 +52,11 @@
                 </div>
             </div>
 
+            @if(Auth::user()->hasMenuPermission('inventory.tool.slow-batch.index', 'can_create'))
             <button type="button" id="btnAddBatch" class="h-9 inline-flex items-center justify-center gap-2 px-6 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all font-sans">
                 <i class="fa-solid fa-plus"></i> Register Asset
             </button>
+            @endif
         </div>
     </div>
 
@@ -484,12 +486,16 @@ $(document).ready(function() {
             },
             { 
                 data: null, orderable: false, searchable: false, className: 'text-center',
-                render: (d, t, r) => `
+                render: (d, t, r) => {
+                    let actionsHtml = `
                     <div class="flex items-center justify-center gap-1">
                         <button class="print-qr-btn h-8 w-8 inline-flex items-center justify-center text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-xs border border-green-100/50 dark:border-green-800/30 transition-all active:scale-95"
                             data-id="${r.id}" title="Print QR Code">
                             <i class="fa-solid fa-print text-sm"></i>
-                        </button>
+                        </button>`;
+                        
+                    @if(Auth::user()->hasMenuPermission('inventory.tool.slow-batch.index', 'can_edit'))
+                    actionsHtml += `
                         <button class="edit-batch-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors"
                             data-id="${r.id}" 
                             data-id-number="${r.id_number}"
@@ -502,8 +508,12 @@ $(document).ready(function() {
                             data-status="${r.status}"
                             title="Edit">
                             <i class="fa-solid fa-pen-to-square text-sm"></i>
-                        </button>
-                    </div>`
+                        </button>`;
+                    @endif
+                    
+                    actionsHtml += `</div>`;
+                    return actionsHtml;
+                }
             }
         ],
         drawCallback: function(settings) {

@@ -100,7 +100,7 @@
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center' },
                 { data: 'image', className: 'text-center' },
-                { data: 'name', render: d => `<span class="font-bold text-gray-900 dark:text-white">${d}</span>` },
+                { data: 'name', render: d => `<span class="text-slate-900 dark:text-slate-100">${d}</span>` },
                 { data: 'category' },
                 { data: 'action', className: 'text-center' }
             ]

@@ -46,21 +46,8 @@ class CheckInventoryRole
                 return $next($request);
             }
 
-            // Get all active allowed routes for the user
-            $allowedRoutes = \App\Models\InventoryModel\Menu::where('is_active', true)
-                ->where(function($q) use ($user) {
-                    $q->whereHas('roles', function($rq) use ($user) {
-                        $rq->whereIn('inv_m_roles.id', $user->roles->pluck('id'));
-                    })->orWhereHas('userSpecific', function($uq) use ($user) {
-                        $uq->where('users.id', $user->id);
-                    });
-                })
-                ->pluck('route')
-                ->filter()
-                ->toArray();
-
-            // Check if the current route is allowed
-            if ($this->hasAccess($routeName, $allowedRoutes)) {
+            // Check if the current route is allowed using scope-based check
+            if ($user->hasMenuPermission($routeName, 'can_view')) {
                 return $next($request);
             }
 

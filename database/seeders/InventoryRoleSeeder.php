@@ -20,6 +20,9 @@ class InventoryRoleSeeder extends Seeder
             ['name' => 'PIC', 'code' => 'pic', 'description' => 'Can create and submit STO events (Person In Charge)'],
             ['name' => 'Supervisor', 'code' => 'supervisor', 'description' => 'Intermediate access with edit/delete permissions'],
             ['name' => 'Viewer', 'code' => 'viewer', 'description' => 'Read-only access'],
+            ['name' => 'Checker Tool', 'code' => 'checker_tool', 'description' => 'Can verify tool stock opname'],
+            ['name' => 'Approver Tool', 'code' => 'approver_tool', 'description' => 'Can finalize tool stock opname'],
+            ['name' => 'Operator Tool', 'code' => 'operator_tool', 'description' => 'Can fill STO tool, perform transactions, and manage master data'],
         ];
 
         foreach ($roles as $role) {

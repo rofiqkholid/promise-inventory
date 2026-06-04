@@ -89,9 +89,22 @@
             $('#permission_role_id').val(id); $('#permission_user_id').val('');
             $('#permissionModalTitle').text('Role Basic Menu');
             $('.menu-checkbox').prop('checked', false);
+            $('.perm-checkbox').prop('checked', false);
+            $('.role-permission-matrix').removeClass('hidden').addClass('flex');
             $.get("{{ url('inventory/role-menus') }}/" + id, function(data) {
                 const menus = Array.isArray(data.active_menus) ? data.active_menus : Object.values(data.active_menus || {});
                 menus.forEach(menuId => $(`.menu-checkbox[value="${menuId}"]`).prop('checked', true));
+                
+                const perms = data.permissions || {};
+                Object.keys(perms).forEach(menuId => {
+                    const row = perms[menuId];
+                    const matrixDiv = $(`.role-permission-matrix[data-menu-id="${menuId}"]`);
+                    if (row.can_view) matrixDiv.find('.can-view-cb').prop('checked', true);
+                    if (row.can_create) matrixDiv.find('.can-create-cb').prop('checked', true);
+                    if (row.can_edit) matrixDiv.find('.can-edit-cb').prop('checked', true);
+                    if (row.can_delete) matrixDiv.find('.can-delete-cb').prop('checked', true);
+                });
+                
                 $('#permissionModal').removeClass('hidden').addClass('flex');
             });
         });

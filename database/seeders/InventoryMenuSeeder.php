@@ -110,20 +110,20 @@ class InventoryMenuSeeder extends Seeder
                 'route' => '#',
                 'type'  => 'header',
                 'order' => 3,
-                'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
+                'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer', 'operator_tool', 'checker_tool', 'approver_tool'],
                 'children' => [
-                    ['title' => 'Dashboard', 'route' => 'inventory.tool.dashboard', 'icon' => 'fa-solid fa-gauge-high', 'order' => 0, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer']],
+                    ['title' => 'Dashboard', 'route' => 'inventory.tool.dashboard', 'icon' => 'fa-solid fa-gauge-high', 'order' => 0, 'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer', 'operator_tool', 'checker_tool', 'approver_tool']],
                     [
                         'title' => 'Master Data',
                         'route' => '#',
                         'icon'  => 'fa-solid fa-boxes-packing',
                         'order' => 1,
-                        'roles' => ['admin', 'approver'],
+                        'roles' => ['admin', 'approver', 'operator_tool'],
                         'children' => [
-                            ['title' => 'Tool Category', 'route' => 'inventory.tool.category.index', 'icon' => 'fa-solid fa-tags', 'order' => 1, 'roles' => ['admin', 'approver']],
-                            ['title' => 'Tool Sketch', 'route' => 'inventory.tool.sketch.index', 'icon' => 'fa-solid fa-image', 'order' => 2, 'roles' => ['admin', 'approver']],
-                            ['title' => 'Tool Specification', 'route' => 'inventory.tool.master.index', 'icon' => 'fa-solid fa-wrench', 'order' => 3, 'roles' => ['admin', 'approver']],
-                            ['title' => 'Tool Location', 'route' => 'inventory.tool.location.index', 'icon' => 'fa-solid fa-location-dot', 'order' => 4, 'roles' => ['admin', 'approver']],
+                            ['title' => 'Tool Category', 'route' => 'inventory.tool.category.index', 'icon' => 'fa-solid fa-tags', 'order' => 1, 'roles' => ['admin', 'approver', 'operator_tool']],
+                            ['title' => 'Tool Sketch', 'route' => 'inventory.tool.sketch.index', 'icon' => 'fa-solid fa-image', 'order' => 2, 'roles' => ['admin', 'approver', 'operator_tool']],
+                            ['title' => 'Tool Specification', 'route' => 'inventory.tool.master.index', 'icon' => 'fa-solid fa-wrench', 'order' => 3, 'roles' => ['admin', 'approver', 'operator_tool']],
+                            ['title' => 'Tool Location', 'route' => 'inventory.tool.location.index', 'icon' => 'fa-solid fa-location-dot', 'order' => 4, 'roles' => ['admin', 'approver', 'operator_tool']],
                         ]
                     ],
                     [
@@ -131,10 +131,10 @@ class InventoryMenuSeeder extends Seeder
                         'route' => '#',
                         'icon'  => 'fa-solid fa-gears',
                         'order' => 2,
-                        'roles' => ['admin', 'approver', 'checker', 'operator'],
+                        'roles' => ['admin', 'approver', 'checker', 'operator', 'operator_tool'],
                         'children' => [
-                            ['title' => 'Fast Moving Stock', 'route' => 'inventory.tool.fast-stock.index', 'icon' => 'fa-solid fa-bolt', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'operator']],
-                            ['title' => 'Slow Moving Assets', 'route' => 'inventory.tool.slow-batch.index', 'icon' => 'fa-solid fa-cubes', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'operator']],
+                            ['title' => 'Fast Moving Stock', 'route' => 'inventory.tool.fast-stock.index', 'icon' => 'fa-solid fa-bolt', 'order' => 1, 'roles' => ['admin', 'approver', 'checker', 'operator', 'operator_tool']],
+                            ['title' => 'Slow Moving Assets', 'route' => 'inventory.tool.slow-batch.index', 'icon' => 'fa-solid fa-cubes', 'order' => 2, 'roles' => ['admin', 'approver', 'checker', 'operator', 'operator_tool']],
                         ]
                     ],
                     [
@@ -142,14 +142,14 @@ class InventoryMenuSeeder extends Seeder
                         'route' => 'inventory.tool.sto.index',
                         'icon'  => 'fa-solid fa-clipboard-check',
                         'order' => 3,
-                        'roles' => ['admin', 'approver', 'checker', 'operator'],
+                        'roles' => ['admin', 'approver', 'checker', 'operator', 'operator_tool', 'checker_tool', 'approver_tool'],
                     ],
                     [
                         'title' => 'Tool Information',
                         'route' => 'inventory.tool.information.index',
                         'icon'  => 'fa-solid fa-circle-info',
                         'order' => 4,
-                        'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer'],
+                        'roles' => ['admin', 'approver', 'checker', 'operator', 'viewer', 'operator_tool', 'checker_tool', 'approver_tool'],
                     ],
                 ]
             ],
@@ -201,8 +201,41 @@ class InventoryMenuSeeder extends Seeder
 
             // Sync Roles if defined
             if (!empty($roles)) {
-                $roleIds = InvRole::whereIn('code', $roles)->pluck('id');
-                $menu->roles()->sync($roleIds);
+                $roleObjects = InvRole::whereIn('code', $roles)->get();
+                $syncData = [];
+                foreach ($roleObjects as $roleObj) {
+                    $code = $roleObj->code;
+                    $canView = true;
+                    $canCreate = false;
+                    $canEdit = false;
+                    $canDelete = false;
+
+                    if (in_array($code, ['admin', 'approver', 'approver_tool'])) {
+                        $canCreate = true;
+                        $canEdit = true;
+                        $canDelete = true;
+                    } elseif (in_array($code, ['operator', 'operator_tool'])) {
+                        if ($m['route'] === 'inventory.tool.sto.index' || $m['route'] === 'inventory.sto.index') {
+                            $canCreate = false;
+                        } else {
+                            $canCreate = true;
+                        }
+                        $canEdit = true;
+                        $canDelete = false;
+                    } elseif (in_array($code, ['checker', 'checker_tool', 'pic'])) {
+                        $canCreate = true;
+                        $canEdit = true;
+                        $canDelete = false;
+                    }
+
+                    $syncData[$roleObj->id] = [
+                        'can_view' => $canView,
+                        'can_create' => $canCreate,
+                        'can_edit' => $canEdit,
+                        'can_delete' => $canDelete,
+                    ];
+                }
+                $menu->roles()->sync($syncData);
             }
 
             // Recurse for children

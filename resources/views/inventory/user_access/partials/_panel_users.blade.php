@@ -158,6 +158,8 @@
             $('#permission_user_id').val(id); $('#permission_role_id').val('');
             $('#permissionModalTitle').text('User Specific Menu');
             $('.menu-checkbox').prop('checked', false);
+            $('.perm-checkbox').prop('checked', false);
+            $('.role-permission-matrix').removeClass('flex').addClass('hidden');
             $.get("{{ url('inventory/user-menus') }}/" + id, function(data) {
                 const menus = Array.isArray(data.active_menus) ? data.active_menus : Object.values(data.active_menus || {});
                 menus.forEach(menuId => $(`.menu-checkbox[value="${menuId}"]`).prop('checked', true));
@@ -187,6 +189,25 @@
             if (isChecked && parentId) {
                 checkAncestors(parentId);
             }
+
+            // 3. Permission matrix sync:
+            const matrixDiv = $(`.role-permission-matrix[data-menu-id="${id}"]`);
+            if (isChecked) {
+                matrixDiv.find('.can-view-cb').prop('checked', true);
+            } else {
+                matrixDiv.find('.perm-checkbox').prop('checked', false);
+            }
+        });
+
+        $(document).on('change', '.perm-checkbox', function() {
+            const isChecked = $(this).is(':checked');
+            if (isChecked) {
+                const menuId = $(this).closest('.role-permission-matrix').data('menu-id');
+                const menuCb = $(`.menu-checkbox[data-id="${menuId}"]`);
+                if (!menuCb.is(':checked')) {
+                    menuCb.prop('checked', true).trigger('change');
+                }
+            }
         });
 
         $(document).on('click', '.select-all-children', function() {
@@ -197,7 +218,7 @@
 
         function checkDescendants(parentId, state) {
             $(`.menu-checkbox[data-parent="${parentId}"]`).each(function() {
-                $(this).prop('checked', state);
+                $(this).prop('checked', state).trigger('change');
                 checkDescendants($(this).data('id'), state);
             });
         }
@@ -205,7 +226,9 @@
         function checkAncestors(id) {
             const current = $(`.menu-checkbox[data-id="${id}"]`);
             if (current.length > 0) {
-                current.prop('checked', true);
+                if (!current.is(':checked')) {
+                    current.prop('checked', true).trigger('change');
+                }
                 const parentId = current.data('parent');
                 if (parentId) checkAncestors(parentId);
             }

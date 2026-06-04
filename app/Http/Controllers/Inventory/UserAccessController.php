@@ -10,7 +10,7 @@ class UserAccessController extends Controller
     public function index()
     {
         $roles = \App\Models\InventoryModel\InvRole::all();
-        $allMenus = \App\Models\InventoryModel\Menu::whereNull('parent_id')->with('children')->orderBy('order')->get();
+        $allMenus = \App\Models\InventoryModel\Menu::whereNull('parent_id')->with('children')->orderBy('sort_order')->get();
         return view('inventory.user_access.index', compact('roles', 'allMenus'));
     }
 
@@ -293,16 +293,40 @@ class UserAccessController extends Controller
     {
         $role = \App\Models\InventoryModel\InvRole::with('menus')->findOrFail($roleId);
         $activeMenuIds = $role->menus->pluck('id')->toArray();
+        $permissions = [];
+        foreach ($role->menus as $menu) {
+            $permissions[$menu->id] = [
+                'can_view' => $menu->pivot->can_view ?? false,
+                'can_create' => $menu->pivot->can_create ?? false,
+                'can_edit' => $menu->pivot->can_edit ?? false,
+                'can_delete' => $menu->pivot->can_delete ?? false,
+            ];
+        }
 
-        return response()->json(['active_menus' => array_values($activeMenuIds)]);
+        return response()->json([
+            'active_menus' => array_values($activeMenuIds),
+            'permissions' => $permissions
+        ]);
     }
 
     public function updateRoleMenu(Request $request)
     {
         $role = \App\Models\InventoryModel\InvRole::findOrFail($request->role_id);
         $menuIds = $request->input('menu_ids', []);
+        $permissions = $request->input('permissions', []);
 
-        $role->menus()->sync($menuIds);
+        $syncData = [];
+        foreach ($menuIds as $menuId) {
+            $menuPerm = $permissions[$menuId] ?? [];
+            $syncData[$menuId] = [
+                'can_view' => isset($menuPerm['can_view']) && $menuPerm['can_view'] == 1,
+                'can_create' => isset($menuPerm['can_create']) && $menuPerm['can_create'] == 1,
+                'can_edit' => isset($menuPerm['can_edit']) && $menuPerm['can_edit'] == 1,
+                'can_delete' => isset($menuPerm['can_delete']) && $menuPerm['can_delete'] == 1,
+            ];
+        }
+
+        $role->menus()->sync($syncData);
 
         return response()->json(['success' => true, 'message' => 'Role permissions updated.']);
     }
@@ -452,7 +476,7 @@ class UserAccessController extends Controller
         if ($order) {
             $colIdx = $order['column'];
             $dir = $order['dir'];
-            $columns = [1 => 'title', 2 => 'parent_id', 5 => 'order'];
+            $columns = [1 => 'title', 2 => 'parent_id', 5 => 'sort_order'];
             if (isset($columns[$colIdx])) {
                 if ($columns[$colIdx] === 'parent_id') {
                     // Sorting by parent title would be better but simple parent_id for now
@@ -462,7 +486,7 @@ class UserAccessController extends Controller
                 }
             }
         } else {
-            $query->orderBy('order', 'asc');
+            $query->orderBy('sort_order', 'asc');
         }
 
         $data = $query->skip($start)->take($length)->get();
@@ -491,7 +515,7 @@ class UserAccessController extends Controller
                 'parent' => $parentTitle,
                 'status' => $statusBadge,
                 'icon' => $iconHtml,
-                'order' => '<span class="font-bold text-gray-500">' . $row->order . '</span>',
+                'order' => '<span class="font-bold text-gray-500">' . $row->sort_order . '</span>',
                 'action' => $btn
             ];
         });
@@ -518,7 +542,7 @@ class UserAccessController extends Controller
             'route' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'order' => 'required|integer',
-            'parent_id' => 'nullable|exists:inv_m_menus,id',
+            'parent_id' => 'nullable|exists:menus,id',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -528,7 +552,7 @@ class UserAccessController extends Controller
                 'title' => $request->title,
                 'route' => $request->route,
                 'icon' => $request->icon,
-                'order' => $request->order,
+                'sort_order' => $request->order,
                 'parent_id' => $request->parent_id,
                 'is_active' => $request->has('is_active') ? true : false,
             ]

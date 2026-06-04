@@ -120,13 +120,13 @@
 
             <!-- Right Section: Action Buttons -->
             <div class="flex items-center gap-2 flex-shrink-0">
-                @if($event->status === 'draft')
+                @if($event->status === 'draft' && ((Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_create') && !Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_delete')) || Auth::user()->hasRole('admin')))
                     <button type="button" id="btnSubmitSTO" class="inline-flex items-center justify-center gap-1.5 px-4 h-9 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-xs uppercase tracking-wider">
                         <i class="fa-solid fa-paper-plane text-xs"></i> Submit for Approval
                     </button>
                 @endif
 
-                @if($event->status === 'submitted' && Auth::user()->hasRole('approver|admin'))
+                @if($event->status === 'submitted' && Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_delete'))
                     <button type="button" id="btnApproveSTO" class="inline-flex items-center justify-center gap-1.5 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-xs uppercase tracking-wider">
                         <i class="fa-solid fa-check-double text-xs"></i> Approve
                     </button>
@@ -135,7 +135,7 @@
                     </button>
                 @endif
 
-                @if(in_array($event->status, ['approved', 'submitted']) && (Auth::user()->hasRole('approver|admin') || Auth::user()->id === $event->created_by))
+                @if(in_array($event->status, ['approved', 'submitted']) && Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_delete'))
                     <button type="button" id="btnReopenSTO" class="inline-flex items-center justify-center gap-1.5 px-4 h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-xs uppercase tracking-wider">
                         <i class="fa-solid fa-rotate-left text-xs"></i> Re-open STO
                     </button>

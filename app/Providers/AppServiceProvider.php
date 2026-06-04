@@ -133,7 +133,7 @@ class AppServiceProvider extends ServiceProvider
                 $roleMenuIds = $roles->pluck('menus')->flatten()->pluck('id')->unique()->toArray();
                 
                 // Get menu IDs from specific user permissions
-                $specificMenuIds = $user->specificMenus()->pluck('inv_m_menus.id')->toArray();
+                $specificMenuIds = $user->specificMenus()->pluck('menus.id')->toArray();
                 
                 $allowedMenuIds = array_unique(array_merge($roleMenuIds, $specificMenuIds));
 
@@ -149,8 +149,33 @@ class AppServiceProvider extends ServiceProvider
                         ->with(['children' => function($q) use ($allowedMenuIds) {
                             $q->whereIn('id', $allowedMenuIds)->where('is_active', true);
                         }])
-                        ->orderBy('order')
+                        ->orderBy('sort_order')
                         ->get();
+
+                    // Filter out menus whose routes are not defined in this application to prevent RouteNotFoundException
+                    $sidebarMenus = $sidebarMenus->filter(function($menu) {
+                        // 1. Filter children first
+                        if ($menu->children->isNotEmpty()) {
+                            $menu->setRelation('children', $menu->children->filter(function($child) {
+                                if ($child->route && $child->route !== '#' && !str_contains($child->route, '*')) {
+                                    return \Route::has($child->route);
+                                }
+                                return true;
+                            }));
+                        }
+
+                        // 2. If it is a wildcard route pattern, only keep it if it still has active children
+                        if ($menu->route && str_contains($menu->route, '*')) {
+                            return $menu->children->isNotEmpty();
+                        }
+
+                        // 3. For standard routes, verify they are defined in the router
+                        if ($menu->route && $menu->route !== '#') {
+                            return \Route::has($menu->route);
+                        }
+                        
+                        return true;
+                    });
                 }
             }
 

@@ -3,7 +3,7 @@
          data-id="{{ $menu->id }}" 
          data-parent="{{ $menu->parent_id ?? '' }}">
         
-        <div class="flex items-center justify-between p-2 {{ $depth === 0 ? 'bg-slate-50/50 dark:bg-gray-700/20' : '' }}">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-2 {{ $depth === 0 ? 'bg-slate-50/50 dark:bg-gray-700/20' : '' }} gap-2">
             <label class="flex items-center gap-2.5 cursor-pointer group flex-1">
                 <input type="checkbox" name="menu_ids[]" value="{{ $menu->id }}" 
                     class="menu-checkbox w-3.5 h-3.5 rounded-xs border-gray-300 text-primary-600 focus:ring-0 transition-all cursor-pointer"
@@ -23,6 +23,26 @@
                     </div>
                 </div>
             </label>
+
+            {{-- Permission Matrix (Only shown/enabled for Roles) --}}
+            <div class="role-permission-matrix hidden flex items-center gap-3 bg-slate-100/50 dark:bg-gray-800/60 px-3 py-1 rounded-sm border border-slate-200/40 dark:border-gray-700/50" data-menu-id="{{ $menu->id }}">
+                <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_view]" value="1" class="perm-checkbox can-view-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    View
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_create]" value="1" class="perm-checkbox can-create-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    Create
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_edit]" value="1" class="perm-checkbox can-edit-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    Edit
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_delete]" value="1" class="perm-checkbox can-delete-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    Delete
+                </label>
+            </div>
 
             @if($menu->children->count() > 0)
                 <button type="button" class="select-all-children px-2 py-0.5 text-[9px] font-black text-primary-600 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 rounded-xs transition-colors border border-primary-100 dark:border-primary-800/50" data-id="{{ $menu->id }}">

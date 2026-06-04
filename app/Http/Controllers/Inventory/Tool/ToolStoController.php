@@ -128,6 +128,10 @@ class ToolStoController extends Controller
 
     public function store(Request $request)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_create')) {
+            return response()->json(['status' => 'error', 'message' => 'Hanya role checker_tool, approver_tool, atau admin yang dapat membuat STO.'], 403);
+        }
+
         $validated = $request->validate([
             'period_start' => 'required|date',
             'description'  => 'nullable|string',
@@ -153,6 +157,10 @@ class ToolStoController extends Controller
 
     public function updateEvent(Request $request, $id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_edit')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         if ($event->status !== 'draft') {
             return response()->json(['status' => 'error', 'message' => 'Hanya STO Event berstatus Draft yang dapat diubah.'], 422);
@@ -173,6 +181,10 @@ class ToolStoController extends Controller
 
     public function deleteEvent($id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_edit')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         if ($event->status !== 'draft') {
             return response()->json(['status' => 'error', 'message' => 'Hanya STO Event berstatus Draft yang dapat dihapus.'], 422);
@@ -208,6 +220,10 @@ class ToolStoController extends Controller
 
     public function addItemFast(Request $request, $id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_edit')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         if ($event->status !== 'draft') return response()->json(['status' => 'error', 'message' => 'Cannot modify a non-draft STO.'], 422);
 
@@ -268,6 +284,10 @@ class ToolStoController extends Controller
 
     public function addItemSlow(Request $request, $id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_edit')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         if ($event->status !== 'draft') return response()->json(['status' => 'error', 'message' => 'Cannot modify a non-draft STO.'], 422);
 
@@ -334,6 +354,10 @@ class ToolStoController extends Controller
 
     public function deleteItemFast(Request $request, $id, $itemId)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_edit')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         if ($event->status !== 'draft') return response()->json(['status' => 'error', 'message' => 'Cannot modify a non-draft STO.'], 422);
 
@@ -345,6 +369,10 @@ class ToolStoController extends Controller
 
     public function deleteItemSlow(Request $request, $id, $itemId)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_edit')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         if ($event->status !== 'draft') return response()->json(['status' => 'error', 'message' => 'Cannot modify a non-draft STO.'], 422);
 
@@ -356,6 +384,12 @@ class ToolStoController extends Controller
 
     public function submit($id)
     {
+        $user = Auth::user();
+        $isChecker = $user->hasMenuPermission('inventory.tool.sto.index', 'can_create') && !$user->hasMenuPermission('inventory.tool.sto.index', 'can_delete');
+        if (!$isChecker && !$user->hasRole('admin')) {
+            return response()->json(['status' => 'error', 'message' => 'Hanya checker_tool atau admin yang dapat memverifikasi/mengirim STO.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         $event->update(['status' => 'submitted']);
         return response()->json(['status' => 'success', 'message' => 'STO submitted for approval.']);
@@ -363,6 +397,10 @@ class ToolStoController extends Controller
 
     public function approve($id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_delete')) {
+            return response()->json(['status' => 'error', 'message' => 'Hanya approver_tool atau admin yang dapat menyetujui/memfinalisasi STO.'], 403);
+        }
+
         $event = TolStoEvent::with(['fastDetails', 'slowDetails'])->findOrFail($id);
         if ($event->status !== 'submitted') return response()->json(['status' => 'error', 'message' => 'Only submitted STOs can be approved.'], 422);
 
@@ -422,6 +460,10 @@ class ToolStoController extends Controller
 
     public function reopen($id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_delete')) {
+            return response()->json(['status' => 'error', 'message' => 'Hanya approver_tool atau admin yang dapat membuka kembali STO.'], 403);
+        }
+
         $event = TolStoEvent::with(['fastDetails', 'slowDetails'])->findOrFail($id);
         
         if (!in_array($event->status, ['approved', 'submitted'])) {
@@ -478,6 +520,10 @@ class ToolStoController extends Controller
 
     public function reject(Request $request, $id)
     {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_delete')) {
+            return response()->json(['status' => 'error', 'message' => 'Hanya approver_tool atau admin yang dapat menolak STO.'], 403);
+        }
+
         $event = TolStoEvent::findOrFail($id);
         $event->update([
             'status' => 'rejected',

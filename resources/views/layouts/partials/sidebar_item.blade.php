@@ -17,7 +17,7 @@
     $hasChildren = $menu->children->count() > 0;
 @endphp
 
-@if(isset($menu->type) && $menu->type === 'header')
+@if(($menu->type ?? null) === 'header' || (is_null($menu->parent_id) && ($menu->route === '#' || is_null($menu->route))))
     {{-- SECTION HEADER (COLLAPSIBLE) --}}
     <div x-data="{ sectionOpen: localStorage.getItem('section_' + {{ $menu->id }}) === 'true' || {{ $isActive ? 'true' : 'false' }} }" 
          class="section-container mb-1 {{ ($depth ?? 0) === 0 ? 'border-t border-slate-200 dark:border-gray-700/50 mt-2 first:border-0 first:mt-0' : '' }}">
