@@ -275,6 +275,15 @@ $(document).ready(function() {
                         let msg = xhr.responseJSON?.message || 'Error occurred.';
                         if (xhr.status) msg = `<span class='font-bold'>[Error ${xhr.status}: ${xhr.statusText}]</span><br>${msg}`;
 
+                        if (xhr.responseJSON?.errors && Array.isArray(xhr.responseJSON.errors)) {
+                            let errHtml = '<div class="mt-3 pt-3 border-t border-rose-200/50 space-y-1">';
+                            xhr.responseJSON.errors.forEach(err => {
+                                errHtml += `<div class="text-[10px] text-rose-600 font-medium leading-tight"><i class="fa-solid fa-circle-exclamation mr-1 text-[8px]"></i> ${err}</div>`;
+                            });
+                            errHtml += '</div>';
+                            msg += errHtml;
+                        }
+
                         $('#importResult').removeClass('hidden bg-emerald-50 text-emerald-900 border-emerald-100')
                             .addClass('bg-rose-50 text-rose-900 border-rose-100 p-5 rounded-sm')
                             .html(msg);

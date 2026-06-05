@@ -96,6 +96,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
         try {
             $skippedEmptyPartNo = 0;
             $skippedEmptyEbdVersion = 0;
+            $skippedDueToPrefix = 0;
             $processedAny = false;
 
             foreach ($rows as $index => $row) {
@@ -122,7 +123,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                 
                 $product = $productQuery->first();
                 if (!$product) {
-                    $this->errors[] = "Row {$rowNum}: Part No '{$partNo}' not found in Product Master for the selected customer.";
+                    $this->errors[] = "Row {$rowNum}: Part No '{$partNo}' not found in Product Master for the selected customer. Please make sure the Part No exists in Product Master Data (Data Master Product) or create it first.";
                     continue;
                 }
 
@@ -138,12 +139,14 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                         // In Regular mode, we ONLY read baselines starting with SQ.
                         // We DO NOT convert EBD to SQ. We simply ignore EBD data.
                         if (stripos($baseName, 'SQ') !== 0) {
+                            $skippedDueToPrefix++;
                             continue;
                         }
                     } else {
                         // In Project mode, we ONLY read baselines starting with EBD.
                         // We ignore any SQ data present in the file.
                         if (stripos($baseName, 'EBD') !== 0) {
+                            $skippedDueToPrefix++;
                             continue;
                         }
                     }
@@ -270,12 +273,18 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                 }
             }
 
+            if ($skippedDueToPrefix > 0) {
+                $requiredPrefix = $this->isRegular ? 'SQ' : 'EBD';
+                $moduleType = $this->isRegular ? 'Regular VAVE' : 'Project VAVE';
+                $this->errors[] = "Skipped {$skippedDueToPrefix} versions because they did not start with '{$requiredPrefix}' (Required for {$moduleType} import).";
+            }
+
             if (!$processedAny) {
                 if ($skippedEmptyPartNo > 0) {
                     $this->errors[] = "Skipped {$skippedEmptyPartNo} rows because 'Part No' in Column C was empty.";
                 }
                 if ($skippedEmptyEbdVersion > 0) {
-                    $this->errors[] = "Skipped {$skippedEmptyEbdVersion} rows because 'EBD Version' in Column E was empty.";
+                    $this->errors[] = "Skipped {$skippedEmptyEbdVersion} rows because 'EBD Version' in Column E was empty or didn't match prefix requirements.";
                 }
                 
                 // Diagnostic info: Show what's in the first row
@@ -288,7 +297,8 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                         $sample[] = "{$colLetter}: '{$val}'";
                     }
                     $this->errors[] = "System sees this on Row 7: " . implode(", ", $sample);
-                    $this->errors[] = "Please make sure 'Part No' is in Column C and 'EBD Version' is in Column E.";
+                    $requiredPrefix = $this->isRegular ? 'SQ' : 'EBD';
+                    $this->errors[] = "Please make sure 'Part No' is in Column C and 'EBD Version' in Column E starts with '{$requiredPrefix}'.";
                 }
 
                 if (count($rows) == 0) {

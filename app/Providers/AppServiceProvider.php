@@ -69,6 +69,17 @@ class AppServiceProvider extends ServiceProvider
                         'u.name as unit_name'
                     ])
                     ->where('p.is_active', 1)
+                    ->whereRaw("p.revision_id = (
+                        SELECT TOP 1 sub_p.revision_id
+                        FROM inv_t_product_detail sub_p
+                        JOIN inv_m_revision sub_r ON sub_p.revision_id = sub_r.id
+                        WHERE sub_p.product_id = p.product_id
+                          AND sub_p.model_id = p.model_id
+                          AND sub_p.is_active = 1
+                        ORDER BY 
+                          CASE WHEN sub_r.group_name = 'RC' THEN 2 ELSE 1 END DESC,
+                          sub_r.sort_order DESC
+                    )")
                     ->get()
                     ->map(function ($item) {
                         $currentPCS = \App\Models\InventoryModel\Material\InventoryProduct::calculatePcs(
