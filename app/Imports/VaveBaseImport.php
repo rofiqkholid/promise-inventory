@@ -128,6 +128,16 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                     continue;
                 }
 
+                // Check if the product has an active record in inv_t_product_detail
+                $hasActiveDetail = DB::table('inv_t_product_detail')
+                    ->where('product_id', $product->id)
+                    ->where('is_active', 1)
+                    ->exists();
+                if (!$hasActiveDetail) {
+                    $missingProducts[$partNo][] = $rowNum;
+                    continue;
+                }
+
                 $maxCols = $row->count();
                 $foundEbdInRow = false;
                 // EBD data starts at Index 4 (Column E), block size is 16 columns
@@ -308,7 +318,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
             }
             if (!empty($missingProducts)) {
                 foreach ($missingProducts as $part => $rowsList) {
-                    $this->errors[] = "Part No '{$part}' (on row(s) " . implode(', ', $rowsList) . ") not found in Product Master. Please register this part in Master Data Product first.";
+                    $this->errors[] = "Part No '{$part}' (on row(s) " . implode(', ', $rowsList) . ") not found in Product Master or has no active revision in Product Details (inv_t_product_detail). Please configure it first.";
                 }
             }
 
