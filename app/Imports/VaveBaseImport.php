@@ -305,6 +305,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                 if (count($rows) == 0) {
                     $this->errors[] = "The selected sheet appears to have no data rows after row 6.";
                 }
+            }
             if (!empty($missingProducts)) {
                 foreach ($missingProducts as $part => $rowsList) {
                     $this->errors[] = "Part No '{$part}' (on row(s) " . implode(', ', $rowsList) . ") not found in Product Master. Please register this part in Master Data Product first.";
