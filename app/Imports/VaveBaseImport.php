@@ -98,6 +98,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
             $skippedEmptyEbdVersion = 0;
             $skippedDueToPrefix = 0;
             $processedAny = false;
+            $missingProducts = [];
 
             foreach ($rows as $index => $row) {
                 $rowNum = $index + 7;
@@ -123,7 +124,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                 
                 $product = $productQuery->first();
                 if (!$product) {
-                    $this->errors[] = "Row {$rowNum}: Part No '{$partNo}' not found in Product Master for the selected customer. Please make sure the Part No exists in Product Master Data (Data Master Product) or create it first.";
+                    $missingProducts[$partNo][] = $rowNum;
                     continue;
                 }
 
@@ -303,6 +304,10 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
 
                 if (count($rows) == 0) {
                     $this->errors[] = "The selected sheet appears to have no data rows after row 6.";
+                }
+            if (!empty($missingProducts)) {
+                foreach ($missingProducts as $part => $rowsList) {
+                    $this->errors[] = "Part No '{$part}' (on row(s) " . implode(', ', $rowsList) . ") not found in Product Master. Please register this part in Master Data Product first.";
                 }
             }
 

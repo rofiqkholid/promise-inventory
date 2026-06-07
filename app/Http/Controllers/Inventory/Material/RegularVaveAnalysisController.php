@@ -204,10 +204,41 @@ class RegularVaveAnalysisController extends Controller
             $totalCreated = count($log['created']); $totalUpdated = count($log['updated']); $unchanged = $log['unchangedCount']; $totalProcessed = $totalCreated + $totalUpdated + $unchanged;
             if (!empty($errors)) {
                 $errorCount = count($errors);
-                if ($totalProcessed === 0) return response()->json(['success' => false, 'message' => 'Full failure', 'errors' => $errors, 'log' => $log], 422);
-                return response()->json(['success' => true, 'message' => 'Imported with ' . $errorCount . ' warnings.', 'errors' => $errors, 'log' => $log]);
+                
+                if ($totalProcessed === 0) {
+                    $errorMsg = "<div class='text-rose-600 font-bold mb-2 uppercase text-[10px]'><i class='fa-solid fa-triangle-exclamation mr-1'></i> Import blocked by {$errorCount} errors:</div>";
+                    $errorMsg .= "<ul class='list-inside space-y-1 text-gray-600 font-medium text-[11px]'>";
+                    foreach (array_slice($errors, 0, 15) as $err) {
+                        $errorMsg .= "<li>&bull; {$err}</li>";
+                    }
+                    $errorMsg .= "</ul>";
+                    if ($errorCount > 15) {
+                        $errorMsg .= "<div class='mt-2 font-bold text-gray-400 italic text-[10px]'>... and " . ($errorCount - 15) . " more errors.</div>";
+                    }
+                    return response()->json(['success' => false, 'message' => $errorMsg, 'errors' => $errors, 'log' => $log], 422);
+                }
+
+                $warnMsg = "<div class='mb-2 font-bold text-amber-700 uppercase text-[10px]'><i class='fa-solid fa-circle-exclamation mr-1'></i> Imported with {$errorCount} warnings</div>";
+                $warnMsg .= "<ul class='list-inside space-y-1 text-gray-600 font-medium text-[11px]'>";
+                foreach (array_slice($errors, 0, 10) as $err) {
+                    $warnMsg .= "<li>&bull; {$err}</li>";
+                }
+                $warnMsg .= "</ul>";
+                if ($errorCount > 10) {
+                    $warnMsg .= "<div class='mt-1 text-gray-400 italic text-[10px]'>... and " . ($errorCount - 10) . " more.</div>";
+                }
+                return response()->json(['success' => true, 'message' => $warnMsg, 'errors' => $errors, 'log' => $log]);
             }
-            return response()->json(['success' => true, 'message' => 'Processed ' . $totalProcessed . ' records successfully.', 'log' => $log]);
+            
+            $successMsg = "<div class='mb-3 font-bold text-emerald-700 uppercase drop-shadow-sm text-[11px]'><i class='fa-solid fa-circle-check mr-1.5'></i> Processed {$totalProcessed} records!</div>";
+            $summaryLines = [];
+            if ($totalCreated > 0) $summaryLines[] = "<div class='text-emerald-600 font-bold text-[10px]'><i class='fa-solid fa-plus-circle mr-1'></i> {$totalCreated} new SQ versions created</div>";
+            if ($totalUpdated > 0) $summaryLines[] = "<div class='text-amber-600 font-bold text-[10px]'><i class='fa-solid fa-pen-to-square mr-1'></i> {$totalUpdated} SQ versions updated</div>";
+            if ($unchanged > 0) $summaryLines[] = "<div class='text-gray-500 italic text-[10px]'><i class='fa-solid fa-check-double mr-1'></i> {$unchanged} other SQ versions already up-to-date</div>";
+            if (!empty($summaryLines)) {
+                $successMsg .= "<div class='space-y-1 border-t border-emerald-100 pt-2 mt-2'>" . implode('', $summaryLines) . "</div>";
+            }
+            return response()->json(['success' => true, 'message' => $successMsg, 'log' => $log]);
         } catch (\Exception $e) { return response()->json(['success' => false, 'message' => 'Critical Error: ' . $e->getMessage()], 500); }
     }
 
