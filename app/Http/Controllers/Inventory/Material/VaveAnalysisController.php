@@ -179,7 +179,7 @@ class VaveAnalysisController extends Controller
             'product' => $product,
             'base' => $base,
             'baseHistory' => $baseHistory,
-            'baseSuffixes' => VaveBaseSuffix::where('customer_id', $product->customer_id)->where('is_active', 1)->get(),
+            'baseSuffixes' => VaveBaseSuffix::where('is_active', 1)->orderBy('name')->get(),
             'materialSpecs' => MaterialSpec::select('id', 'spec_name')->get(),
             'units' => Unit::all(),
             'revisions' => InventoryProduct::with(['materialSpec', 'unit', 'revision'])

@@ -188,7 +188,7 @@ class VaveBaseImportSheet implements ToCollection, WithStartRow
                     }
 
                     // Relationships
-                    $suffix = !empty($suffixName) ? VaveBaseSuffix::where('name', $suffixName)->where('customer_id', $product->customer_id)->first() : null;
+                    $suffix = !empty($suffixName) ? VaveBaseSuffix::where('name', $suffixName)->where('base_type', $this->isRegular ? 'SQ' : 'EBD')->first() : null;
                     if (!empty($suffixName) && !$suffix) {
                         $vaveErrors[] = "EBD Suffix '{$suffixName}' not found.";
                     }
