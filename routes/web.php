@@ -105,6 +105,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
             Route::get('/product/get-customer', [InventoryProductController::class, 'getCustomers'])->name('product.getCustomers');
             Route::get('/product/get-model', [InventoryProductController::class, 'getModels'])->name('product.getModels');
             Route::get('/product/latest-revision/{productId}', [InventoryProductController::class, 'getLatestRevision'])->name('product.latestRevision');
+            Route::get('/product/get-epicor-parts', [InventoryProductController::class, 'getEpicorParts'])->name('product.getEpicorParts');
             Route::get('/product/{inventoryProduct}/print', [InventoryProductController::class, 'printLabel'])->name('product.print');
             Route::post('/product/update-action-status/{id}', [InventoryProductController::class, 'updateActionStatus'])->name('product.updateActionStatus');
             Route::get('/product/old-revisions', [InventoryProductController::class, 'getOldRevisions'])->name('product.oldRevisions');

@@ -781,6 +781,71 @@ class InventoryProductController extends Controller
         ]);
     }
 
+    public function getEpicorParts(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+        if ($q === '') {
+            return response()->json(['results' => []]);
+        }
+
+        try {
+            $results = DB::connection('second_db')->select("
+                WITH PriceLatest AS (
+                    select 
+                        b.VendorID, 
+                        a.PartNum, 
+                        a.BaseUnitPrice, 
+                        a.PUM, 
+                        a.EffectiveDate, 
+                        a.ExpirationDate, 
+                        e.ConvFactor,
+                        ROW_NUMBER() OVER (PARTITION BY a.PartNum ORDER BY a.EffectiveDate DESC) as RowNum
+                    from erp.VendPart a
+                    left join erp.Vendor b on b.VendorNum = a.VendorNum
+                    left join erp.part c on c.PartNum = a.PartNum
+                    left join erp.UOMClass d on d.UOMClassID = c.UOMClassID
+                    left join erp.UOMConv e on e.UOMClassID = d.UOMClassID and e.UOMCode = a.PUM
+                    where a.PartNum like ?
+                )
+                select top 30 * from PriceLatest where RowNum = 1
+            ", ["%{$q}%"]);
+
+            $formatted = collect($results)->map(function($row) {
+                $effDate = $row->EffectiveDate ? date('Y-m-d', strtotime($row->EffectiveDate)) : '-';
+                $expDate = $row->ExpirationDate ? date('Y-m-d', strtotime($row->ExpirationDate)) : '-';
+                
+                $rawPrice = (float)$row->BaseUnitPrice;
+                $convFactor = $row->ConvFactor ? round((float)$row->ConvFactor, 3) : 0;
+                $pum = trim($row->PUM);
+                
+                $calculatedPrice = $rawPrice;
+                if ($pum === 'SHEET' && $convFactor > 0) {
+                    $calculatedPrice = ceil($rawPrice / $convFactor);
+                }
+                
+                $price = number_format($calculatedPrice, 2);
+                
+                $text = "{$row->PartNum} | Vendor: {$row->VendorID} | Price: {$price} {$row->PUM} | Eff: {$effDate}";
+                
+                return [
+                    'id' => trim($row->PartNum),
+                    'text' => trim($row->PartNum),
+                    'detail' => $text,
+                    'vendor_id' => $row->VendorID,
+                    'price' => $calculatedPrice,
+                    'pum' => $pum,
+                    'effective_date' => $effDate,
+                    'expiration_date' => $expDate,
+                    'conv_factor' => $row->ConvFactor
+                ];
+            });
+
+            return response()->json(['results' => $formatted]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     /**
      * PRIVATE METHODS
      */

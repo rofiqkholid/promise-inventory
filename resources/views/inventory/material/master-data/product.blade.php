@@ -183,6 +183,14 @@
                                 </select>
                                 <p id="error-revision_id" class="text-red-500 text-[10px] mt-1 hidden font-medium uppercase tracking-wide"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required</p>
                             </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block mb-2 text-[10px] font-medium text-slate-900 dark:text-gray-300 uppercase tracking-wider">Epicor Part Number</label>
+                                <select name="partno_epicor" id="partno_epicor" class="bg-white border border-slate-200 text-gray-900 text-xs font-medium rounded-xs focus:ring-slate-500 focus:border-slate-500 block w-full h-10 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all">
+                                    <option value=""></option>
+                                </select>
+                                <p id="error-partno_epicor" class="text-red-500 text-[10px] mt-1 hidden font-medium uppercase tracking-wide"></p>
+                            </div>
                         </div>
                     </div>
 
@@ -533,6 +541,7 @@ $(function() {
                 sheetNames: '{{ route("inventory.master.product.getSheetNames") }}',
                 oldRevisions: '{{ route("inventory.master.product.oldRevisions") }}',
                 updateProductStatus: '{{ url("inventory/master/product/update-product-status") }}',
+                epicorParts: '{{ route("inventory.master.product.getEpicorParts") }}',
                 base: '{{ url("inventory/master/product") }}'
             }
         },
@@ -702,6 +711,46 @@ $(function() {
                 placeholder: 'Select...',
             });
             this.initProductSelect2();
+            this.initEpicorPartsSelect2();
+        },
+
+        initEpicorPartsSelect2: function() {
+            const el = $('#partno_epicor');
+            if (el.data('select2')) el.select2('destroy');
+            el.select2({
+                dropdownParent: this.elements.formModal,
+                width: '100%',
+                placeholder: 'Search Epicor Part...',
+                allowClear: true,
+                minimumInputLength: 3,
+                ajax: {
+                    url: this.config.routes.epicorParts,
+                    dataType: 'json',
+                    delay: 350,
+                    data: p => ({
+                        q: p.term || ''
+                    }),
+                    processResults: d => ({ results: d.results })
+                },
+                templateResult: function(repo) {
+                    if (repo.loading) return repo.text;
+                    if (!repo.detail) return repo.text;
+                    
+                    const parts = repo.detail.split(' | ');
+                    const partNo = parts[0];
+                    const details = parts.slice(1).join(' | ');
+
+                    return $(`
+                        <div class="select2-result-epicor py-1">
+                            <div class="font-bold text-xs text-slate-800 dark:text-slate-200">${partNo}</div>
+                            <div class="text-[10px] text-gray-500 mt-0.5">${details}</div>
+                        </div>
+                    `);
+                },
+                templateSelection: function(repo) {
+                    return repo.text;
+                }
+            });
         },
 
         initProductSelect2: function() {
@@ -940,7 +989,12 @@ $(function() {
 
                     // Fill other fields
                     $('#revision_id').val(data.revision_id ? data.revision?.hash_id : '').trigger('change');
-                    $('#partno_epicor').val(data.partno_epicor);
+                    if (data.partno_epicor) {
+                        const opt = new Option(data.partno_epicor, data.partno_epicor, true, true);
+                        $('#partno_epicor').append(opt).trigger('change');
+                    } else {
+                        $('#partno_epicor').val(null).trigger('change');
+                    }
                     $('#material_spec_id').val(data.material_spec?.hash_id).trigger('change');
                     $('#thickness').val(parseFloat(data.thickness || 0));
                     $('#width').val(parseFloat(data.width || 0));
@@ -1025,7 +1079,12 @@ $(function() {
                 if (res.exists) {
                     const d = res.data;
                     $('#revision_id').val(res.next_revision_id).trigger('change');
-                    $('#partno_epicor').val(d.partno_epicor);
+                    if (d.partno_epicor) {
+                        const opt = new Option(d.partno_epicor, d.partno_epicor, true, true);
+                        $('#partno_epicor').append(opt).trigger('change');
+                    } else {
+                        $('#partno_epicor').val(null).trigger('change');
+                    }
                     $('#material_spec_id').val(res.material_spec_hash).trigger('change');
                     $('#thickness').val(parseFloat(d.thickness || 0));
                     $('#width').val(parseFloat(d.width || 0));
@@ -1483,7 +1542,7 @@ $(function() {
                 $('#top_coil').val(500);
                 $('#end_coil').val(2500);
                 $('#weight_kg, #net_weight, #gross_coil, #net_coil').val('');
-                $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id, #revision_id, #product_status, #product_status_remark').val('').trigger('change');
+                $('#customer_id, #model_id, #material_spec_id, #unit_id, #rank_id, #revision_id, #product_status, #product_status_remark, #partno_epicor').val('').trigger('change');
                 ProductApp.ui.clearErrors();
                 ProductApp.ui.toggleDuplicateMode(false);
                 ProductApp.ui.toggleUnitFields();
