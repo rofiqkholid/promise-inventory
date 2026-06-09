@@ -85,15 +85,22 @@ class RegularVaveDashboardController extends Controller
                 if ($modelId)    $yearlyBaselines->where('pd.model_id', $modelId);
 
                 $baselines = $yearlyBaselines->select([
-                    'p.part_no', 'vb.weight_kg as plan_kg', 'pd.weight_kg as actual_kg', 'vb.material_price as idr_per_kg'
+                    'p.part_no', 'pd.partno_epicor', 'vb.weight_kg as plan_kg', 'pd.weight_kg as actual_kg', 'vb.material_price as idr_per_kg'
                 ])->get();
 
                 $totalBenefit = 0;
                 $totalKg = 0;
 
                 foreach ($baselines as $row) {
-                    $pn = trim($row->part_no);
-                    $qty = (float) ($shipYearTotal[$pn][$y] ?? $shipYearTotal[$pn . '-R'][$y] ?? 0);
+                    $qty = 0;
+                    if ($row->partno_epicor) {
+                        $epicorPart = trim($row->partno_epicor);
+                        $qty = (float) ($shipYearTotal[$epicorPart][$y] ?? 0);
+                    }
+                    if ($qty <= 0) {
+                        $pn = trim($row->part_no);
+                        $qty = (float) ($shipYearTotal[$pn][$y] ?? $shipYearTotal[$pn . '-R'][$y] ?? 0);
+                    }
                     
                     $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
                     if ($weightGap > 0 && $qty > 0) {
@@ -133,9 +140,20 @@ class RegularVaveDashboardController extends Controller
         if ($modelId)    $baselinesQuery->where('pd.model_id', $modelId);
 
         $baselines = $baselinesQuery->select([
-            'p.part_no', 'p.part_name', 'm.name as model_name', 'c.code as customer_code', 'vb.base_name as ebd_version',
+            'p.part_no', 'pd.partno_epicor', 'p.part_name', 'm.name as model_name', 'c.code as customer_code', 'vb.base_name as ebd_version',
             'vb.weight_kg as plan_kg', 'pd.weight_kg as actual_kg', 'vb.material_price as idr_per_kg'
         ])->get();
+
+        $allPartNums = [];
+        foreach ($baselines as $row) {
+            $allPartNums[] = $row->part_no;
+            $allPartNums[] = $row->part_no . '-R';
+            if ($row->partno_epicor) {
+                $allPartNums[] = trim($row->partno_epicor);
+            }
+        }
+        $allPartNums = array_unique(array_filter($allPartNums));
+        $epicorPrices = $this->fetchEpicorPrices($allPartNums);
 
         $kpiTotals = [
             'gap_benefit_idr' => 0, 'gap_kg_total' => 0, 'qty_usage' => 0,
@@ -149,12 +167,28 @@ class RegularVaveDashboardController extends Controller
         }
 
         foreach ($baselines as $row) {
-            $pn = trim($row->part_no);
-            // Support exact match or -R suffix
-            $monthlyQtys = $shipMap[$pn][$year] ?? $shipMap[$pn . '-R'][$year] ?? [];
+            $monthlyQtys = [];
+            if ($row->partno_epicor) {
+                $epicorPart = trim($row->partno_epicor);
+                $monthlyQtys = $shipMap[$epicorPart][$year] ?? [];
+            }
+            if (empty($monthlyQtys)) {
+                $pn = trim($row->part_no);
+                $monthlyQtys = $shipMap[$pn][$year] ?? $shipMap[$pn . '-R'][$year] ?? [];
+            }
             
             $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
-            $price = (float) $row->idr_per_kg;
+            
+            $price = null;
+            if ($row->partno_epicor) {
+                $price = $this->getEpicorPriceForPart($row->partno_epicor, $epicorPrices);
+            }
+            if ($price === null) {
+                $price = $this->getEpicorPriceForPart($row->part_no, $epicorPrices);
+            }
+            if ($price === null) {
+                $price = (float) $row->idr_per_kg;
+            }
             
             $totalPartQty = 0;
             $totalPartBenefit = 0;
@@ -286,19 +320,50 @@ class RegularVaveDashboardController extends Controller
         $baselines = $baselinesQuery->select([
                 DB::raw("$labelColumn as label_name"),
                 'p.part_no',
+                'pd.partno_epicor',
                 'vb.weight_kg as plan_kg',
                 'pd.weight_kg as actual_kg',
                 'vb.material_price as idr_per_kg'
             ])->get();
 
+        $allPartNums = [];
+        foreach ($baselines as $row) {
+            $allPartNums[] = $row->part_no;
+            $allPartNums[] = $row->part_no . '-R';
+            if ($row->partno_epicor) {
+                $allPartNums[] = trim($row->partno_epicor);
+            }
+        }
+        $allPartNums = array_unique(array_filter($allPartNums));
+        $epicorPrices = $this->fetchEpicorPrices($allPartNums);
+
         $aggData = [];
         foreach ($baselines as $row) {
-            $pn = trim($row->part_no);
-            $qty = (float) ($epicorData[$pn] ?? $epicorData[$pn . '-R'] ?? 0);
+            $qty = 0;
+            if ($row->partno_epicor) {
+                $epicorPart = trim($row->partno_epicor);
+                $qty = (float) ($epicorData[$epicorPart] ?? 0);
+            }
+            if ($qty <= 0) {
+                $pn = trim($row->part_no);
+                $qty = (float) ($epicorData[$pn] ?? $epicorData[$pn . '-R'] ?? 0);
+            }
             
             $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
+            
+            $price = null;
+            if ($row->partno_epicor) {
+                $price = $this->getEpicorPriceForPart($row->partno_epicor, $epicorPrices);
+            }
+            if ($price === null) {
+                $price = $this->getEpicorPriceForPart($row->part_no, $epicorPrices);
+            }
+            if ($price === null) {
+                $price = (float) $row->idr_per_kg;
+            }
+            
             if ($weightGap > 0 && $qty > 0) {
-                $benefit = $weightGap * (float) $row->idr_per_kg * $qty;
+                $benefit = $weightGap * $price * $qty;
                 $kgGap = $weightGap * $qty;
 
                 if (!isset($aggData[$row->label_name])) {
@@ -325,5 +390,81 @@ class RegularVaveDashboardController extends Controller
         });
 
         return response()->json(['pareto' => $result->values()]);
+    }
+
+    private function fetchEpicorPrices($partNumbers = [])
+    {
+        try {
+            $queryStr = "
+                WITH PriceLatest AS (
+                    select 
+                        a.PartNum, 
+                        a.BaseUnitPrice, 
+                        a.PUM, 
+                        e.ConvFactor,
+                        ROW_NUMBER() OVER (PARTITION BY a.PartNum ORDER BY a.EffectiveDate DESC) as RowNum
+                    from erp.VendPart a
+                    left join erp.part c on c.PartNum = a.PartNum
+                    left join erp.UOMClass d on d.UOMClassID = c.UOMClassID
+                    left join erp.UOMConv e on e.UOMClassID = d.UOMClassID and e.UOMCode = a.PUM
+            ";
+
+            if (!empty($partNumbers)) {
+                $placeholders = implode(',', array_fill(0, count($partNumbers), '?'));
+                $queryStr .= " where a.PartNum IN ($placeholders) ";
+                $params = $partNumbers;
+            } else {
+                $queryStr .= " where a.PartNum like '%-R%' ";
+                $params = [];
+            }
+
+            $queryStr .= "
+                )
+                SELECT * FROM PriceLatest WHERE RowNum = 1
+            ";
+
+            $epicorDataRaw = DB::connection('second_db')->select($queryStr, $params);
+            $epicorData = [];
+            foreach ($epicorDataRaw as $row) {
+                $epicorData[trim($row->PartNum)] = $row;
+            }
+            return $epicorData;
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    private function getEpicorPriceForPart($partNo, $epicorData)
+    {
+        $partNoTrim = trim($partNo);
+        $epi = $epicorData[$partNoTrim] ?? null;
+
+        if (!$epi) {
+            $lookupBase = $partNoTrim . '-R';
+            $epi = $epicorData[$lookupBase] ?? null;
+            
+            if (!$epi) {
+                $pattern = '/^' . preg_quote($lookupBase, '/') . '\d*$/';
+                foreach ($epicorData as $epiPn => $epiRow) {
+                    if (preg_match($pattern, $epiPn)) {
+                        $epi = $epiRow;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if ($epi) {
+            $rawPrice = (float) $epi->BaseUnitPrice;
+            $convFactor = $epi->ConvFactor ? round((float) $epi->ConvFactor, 3) : 0;
+            $pum = trim($epi->PUM);
+            
+            if ($pum === 'SHEET' && $convFactor > 0) {
+                return ceil($rawPrice / $convFactor);
+            } elseif ($pum === 'KG') {
+                return $rawPrice;
+            }
+        }
+        return null;
     }
 }

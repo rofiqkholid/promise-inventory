@@ -161,11 +161,41 @@ class RegularVaveAnalysisController extends Controller
             ->select('inv_t_product_detail.*')
             ->get();
 
-        $epicorData = $this->fetchEpicorPrices();
-        $epicorPrice = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+        $targetPartNums = [$product->part_no, $product->part_no . '-R'];
+        foreach ($revisions as $rev) {
+            if ($rev->partno_epicor) {
+                $targetPartNums[] = trim($rev->partno_epicor);
+            }
+        }
+        $targetPartNums = array_unique(array_filter($targetPartNums));
+
+        $epicorData = $this->fetchEpicorPrices($targetPartNums);
+
+        $activeRev = $revisions->first();
+        $partnoEpicor = $activeRev ? $activeRev->partno_epicor : null;
+
+        foreach ($bases as $base) {
+            $price = null;
+            if ($partnoEpicor) {
+                $price = $this->getEpicorPriceForPart($partnoEpicor, $epicorData);
+            }
+            if ($price === null) {
+                $price = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+            }
+            if ($price !== null) {
+                $base->material_price = $price;
+            }
+        }
 
         foreach ($revisions as $rev) {
-            $rev->material_price = ($epicorPrice !== null) ? $epicorPrice : 0;
+            $price = null;
+            if ($rev->partno_epicor) {
+                $price = $this->getEpicorPriceForPart($rev->partno_epicor, $epicorData);
+            }
+            if ($price === null) {
+                $price = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+            }
+            $rev->material_price = ($price !== null) ? $price : 0;
         }
 
         return response()->json(['product' => $product, 'bases' => $bases, 'revisions' => $revisions]);
@@ -243,10 +273,10 @@ class RegularVaveAnalysisController extends Controller
     }
 
     // Epicor Pricing Helpers
-    private function fetchEpicorPrices()
+    private function fetchEpicorPrices($partNumbers = [])
     {
         try {
-            $epicorDataRaw = DB::connection('second_db')->select("
+            $queryStr = "
                 WITH PriceLatest AS (
                     select 
                         a.PartNum, 
@@ -255,12 +285,26 @@ class RegularVaveAnalysisController extends Controller
                         e.ConvFactor,
                         ROW_NUMBER() OVER (PARTITION BY a.PartNum ORDER BY a.EffectiveDate DESC) as RowNum
                     from erp.VendPart a
-                    left join erp.UOMClass d on d.Description = a.PartNum
+                    left join erp.part c on c.PartNum = a.PartNum
+                    left join erp.UOMClass d on d.UOMClassID = c.UOMClassID
                     left join erp.UOMConv e on e.UOMClassID = d.UOMClassID and e.UOMCode = a.PUM
-                    where a.PartNum like '%-R%'
+            ";
+
+            if (!empty($partNumbers)) {
+                $placeholders = implode(',', array_fill(0, count($partNumbers), '?'));
+                $queryStr .= " where a.PartNum IN ($placeholders) ";
+                $params = $partNumbers;
+            } else {
+                $queryStr .= " where a.PartNum like '%-R%' ";
+                $params = [];
+            }
+
+            $queryStr .= "
                 )
                 SELECT * FROM PriceLatest WHERE RowNum = 1
-            ");
+            ";
+
+            $epicorDataRaw = DB::connection('second_db')->select($queryStr, $params);
             $epicorData = [];
             foreach ($epicorDataRaw as $row) {
                 $epicorData[trim($row->PartNum)] = $row;
@@ -273,15 +317,20 @@ class RegularVaveAnalysisController extends Controller
 
     private function getEpicorPriceForPart($partNo, $epicorData)
     {
-        $lookupBase = trim($partNo) . '-R';
-        $epi = $epicorData[$lookupBase] ?? null;
-        
+        $partNoTrim = trim($partNo);
+        $epi = $epicorData[$partNoTrim] ?? null;
+
         if (!$epi) {
-            $pattern = '/^' . preg_quote($lookupBase, '/') . '\d*$/';
-            foreach ($epicorData as $epiPn => $epiRow) {
-                if (preg_match($pattern, $epiPn)) {
-                    $epi = $epiRow;
-                    break;
+            $lookupBase = $partNoTrim . '-R';
+            $epi = $epicorData[$lookupBase] ?? null;
+            
+            if (!$epi) {
+                $pattern = '/^' . preg_quote($lookupBase, '/') . '\d*$/';
+                foreach ($epicorData as $epiPn => $epiRow) {
+                    if (preg_match($pattern, $epiPn)) {
+                        $epi = $epiRow;
+                        break;
+                    }
                 }
             }
         }
@@ -314,11 +363,41 @@ class RegularVaveAnalysisController extends Controller
             
         if ($bases->isEmpty() || $revisions->isEmpty()) return back()->with('error', 'Incomplete data for export.');
 
-        $epicorData = $this->fetchEpicorPrices();
-        $epicorPrice = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+        $targetPartNums = [$product->part_no, $product->part_no . '-R'];
+        foreach ($revisions as $rev) {
+            if ($rev->partno_epicor) {
+                $targetPartNums[] = trim($rev->partno_epicor);
+            }
+        }
+        $targetPartNums = array_unique(array_filter($targetPartNums));
+
+        $epicorData = $this->fetchEpicorPrices($targetPartNums);
+
+        $activeRev = $revisions->first();
+        $partnoEpicor = $activeRev ? $activeRev->partno_epicor : null;
+
+        foreach ($bases as $base) {
+            $price = null;
+            if ($partnoEpicor) {
+                $price = $this->getEpicorPriceForPart($partnoEpicor, $epicorData);
+            }
+            if ($price === null) {
+                $price = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+            }
+            if ($price !== null) {
+                $base->material_price = $price;
+            }
+        }
 
         foreach ($revisions as $rev) {
-            $rev->material_price = ($epicorPrice !== null) ? $epicorPrice : 0;
+            $price = null;
+            if ($rev->partno_epicor) {
+                $price = $this->getEpicorPriceForPart($rev->partno_epicor, $epicorData);
+            }
+            if ($price === null) {
+                $price = $this->getEpicorPriceForPart($product->part_no, $epicorData);
+            }
+            $rev->material_price = ($price !== null) ? $price : 0;
         }
 
         $fileName = 'VAVE_Analysis_' . $product->part_no . '_' . date('Ymd_His') . '.xlsx';
@@ -343,11 +422,47 @@ class RegularVaveAnalysisController extends Controller
         $data = [];
         $targetBaseNames = $request->input('base_names', []);
         
-        $epicorData = $this->fetchEpicorPrices();
+        $allPartNums = [];
+        foreach ($products as $p) {
+            $allPartNums[] = $p->part_no;
+            $allPartNums[] = $p->part_no . '-R';
+            
+            $revPartNos = DB::table('inv_t_product_detail')
+                ->where('product_id', $p->id)
+                ->where('is_active', 1)
+                ->whereNotNull('partno_epicor')
+                ->pluck('partno_epicor')
+                ->toArray();
+            
+            $allPartNums = array_merge($allPartNums, $revPartNos);
+        }
+        $allPartNums = array_unique(array_filter($allPartNums));
+
+        $epicorData = $this->fetchEpicorPrices($allPartNums);
 
         foreach ($products as $p) {
-            $epicorPrice = $this->getEpicorPriceForPart($p->part_no, $epicorData);
+            $activePartNoEpicor = DB::table('inv_t_product_detail')
+                ->where('product_id', $p->id)
+                ->where('is_active', 1)
+                ->whereNotNull('partno_epicor')
+                ->value('partno_epicor');
+
+            $epicorPrice = null;
+            if ($activePartNoEpicor) {
+                $epicorPrice = $this->getEpicorPriceForPart($activePartNoEpicor, $epicorData);
+            }
+            if ($epicorPrice === null) {
+                $epicorPrice = $this->getEpicorPriceForPart($p->part_no, $epicorData);
+            }
+
             $allProductBases = DB::table('inv_m_vave_base as base')->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'base.material_spec_id')->leftJoin('inv_m_unit as u', 'u.id', '=', 'base.unit_id')->leftJoin('inv_m_vave_base_suffix as sfx', 'sfx.id', '=', 'base.vave_base_suffix_id')->where('base.product_id', $p->id)->select('base.*', 'ms.spec_name as spec_name', 'u.name as unit_name', 'sfx.name as suffix_name')->orderBy('base.base_name', 'asc')->get();
+            
+            foreach ($allProductBases as $b) {
+                if ($epicorPrice !== null) {
+                    $b->material_price = $epicorPrice;
+                }
+            }
+
             $revisions = DB::table('inv_t_product_detail as rev_table')->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'rev_table.material_spec_id')->leftJoin('inv_m_unit as u', 'u.id', '=', 'rev_table.unit_id')->leftJoin('inv_m_revision as r', 'r.id', '=', 'rev_table.revision_id')->where('rev_table.product_id', $p->id)->select('rev_table.*', 'ms.spec_name as spec_name', 'u.name as unit_name', 'r.code as revision_code')->orderBy('r.sort_order', 'asc')->get();
             $p->stages = []; $filteredBases = [];
             if (!empty($targetBaseNames)) {
@@ -393,7 +508,14 @@ class RegularVaveAnalysisController extends Controller
                 } else { $p->change_status = '-'; }
             }
             foreach($revisions as $rev) {
-                $matPrice = ($epicorPrice !== null) ? $epicorPrice : 0;
+                $matPrice = null;
+                if (!empty($rev->partno_epicor)) {
+                    $matPrice = $this->getEpicorPriceForPart($rev->partno_epicor, $epicorData);
+                }
+                if ($matPrice === null) {
+                    $matPrice = $this->getEpicorPriceForPart($p->part_no, $epicorData);
+                }
+                $matPrice = ($matPrice !== null) ? $matPrice : 0;
                 $p->stages[] = [
                     'source' => 'ACTUAL', 'name' => 'Revision ' . ($rev->revision_code ?? '-'), 'spec' => $rev->spec_name, 'unit' => $rev->unit_name, 't' => $rev->thickness, 'w' => $rev->width, 'l1' => $rev->length, 'l2' => $rev->length_2, 'pitch' => $rev->pitch, 'theoretical_weight' => $rev->weight_kg, 'net_weight' => $rev->net_weight, 'material_price' => $matPrice, 'cost' => $rev->weight_kg * ($matPrice ?? 0), 'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0, 'is_baseline' => false
                 ];
