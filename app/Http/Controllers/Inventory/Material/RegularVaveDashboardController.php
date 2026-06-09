@@ -61,6 +61,38 @@ class RegularVaveDashboardController extends Controller
 
         $comparisonTrend = [];
         if ($mode === 'comparison') {
+            // Pre-collect all part numbers across all years for a single Epicor price fetch
+            $allCompPartNums = [];
+            for ($y = $startYear; $y <= $endYear; $y++) {
+                $yearlyBaselinesPreFetch = DB::table('inv_m_vave_base as vb')
+                    ->join('products as p', 'p.id', '=', 'vb.product_id')
+                    ->join('inv_t_product_detail as pd', 'pd.product_id', '=', 'p.id')
+                    ->join('models as m', 'm.id', '=', 'pd.model_id')
+                    ->join('inv_m_model_status as ms', 'm.id', '=', 'ms.model_id')
+                    ->join(DB::raw("(
+                        SELECT product_id, 
+                               COALESCE(
+                                   (SELECT MAX(id) FROM inv_m_vave_base WHERE product_id = b0.product_id AND ((effective_from <= $y AND (effective_to IS NULL OR effective_to >= $y)) OR (effective_from IS NULL AND effective_to IS NULL))" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . "),
+                                   (SELECT MIN(id) FROM inv_m_vave_base WHERE product_id = b0.product_id" . ($sqVersion ? " AND base_name = '$sqVersion'" : " AND base_name LIKE 'SQ%'") . ")
+                               ) as matched_id
+                        FROM inv_m_vave_base b0
+                        GROUP BY product_id
+                    ) as latest_ebd0"), 'latest_ebd0.matched_id', '=', 'vb.id')
+                    ->where('p.is_delete', 0)
+                    ->where('pd.is_active', 1)
+                    ->where('ms.project_status', 'Regular')
+                    ->select(['p.part_no', 'pd.partno_epicor']);
+                if ($customerId) $yearlyBaselinesPreFetch->where('p.customer_id', $customerId);
+                if ($modelId)    $yearlyBaselinesPreFetch->where('pd.model_id', $modelId);
+                foreach ($yearlyBaselinesPreFetch->get() as $r) {
+                    $allCompPartNums[] = $r->part_no;
+                    $allCompPartNums[] = $r->part_no . '-R';
+                    if ($r->partno_epicor) $allCompPartNums[] = trim($r->partno_epicor);
+                }
+            }
+            $allCompPartNums = array_values(array_unique(array_filter($allCompPartNums)));
+            $compEpicorPrices = $this->fetchEpicorPrices($allCompPartNums);
+
             for ($y = $startYear; $y <= $endYear; $y++) {
                 // Fetch baselines for THIS year. 
                 // FALLBACK: If no baseline is active for $y, use the oldest one (to show theoretical benefit for historical shipments)
@@ -103,9 +135,21 @@ class RegularVaveDashboardController extends Controller
                         $qty = (float) ($shipYearTotal[$pn][$y] ?? $shipYearTotal[$pn . '-R'][$y] ?? 0);
                     }
                     
+                    // Prioritize Epicor price, fallback to SQ baseline price
+                    $price = null;
+                    if ($row->partno_epicor) {
+                        $price = $this->getEpicorPriceForPart($row->partno_epicor, $compEpicorPrices);
+                    }
+                    if ($price === null) {
+                        $price = $this->getEpicorPriceForPart($row->part_no, $compEpicorPrices);
+                    }
+                    if ($price === null) {
+                        $price = (float) $row->idr_per_kg;
+                    }
+                    
                     $weightGap = (float) $row->plan_kg - (float) $row->actual_kg;
                     if ($weightGap > 0 && $qty > 0) {
-                        $totalBenefit += $weightGap * (float) $row->idr_per_kg * $qty;
+                        $totalBenefit += $weightGap * $price * $qty;
                         $totalKg += $weightGap * $qty;
                     }
                 }
@@ -154,7 +198,7 @@ class RegularVaveDashboardController extends Controller
                 $allPartNums[] = trim($row->partno_epicor);
             }
         }
-        $allPartNums = array_unique(array_filter($allPartNums));
+        $allPartNums = array_values(array_unique(array_filter($allPartNums)));
         $epicorPrices = $this->fetchEpicorPrices($allPartNums);
 
         $kpiTotals = [
@@ -337,7 +381,7 @@ class RegularVaveDashboardController extends Controller
                 $allPartNums[] = trim($row->partno_epicor);
             }
         }
-        $allPartNums = array_unique(array_filter($allPartNums));
+        $allPartNums = array_values(array_unique(array_filter($allPartNums)));
         $epicorPrices = $this->fetchEpicorPrices($allPartNums);
 
         $aggData = [];
@@ -433,6 +477,7 @@ class RegularVaveDashboardController extends Controller
             }
             return $epicorData;
         } catch (\Exception $e) {
+            \Log::error("VAVE Dashboard Epicor Price Fetch Error: " . $e->getMessage());
             return [];
         }
     }
