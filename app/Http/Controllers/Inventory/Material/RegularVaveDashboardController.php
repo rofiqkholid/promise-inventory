@@ -79,6 +79,7 @@ class RegularVaveDashboardController extends Controller
                         GROUP BY product_id
                     ) as latest_ebd"), 'latest_ebd.matched_id', '=', 'vb.id')
                     ->where('p.is_delete', 0)
+                    ->where('pd.is_active', 1)
                     ->where('ms.project_status', 'Regular');
 
                 if ($customerId) $yearlyBaselines->where('p.customer_id', $customerId);
@@ -134,6 +135,7 @@ class RegularVaveDashboardController extends Controller
                 GROUP BY product_id
             ) as latest_ebd"), 'latest_ebd.matched_id', '=', 'vb.id')
             ->where('p.is_delete', 0)
+            ->where('pd.is_active', 1)
             ->where('ms.project_status', 'Regular');
 
         if ($customerId) $baselinesQuery->where('p.customer_id', $customerId);
@@ -310,6 +312,7 @@ class RegularVaveDashboardController extends Controller
                 GROUP BY product_id
             ) as latest_ebd"), 'latest_ebd.matched_id', '=', 'vb.id')
             ->where('p.is_delete', 0)
+            ->where('pd.is_active', 1)
             ->where('ms.project_status', 'Regular');
 
         if ($customerId) $baselinesQuery->where('p.customer_id', $customerId);
