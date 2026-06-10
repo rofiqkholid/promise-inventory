@@ -20,10 +20,7 @@ class InvRole extends Model
     protected static function booted()
     {
         static::addGlobalScope('inventory', function ($builder) {
-            $builder->where(function ($q) {
-                $q->where('scope_id', 'app_inventory')
-                  ->orWhere('role_name', 'like', 'Inv %');
-            });
+            $builder->where('roles.scope_id', 'app_inventory');
         });
     }
 
