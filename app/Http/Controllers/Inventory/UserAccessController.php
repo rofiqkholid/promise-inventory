@@ -144,24 +144,47 @@ class UserAccessController extends Controller
     {
         $userId = $request->user_id ?: $request->id;
         
-        $request->merge(['user_id' => $userId]); // Ensure it's there for validation if needed
+        $request->merge(['user_id' => $userId]);
 
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'role_ids' => 'required|array',
-            'role_ids.*' => 'exists:inv_m_roles,id',
+            'role_ids.*' => 'exists:roles,id',
         ]);
 
         $user = \App\Models\User::findOrFail($userId);
-        $user->roles()->sync($request->role_ids);
+
+        // Remove existing inventory scope roles for this user
+        \DB::table('user_scope_roles')
+            ->where('user_id', $userId)
+            ->where('scope_id', 'app_inventory')
+            ->delete();
+
+        // Re-insert with the scope_id properly set
+        $insertData = [];
+        foreach ($request->role_ids as $roleId) {
+            $insertData[] = [
+                'user_id'  => $userId,
+                'scope_id' => 'app_inventory',
+                'role_id'  => $roleId,
+            ];
+        }
+
+        if (!empty($insertData)) {
+            \DB::table('user_scope_roles')->insert($insertData);
+        }
 
         return response()->json(['success' => true, 'message' => 'User roles updated successfully.']);
     }
 
     public function destroy($userId)
     {
-        $user = \App\Models\User::findOrFail($userId);
-        $user->roles()->detach();
+        \App\Models\User::findOrFail($userId);
+
+        \DB::table('user_scope_roles')
+            ->where('user_id', $userId)
+            ->where('scope_id', 'app_inventory')
+            ->delete();
 
         return response()->json(['success' => true, 'message' => 'All user access revoked.']);
     }
@@ -257,14 +280,15 @@ class UserAccessController extends Controller
     {
         $id = $request->id;
         $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:50|unique:inv_m_roles,code,' . $id,
-            'description' => 'nullable|string',
+            'role_name' => 'required|string|max:255',
         ]);
 
         \App\Models\InventoryModel\InvRole::updateOrCreate(
             ['id' => $id],
-            $request->only(['name', 'code', 'description'])
+            [
+                'role_name' => $request->role_name,
+                'scope_id'  => 'app_inventory',
+            ]
         );
 
         return response()->json(['success' => true, 'message' => 'Role saved successfully.']);
@@ -280,8 +304,8 @@ class UserAccessController extends Controller
     {
         $role = \App\Models\InventoryModel\InvRole::findOrFail($id);
         
-        // Prevent deleting core roles if needed, or check if used
-        if (\App\Models\InventoryModel\UserAppRole::where('role_id', $id)->exists()) {
+        // Prevent deleting roles that are assigned to users in this scope
+        if (\DB::table('user_scope_roles')->where('role_id', $id)->where('scope_id', 'app_inventory')->exists()) {
             return response()->json(['success' => false, 'message' => 'Role is currently assigned to users.'], 422);
         }
 

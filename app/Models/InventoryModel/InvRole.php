@@ -10,7 +10,22 @@ class InvRole extends Model
 
     protected $fillable = [
         'role_name',
+        'scope_id',
     ];
+
+    /**
+     * Default global scope: only show inventory-relevant roles.
+     * Inventory roles are scoped via scope_id = 'app_inventory' in the roles table.
+     */
+    protected static function booted()
+    {
+        static::addGlobalScope('inventory', function ($builder) {
+            $builder->where(function ($q) {
+                $q->where('scope_id', 'app_inventory')
+                  ->orWhere('role_name', 'like', 'Inv %');
+            });
+        });
+    }
 
     public function getNameAttribute()
     {
