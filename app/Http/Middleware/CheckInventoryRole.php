@@ -47,7 +47,7 @@ class CheckInventoryRole
             }
 
             // Check if the current route is allowed using scope-based check
-            if ($user->hasMenuPermission($routeName, 'can_view')) {
+            if ($user->hasMenuPermission($routeName, 'view')) {
                 return $next($request);
             }
 

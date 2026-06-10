@@ -27,19 +27,19 @@
             {{-- Permission Matrix (Only shown/enabled for Roles) --}}
             <div class="role-permission-matrix hidden flex items-center gap-3 bg-slate-100/50 dark:bg-gray-800/60 px-3 py-1 rounded-sm border border-slate-200/40 dark:border-gray-700/50" data-menu-id="{{ $menu->id }}">
                 <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
-                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_view]" value="1" class="perm-checkbox can-view-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][view]" value="1" class="perm-checkbox can-view-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
                     View
                 </label>
                 <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
-                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_create]" value="1" class="perm-checkbox can-create-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][create]" value="1" class="perm-checkbox can-create-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
                     Create
                 </label>
                 <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
-                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_edit]" value="1" class="perm-checkbox can-edit-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][edit]" value="1" class="perm-checkbox can-edit-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
                     Edit
                 </label>
                 <label class="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-500 dark:text-gray-400 hover:text-primary-600 transition-colors">
-                    <input type="checkbox" name="permissions[{{ $menu->id }}][can_delete]" value="1" class="perm-checkbox can-delete-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
+                    <input type="checkbox" name="permissions[{{ $menu->id }}][delete]" value="1" class="perm-checkbox can-delete-cb w-3 h-3 rounded-xs border-gray-300 text-primary-500 focus:ring-0 cursor-pointer">
                     Delete
                 </label>
             </div>

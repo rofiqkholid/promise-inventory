@@ -1,3 +1,9 @@
+@php
+    $vaveRouteName = request()->route() ? request()->route()->getName() : 'inventory.vave.index';
+    $canCreateVave = Auth::user()->hasMenuPermission($vaveRouteName, 'create');
+    $canEditVave = Auth::user()->hasMenuPermission($vaveRouteName, 'edit');
+    $canDeleteVave = Auth::user()->hasMenuPermission($vaveRouteName, 'delete');
+@endphp
 {{-- RFQ Management Modal --}}
 <div id="rfqModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 transition-all duration-300">
     <div class="relative p-4 w-full max-w-4xl max-h-screen">
@@ -39,12 +45,16 @@
                                         </select>
                                     </div>
                                     <div class="flex gap-2 h-11 w-full md:w-auto">
+                                        @if($canCreateVave)
                                         <button type="button" id="btn_new_baseline" class="flex-1 md:flex-none px-6 text-[10px] font-black text-white bg-primary-600 border border-primary-600 rounded-xs hover:bg-primary-700 transition-all uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2">
                                             <i class="fa-solid fa-plus"></i> NEW VERSION
                                         </button>
+                                        @endif
+                                        @if($canDeleteVave)
                                         <button type="button" id="btn_delete_baseline" class="px-4 text-[12px] font-black text-rose-600 bg-rose-50 border border-rose-200 rounded-xs hover:bg-rose-100 transition-all hidden uppercase tracking-widest active:scale-95">
                                             <i class="fa-solid fa-trash-can"></i>
                                         </button>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -219,9 +229,11 @@
                     <button type="button" class="close-modal-button text-slate-500 bg-white hover:bg-slate-50 focus:outline-none rounded-xs border border-slate-200 text-xs font-medium px-8 py-2.5 transition-all active:scale-95">
                         Cancel
                     </button>
+                    @if($canCreateVave || $canEditVave)
                     <button type="submit" class="text-white bg-primary-600 hover:bg-primary-700 focus:outline-none font-medium rounded-xs text-xs px-8 py-2.5 text-center transition-all active:scale-95">
                         <i class="fa-solid fa-save mr-2"></i> Save EBD
                     </button>
+                    @endif
                 </div>
             </form>
         </div>
@@ -232,12 +244,21 @@
 <script>
 $(document).ready(function() {
     // Variables
+    const CAN_CREATE_VAVE = @json($canCreateVave);
+    const CAN_EDIT_VAVE = @json($canEditVave);
+    const CAN_DELETE_VAVE = @json($canDeleteVave);
+
     window.baseHistory = [];
     window.baseRevisions = [];
     window.latestRevision = null;
 
     // Helper to set form readonly state
     function setEbdFormReadonly(isReadonly) {
+        // Force readonly if user lacks both create and edit permissions
+        if (!CAN_CREATE_VAVE && !CAN_EDIT_VAVE) {
+            isReadonly = true;
+        }
+
         // Find all fields except the history selector and product ID
         const formFields = $('#rfqForm').find('input, select, textarea').not('#rfq_history_select, #rfq_product_id, [name="_token"]');
         formFields.prop('disabled', isReadonly);
@@ -255,7 +276,11 @@ $(document).ready(function() {
             $('#editing_status_text').text('Readonly History').removeClass('text-amber-700 text-primary-700')
                 .addClass('text-slate-600 dark:text-slate-400');
         } else {
-            $('#rfqForm button[type="submit"]').removeClass('hidden');
+            if (CAN_CREATE_VAVE || CAN_EDIT_VAVE) {
+                $('#rfqForm button[type="submit"]').removeClass('hidden');
+            } else {
+                $('#rfqForm button[type="submit"]').addClass('hidden');
+            }
             // Badge state will be updated by the caller (Editing/New Create)
         }
     }
@@ -388,8 +413,8 @@ $(document).ready(function() {
             if (res.base && res.base.base_name.toUpperCase().startsWith('EBD')) {
                 loadEbdToForm(res.base);
                 $('#display_base_name').text(res.base.base_name);
-                $('#btn_new_baseline').removeClass('hidden'); 
-                $('#btn_delete_baseline').removeClass('hidden');
+                if (CAN_CREATE_VAVE) $('#btn_new_baseline').removeClass('hidden'); 
+                if (CAN_DELETE_VAVE) $('#btn_delete_baseline').removeClass('hidden');
                 setEbdFormReadonly(false);
 
                 // Explicitly set to Editing
@@ -401,7 +426,7 @@ $(document).ready(function() {
                 if (res.base && res.base.base_name.toUpperCase().startsWith('SQ')) {
                     loadEbdToForm(res.base);
                     $('#display_base_name').text(res.base.base_name);
-                    $('#btn_new_baseline').removeClass('hidden'); 
+                    if (CAN_CREATE_VAVE) $('#btn_new_baseline').removeClass('hidden'); 
                     setEbdFormReadonly(true);
                 } else {
                     // If no active EBD or SQ, calculate next EBD number
@@ -450,14 +475,14 @@ $(document).ready(function() {
              const isSQ = selected.base_name.toUpperCase().startsWith('SQ');
              if (isSQ) {
                  setEbdFormReadonly(true);
-                 $('#btn_new_baseline').removeClass('hidden');
+                 if (CAN_CREATE_VAVE) $('#btn_new_baseline').removeClass('hidden');
              } else {
                  setEbdFormReadonly(false);
                  $('#editing_status_badge').removeClass('bg-primary-100 border-primary-200').addClass('bg-amber-100 border-amber-200');
                  $('#editing_status_badge i').removeClass('fa-plus-circle text-primary-500 fa-lock text-slate-400').addClass('fa-pen-to-square text-amber-500');
                  $('#editing_status_text').text('Editing').removeClass('text-primary-700 text-slate-600').addClass('text-amber-700');
-                 $('#btn_new_baseline').removeClass('hidden');
-                 $('#btn_delete_baseline').removeClass('hidden');
+                 if (CAN_CREATE_VAVE) $('#btn_new_baseline').removeClass('hidden');
+                 if (CAN_DELETE_VAVE) $('#btn_delete_baseline').removeClass('hidden');
              }
              $('#rfq_history_select option[value="NEW_CREATE"]').remove();
         }

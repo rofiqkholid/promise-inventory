@@ -19,6 +19,7 @@
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
             </button>
+            @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'create'))
             <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
                 <i class="fa-solid fa-file-import"></i>
                 Import Excel
@@ -27,6 +28,7 @@
                 <i class="fa-solid fa-plus"></i>
                 Add New
             </button>
+            @endif
         </div>
     </div>
 
@@ -105,7 +107,9 @@
                 <th class="text-center">Unit/Car</th>
                 <th class="text-left">Remark</th>
                 <th class="text-center whitespace-nowrap">Updated At</th>
+                @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'edit') || Auth::user()->hasMenuPermission('inventory.master.product.index', 'delete') || Auth::user()->hasMenuPermission('inventory.master.product.index', 'create'))
                 <th class="text-center w-[100px]">Action</th>
+                @endif
             </tr>
         </thead>
         <tbody></tbody>
@@ -663,18 +667,26 @@ $(function() {
                     { data: 'unit_per_car', className: 'text-center' },
                     { data: 'remark', className: 'text-xs text-gray-500', render: d => d || '-' },
                     { data: 'updated_at', className: 'whitespace-nowrap text-[10px] text-gray-400', render: d => d || '-' },
+                    @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'edit') || Auth::user()->hasMenuPermission('inventory.master.product.index', 'delete') || Auth::user()->hasMenuPermission('inventory.master.product.index', 'create'))
                     {
                         data: null,
                         orderable: false,
                         className: 'text-center',
-                        render: r => `
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-xs bg-green-50 hover:bg-green-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-print"></i></button>
-                                <button class="edit-button h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="duplicate-button h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-copy"></i></button>
-                                <button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-trash-can"></i></button>
-                            </div>`
+                        render: r => {
+                            let buttons = `<button class="print-button h-8 w-8 inline-flex items-center justify-center text-green-600 rounded-xs bg-green-50 hover:bg-green-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-print"></i></button>`;
+                            @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'edit'))
+                            buttons += `<button class="edit-button h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-pen-to-square"></i></button>`;
+                            @endif
+                            @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'create'))
+                            buttons += `<button class="duplicate-button h-8 w-8 inline-flex items-center justify-center text-amber-600 rounded-xs bg-amber-50 hover:bg-amber-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-copy"></i></button>`;
+                            @endif
+                            @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'delete'))
+                            buttons += `<button class="delete-button h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 transition-colors" data-id="${r.id}"><i class="fa-solid fa-trash-can"></i></button>`;
+                            @endif
+                            return `<div class="flex items-center justify-center gap-1.5">${buttons}</div>`;
+                        }
                     }
+                    @endif
                 ],
                 order: [[0, 'desc']]
             });

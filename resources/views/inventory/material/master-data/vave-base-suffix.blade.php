@@ -10,11 +10,14 @@
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">VA/VE Suffix</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage suffixes for Engineering Breakdown (EBD) and Sales Quotation (SQ) versions.</p>
         </div>
+        @if(Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'create'))
+
         <div class="mt-4 sm:mt-0">
             <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
+        @endif
     </div>
 
     <x-table id="vaveSuffixTable">
@@ -25,7 +28,9 @@
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Baseline Type</th>
                 <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Remark</th>
                 <th scope="col" class="px-6 py-4 text-center w-24 text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Status</th>
+                @if(Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'edit') || Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'delete'))
                 <th scope="col" class="px-6 py-4 text-center w-[100px] text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Action</th>
+                @endif
             </tr>
         </thead>
         <tbody></tbody>
@@ -115,18 +120,29 @@
                         ? '<span class="px-2 py-0.5 bg-emerald-100/50 text-emerald-700 rounded-px text-[9px] font-bold border border-emerald-200 uppercase tracking-wider">Active</span>' 
                         : '<span class="px-2 py-0.5 bg-gray-100/50 text-gray-500 rounded-px text-[9px] font-bold border border-gray-200 uppercase tracking-wider">Inactive</span>'
                 },
+                @if(Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'edit') || Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'delete'))
                 {
                     data: null, orderable: false, searchable: false, className: 'text-center', width: '100px',
-                    render: (d, t, r) => `
-                        <div class="flex items-center justify-center gap-1.5">
+                    render: (d, t, r) => {
+                        let buttons = '';
+                        @if(Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'edit'))
+                        buttons += `
                              <button class="edit-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.hash_id}" title="Edit">
                                 <i class="fa-solid fa-pen-to-square text-sm"></i>
                             </button>
+                        `;
+                        @endif
+                        @if(Auth::user()->hasMenuPermission('inventory.master.vave-base-suffix.index', 'delete'))
+                        buttons += `
                             <button class="delete-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.hash_id}" title="Delete">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
-                        </div>`
+                        `;
+                        @endif
+                        return `<div class="flex items-center justify-center gap-1.5">${buttons}</div>`;
+                    }
                 }
+                @endif
             ],
             order: [[1, 'asc']]
         });

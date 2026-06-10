@@ -64,9 +64,9 @@
     </div>
 </div>
 
-<div id="permissionModal" tabindex="-1" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4">
-    <div class="relative w-full max-w-4xl max-h-[95vh] flex flex-col scale-100 transition-transform duration-300">
-        <div class="bg-white dark:bg-gray-900 rounded-xs overflow-hidden border border-slate-200 dark:border-gray-700 shadow-xl flex flex-col h-full">
+<div id="permissionModal" tabindex="-1" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-6 md:p-10">
+    <div class="relative w-full max-w-6xl max-h-[85vh] flex flex-col scale-100 transition-transform duration-300">
+        <div class="bg-white dark:bg-gray-900 rounded-xs overflow-hidden border border-slate-200 dark:border-gray-700 shadow-xl flex flex-col h-full min-h-0">
             <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-slate-200 dark:border-gray-700 flex justify-between items-center shrink-0">
                 <div>
                     <h3 id="permissionModalTitle" class="text-sm font-black text-gray-900 dark:text-white tracking-widest uppercase">Access Privilege Configuration</h3>
@@ -173,30 +173,30 @@
 
         $('#addUserRoleForm').on('submit', e => handleFormSubmit(e, "{{ route('inventory.userAccess.store') }}", 'addUserRoleModal', userTable));
         
-        // --- RECURSIVE CHECKBOX LOGIC (RESTORED) ---
+        // --- RECURSIVE CHECKBOX LOGIC (FIXED) ---
+        let isProgrammatic = false;
+
         $(document).on('change', '.menu-checkbox', function() {
+            if (isProgrammatic) return;
+            
             const isChecked = $(this).is(':checked');
             const id = $(this).data('id');
             const parentId = $(this).data('parent');
 
+            isProgrammatic = true;
+
             // 1. If checking/unchecking a parent, handle all descendants (Select All effect)
-            const descendants = $(`.menu-checkbox[data-parent="${id}"]`);
-            if (descendants.length > 0) {
-                checkDescendants(id, isChecked);
-            }
+            checkDescendants(id, isChecked);
 
             // 2. If checking a child, ensure all ancestors are checked
             if (isChecked && parentId) {
                 checkAncestors(parentId);
             }
 
+            isProgrammatic = false;
+
             // 3. Permission matrix sync:
-            const matrixDiv = $(`.role-permission-matrix[data-menu-id="${id}"]`);
-            if (isChecked) {
-                matrixDiv.find('.can-view-cb').prop('checked', true);
-            } else {
-                matrixDiv.find('.perm-checkbox').prop('checked', false);
-            }
+            syncMatrixCheckboxes();
         });
 
         $(document).on('change', '.perm-checkbox', function() {
@@ -205,7 +205,11 @@
                 const menuId = $(this).closest('.role-permission-matrix').data('menu-id');
                 const menuCb = $(`.menu-checkbox[data-id="${menuId}"]`);
                 if (!menuCb.is(':checked')) {
-                    menuCb.prop('checked', true).trigger('change');
+                    isProgrammatic = true;
+                    menuCb.prop('checked', true);
+                    const parentId = menuCb.data('parent');
+                    if (parentId) checkAncestors(parentId);
+                    isProgrammatic = false;
                 }
             }
         });
@@ -213,12 +217,17 @@
         $(document).on('click', '.select-all-children', function() {
             const id = $(this).data('id');
             const parentCheckbox = $(`.menu-checkbox[data-id="${id}"]`);
-            parentCheckbox.prop('checked', true).trigger('change');
+            isProgrammatic = true;
+            parentCheckbox.prop('checked', true);
+            checkDescendants(id, true);
+            checkAncestors(parentCheckbox.data('parent'));
+            isProgrammatic = false;
+            syncMatrixCheckboxes();
         });
 
         function checkDescendants(parentId, state) {
             $(`.menu-checkbox[data-parent="${parentId}"]`).each(function() {
-                $(this).prop('checked', state).trigger('change');
+                $(this).prop('checked', state);
                 checkDescendants($(this).data('id'), state);
             });
         }
@@ -226,12 +235,25 @@
         function checkAncestors(id) {
             const current = $(`.menu-checkbox[data-id="${id}"]`);
             if (current.length > 0) {
-                if (!current.is(':checked')) {
-                    current.prop('checked', true).trigger('change');
-                }
+                current.prop('checked', true);
                 const parentId = current.data('parent');
                 if (parentId) checkAncestors(parentId);
             }
+        }
+
+        function syncMatrixCheckboxes() {
+            $('.menu-checkbox').each(function() {
+                const id = $(this).data('id');
+                const isChecked = $(this).is(':checked');
+                const matrixDiv = $(`.role-permission-matrix[data-menu-id="${id}"]`);
+                if (isChecked) {
+                    if (matrixDiv.find('.perm-checkbox:checked').length === 0) {
+                        matrixDiv.find('.can-view-cb').prop('checked', true);
+                    }
+                } else {
+                    matrixDiv.find('.perm-checkbox').prop('checked', false);
+                }
+            });
         }
 
         $('#permissionForm').on('submit', function(e) {

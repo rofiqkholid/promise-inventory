@@ -11,7 +11,7 @@
             <h2 class="text-2xl font-black text-gray-900 dark:text-gray-100 sm:text-3xl tracking-tighter">Tool Stock Opname</h2>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Manage stock opname events for both fast and slow moving tools.</p>
         </div>
-        @if(Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'can_create'))
+        @if(Auth::user()->hasMenuPermission('inventory.tool.sto.index', 'create'))
         <div class="mt-4 sm:mt-0">
             <button type="button" onclick="showMdl('modal-new-event')" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-medium text-white uppercase tracking-widest active:scale-[0.98] transition-all">
                 <i class="fa-solid fa-plus text-xs"></i> New STO Event

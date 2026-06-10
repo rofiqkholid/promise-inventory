@@ -10,11 +10,14 @@
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Coil Center</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage all industrial coil center configurations.</p>
         </div>
+        @if(Auth::user()->hasMenuPermission('inventory.master.coilCenter.index', 'create'))
+
         <div class="mt-4 sm:mt-0">
             <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm" data-target="coil-center">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
         </div>
+        @endif
     </div>
 
     <x-table id="coilCenterTable">
@@ -172,6 +175,7 @@
                             </button>
                         </div>`
                 }
+                @endif
             ],
             order: [[1, 'asc']]
         });

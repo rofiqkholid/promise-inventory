@@ -196,6 +196,10 @@ class VaveAnalysisController extends Controller
      */
     public function storeBase(Request $request)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.vave.index', 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $productId = Products::decodeHash($request->product_id);
         $baseId = $request->base_id ? VaveBase::decodeHash($request->base_id) : null;
 
@@ -325,6 +329,10 @@ class VaveAnalysisController extends Controller
      */
     public function destroyBase($id)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.vave.index', 'delete')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $base = VaveBase::findByHashOrFail($id);
         $productId = $base->product_id;
         $wasActive = $base->is_active;
@@ -606,6 +614,10 @@ class VaveAnalysisController extends Controller
      */
     public function importExcel(Request $request)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.vave.index', 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $request->validate([
             'sheet_name' => 'required|string'
         ]);

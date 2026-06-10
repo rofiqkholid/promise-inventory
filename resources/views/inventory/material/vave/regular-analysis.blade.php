@@ -10,11 +10,13 @@
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Regular VA/VE Analysis</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Compare SQ (Sales Quotation) data with production revisions to analyze material efficiency for Regular models.</p>
         </div>
+        @if(Auth::user()->hasMenuPermission('inventory.vave.index', 'create'))
         <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
             <button type="button" id="btnImportSq" data-modal-target="importSqModal" class="h-9 px-4 inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xs transition-all gap-2 active:scale-95 shadow-sm text-xs font-medium">
                 <i class="fa-solid fa-file-import"></i> Import SQ Data
             </button>
         </div>
+        @endif
     </div>
 
     {{-- Filter Card --}}

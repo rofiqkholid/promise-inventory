@@ -11,7 +11,8 @@ class UserAccessController extends Controller
     {
         $roles = \App\Models\InventoryModel\InvRole::all();
         $allMenus = \App\Models\InventoryModel\Menu::whereNull('parent_id')->with('children')->orderBy('sort_order')->get();
-        return view('inventory.user_access.index', compact('roles', 'allMenus'));
+        $departments = \App\Models\Department::orderBy('name')->get();
+        return view('inventory.user_access.index', compact('roles', 'allMenus', 'departments'));
     }
 
     public function data(Request $request)
@@ -281,12 +282,14 @@ class UserAccessController extends Controller
         $id = $request->id;
         $request->validate([
             'role_name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:255',
         ]);
 
         \App\Models\InventoryModel\InvRole::updateOrCreate(
             ['id' => $id],
             [
                 'role_name' => $request->role_name,
+                'description' => $request->description,
                 'scope_id'  => 'app_inventory',
             ]
         );
@@ -315,42 +318,74 @@ class UserAccessController extends Controller
 
     public function roleMenuData($roleId)
     {
-        $role = \App\Models\InventoryModel\InvRole::with('menus')->findOrFail($roleId);
-        $activeMenuIds = $role->menus->pluck('id')->toArray();
+        $rolePermissions = \DB::table('role_scope_permissions')
+            ->where('role_id', $roleId)
+            ->where('scope_id', 'app_inventory')
+            ->get();
+
+        $activeMenuIds = $rolePermissions->pluck('menu_id')->unique()->values()->toArray();
         $permissions = [];
-        foreach ($role->menus as $menu) {
-            $permissions[$menu->id] = [
-                'can_view' => $menu->pivot->can_view ?? false,
-                'can_create' => $menu->pivot->can_create ?? false,
-                'can_edit' => $menu->pivot->can_edit ?? false,
-                'can_delete' => $menu->pivot->can_delete ?? false,
-            ];
+        foreach ($rolePermissions as $rp) {
+            if (!isset($permissions[$rp->menu_id])) {
+                $permissions[$rp->menu_id] = [
+                    'view' => false,
+                    'create' => false,
+                    'edit' => false,
+                    'delete' => false,
+                ];
+            }
+            if ($rp->permission_id == 1) $permissions[$rp->menu_id]['view'] = true;
+            if ($rp->permission_id == 2) $permissions[$rp->menu_id]['create'] = true;
+            if ($rp->permission_id == 3) $permissions[$rp->menu_id]['edit'] = true;
+            if ($rp->permission_id == 4) $permissions[$rp->menu_id]['delete'] = true;
         }
 
         return response()->json([
-            'active_menus' => array_values($activeMenuIds),
+            'active_menus' => $activeMenuIds,
             'permissions' => $permissions
         ]);
     }
 
     public function updateRoleMenu(Request $request)
     {
-        $role = \App\Models\InventoryModel\InvRole::findOrFail($request->role_id);
+        $roleId = $request->role_id;
         $menuIds = $request->input('menu_ids', []);
         $permissions = $request->input('permissions', []);
 
-        $syncData = [];
-        foreach ($menuIds as $menuId) {
-            $menuPerm = $permissions[$menuId] ?? [];
-            $syncData[$menuId] = [
-                'can_view' => isset($menuPerm['can_view']) && $menuPerm['can_view'] == 1,
-                'can_create' => isset($menuPerm['can_create']) && $menuPerm['can_create'] == 1,
-                'can_edit' => isset($menuPerm['can_edit']) && $menuPerm['can_edit'] == 1,
-                'can_delete' => isset($menuPerm['can_delete']) && $menuPerm['can_delete'] == 1,
-            ];
-        }
+        \DB::transaction(function () use ($roleId, $menuIds, $permissions) {
+            // Delete existing inventory role permissions
+            \DB::table('role_scope_permissions')
+                ->where('role_id', $roleId)
+                ->where('scope_id', 'app_inventory')
+                ->delete();
 
-        $role->menus()->sync($syncData);
+            $insertData = [];
+            foreach ($menuIds as $menuId) {
+                $menuPerm = $permissions[$menuId] ?? [];
+                
+                $mappings = [
+                    'view' => 1,
+                    'create' => 2,
+                    'edit' => 3,
+                    'delete' => 4,
+                ];
+
+                foreach ($mappings as $key => $permId) {
+                    if (isset($menuPerm[$key]) && $menuPerm[$key] == 1) {
+                        $insertData[] = [
+                            'role_id' => $roleId,
+                            'scope_id' => 'app_inventory',
+                            'menu_id' => $menuId,
+                            'permission_id' => $permId,
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($insertData)) {
+                \DB::table('role_scope_permissions')->insert($insertData);
+            }
+        });
 
         return response()->json(['success' => true, 'message' => 'Role permissions updated.']);
     }
@@ -363,7 +398,7 @@ class UserAccessController extends Controller
         $length = (int) $request->input('length', 10);
         $search = $request->input('search.value');
         
-        $query = \App\Models\User::query();
+        $query = \App\Models\User::with('department');
 
         $recordsTotal = (clone $query)->count();
 
@@ -371,7 +406,11 @@ class UserAccessController extends Controller
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%");
+                  ->orWhere('nik', 'like', "%{$search}%")
+                  ->orWhereHas('department', function($dq) use ($search) {
+                      $dq->where('name', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -407,6 +446,7 @@ class UserAccessController extends Controller
                 'nik' => $row->nik ?? '-',
                 'name' => $row->name,
                 'email' => $row->email,
+                'department' => $row->department ? ($row->department->code . ' - ' . $row->department->name) : '-',
                 'action' => $btn
             ];
         });
@@ -432,6 +472,7 @@ class UserAccessController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $id,
             'nik' => 'required|string|max:50|unique:users,nik,' . $id,
+            'id_dept' => 'nullable|integer|exists:departments,id',
         ];
 
         if (!$id || $request->filled('password')) {
@@ -444,6 +485,7 @@ class UserAccessController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'nik' => $request->nik,
+            'id_dept' => $request->id_dept,
         ];
 
         if ($request->filled('password')) {

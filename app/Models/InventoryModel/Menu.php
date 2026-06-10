@@ -7,7 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Menu extends Model
 {
     protected $table = 'menus';
-    protected $fillable = ['title', 'route', 'icon', 'sort_order', 'is_active', 'parent_id', 'is_visible'];
+    protected $fillable = ['title', 'route', 'icon', 'sort_order', 'is_active', 'parent_id', 'is_visible', 'scope_id'];
+
+    protected static function booted()
+    {
+        static::addGlobalScope('inventory_scope', function ($builder) {
+            $builder->where('menus.scope_id', 'app_inventory');
+        });
+    }
 
     public function roles()
     {

@@ -104,9 +104,9 @@ class StoController extends Controller
                     'net_pcs' => $event->net_pcs ?? 0,
                     'net_amount' => $event->net_amount ?? 0,
                     // Minimal flags for UI logic in Blade/JS
-                    'can_manage' => auth()->user()->hasAppRole('pic') || auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'),
-                    'is_approver' => auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'),
-                    'is_checker' => auth()->user()->hasAppRole('checker') || auth()->user()->hasAppRole('approver') || auth()->user()->hasAppRole('admin'),
+                    'can_manage' => auth()->user()->hasMenuPermission('inventory.sto.index', 'create') || auth()->user()->hasMenuPermission('inventory.sto.index', 'edit'),
+                    'is_approver' => auth()->user()->hasMenuPermission('inventory.sto.index', 'edit'),
+                    'is_checker' => auth()->user()->hasMenuPermission('inventory.sto.index', 'edit'),
                 ];
             });
 
@@ -127,10 +127,10 @@ class StoController extends Controller
      */
     public function store(Request $request)
     {
-        // Only Admin, Approver, or PIC role can initialize a new event
+        // Only users with create permission can initialize a new event
         $user = auth()->user();
-        if (!$user->hasAppRole('pic') && !$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
-             return back()->with('error', 'Unauthorized. Only PIC, Approver, or Admin can initialize STO events.');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'create')) {
+             return back()->with('error', 'Unauthorized. You do not have permission to initialize STO events.');
         }
 
         $validated = $request->validate([
@@ -201,6 +201,14 @@ class StoController extends Controller
      */
     public function destroy($id)
     {
+        $user = auth()->user();
+        if (!$user->hasMenuPermission('inventory.sto.index', 'delete')) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Unauthorized.'
+             ], 403);
+        }
+
         $event = StoEvent::findByHashOrFail($id);
         
         if ($event->status === 'CLOSED') {
@@ -384,9 +392,10 @@ class StoController extends Controller
         // Calculate starting row number for this page
         $rowNumber = $start + 1;
         $user = auth()->user();
-        $isAdmin = $user->hasAppRole('admin');
-        $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic'); // PIC role or event creator
-        $canEditInline = ($isAdmin || $isPic) && $stoEvent->status === 'OPEN';
+        $isAdmin = $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic') || $user->hasAppRole('Inv PIC'); // PIC role or event creator
+        $isOperator = $user->hasAppRole('operator') || $user->hasAppRole('Inv Operator');
+        $canEditInline = ($isAdmin || $isPic || $isOperator) && $stoEvent->status === 'OPEN';
 
         // 1. Get the list of product IDs on current page
         $productIds = $data->pluck('product_detail_id')->unique();
@@ -507,6 +516,12 @@ class StoController extends Controller
      */
     public function scan(Request $request, $id)
     {
+        $user = auth()->user();
+        $isOperator = $user->hasAppRole('Inv Operator') || $user->hasAppRole('operator') || $user->hasAppRole('pic') || $user->hasAppRole('Inv PIC') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'edit') || !$isOperator) {
+             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $stoEvent = StoEvent::findByHashOrFail($id);
         
         if ($stoEvent->status !== 'OPEN') {
@@ -588,6 +603,12 @@ class StoController extends Controller
     public function saveCount(Request $request, $id)
     {
         try {
+            $user = auth()->user();
+            $isOperator = $user->hasAppRole('Inv Operator') || $user->hasAppRole('operator') || $user->hasAppRole('pic') || $user->hasAppRole('Inv PIC') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+            if (!$user->hasMenuPermission('inventory.sto.index', 'edit') || !$isOperator) {
+                 return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+            }
+
             // Sanitize inputs that might be sent as JS strings "undefined" or "null"
             if ($request->location_id === 'undefined' || $request->location_id === 'null' || $request->location_id === '') {
                 $request->merge(['location_id' => null]);
@@ -706,6 +727,12 @@ class StoController extends Controller
      */
     public function deleteDetail($id, $detailId)
     {
+        $user = auth()->user();
+        $isOperator = $user->hasAppRole('Inv Operator') || $user->hasAppRole('operator') || $user->hasAppRole('pic') || $user->hasAppRole('Inv PIC') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'delete') || !$isOperator) {
+             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $stoEvent = StoEvent::findByHashOrFail($id);
         
         if ($stoEvent->status !== 'OPEN') {
@@ -735,8 +762,9 @@ class StoController extends Controller
         $stoEvent = StoEvent::findByHashOrFail($id);
         
         $user = auth()->user();
-        if ($stoEvent->user_id !== $user->id && !$user->hasAppRole('pic') && !$user->hasAppRole('admin')) {
-            return back()->with('error', 'Only the assigned PIC, users with PIC role, or Admin can submit this event.');
+        $isPicUser = $stoEvent->user_id === $user->id || $user->hasAppRole('pic') || $user->hasAppRole('Inv PIC') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$isPicUser) {
+            return back()->with('error', 'Only the assigned PIC can submit this event.');
         }
 
         if ($stoEvent->status !== 'OPEN') {
@@ -787,7 +815,8 @@ class StoController extends Controller
 
         // Authorization Check
         $user = auth()->user();
-        if (!$user->hasAppRole('checker') && !$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+        $isChecker = $user->hasAppRole('checker') || $user->hasAppRole('Inv Checker') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'edit') || !$isChecker) {
              return back()->with('error', 'Unauthorized. Only Checkers or Admins can verify.');
         }
 
@@ -815,7 +844,8 @@ class StoController extends Controller
         ]);
 
         $user = auth()->user();
-        if (!$user->hasAppRole('checker') && !$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+        $isAuthorized = $user->hasAppRole('checker') || $user->hasAppRole('Inv Checker') || $user->hasAppRole('approver') || $user->hasAppRole('Inv Approver') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'edit') || !$isAuthorized) {
              return back()->with('error', 'Unauthorized.');
         }
         
@@ -846,7 +876,8 @@ class StoController extends Controller
 
         // Authorization Check
         $user = auth()->user();
-        if (!$user->hasAppRole('approver') && !$user->hasAppRole('admin')) {
+        $isApprover = $user->hasAppRole('approver') || $user->hasAppRole('Inv Approver') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'edit') || !$isApprover) {
              return back()->with('error', 'Unauthorized. Only Approvers or Admins can finalize.');
         }
 
@@ -902,8 +933,10 @@ class StoController extends Controller
      */
     public function reopen(Request $request, $id)
     {
-        // Reopen Logic: Only Approver
-        if (!auth()->user()->hasAppRole('approver') && !auth()->user()->hasAppRole('admin')) {
+        // Reopen Logic: Requires edit permission and Approver/Admin role
+        $user = auth()->user();
+        $isApprover = $user->hasAppRole('approver') || $user->hasAppRole('Inv Approver') || $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
+        if (!$user->hasMenuPermission('inventory.sto.index', 'edit') || !$isApprover) {
             return back()->with('error', 'Unauthorized.');
         }
 

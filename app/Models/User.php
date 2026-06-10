@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'nik',
+        'id_dept',
         'password',
     ];
 
@@ -57,6 +58,11 @@ class User extends Authenticatable
         return 'nik';
     }
 
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'id_dept');
+    }
+
     public function roles()
     {
         return $this->belongsToMany(\App\Models\InventoryModel\InvRole::class, 'user_scope_roles', 'user_id', 'role_id')
@@ -65,7 +71,14 @@ class User extends Authenticatable
 
     public function hasAppRole($roleCode)
     {
-        return $this->roles->contains('code', $roleCode);
+        $target = strtolower(trim($roleCode));
+        $targetStripped = str_starts_with($target, 'inv ') ? substr($target, 4) : $target;
+
+        return $this->roles->contains(function($role) use ($target, $targetStripped) {
+            $code = strtolower(trim($role->code));
+            $codeStripped = str_starts_with($code, 'inv ') ? substr($code, 4) : $code;
+            return $code === $target || $codeStripped === $targetStripped || $code === 'inv ' . $targetStripped;
+        });
     }
 
     public function hasRole($roleString)
@@ -85,21 +98,14 @@ class User extends Authenticatable
             ->wherePivot('scope_id', 'app_inventory');
     }
 
-    public function hasMenuPermission($routeName, $permissionColumn = 'can_view')
+    public function hasMenuPermission($routeName, $permissionName = 'view')
     {
         if ($this->hasRole('admin')) {
             return true;
         }
 
-        $permissionMap = [
-            'can_view' => 'view',
-            'can_create' => 'create',
-            'can_edit' => 'edit',
-            'can_delete' => 'delete',
-            'can_upload' => 'upload',
-            'can_download' => 'download',
-        ];
-        $permName = $permissionMap[$permissionColumn] ?? 'view';
+        // Support both with and without 'can_' prefix
+        $permName = str_replace('can_', '', $permissionName);
 
         // 1. Direct User Override Check
         $directOverrides = \DB::table('user_scope_permissions')

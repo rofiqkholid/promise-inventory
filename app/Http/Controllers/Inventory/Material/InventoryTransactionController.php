@@ -328,7 +328,7 @@ class InventoryTransactionController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!Auth::user()->hasAppRole('supervisor') && !Auth::user()->hasAppRole('admin')) {
+        if (!Auth::user()->hasMenuPermission('inventory.transactions.index', 'edit')) {
             return response()->json(['success' => false, 'message' => 'You do not have permission to edit transactions.'], 403);
         }
 
@@ -429,7 +429,7 @@ class InventoryTransactionController extends Controller
 
     public function destroy($id)
     {
-        if (!Auth::user()->hasAppRole('supervisor') && !Auth::user()->hasAppRole('admin')) {
+        if (!Auth::user()->hasMenuPermission('inventory.transactions.index', 'delete')) {
             return response()->json(['success' => false, 'message' => 'You do not have permission to delete transactions.'], 403);
         }
 

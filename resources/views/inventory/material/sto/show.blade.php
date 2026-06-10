@@ -51,9 +51,9 @@
 
             @php
                  $user = auth()->user();
-                 $isPic = $user->hasAppRole('pic') || $user->hasAppRole('admin') || $stoEvent->user_id === $user->id;
-                 $isChecker = $user->hasAppRole('checker') || $user->hasAppRole('approver') || $user->hasAppRole('admin');
-                 $isApprover = $user->hasAppRole('approver') || $user->hasAppRole('admin');
+                 $isPic = $user->hasMenuPermission('inventory.sto.index', 'create') || $user->hasMenuPermission('inventory.sto.index', 'edit') || $stoEvent->user_id === $user->id;
+                 $isChecker = $user->hasMenuPermission('inventory.sto.index', 'edit');
+                 $isApprover = $user->hasMenuPermission('inventory.sto.index', 'edit');
             @endphp
 
             @if($stoEvent->status === 'OPEN' && $isPic)

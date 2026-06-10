@@ -15,6 +15,7 @@
                 <th class="text-center w-32">NIK</th>
                 <th class="text-left">Full Name</th>
                 <th class="text-left">Email</th>
+                <th class="text-left">Department</th>
                 <th class="w-32 text-center">Action</th>
             </tr>
         </thead>
@@ -52,6 +53,15 @@
                         <label class="block mb-1 text-xs font-medium text-gray-400">Full Name</label>
                         <input type="text" name="name" id="account_name_input" class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-medium" required>
                     </div>
+                    <div>
+                        <label class="block mb-1 text-xs font-medium text-gray-400">Department</label>
+                        <select name="id_dept" id="account_dept_input" class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xs text-sm font-medium">
+                            <option value="">-- No Department --</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->code }} - {{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     
                     <div class="pt-3 border-t border-gray-100 dark:border-gray-700 mt-2">
                         <p class="text-xs font-black text-amber-600 mb-3">Credentials</p>
@@ -80,6 +90,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#account_dept_input').select2({
+            dropdownParent: $('#accountModal'),
+            width: '100%'
+        });
+
         accountsTable = window.defaultDataTable('#AccountsTable', {
             processing: true, serverSide: true,
             ajax: "{{ route('inventory.users.data') }}",
@@ -88,14 +103,20 @@
                 { data: 'nik', className: 'text-center font-medium text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/40 px-2 py-1' },
                 { data: 'name', className: 'font-medium' },
                 { data: 'email', className: 'text-gray-500 text-sm' },
+                { data: 'department', className: 'text-gray-500 text-sm' },
                 { data: 'action', className: 'text-center', orderable: false }
             ]
         });
 
         $('#AccountsTable').on('click', '.edit-user-btn', function() {
             $.get("{{ url('inventory/users') }}/" + $(this).data('id'), function(data) {
-                $('#account_id_input').val(data.id); $('#account_nik_input').val(data.nik); $('#account_name_input').val(data.name); $('#account_email_input').val(data.email);
-                $('#account_password_input, #account_password_confirm_input').val(''); $('#password_hint').show();
+                $('#account_id_input').val(data.id); 
+                $('#account_nik_input').val(data.nik); 
+                $('#account_name_input').val(data.name); 
+                $('#account_email_input').val(data.email);
+                $('#account_dept_input').val(data.id_dept).trigger('change');
+                $('#account_password_input, #account_password_confirm_input').val(''); 
+                $('#password_hint').show();
                 $('#accountModalTitle').html('<i class="fa-solid fa-user-pen text-amber-500"></i> Edit Account');
                 $('#accountModal').removeClass('hidden').addClass('flex');
             });
@@ -111,6 +132,7 @@
     function openAddAccountModal() { 
         $('#accountForm')[0].reset(); 
         $('#account_id_input').val(''); 
+        $('#account_dept_input').val('').trigger('change');
         $('#password_hint').hide(); 
         $('#accountModalTitle').html('<i class="fa-solid fa-user-plus text-amber-600"></i> Add Account'); 
         $('#accountModal').removeClass('hidden').addClass('flex'); 

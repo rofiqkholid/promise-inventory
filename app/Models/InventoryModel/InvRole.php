@@ -11,6 +11,7 @@ class InvRole extends Model
     protected $fillable = [
         'role_name',
         'scope_id',
+        'description',
     ];
 
     /**

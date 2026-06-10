@@ -137,6 +137,7 @@
                         `;
                     }
                 }
+                @endif
             ],
             order: [[2, 'asc']] // order by model name
         });

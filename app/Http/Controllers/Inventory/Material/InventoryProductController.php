@@ -270,6 +270,10 @@ class InventoryProductController extends Controller
      */
     public function importExcel(Request $request)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.product.index', 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $request->validate([
             'customer_id' => 'required',
             'model_id' => 'required',
@@ -409,6 +413,10 @@ class InventoryProductController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.product.index', 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $data = $this->decodeHashInputs($request->all(), [
             'product_id' => \App\Models\Products::class,
             'material_spec_id' => MaterialSpec::class,
@@ -456,6 +464,10 @@ class InventoryProductController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.product.index', 'edit')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
         
         $data = $this->decodeHashInputs($request->all(), [
@@ -486,6 +498,10 @@ class InventoryProductController extends Controller
      */
     public function destroy($id)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.product.index', 'delete')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $inventoryProduct = InventoryProduct::findByHashOrFail($id);
 
         // Check for transactions

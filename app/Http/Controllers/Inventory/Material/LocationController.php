@@ -71,6 +71,10 @@ class LocationController extends Controller
      */
     public function store(Request $request)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.location.index', 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:inv_m_locations,name',
             'is_active' => 'required|boolean',
@@ -95,6 +99,10 @@ class LocationController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.location.index', 'edit')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $location = Location::findByHashOrFail($id);
         $validated = $request->validate([
             'name' => [
@@ -116,6 +124,10 @@ class LocationController extends Controller
      */
     public function destroy($id)
     {
+        if (!auth()->user()->hasMenuPermission('inventory.master.location.index', 'delete')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $location = Location::findByHashOrFail($id);
         
         // Check if location is used in STO details

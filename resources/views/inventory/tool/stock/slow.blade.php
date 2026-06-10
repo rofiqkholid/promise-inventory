@@ -52,7 +52,7 @@
                 </div>
             </div>
 
-            @if(Auth::user()->hasMenuPermission('inventory.tool.slow-batch.index', 'can_create'))
+            @if(Auth::user()->hasMenuPermission('inventory.tool.slow-batch.index', 'create'))
             <button type="button" id="btnAddBatch" class="h-9 inline-flex items-center justify-center gap-2 px-6 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all font-sans">
                 <i class="fa-solid fa-plus"></i> Register Asset
             </button>
@@ -494,7 +494,7 @@ $(document).ready(function() {
                             <i class="fa-solid fa-print text-sm"></i>
                         </button>`;
                         
-                    @if(Auth::user()->hasMenuPermission('inventory.tool.slow-batch.index', 'can_edit'))
+                    @if(Auth::user()->hasMenuPermission('inventory.tool.slow-batch.index', 'edit'))
                     actionsHtml += `
                         <button class="edit-batch-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 transition-colors"
                             data-id="${r.id}" 

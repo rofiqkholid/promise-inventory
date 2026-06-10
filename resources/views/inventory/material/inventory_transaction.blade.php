@@ -235,7 +235,7 @@
                                 <th class="w-32 text-center font-medium tracking-wider text-xs">Category</th>
                                 <th class="w-24 text-center font-medium tracking-wider text-xs">Qty</th>
                                 <th class="w-40 text-left font-medium tracking-wider text-xs">PIC</th>
-                                @if(Auth::user()->hasAppRole('supervisor') || Auth::user()->hasAppRole('admin'))
+                                @if(Auth::user()->hasMenuPermission('inventory.transactions.index', 'edit') || Auth::user()->hasMenuPermission('inventory.transactions.index', 'delete'))
                                 <th class="w-[100px] text-center font-medium tracking-wider text-xs">Action</th>
                                 @endif
                             </tr>
@@ -507,22 +507,28 @@
                     data: 'pic_name',
                     render: (d) => `<span class="text-[10px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-tight">${d}</span>`
                 },
-                @if(Auth::user()->hasAppRole('supervisor') || Auth::user()->hasAppRole('admin'))
+                @if(Auth::user()->hasMenuPermission('inventory.transactions.index', 'edit') || Auth::user()->hasMenuPermission('inventory.transactions.index', 'delete'))
                 {
                     data: null,
                     orderable: false,
                     className: 'text-center',
                     render: (d, t, r) => {
-                        return `
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button class="edit-transaction-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.id}" title="Edit">
-                                    <i class="fa-solid fa-pen-to-square text-sm"></i>
-                                </button>
-                                <button class="delete-transaction-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.id}" title="Delete">
-                                    <i class="fa-solid fa-trash-can text-sm"></i>
-                                </button>
-                            </div>
+                        let buttons = '';
+                        @if(Auth::user()->hasMenuPermission('inventory.transactions.index', 'edit'))
+                        buttons += `
+                            <button class="edit-transaction-btn h-8 w-8 inline-flex items-center justify-center text-primary-600 rounded-xs bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 transition-colors" data-id="${r.id}" title="Edit">
+                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                            </button>
                         `;
+                        @endif
+                        @if(Auth::user()->hasMenuPermission('inventory.transactions.index', 'delete'))
+                        buttons += `
+                            <button class="delete-transaction-btn h-8 w-8 inline-flex items-center justify-center text-red-600 rounded-xs bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors" data-id="${r.id}" title="Delete">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        `;
+                        @endif
+                        return `<div class="flex items-center justify-center gap-1.5">${buttons}</div>`;
                     }
                 }
                 @endif

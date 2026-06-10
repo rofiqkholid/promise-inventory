@@ -74,7 +74,7 @@
                 </div>
             </div>
 
-            @if(Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'can_create'))
+            @if(Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'create'))
             <button type="button" id="btnNewTransaction" class="h-9 inline-flex items-center justify-center gap-2 px-4 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest active:scale-[0.98] transition-all font-sans">
                 <i class="fa-solid fa-plus"></i> New Transaction
             </button>

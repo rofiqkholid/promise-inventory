@@ -188,6 +188,12 @@ class ProjectVaveAnalysisController extends Controller
 
     public function storeBase(Request $request)
     {
+        $routeName = $request->route() ? $request->route()->getName() : 'inventory.projectVaveAnalysis.index';
+        $baseRoute = str_contains($routeName, 'project') ? 'inventory.projectVaveAnalysis.index' : 'inventory.vave.index';
+        if (!auth()->user()->hasMenuPermission($baseRoute, 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $productId = Products::decodeHash($request->product_id);
         $baseId = $request->base_id ? VaveBase::decodeHash($request->base_id) : null;
         $data = $request->except(['base_id', 'product_id']);
@@ -292,6 +298,12 @@ class ProjectVaveAnalysisController extends Controller
 
     public function destroyBase($id)
     {
+        $routeName = request()->route() ? request()->route()->getName() : 'inventory.projectVaveAnalysis.index';
+        $baseRoute = str_contains($routeName, 'project') ? 'inventory.projectVaveAnalysis.index' : 'inventory.vave.index';
+        if (!auth()->user()->hasMenuPermission($baseRoute, 'delete')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $base = VaveBase::findByHashOrFail($id);
         $productId = $base->product_id;
         $wasActive = $base->is_active;
@@ -420,6 +432,12 @@ class ProjectVaveAnalysisController extends Controller
 
     public function importExcel(Request $request, $isRegular = false)
     {
+        $routeName = $request->route() ? $request->route()->getName() : 'inventory.projectVaveAnalysis.index';
+        $baseRoute = str_contains($routeName, 'project') ? 'inventory.projectVaveAnalysis.index' : 'inventory.vave.index';
+        if (!auth()->user()->hasMenuPermission($baseRoute, 'create')) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
         $request->validate(['sheet_name' => 'required|string']);
         $fileToImport = null; $tmpPath = null;
         if ($request->has('chunk_index')) {

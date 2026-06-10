@@ -13,6 +13,7 @@
             <tr>
                 <th class="w-16">No</th>
                 <th class="text-left">Role Name</th>
+                <th class="text-left">Description</th>
                 <th class="w-40 text-center">Configuration</th>
             </tr>
         </thead>
@@ -41,6 +42,10 @@
                         <input type="text" name="role_name" id="role_name_input" class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-medium" placeholder="e.g. Inv Admin" required>
                         <p class="mt-1 text-[10px] text-gray-400">Prefix with "Inv " for inventory roles (e.g. Inv Admin, Inv Viewer)</p>
                     </div>
+                    <div>
+                        <label class="block mb-1.5 text-xs font-medium text-gray-500 tracking-wider">Description</label>
+                        <textarea name="description" id="role_description_input" class="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md text-sm font-medium" placeholder="Role description..." rows="2"></textarea>
+                    </div>
                 </div>
                 <div class="mt-6 flex gap-3">
                     <button type="button" onclick="closeModal('roleModal')" class="flex-1 py-2 text-sm font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-md transition-all">Cancel</button>
@@ -60,6 +65,7 @@
             columns: [
                 { data: 'DT_RowIndex', className: 'text-center font-medium text-gray-400' },
                 { data: 'name', className: 'font-medium text-slate-900 dark:text-slate-100' },
+                { data: 'description', className: 'text-gray-500 text-sm' },
                 { data: 'action', className: 'text-center', orderable: false }
             ]
         });
@@ -68,6 +74,7 @@
             $.get("{{ url('inventory/roles') }}/" + $(this).data('id'), function(data) {
                 $('#role_id_input').val(data.id);
                 $('#role_name_input').val(data.role_name);
+                $('#role_description_input').val(data.description);
                 $('#roleModalTitle').html('<i class="fa-solid fa-pen-to-square text-primary-500"></i> Edit Role');
                 $('#roleModal').removeClass('hidden').addClass('flex');
             });
@@ -89,10 +96,10 @@
                 Object.keys(perms).forEach(menuId => {
                     const row = perms[menuId];
                     const matrixDiv = $(`.role-permission-matrix[data-menu-id="${menuId}"]`);
-                    if (row.can_view) matrixDiv.find('.can-view-cb').prop('checked', true);
-                    if (row.can_create) matrixDiv.find('.can-create-cb').prop('checked', true);
-                    if (row.can_edit) matrixDiv.find('.can-edit-cb').prop('checked', true);
-                    if (row.can_delete) matrixDiv.find('.can-delete-cb').prop('checked', true);
+                    if (row.view) matrixDiv.find('.can-view-cb').prop('checked', true);
+                    if (row.create) matrixDiv.find('.can-create-cb').prop('checked', true);
+                    if (row.edit) matrixDiv.find('.can-edit-cb').prop('checked', true);
+                    if (row.delete) matrixDiv.find('.can-delete-cb').prop('checked', true);
                 });
                 
                 $('#permissionModal').removeClass('hidden').addClass('flex');
@@ -110,6 +117,7 @@
         $('#roleForm')[0].reset(); 
         $('#role_id_input').val(''); 
         $('#role_name_input').val('');
+        $('#role_description_input').val('');
         $('#roleModalTitle').html('<i class="fa-solid fa-plus text-purple-600"></i> Add Role'); 
         $('#roleModal').removeClass('hidden').addClass('flex'); 
     }
