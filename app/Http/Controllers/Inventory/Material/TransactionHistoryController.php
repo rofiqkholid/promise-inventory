@@ -107,7 +107,7 @@ class TransactionHistoryController extends Controller
                     $q4->where('part_no', 'like', "%{$search}%")
                        ->orWhere('part_name', 'like', "%{$search}%");
                 })
-              ->orWhere('remark', 'like', "%{$search}%");
+              ->orWhere('inv_t_inventory_transaction.remark', 'like', "%{$search}%");
         });
     }
 

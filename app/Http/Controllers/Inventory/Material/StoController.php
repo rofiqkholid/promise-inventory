@@ -321,7 +321,7 @@ class StoController extends Controller
                 $q->whereHas('product.product', function($sq) use ($search) {
                     $sq->where('part_no', 'like', "%{$search}%")
                        ->orWhere('part_name', 'like', "%{$search}%");
-                })->orWhere('remark', 'like', "%{$search}%");
+                })->orWhere('inv_t_sto_detail.remark', 'like', "%{$search}%");
             });
         }
 
