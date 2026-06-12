@@ -217,7 +217,7 @@
 <div id="correctionDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 p-0 md:p-4" role="dialog" aria-modal="true">
     <div class="relative w-full h-full md:h-[95vh] md:w-[95vw] transform overflow-hidden md:rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col shadow-2xl transition-all">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
-            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+            <h3 class="text-sm font-medium text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                 <i class="fa-solid fa-clock-rotate-left text-primary-500"></i> Global STO Correction Log
             </h3>
             <button onclick="closeCorrectionModal()" class="text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Close Modal">
@@ -227,52 +227,51 @@
         
         <div class="flex-1 min-h-0 flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
             <table id="correctionLogTable" class="custom-table w-full text-left border-collapse">
-                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
+                <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                     <tr>
-                        <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model Identification</th>
-                        <th class="py-3 px-3 text-center w-28 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
-                        <th class="py-3 px-3 text-center w-28 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Events</th>
-                        <th class="py-3 px-3 text-center w-32 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Affected Parts</th>
-                        <th class="py-3 px-4 text-right w-44 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">ABS Adj. Value</th>
-                        <th class="py-3 px-3 text-center w-48 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Qty Balance (+/-)</th>
-                        <th class="py-3 px-4 text-right w-44 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Net Impact</th>
-                        <th class="py-3 px-6 text-center w-36 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Detail</th>
+                        <th class="py-3 px-4 text-left text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model Identification</th>
+                        <th class="py-3 px-3 text-center w-28 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
+                        <th class="py-3 px-3 text-center w-28 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Events</th>
+                        <th class="py-3 px-3 text-center w-32 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Affected Parts</th>
+                        <th class="py-3 px-4 text-right w-44 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">ABS Adj. Value</th>
+                        <th class="py-3 px-3 text-center w-48 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Qty Balance (+/-)</th>
+                        <th class="py-3 px-4 text-right w-44 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Net Impact</th>
+                        <th class="py-3 px-6 text-center w-36 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Detail</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-800 text-[11px] font-medium text-gray-700 dark:text-gray-300">
                     @foreach($correctionByModel as $model)
                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150">
                             <td class="py-3 px-4">
-                                <span class="font-semibold text-gray-900 dark:text-white uppercase tracking-tight">{{ $model['model_name'] }}</span>
+                                <span class="font-normal text-gray-900 dark:text-white uppercase tracking-tight">{{ $model['model_name'] }}</span>
                             </td>
                             <td class="py-3 px-3 text-center">
-                                <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">
+                                <span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">
                                     {{ $model['customer_code'] ?? 'Unknown' }}
                                 </span>
                             </td>
                             <td class="py-3 px-3 text-center">
-                                <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">
+                                <span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">
                                     {{ $model['event_count'] }} events
                                 </span>
                             </td>
                             <td class="py-3 px-3 text-center">
-                                <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">
+                                <span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">
                                     {{ $model['affected_parts'] }} parts
                                 </span>
                             </td>
                             <td class="py-3 px-4 text-right">
-                                <div class="font-mono font-bold text-xs text-gray-900 dark:text-white">
-                                    <span class="text-[9.5px] font-semibold text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>{{ number_format($model['total_correction']) }}
+                                <div class="font-mono font-medium text-xs text-gray-900 dark:text-white">
+                                    <span class="text-[9.5px] font-normal text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>{{ number_format($model['total_correction']) }}
                                 </div>
                             </td>
                             <td class="py-3 px-3 text-center">
-                                <div class="flex items-center justify-center gap-2 font-mono font-bold text-xs">
-                                    <span class="text-rose-600 dark:text-rose-400">+{{ number_format($model['increment_pcs']) }}</span>
-                                    <span class="text-gray-300 dark:text-gray-700">/</span>
-                                    <span class="text-rose-600 dark:text-rose-400">-{{ number_format($model['decrement_pcs']) }}</span>
+                                <div class="flex flex-col items-center gap-0.5 font-mono font-medium text-xs">
+                                    <span class="text-rose-600 dark:text-rose-400">+{{ number_format($model['increment_pcs']) }} pcs</span>
+                                    <span class="text-rose-600 dark:text-rose-400">-{{ number_format($model['decrement_pcs']) }} pcs</span>
                                 </div>
                             </td>
-                            <td class="py-3 px-4 text-right font-mono font-bold text-xs">
+                            <td class="py-3 px-4 text-right font-mono font-medium text-xs">
                                 @if($model['net_correction'] < 0)
                                     <span class="text-rose-600 dark:text-rose-400">-Rp {{ number_format(abs($model['net_correction'])) }}</span>
                                 @elseif($model['net_correction'] > 0)
@@ -282,7 +281,7 @@
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-center">
-                                <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                <button onclick="showCorrectionDetail('{{ $model['model_name'] }}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                     View Logs
                                 </button>
                             </td>
@@ -296,8 +295,8 @@
         <div id="subModalContainer" class="hidden absolute inset-0 z-35 bg-white dark:bg-gray-900 flex flex-col rounded-xs overflow-hidden">
             <div class="w-full h-full flex flex-col overflow-hidden">
                 <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-receipt text-primary-500"></i> Correction Trail Log — <span id="modalModelName" class="text-primary-600 dark:text-primary-400 font-bold">Model Name</span>
+                    <h3 class="text-sm font-medium text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-receipt text-primary-500"></i> Correction Trail Log — <span id="modalModelName" class="text-primary-600 dark:text-primary-400 font-medium">Model Name</span>
                     </h3>
                     <button onclick="closeSubModal()" class="text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" title="Back to Overview">
                         <i class="fa-solid fa-arrow-left text-base"></i>
@@ -305,14 +304,14 @@
                 </div>
                 <div class="flex-1 min-h-0 flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
                     <table id="correctionSubTable" class="custom-table w-full text-left border-collapse">
-                        <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
+                        <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-medium text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                             <tr>
-                                <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">STO Event</th>
-                                <th class="py-3 px-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Part No</th>
-                                <th class="py-3 px-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Reason Category</th>
-                                <th class="py-3 px-4 text-right w-36 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Quantity Adj.</th>
-                                <th class="py-3 px-4 text-right w-40 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Value Impact</th>
-                                <th class="py-3 px-6 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Correction Remark</th>
+                                <th class="py-3 px-4 text-left text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">STO Event</th>
+                                <th class="py-3 px-3 text-left text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Part No</th>
+                                <th class="py-3 px-3 text-left text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Reason Category</th>
+                                <th class="py-3 px-4 text-right w-36 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Quantity Adj.</th>
+                                <th class="py-3 px-4 text-right w-40 text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Value Impact</th>
+                                <th class="py-3 px-6 text-left text-[10px] font-medium tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Correction Remark</th>
                             </tr>
                         </thead>
                         <tbody id="correctionDetailBody" class="divide-y divide-gray-100 dark:divide-gray-800 text-[11px] font-medium text-gray-700 dark:text-gray-300">
@@ -320,7 +319,7 @@
                     </table>
                 </div>
                 <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 shrink-0 flex justify-end">
-                    <button onclick="closeSubModal()" class="px-4 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+                    <button onclick="closeSubModal()" class="px-4 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
                         <i class="fa-solid fa-arrow-left text-[10px]"></i> Back to Overview
                     </button>
                 </div>
@@ -328,7 +327,7 @@
         </div>
         
         <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 dark:border-gray-800 shrink-0 flex justify-end">
-            <button onclick="closeCorrectionModal()" class="px-5 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
+            <button onclick="closeCorrectionModal()" class="px-5 py-2.5 bg-white dark:bg-gray-850 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-1.5">
                 <i class="fa-solid fa-xmark text-[10px]"></i> Close Correction Log
             </button>
         </div>
@@ -1736,16 +1735,15 @@
                     } else {
                         netImpactHtml = `<span class="text-slate-400 dark:text-slate-500">Rp 0</span>`;
                     }
-                    
-                    const rowNode = correctionTable.row.add([
-                        `<span class="font-semibold text-gray-900 dark:text-white uppercase tracking-tight">${model.model_name}</span>`,
-                        `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">${model.customer_code || 'Unknown'}</span>`,
-                        `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${model.event_count} events</span>`,
-                        `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">${model.affected_parts} parts</span>`,
-                        `<div class="font-mono font-bold text-xs text-gray-900 dark:text-white"><span class="text-[9.5px] font-semibold text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>${absValFormatted}</div>`,
-                        `<div class="flex items-center justify-center gap-2 font-mono font-bold text-xs"><span class="text-rose-600 dark:text-rose-400">+${incPcs}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="text-rose-600 dark:text-rose-400">-${decPcs}</span></div>`,
+                                      const rowNode = correctionTable.row.add([
+                        `<span class="font-normal text-gray-900 dark:text-white uppercase tracking-tight">${model.model_name}</span>`,
+                        `<span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">${model.customer_code || 'Unknown'}</span>`,
+                        `<span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${model.event_count} events</span>`,
+                        `<span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">${model.affected_parts} parts</span>`,
+                        `<div class="font-mono font-medium text-xs text-gray-900 dark:text-white"><span class="text-[9.5px] font-normal text-gray-400 dark:text-gray-555 mr-0.5">Rp</span>${absValFormatted}</div>`,
+                        `<div class="flex flex-col items-center gap-0.5 font-mono font-medium text-xs"><span class="text-rose-600 dark:text-rose-400">+${incPcs} Pcs</span><span class="text-rose-600 dark:text-rose-400">-${decPcs} Pcs</span></div>`,
                         netImpactHtml,
-                        `<button onclick="showCorrectionDetail('${escapeSingleQuotes(model.model_name)}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View Logs</button>`
+                        `<button onclick="showCorrectionDetail('${escapeSingleQuotes(model.model_name)}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View Logs</button>`
                     ]).node();
                     
                     $(rowNode).addClass('hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150');
@@ -1753,7 +1751,7 @@
                 
                 correctionTable.draw();
             });
-    }
+    }  }
     
     function openGlobalAuditLogsModal() {
         const modal = document.getElementById('correctionDetailModal');
@@ -1785,7 +1783,7 @@
                 <td colspan="6" class="py-24 text-center">
                     <div class="flex flex-col items-center justify-center gap-3">
                         <i class="fa-solid fa-spinner animate-spin text-3xl text-primary-500"></i>
-                        <span class="text-[10px] font-bold tracking-widest text-slate-400 dark:text-gray-500 uppercase">Fetching Trails...</span>
+                        <span class="text-[10px] font-medium tracking-widest text-slate-400 dark:text-gray-550 uppercase">Fetching Trails...</span>
                     </div>
                 </td>
             </tr>
@@ -1821,30 +1819,33 @@
 
                     let qtyAdjHtml = '';
                     if (unitLower === 'pcs') {
-                        qtyAdjHtml = `${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} pcs`;
+                        qtyAdjHtml = `<div class="flex flex-col items-end">
+                            <span class="font-normal font-mono ${deviationColorClass}">${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} pcs</span>
+                        </div>`;
                     } else {
-                        qtyAdjHtml = `${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode} (${roundedDiffPcs > 0 ? '+' : ''}${diffPcsFormatted} pcs)`;
+                        qtyAdjHtml = `<div class="flex flex-col items-end">
+                            <span class="font-normal font-mono ${deviationColorClass}">${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode}</span>
+                            <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal font-mono">(${roundedDiffPcs > 0 ? '+' : ''}${diffPcsFormatted} pcs)</span>
+                        </div>`;
                     }
 
                     tr.innerHTML = `
                         <td class="py-3 px-4">
                             <div class="flex flex-col">
-                                <span class="font-bold text-gray-900 dark:text-white uppercase tracking-tight">${row.event_code}</span>
+                                <span class="font-medium text-gray-900 dark:text-white uppercase tracking-tight">${row.event_code}</span>
                                 <span class="text-[10px] text-gray-500 font-medium">${date}</span>
                             </div>
                         </td>
                         <td class="py-3 px-3">
-                            <span class="font-mono text-xs text-gray-900 dark:text-white font-semibold">${row.part_no}${row.revision_code ? ` - ${row.revision_code}` : ''}</span>
+                            <span class="font-mono text-xs text-gray-900 dark:text-white font-normal">${row.part_no}${row.revision_code ? ` - ${row.revision_code}` : ''}</span>
                         </td>
                         <td class="py-3 px-3">
-                            <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase tracking-wider">${row.reason_name}</span>
+                            <span class="px-2 py-0.5 rounded-xs text-[9px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase tracking-wider">${row.reason_name}</span>
                         </td>
                         <td class="py-3 px-4 text-right">
-                            <span class="font-bold font-mono ${deviationColorClass}">
-                                ${qtyAdjHtml}
-                            </span>
+                            ${qtyAdjHtml}
                         </td>
-                        <td class="py-3 px-4 text-right font-mono font-bold text-xs ${deviationColorClass}">
+                        <td class="py-3 px-4 text-right font-mono font-normal text-xs ${deviationColorClass}">
                             ${row.diff_qty !== 0 ? sign : ''}Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
                         </td>
                         <td class="py-3 px-6">
@@ -1853,7 +1854,7 @@
                                 "${row.remark}"
                             </span>
                             ` : `
-                            <span class="text-xs text-gray-400 dark:text-gray-500 italic">-</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-550 italic">-</span>
                             `}
                         </td>
                     `;

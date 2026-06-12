@@ -36,8 +36,8 @@
                 <th class="text-left w-48 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Event Code</th>
                 <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Counting Period</th>
                 <th class="text-left w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">PIC</th>
-                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Amount</th>
-                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net PCS</th>
+                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Amount (Rp)</th>
+                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Qty</th>
                 <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Status</th>
                 <th class="text-center w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">STO Control</th>
                 <th class="w-[100px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
@@ -198,9 +198,14 @@
                             const prefixQty = valQty > 0 ? '+' : (valQty < 0 ? '-' : '');
                             
                             const formattedPcs = valPcs !== 0 ? `${prefixPcs}${Math.abs(valPcs).toLocaleString()} Pcs` : '0 Pcs';
-                            const formattedQty = valQty !== 0 ? `${prefixQty}${parseFloat(Math.abs(valQty).toFixed(2)).toLocaleString()} Unit` : '0 Unit';
+                            const formattedQty = valQty !== 0 ? `(${prefixQty}${parseFloat(Math.abs(valQty).toFixed(2)).toLocaleString()} Unit)` : '(0 Unit)';
                             
-                            return `<span class="text-xs font-medium text-red-600">${formattedPcs} (${formattedQty})</span>`;
+                            return `
+                                <div class="flex flex-col items-center">
+                                    <span class="text-xs font-semibold text-red-600">${formattedPcs}</span>
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">${formattedQty}</span>
+                                </div>
+                            `;
                         }
                     },
                     { 
