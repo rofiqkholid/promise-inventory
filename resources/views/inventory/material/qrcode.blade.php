@@ -5,7 +5,7 @@
 <title>QR Labels</title>
 <style>
   @page {
-    size: 4.13in 5.83in;
+    size: A6 portrait;
     margin: 0;
   }
 
