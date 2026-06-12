@@ -167,7 +167,7 @@
                 <span class="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400 uppercase tracking-widest mb-1">Stock Increment</span>
                 <span id="stat-total-increase-pcs" class="text-lg font-bold text-emerald-700 dark:text-emerald-400 leading-none">{{ number_format($stats['total_increase_pcs'], 0) }} Pcs</span>
                 <span id="stat-total-increase" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ number_format($stats['total_increase'], 1) }} Unit / {{ $stats['count_increase'] }} items)
+                    ({{ number_format($stats['total_increase'], $stats['total_increase'] == (int)$stats['total_increase'] ? 0 : 1) }} Unit / {{ $stats['count_increase'] }} items)
                 </span>
             </div>
 
@@ -179,7 +179,7 @@
                 <span class="text-[9px] font-bold text-rose-600/70 dark:text-rose-400 uppercase tracking-widest mb-1">Stock Decrement</span>
                 <span id="stat-total-decrease-pcs" class="text-lg font-bold text-rose-700 dark:text-rose-400 leading-none">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
                 <span id="stat-total-decrease" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ number_format($stats['total_decrease'], 1) }} Unit / {{ $stats['count_decrease'] }} items)
+                    ({{ number_format($stats['total_decrease'], $stats['total_decrease'] == (int)$stats['total_decrease'] ? 0 : 1) }} Unit / {{ $stats['count_decrease'] }} items)
                 </span>
             </div>
 
@@ -191,7 +191,7 @@
                 <span class="text-[9px] font-bold text-purple-600/70 dark:text-purple-400 uppercase tracking-widest mb-1">Adjustment Impact</span>
                 <span id="stat-net-adjustment-pcs" class="text-lg font-bold text-purple-700 dark:text-purple-400 leading-none">{{ ($stats['net_adjustment_pcs'] >= 0 ? '+' : '') . number_format($stats['net_adjustment_pcs'], 0) }} Pcs</span>
                 <span id="stat-net-adjustment" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, 1) }} Unit)
+                    ({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, $netAdjustment == (int)$netAdjustment ? 0 : 1) }} Unit)
                 </span>
             </div>
 
@@ -588,7 +588,11 @@
     window.updateStatsCard = function(stats) {
         if (!stats) return;
 
-        const formatNumber = (num, dec = 0) => parseFloat(num || 0).toLocaleString(undefined, {minimumFractionDigits: dec});
+        const formatNumber = (num, dec = 0) => {
+            const parsed = parseFloat(num || 0);
+            const precision = (parsed % 1 === 0) ? 0 : dec;
+            return parsed.toLocaleString(undefined, {minimumFractionDigits: precision, maximumFractionDigits: precision});
+        };
         const setVal = (id, val) => {
             const el = document.getElementById(id);
             if (el) el.innerText = (val !== undefined && val !== null) ? val : '0';
