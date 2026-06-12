@@ -1177,10 +1177,10 @@
         reasonList.sort((a, b) => b.count - a.count);
 
         const totalCount = reasonList.reduce((sum, item) => sum + item.count, 0);
-        let runningSum = 0;
+        let runningSumPB = 0;
         const cumulativePcts = reasonList.map(item => {
-            runningSum += item.count;
-            return totalCount > 0 ? (runningSum / totalCount) * 100 : 0;
+            runningSumPB += item.count;
+            return totalCount > 0 ? (runningSumPB / totalCount) * 100 : 0;
         });
 
         const labelsPB = reasonList.map(item => item.name);
