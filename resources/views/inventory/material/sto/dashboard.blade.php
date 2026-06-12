@@ -266,16 +266,23 @@
                                 </div>
                             </td>
                             <td class="py-3 px-3 text-center">
+                                @php
+                                    $incVal = (float)($model['increment_pcs'] ?? 0);
+                                    $decVal = (float)($model['decrement_pcs'] ?? 0);
+                                @endphp
                                 <div class="flex flex-col items-center gap-0.5 font-mono font-medium text-xs">
-                                    <span class="text-rose-600 dark:text-rose-400">+{{ number_format($model['increment_pcs']) }} pcs</span>
-                                    <span class="text-rose-600 dark:text-rose-400">-{{ number_format($model['decrement_pcs']) }} pcs</span>
+                                    <span class="{{ $incVal > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500' }}">{{ $incVal > 0 ? '+' : '' }}{{ number_format($incVal) }} pcs</span>
+                                    <span class="{{ $decVal > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500' }}">{{ $decVal > 0 ? '-' : '' }}{{ number_format($decVal) }} pcs</span>
                                 </div>
                             </td>
                             <td class="py-3 px-4 text-right font-mono font-medium text-xs">
-                                @if($model['net_correction'] < 0)
-                                    <span class="text-rose-600 dark:text-rose-400">-Rp {{ number_format(abs($model['net_correction'])) }}</span>
-                                @elseif($model['net_correction'] > 0)
-                                    <span class="text-rose-600 dark:text-rose-400">+Rp {{ number_format(abs($model['net_correction'])) }}</span>
+                                @php
+                                    $netCorrVal = (float)($model['net_correction'] ?? 0);
+                                @endphp
+                                @if($netCorrVal < 0)
+                                    <span class="text-rose-600 dark:text-rose-400">-Rp {{ number_format(abs($netCorrVal)) }}</span>
+                                @elseif($netCorrVal > 0)
+                                    <span class="text-rose-600 dark:text-rose-400">+Rp {{ number_format(abs($netCorrVal)) }}</span>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-500">Rp 0</span>
                                 @endif
@@ -1721,27 +1728,37 @@
                     const absValFormatted = new Intl.NumberFormat('id-ID').format(model.total_correction);
                     
                     // Format increment and decrement pcs
-                    const incPcs = new Intl.NumberFormat('id-ID').format(model.increment_pcs);
-                    const decPcs = new Intl.NumberFormat('id-ID').format(model.decrement_pcs);
+                    // Format increment and decrement pcs
+                    const incVal = parseFloat(model.increment_pcs) || 0;
+                    const decVal = parseFloat(model.decrement_pcs) || 0;
+                    const incPcs = new Intl.NumberFormat('id-ID').format(incVal);
+                    const decPcs = new Intl.NumberFormat('id-ID').format(decVal);
                     
+                    const incColor = incVal > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500';
+                    const decColor = decVal > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500';
+                    const incSign = incVal > 0 ? '+' : '';
+                    const decSign = decVal > 0 ? '-' : '';
+
                     // Format net correction impact
                     let netImpactHtml = '';
-                    const absNet = Math.abs(model.net_correction);
+                    const netCorrVal = parseFloat(model.net_correction) || 0;
+                    const absNet = Math.abs(netCorrVal);
                     const formattedNet = new Intl.NumberFormat('id-ID').format(absNet);
-                    if (model.net_correction < 0) {
+                    if (netCorrVal < 0) {
                         netImpactHtml = `<span class="text-rose-600 dark:text-rose-400">-Rp ${formattedNet}</span>`;
-                    } else if (model.net_correction > 0) {
+                    } else if (netCorrVal > 0) {
                         netImpactHtml = `<span class="text-rose-600 dark:text-rose-400">+Rp ${formattedNet}</span>`;
                     } else {
                         netImpactHtml = `<span class="text-slate-400 dark:text-slate-500">Rp 0</span>`;
                     }
-                                      const rowNode = correctionTable.row.add([
+                    
+                    const rowNode = correctionTable.row.add([
                         `<span class="font-normal text-gray-900 dark:text-white uppercase tracking-tight">${model.model_name}</span>`,
                         `<span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">${model.customer_code || 'Unknown'}</span>`,
                         `<span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${model.event_count} events</span>`,
                         `<span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">${model.affected_parts} parts</span>`,
                         `<div class="font-mono font-medium text-xs text-gray-900 dark:text-white"><span class="text-[9.5px] font-normal text-gray-400 dark:text-gray-555 mr-0.5">Rp</span>${absValFormatted}</div>`,
-                        `<div class="flex flex-col items-center gap-0.5 font-mono font-medium text-xs"><span class="text-rose-600 dark:text-rose-400">+${incPcs} Pcs</span><span class="text-rose-600 dark:text-rose-400">-${decPcs} Pcs</span></div>`,
+                        `<div class="flex flex-col items-center gap-0.5 font-mono font-medium text-xs"><span class="${incColor}">${incSign}${incPcs} Pcs</span><span class="${decColor}">${decSign}${decPcs} Pcs</span></div>`,
                         netImpactHtml,
                         `<button onclick="showCorrectionDetail('${escapeSingleQuotes(model.model_name)}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-medium text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View Logs</button>`
                     ]).node();

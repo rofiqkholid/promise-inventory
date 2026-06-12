@@ -290,7 +290,7 @@
                         @endforeach
                         
                         <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-amber-50/30 dark:bg-amber-900/10">STO gap</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount (Rp)</th>
 
                         @if($categories->count() === 0)
                         <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px]">-</th>
@@ -440,16 +440,36 @@
                             textColorClass = 'text-primary-700 dark:text-primary-400';
                         }
 
-                        const unitSub = row.current_qty + ' ' + row.balance_unit;
+                        const pcsVal = parseFloat(row.balance_pcs.replace(/,/g, '')) || 0;
+                        const unitVal = parseFloat(row.current_qty) || 0;
+                        let unitLabel = (row.balance_unit || '').toUpperCase();
+                        if (unitLabel.includes('COIL')) {
+                            unitLabel = 'KG';
+                        }
+                        
+                        const pcsDisplay = pcsVal.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' PCS';
+                        const unitDisplay = unitVal.toLocaleString(undefined, { maximumFractionDigits: 2 }) + ' ' + unitLabel;
+
                         const breakdown = `In: ${row.total_in} | Out: ${row.total_out} | STO: ${row.sto_gap_plain}`;
+
+                        let qtyHtml = '';
+                        if (parseFloat(row.pcs_per_unit) == 1 && !(row.balance_unit || '').toLowerCase().includes('coil')) {
+                            qtyHtml = `<span class="font-bold ${textColorClass} text-xs tracking-tight">${pcsDisplay}</span>`;
+                        } else {
+                            qtyHtml = `
+                                <div class="flex flex-col items-center justify-center">
+                                    <span class="font-bold ${textColorClass} text-xs tracking-tight">${unitDisplay}</span>
+                                    <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-tighter">${pcsDisplay}</span>
+                                </div>
+                            `;
+                        }
 
                         return `
                             <div class="flex flex-col items-center justify-center p-2" title="${breakdown}">
                                 <div class="flex items-center gap-2 mb-1">
                                     <span class="w-2 h-2 rounded-full ${indicatorClass}"></span>
-                                    <span class="font-bold ${textColorClass} text-xs tracking-tight">${data}</span>
+                                    ${qtyHtml}
                                 </div>
-                                <span class="text-[9px] text-slate-600 dark:text-slate-400 font-medium tracking-wider opacity-80">${row.balance_unit} (${row.current_qty})</span>
                             </div>
                         `;
                     }
@@ -462,7 +482,7 @@
             data: 'total_amount',
             className: 'text-right font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300',
             render: function(data) {
-                return data ? new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(data) : '0';
+                return data ? 'Rp ' + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(data) : 'Rp 0';
             }
         };
 

@@ -394,7 +394,7 @@ class StockMonitoringController extends Controller
                     );
                 }
 
-                $row[$alias] = $this->formatCalculatedQty($catQty, $catPcs, $isCoil, $pcsPerUnit);
+                $row[$alias] = $this->formatCalculatedQty($catQty, $catPcs, $isCoil, $pcsPerUnit, $item->unit_code);
 
                 if ($cat->is_trial) {
                     $trialQty = abs($catQty); // Unit
@@ -419,34 +419,57 @@ class StockMonitoringController extends Controller
 
     private function formatStoGap($gap, $item, $pcsPerUnit, $isCoil = false, $weightKg = 0)
     {
-        if ($gap === null) return '-';
+        if ($gap === null) return '<span class="text-gray-300 dark:text-gray-650 font-mono text-[10px]">-</span>';
         $gap = floatval($gap);
         if ($gap == 0) return '0';
 
         $sign = $gap > 0 ? '+' : '';
         $pcs = InventoryProduct::calculatePcs($gap, $weightKg, $pcsPerUnit, $item->unit_name, $item->top_coil, $item->end_coil, $item->pitch, $item->pcs_per_pitch, $item->gross_coil);
-        $pcsDisplay = $sign . number_format($pcs, 0);
-
-        if ($pcsPerUnit == 1 && !$isCoil) {
-            return "<span class='font-bold'>$pcsDisplay</span>";
+        $pcsDisplay = $sign . number_format($pcs, 0) . ' PCS';
+        
+        $unitLabel = strtoupper($item->unit_code);
+        if ($unitLabel === 'COIL') {
+            $unitLabel = 'KG';
         }
 
-        $unitDisplay = $sign . number_format($gap, $isCoil ? 2 : 0);
-        return "<span class='font-bold'>$pcsDisplay</span> <span class='text-xs text-gray-400 font-normal'>($unitDisplay)</span>";
+        if ($pcsPerUnit == 1 && !$isCoil) {
+            return "
+                <div class='flex flex-col items-center justify-center'>
+                    <span class='font-medium'>$pcsDisplay</span>
+                </div>";
+        }
+
+        $unitDisplay = $sign . number_format($gap, $isCoil ? 2 : 0) . ' ' . $unitLabel;
+        return "
+            <div class='flex flex-col items-center justify-center'>
+                <span class='font-medium'>$unitDisplay</span>
+                <span class='text-[10px] text-gray-400 dark:text-gray-500 font-medium leading-none mt-1'>$pcsDisplay</span>
+            </div>";
     }
 
-    private function formatCalculatedQty($qty, $pcs, $isCoil, $pcsPerUnit)
+    private function formatCalculatedQty($qty, $pcs, $isCoil, $pcsPerUnit, $unitCode = 'PCS')
     {
         if ($qty == 0) return '-';
         
-        $pcsDisplay = number_format($pcs, 0);
-
-        if ($pcsPerUnit == 1 && !$isCoil) {
-            return "<span class='font-bold'>$pcsDisplay</span>";
+        $pcsDisplay = number_format($pcs, 0) . ' PCS';
+        $unitLabel = strtoupper($unitCode);
+        if ($unitLabel === 'COIL') {
+            $unitLabel = 'KG';
         }
 
-        $unitDisplay = number_format($qty, $isCoil ? 2 : 0);
-        return "<span class='font-bold'>$pcsDisplay</span> <span class='text-xs text-gray-500'>($unitDisplay)</span>";
+        if ($pcsPerUnit == 1 && !$isCoil) {
+            return "
+                <div class='flex flex-col items-center justify-center'>
+                    <span class='font-medium text-gray-800 dark:text-gray-200'>$pcsDisplay</span>
+                </div>";
+        }
+
+        $unitDisplay = number_format($qty, $isCoil ? 2 : 0) . ' ' . $unitLabel;
+        return "
+            <div class='flex flex-col items-center justify-center'>
+                <span class='font-medium text-gray-800 dark:text-gray-200'>$unitDisplay</span>
+                <span class='text-[10px] text-gray-400 dark:text-gray-505 font-medium leading-none mt-1'>$pcsDisplay</span>
+            </div>";
     }
 
     /**
