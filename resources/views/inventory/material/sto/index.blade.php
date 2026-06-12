@@ -181,18 +181,26 @@
                         data: 'net_amount', 
                         className: 'text-center',
                         render: function(val) {
-                            if (val == 0) return '<span class="text-xs font-medium text-slate-300">0</span>';
+                            if (val == 0) return '<span class="text-xs font-medium text-slate-350">0</span>';
                             let prefix = val > 0 ? '+' : '-';
-                            return `<span class="text-xs font-medium text-red-600">${prefix}${Math.abs(val).toLocaleString()}</span>`;
+                            return `<span class="text-xs font-medium text-red-600">${prefix}Rp ${Math.abs(val).toLocaleString()}</span>`;
                         }
                     },
                     { 
-                        data: 'net_pcs', 
+                        data: null, 
                         className: 'text-center',
-                        render: function(val) {
-                            if (val == 0) return '<span class="text-xs font-medium text-slate-300">0</span>';
-                            let prefix = val > 0 ? '+' : '-';
-                            return `<span class="text-xs font-medium text-red-600">${prefix}${Math.abs(val).toLocaleString()} <span class="text-[9px] opacity-70">Pcs</span></span>`;
+                        render: function(data) {
+                            const valPcs = data.net_pcs ?? 0;
+                            const valQty = data.net_qty ?? 0;
+                            if (valPcs == 0 && valQty == 0) return '<span class="text-xs font-medium text-slate-350">0</span>';
+                            
+                            const prefixPcs = valPcs > 0 ? '+' : (valPcs < 0 ? '-' : '');
+                            const prefixQty = valQty > 0 ? '+' : (valQty < 0 ? '-' : '');
+                            
+                            const formattedPcs = valPcs !== 0 ? `${prefixPcs}${Math.abs(valPcs).toLocaleString()} Pcs` : '0 Pcs';
+                            const formattedQty = valQty !== 0 ? `${prefixQty}${parseFloat(Math.abs(valQty).toFixed(2)).toLocaleString()} Unit` : '0 Unit';
+                            
+                            return `<span class="text-xs font-medium text-red-600">${formattedPcs} (${formattedQty})</span>`;
                         }
                     },
                     { 

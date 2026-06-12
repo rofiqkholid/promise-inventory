@@ -267,7 +267,7 @@
                             </td>
                             <td class="py-3 px-3 text-center">
                                 <div class="flex items-center justify-center gap-2 font-mono font-bold text-xs">
-                                    <span class="text-emerald-600 dark:text-emerald-400">+{{ number_format($model['increment_pcs']) }}</span>
+                                    <span class="text-rose-600 dark:text-rose-400">+{{ number_format($model['increment_pcs']) }}</span>
                                     <span class="text-gray-300 dark:text-gray-700">/</span>
                                     <span class="text-rose-600 dark:text-rose-400">-{{ number_format($model['decrement_pcs']) }}</span>
                                 </div>
@@ -275,8 +275,10 @@
                             <td class="py-3 px-4 text-right font-mono font-bold text-xs">
                                 @if($model['net_correction'] < 0)
                                     <span class="text-rose-600 dark:text-rose-400">-Rp {{ number_format(abs($model['net_correction'])) }}</span>
+                                @elseif($model['net_correction'] > 0)
+                                    <span class="text-rose-600 dark:text-rose-400">+Rp {{ number_format(abs($model['net_correction'])) }}</span>
                                 @else
-                                    <span class="text-emerald-600 dark:text-emerald-400">+Rp {{ number_format(abs($model['net_correction'])) }}</span>
+                                    <span class="text-slate-400 dark:text-slate-500">Rp 0</span>
                                 @endif
                             </td>
                             <td class="py-3 px-6 text-center">
@@ -1729,8 +1731,10 @@
                     const formattedNet = new Intl.NumberFormat('id-ID').format(absNet);
                     if (model.net_correction < 0) {
                         netImpactHtml = `<span class="text-rose-600 dark:text-rose-400">-Rp ${formattedNet}</span>`;
+                    } else if (model.net_correction > 0) {
+                        netImpactHtml = `<span class="text-rose-600 dark:text-rose-400">+Rp ${formattedNet}</span>`;
                     } else {
-                        netImpactHtml = `<span class="text-emerald-600 dark:text-emerald-400">+Rp ${formattedNet}</span>`;
+                        netImpactHtml = `<span class="text-slate-400 dark:text-slate-500">Rp 0</span>`;
                     }
                     
                     const rowNode = correctionTable.row.add([
@@ -1739,7 +1743,7 @@
                         `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${model.event_count} events</span>`,
                         `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">${model.affected_parts} parts</span>`,
                         `<div class="font-mono font-bold text-xs text-gray-900 dark:text-white"><span class="text-[9.5px] font-semibold text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>${absValFormatted}</div>`,
-                        `<div class="flex items-center justify-center gap-2 font-mono font-bold text-xs"><span class="text-emerald-600 dark:text-emerald-400">+${incPcs}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="text-rose-600 dark:text-rose-400">-${decPcs}</span></div>`,
+                        `<div class="flex items-center justify-center gap-2 font-mono font-bold text-xs"><span class="text-rose-600 dark:text-rose-400">+${incPcs}</span><span class="text-gray-300 dark:text-gray-700">/</span><span class="text-rose-600 dark:text-rose-400">-${decPcs}</span></div>`,
                         netImpactHtml,
                         `<button onclick="showCorrectionDetail('${escapeSingleQuotes(model.model_name)}')" title="Explore detailed correction logs" class="h-7 px-3 inline-flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[9px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">View Logs</button>`
                     ]).node();
@@ -1799,7 +1803,7 @@
                     const date = new Date(row.period_end).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
                     const diffQtyFormatted = new Intl.NumberFormat('id-ID').format(row.diff_qty);
                     const isNegative = row.diff_qty < 0;
-                    const amountColorClass = isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
+                    const deviationColorClass = row.diff_qty !== 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500';
                     const sign = isNegative ? '-' : '+';
                     
                     const pcsPerUnit = parseFloat(row.pcs_per_unit) || 1;
@@ -1836,12 +1840,12 @@
                             <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase tracking-wider">${row.reason_name}</span>
                         </td>
                         <td class="py-3 px-4 text-right">
-                            <span class="font-bold font-mono ${isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
+                            <span class="font-bold font-mono ${deviationColorClass}">
                                 ${qtyAdjHtml}
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-right font-mono font-bold text-xs ${amountColorClass}">
-                            ${sign}Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
+                        <td class="py-3 px-4 text-right font-mono font-bold text-xs ${deviationColorClass}">
+                            ${row.diff_qty !== 0 ? sign : ''}Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
                         </td>
                         <td class="py-3 px-6">
                             ${row.remark ? `

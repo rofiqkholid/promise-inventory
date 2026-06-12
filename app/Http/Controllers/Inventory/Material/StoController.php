@@ -72,6 +72,8 @@ class StoController extends Controller
             // Calculate Variance Totals in Query
             $query->select('inv_t_sto_event.*')
                 ->addSelect([
+                    'net_qty' => StoDetail::selectRaw("SUM(inv_t_sto_detail.diff_qty)")
+                        ->whereColumn('inv_t_sto_detail.event_id', 'inv_t_sto_event.id'),
                     'net_pcs' => StoDetail::selectRaw("SUM(" . \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql('inv_t_sto_detail.diff_qty', 'inv_t_product_detail', 'u.name') . ")")
                         ->leftJoin('inv_t_product_detail', 'inv_t_sto_detail.product_detail_id', '=', 'inv_t_product_detail.id')
                         ->leftJoin('inv_m_unit as u', 'u.id', '=', 'inv_t_product_detail.unit_id')
@@ -101,6 +103,7 @@ class StoController extends Controller
                     'period_end' => $event->period_end ? $event->period_end->format('d M Y') : null,
                     'status' => $event->status,
                     'pic_name' => $event->pic->name ?? '-',
+                    'net_qty' => $event->net_qty ?? 0,
                     'net_pcs' => $event->net_pcs ?? 0,
                     'net_amount' => $event->net_amount ?? 0,
                     // Minimal flags for UI logic in Blade/JS
