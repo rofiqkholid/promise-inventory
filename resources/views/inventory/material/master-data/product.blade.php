@@ -19,7 +19,7 @@
                 <i class="fa-solid fa-file-excel"></i>
                 Export Excel
             </button>
-            <button type="button" id="btnPrintLabels" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-purple-650 hover:bg-purple-755 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
+            <button type="button" id="btnPrintLabels" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-purple-600 hover:bg-purple-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
                 <i class="fa-solid fa-print"></i>
                 Print Labels
             </button>
