@@ -129,9 +129,11 @@ class InventoryProductController extends Controller
             $query->orderBy($orderCol, $orderDir);
         }
 
-        $data = $query->skip($start)
-            ->take($length)
-            ->get()
+        if ($length !== -1) {
+            $query->skip($start)->take($length);
+        }
+
+        $data = $query->get()
             ->map(fn($r) => [
                 'id' => InventoryProduct::encodeHash($r->id),
                 'product_id' => $r->product_id,
@@ -636,7 +638,8 @@ class InventoryProductController extends Controller
      */
     public function printLabel($id, ProductService $productService)
     {
-        $products = $productService->generateLabelData($id);
+        $ids = explode(',', $id);
+        $products = $productService->generateLabelData($ids);
         
         if (empty($products)) abort(404);
 
