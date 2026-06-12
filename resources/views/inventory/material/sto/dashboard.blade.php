@@ -1045,8 +1045,8 @@
                         label: 'Absolute Deviation',
                         data: deviationValues,
                         backgroundColor: '#6366f1',
-                        barPercentage: 0.45,
-                        categoryPercentage: 0.6,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9,
                         yAxisID: 'y',
                         yellowLabels: true,
                         yellowLabelFormat: v => formatSuffix(v),
@@ -1076,6 +1076,10 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -1181,8 +1185,8 @@
                         label: 'Problem Volume',
                         data: dataPB,
                         backgroundColor: '#6366f1',
-                        barPercentage: 0.45,
-                        categoryPercentage: 0.6,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9,
                         order: 2,
                         pointStyle: 'rect'
                     },
@@ -1194,7 +1198,7 @@
                         borderWidth: 1.5,
                         pointBackgroundColor: '#f59e0b',
                         pointBorderColor: '#fff',
-                        pointBorderWidth: 1.5,
+                        pointBorderWidth: 1,
                         pointRadius: 4,
                         fill: false,
                         tension: 0.15,
@@ -1207,6 +1211,10 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -1251,14 +1259,20 @@
 
     function renderCustomerAccuracyCharts(data) {
         const paretoData = data.pareto || [];
-        // Sort descending by abs_amount
-        const sortedPareto = [...paretoData].sort((a, b) => b.abs_amount - a.abs_amount);
-        const labels = sortedPareto.map(d => [d.model_name, d.customer_code]);
         
-        const amountCO = sortedPareto.map(d => d.system_amount);
-        const amountSTO = sortedPareto.map(d => d.real_amount);
-        const sumNET = sortedPareto.map(d => d.net_amount);
-        const sumABS = sortedPareto.map(d => d.abs_amount);
+        // Sort for NET Chart: descending by system_amount
+        const sortedNet = [...paretoData].sort((a, b) => b.system_amount - a.system_amount);
+        const labelsNet = sortedNet.map(d => [d.model_name, d.customer_code]);
+        const amountCO_Net = sortedNet.map(d => d.system_amount);
+        const amountSTO_Net = sortedNet.map(d => d.real_amount);
+        const sumNET_Net = sortedNet.map(d => d.net_amount);
+
+        // Sort for ABS Chart: descending by abs_amount
+        const sortedAbs = [...paretoData].sort((a, b) => b.abs_amount - a.abs_amount);
+        const labelsAbs = sortedAbs.map(d => [d.model_name, d.customer_code]);
+        const amountCO_Abs = sortedAbs.map(d => d.system_amount);
+        const amountSTO_Abs = sortedAbs.map(d => d.real_amount);
+        const sumABS_Abs = sortedAbs.map(d => d.abs_amount);
 
         const commonScales = {
             y: {
@@ -1327,14 +1341,14 @@
         accuracyNetChart = new Chart(netCtx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: labelsNet,
                 datasets: [
                     {
                         label: 'System Amount (CO)',
-                        data: amountCO,
+                        data: amountCO_Net,
                         backgroundColor: '#6366f1',
-                        barPercentage: 0.9,
-                        categoryPercentage: 0.85,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9,
                         yAxisID: 'y',
                         yellowLabels: true,
                         yellowLabelFormat: v => formatSuffix(v),
@@ -1343,10 +1357,10 @@
                     },
                     {
                         label: 'Physical Amount (STO)',
-                        data: amountSTO,
+                        data: amountSTO_Net,
                         backgroundColor: '#10b981',
-                        barPercentage: 0.9,
-                        categoryPercentage: 0.85,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9,
                         yAxisID: 'y',
                         yellowLabels: true,
                         yellowLabelFormat: v => formatSuffix(v),
@@ -1355,7 +1369,7 @@
                     },
                     {
                         label: 'Net Deviation',
-                        data: sumNET,
+                        data: sumNET_Net,
                         type: 'line',
                         borderColor: '#ef4444',
                         borderWidth: 1.5,
@@ -1376,6 +1390,10 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     ...commonPluginOptions,
                     legend: {
@@ -1406,14 +1424,14 @@
         accuracyAbsChart = new Chart(absCtx, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: labelsAbs,
                 datasets: [
                     {
                         label: 'Physical Amount (STO)',
-                        data: amountSTO,
+                        data: amountSTO_Abs,
                         backgroundColor: '#10b981',
-                        barPercentage: 0.9,
-                        categoryPercentage: 0.85,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9,
                         yAxisID: 'y',
                         yellowLabels: true,
                         yellowLabelFormat: v => formatSuffix(v),
@@ -1422,10 +1440,10 @@
                     },
                     {
                         label: 'System Amount (CO)',
-                        data: amountCO,
+                        data: amountCO_Abs,
                         backgroundColor: '#6366f1',
-                        barPercentage: 0.9,
-                        categoryPercentage: 0.85,
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9,
                         yAxisID: 'y',
                         yellowLabels: true,
                         yellowLabelFormat: v => formatSuffix(v),
@@ -1434,7 +1452,7 @@
                     },
                     {
                         label: 'Absolute Deviation',
-                        data: sumABS,
+                        data: sumABS_Abs,
                         type: 'line',
                         borderColor: '#ef4444',
                         borderWidth: 1.5,
@@ -1455,6 +1473,10 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: commonPluginOptions,
                 scales: commonScales
             }
