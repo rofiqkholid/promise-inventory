@@ -400,7 +400,8 @@ class RegularVaveAnalysisController extends Controller
             $rev->material_price = ($price !== null) ? $price : 0;
         }
 
-        $fileName = 'VAVE_Analysis_' . $product->part_no . '_' . date('Ymd_His') . '.xlsx';
+        $safePartNo = str_replace(['/', '\\'], '_', $product->part_no);
+        $fileName = 'VAVE_Analysis_' . $safePartNo . '_' . date('Ymd_His') . '.xlsx';
         return Excel::download(new VaveAnalysisExport(['product' => $product, 'rfqs' => $bases, 'revisions' => $revisions, 'selected_base_id' => $request->base_id, 'selected_actual_id' => $request->actual_id, 'is_regular' => true]), $fileName);
     }
 

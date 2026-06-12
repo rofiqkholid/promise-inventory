@@ -989,7 +989,8 @@ class StoController extends Controller
         $stoEvent = \App\Models\InventoryModel\Material\StoEvent::findByHashOrFail($id);
         $stoEvent->load(['details.product.product', 'details.auditor', 'pic']);
 
-        $filename = "STO_{$stoEvent->code}_" . now()->format('Ymd_His') . ".xlsx";
+        $safeCode = str_replace(['/', '\\'], '_', $stoEvent->code);
+        $filename = "STO_{$safeCode}_" . now()->format('Ymd_His') . ".xlsx";
         
         return Excel::download(new StoExport($stoEvent), $filename);
     }

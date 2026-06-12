@@ -232,11 +232,12 @@ class StoDashboardController extends Controller
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
-            ->where('se.status', 'CLOSED')
             ->where(DB::raw("ISNULL(m.name, 'No Model')"), $modelName);
 
         if (!empty($eventIds)) {
             $query->whereIn('sd.event_id', $eventIds);
+        } else {
+            $query->where('se.status', 'CLOSED');
         }
 
         $detail = $query->select(
@@ -321,11 +322,12 @@ class StoDashboardController extends Controller
         $query = DB::table('inv_t_sto_detail as sd')
             ->join('inv_t_sto_event as se', 'se.id', '=', 'sd.event_id')
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 'sd.product_detail_id')
-            ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
-            ->where('se.status', 'CLOSED');
+            ->leftJoin('models as m', 'm.id', '=', 'pd.model_id');
 
         if (!empty($eventIds)) {
             $query->whereIn('sd.event_id', $eventIds);
+        } else {
+            $query->where('se.status', 'CLOSED');
         }
 
         return $query->select(

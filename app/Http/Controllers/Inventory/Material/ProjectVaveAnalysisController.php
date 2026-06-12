@@ -336,7 +336,8 @@ class ProjectVaveAnalysisController extends Controller
         $bases = VaveBase::with(['materialSpec', 'unit', 'suffix'])->where('product_id', $product->id)->orderBy('created_at', 'desc')->get();
         $revisions = InventoryProduct::with(['materialSpec', 'unit', 'revision'])->join('inv_m_revision as r', 'r.id', '=', 'inv_t_product_detail.revision_id')->where('product_id', $product->id)->orderBy('r.sort_order', 'desc')->select('inv_t_product_detail.*')->get();
         if ($bases->isEmpty() || $revisions->isEmpty()) return back()->with('error', 'Incomplete data for export.');
-        $fileName = 'VAVE_Analysis_' . $product->part_no . '_' . date('Ymd_His') . '.xlsx';
+        $safePartNo = str_replace(['/', '\\'], '_', $product->part_no);
+        $fileName = 'VAVE_Analysis_' . $safePartNo . '_' . date('Ymd_His') . '.xlsx';
         return Excel::download(new VaveAnalysisExport(['product' => $product, 'rfqs' => $bases, 'revisions' => $revisions, 'selected_base_id' => $request->base_id, 'selected_actual_id' => $request->actual_id,]), $fileName);
     }
 

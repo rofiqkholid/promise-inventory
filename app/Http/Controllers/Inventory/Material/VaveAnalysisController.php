@@ -384,7 +384,8 @@ class VaveAnalysisController extends Controller
             return back()->with('error', 'Incomplete data for export.');
         }
  
-        $fileName = 'VAVE_Analysis_' . $product->part_no . '_' . date('Ymd_His') . '.xlsx';
+        $safePartNo = str_replace(['/', '\\'], '_', $product->part_no);
+        $fileName = 'VAVE_Analysis_' . $safePartNo . '_' . date('Ymd_His') . '.xlsx';
         
         return Excel::download(new VaveAnalysisExport([
             'product' => $product,

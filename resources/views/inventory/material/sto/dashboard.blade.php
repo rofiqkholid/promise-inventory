@@ -967,7 +967,7 @@
         const badge = document.getElementById('tab1-event-badge');
         if (badge) badge.innerText = eventCode;
 
-        fetch(`/inventory/sto/${hashId}/pareto-by-model`)
+        fetch("{{ url('inventory/sto') }}/" + hashId + "/pareto-by-model")
             .then(res => res.json())
             .then(data => {
                 const rawBreakdown = data.reason_breakdown || [];
@@ -1625,7 +1625,7 @@
     function fetchAndRenderCorrectionLog(hashId) {
         if (!correctionTable) return;
         
-        fetch(`/inventory/sto/dashboard/correction-log?event_id=${hashId}`)
+        fetch("{{ url('inventory/sto/dashboard/correction-log') }}?event_id=" + hashId)
             .then(res => res.json())
             .then(res => {
                 const data = res.data || [];
@@ -1705,7 +1705,7 @@
         `;
         document.getElementById('subModalContainer').classList.remove('hidden');
 
-        fetch(`/inventory/sto/dashboard/correction-log/${encodeURIComponent(modelName)}?event_id=${loadedEventId}`)
+        fetch("{{ url('inventory/sto/dashboard/correction-log') }}/" + encodeURIComponent(modelName) + "?event_id=" + loadedEventId)
             .then(res => res.json())
             .then(data => {
                 tbody.innerHTML = '';
