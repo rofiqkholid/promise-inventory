@@ -1799,9 +1799,11 @@
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150';
                     const date = new Date(row.period_end).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
-                    const diffQtyFormatted = new Intl.NumberFormat('id-ID').format(row.diff_qty);
-                    const isNegative = row.diff_qty < 0;
-                    const deviationColorClass = row.diff_qty !== 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500';
+                    const diffVal = parseFloat(row.diff_qty) || 0;
+                    const diffQtyFormatted = new Intl.NumberFormat('id-ID').format(diffVal);
+                    const isNegative = diffVal < 0;
+                    const isDeviation = diffVal !== 0;
+                    const deviationColorClass = isDeviation ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500';
                     const sign = isNegative ? '-' : '+';
                     
                     const pcsPerUnit = parseFloat(row.pcs_per_unit) || 1;
@@ -1810,9 +1812,9 @@
                     const unitLower = unitCode.toLowerCase();
                     let diffPcs = 0;
                     if (unitLower.includes('coil') && grossCoil > 0) {
-                        diffPcs = (row.diff_qty / grossCoil) * pcsPerUnit;
+                        diffPcs = (diffVal / grossCoil) * pcsPerUnit;
                     } else {
-                        diffPcs = row.diff_qty * pcsPerUnit;
+                        diffPcs = diffVal * pcsPerUnit;
                     }
                     const roundedDiffPcs = Math.round(diffPcs);
                     const diffPcsFormatted = new Intl.NumberFormat('id-ID').format(roundedDiffPcs);
@@ -1820,11 +1822,11 @@
                     let qtyAdjHtml = '';
                     if (unitLower === 'pcs') {
                         qtyAdjHtml = `<div class="flex flex-col items-end">
-                            <span class="font-normal font-mono ${deviationColorClass}">${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} pcs</span>
+                            <span class="font-normal font-mono ${deviationColorClass}">${diffVal > 0 ? '+' : ''}${diffQtyFormatted} pcs</span>
                         </div>`;
                     } else {
                         qtyAdjHtml = `<div class="flex flex-col items-end">
-                            <span class="font-normal font-mono ${deviationColorClass}">${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode}</span>
+                            <span class="font-normal font-mono ${deviationColorClass}">${diffVal > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode}</span>
                             <span class="text-[10px] text-gray-500 dark:text-gray-400 font-normal font-mono">(${roundedDiffPcs > 0 ? '+' : ''}${diffPcsFormatted} pcs)</span>
                         </div>`;
                     }
@@ -1846,7 +1848,7 @@
                             ${qtyAdjHtml}
                         </td>
                         <td class="py-3 px-4 text-right font-mono font-normal text-xs ${deviationColorClass}">
-                            ${row.diff_qty !== 0 ? sign : ''}Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
+                            ${isDeviation ? sign : ''}Rp ${new Intl.NumberFormat('id-ID').format(Math.abs(row.diff_amount))}
                         </td>
                         <td class="py-3 px-6">
                             ${row.remark ? `
