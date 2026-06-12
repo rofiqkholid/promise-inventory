@@ -175,7 +175,6 @@
                             </button>
                         </div>`
                 }
-                @endif
             ],
             order: [[1, 'asc']]
         });
