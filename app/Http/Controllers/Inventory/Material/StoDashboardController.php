@@ -232,6 +232,7 @@ class StoDashboardController extends Controller
             ->join('products as p', 'p.id', '=', 'pd.product_id')
             ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
+            ->leftJoin('inv_m_unit as u', 'u.id', '=', 'pd.unit_id')
             ->where(DB::raw("ISNULL(m.name, 'No Model')"), $modelName);
 
         if (!empty($eventIds)) {
@@ -247,7 +248,10 @@ class StoDashboardController extends Controller
                 DB::raw("ISNULL(r.name, '-') as reason_name"),
                 'sd.diff_qty',
                 DB::raw("sd.diff_qty * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0) as diff_amount"),
-                'sd.remark'
+                'sd.remark',
+                'u.code as unit_code',
+                'pd.pcs_per_unit',
+                'pd.gross_coil'
             )
             ->orderByDesc('se.period_end')
             ->orderBy('p.part_no')
@@ -322,7 +326,8 @@ class StoDashboardController extends Controller
         $query = DB::table('inv_t_sto_detail as sd')
             ->join('inv_t_sto_event as se', 'se.id', '=', 'sd.event_id')
             ->join('inv_t_product_detail as pd', 'pd.id', '=', 'sd.product_detail_id')
-            ->leftJoin('models as m', 'm.id', '=', 'pd.model_id');
+            ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
+            ->leftJoin('customers as c', 'c.id', '=', 'm.customer_id');
 
         if (!empty($eventIds)) {
             $query->whereIn('sd.event_id', $eventIds);
@@ -332,6 +337,7 @@ class StoDashboardController extends Controller
 
         return $query->select(
                 DB::raw("ISNULL(m.name, 'No Model') as model_name"),
+                DB::raw("ISNULL(c.code, 'Unknown') as customer_code"),
                 DB::raw("COUNT(DISTINCT se.id) as event_count"),
                 DB::raw("COUNT(DISTINCT pd.id) as affected_parts"),
                 DB::raw("SUM(CASE WHEN sd.diff_qty > 0 THEN sd.diff_qty * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0) ELSE 0 END) as increment_amount"),
@@ -342,13 +348,14 @@ class StoDashboardController extends Controller
                 DB::raw("SUM(CASE WHEN sd.diff_qty > 0 THEN sd.diff_qty * ISNULL(pd.pcs_per_unit, 1) ELSE 0 END) as increment_pcs"),
                 DB::raw("SUM(CASE WHEN sd.diff_qty < 0 THEN ABS(sd.diff_qty * ISNULL(pd.pcs_per_unit, 1)) ELSE 0 END) as decrement_pcs")
             )
-            ->groupBy('m.name')
+            ->groupBy('m.name', 'c.code')
             ->orderByDesc(DB::raw("SUM(ABS(sd.diff_qty * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0)))"))
             ->limit($limit)
             ->get()
             ->map(function ($row) {
                 return [
                     'model_name'       => $row->model_name,
+                    'customer_code'    => $row->customer_code,
                     'event_count'      => $row->event_count,
                     'affected_parts'   => $row->affected_parts,
                     'increment_amount' => round((float) $row->increment_amount, 0),

@@ -230,6 +230,7 @@
                 <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800/80 text-[10px] font-bold text-gray-555 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-800 z-10">
                     <tr>
                         <th class="py-3 px-4 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Model Identification</th>
+                        <th class="py-3 px-3 text-center w-28 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Customer</th>
                         <th class="py-3 px-3 text-center w-28 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Events</th>
                         <th class="py-3 px-3 text-center w-32 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">Affected Parts</th>
                         <th class="py-3 px-4 text-right w-44 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">ABS Adj. Value</th>
@@ -243,6 +244,11 @@
                         <tr class="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors duration-150">
                             <td class="py-3 px-4">
                                 <span class="font-semibold text-gray-900 dark:text-white uppercase tracking-tight">{{ $model['model_name'] }}</span>
+                            </td>
+                            <td class="py-3 px-3 text-center">
+                                <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">
+                                    {{ $model['customer_code'] ?? 'Unknown' }}
+                                </span>
                             </td>
                             <td class="py-3 px-3 text-center">
                                 <span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">
@@ -1170,6 +1176,13 @@
         // Sort descending by count
         reasonList.sort((a, b) => b.count - a.count);
 
+        const totalCount = reasonList.reduce((sum, item) => sum + item.count, 0);
+        let runningSum = 0;
+        const cumulativePcts = reasonList.map(item => {
+            runningSum += item.count;
+            return totalCount > 0 ? (runningSum / totalCount) * 100 : 0;
+        });
+
         const labelsPB = reasonList.map(item => item.name);
         const dataPB = reasonList.map(item => item.count);
 
@@ -1187,12 +1200,13 @@
                         backgroundColor: '#6366f1',
                         barPercentage: 0.8,
                         categoryPercentage: 0.9,
+                        yAxisID: 'y',
                         order: 2,
                         pointStyle: 'rect'
                     },
                     {
-                        label: 'Trend',
-                        data: dataPB,
+                        label: 'Cumulative %',
+                        data: cumulativePcts,
                         type: 'line',
                         borderColor: '#f59e0b',
                         borderWidth: 1.5,
@@ -1202,7 +1216,9 @@
                         pointRadius: 4,
                         fill: false,
                         tension: 0.15,
+                        yAxisID: 'y1',
                         yellowLabels: true, // triggers custom yellow label tags
+                        yellowLabelFormat: v => v.toFixed(0) + '%',
                         order: 1,
                         pointStyle: 'circle'
                     }
@@ -1219,7 +1235,21 @@
                     legend: { display: false },
                     tooltip: {
                         titleFont: { size: 11, weight: 'bold' },
-                        bodyFont: { size: 10 }
+                        bodyFont: { size: 10 },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 0) {
+                                    label += context.parsed.y;
+                                } else {
+                                    label += context.parsed.y.toFixed(1) + '%';
+                                }
+                                return label;
+                            }
+                        }
                     },
                     yellowDataLabels: { precision: 0 }
                 },
@@ -1230,9 +1260,31 @@
                         grid: { color: 'rgba(156, 163, 175, 0.1)', borderDash: [2, 2] },
                         ticks: { font: { size: 10, weight: 'normal' }, maxTicksLimit: 5 }
                     },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        max: 110,
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            font: { size: 10, weight: 'normal' },
+                            maxTicksLimit: 5,
+                            callback: v => v.toFixed(0) + '%'
+                        }
+                    },
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 9, weight: 'normal' }, maxRotation: 30, minRotation: 0 }
+                        ticks: {
+                            font: { size: 9, weight: 'normal' },
+                            maxRotation: 30,
+                            minRotation: 0,
+                            callback: function(value) {
+                                const label = this.getLabelForValue(value);
+                                if (typeof label === 'string' && label.length > 12) {
+                                    return label.substring(0, 12) + '...';
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
@@ -1427,9 +1479,9 @@
                 labels: labelsAbs,
                 datasets: [
                     {
-                        label: 'Physical Amount (STO)',
-                        data: amountSTO_Abs,
-                        backgroundColor: '#10b981',
+                        label: 'System Amount (CO)',
+                        data: amountCO_Abs,
+                        backgroundColor: '#6366f1',
                         barPercentage: 0.8,
                         categoryPercentage: 0.9,
                         yAxisID: 'y',
@@ -1439,9 +1491,9 @@
                         pointStyle: 'rect'
                     },
                     {
-                        label: 'System Amount (CO)',
-                        data: amountCO_Abs,
-                        backgroundColor: '#6366f1',
+                        label: 'Physical Amount (STO)',
+                        data: amountSTO_Abs,
+                        backgroundColor: '#10b981',
                         barPercentage: 0.8,
                         categoryPercentage: 0.9,
                         yAxisID: 'y',
@@ -1681,6 +1733,7 @@
                     
                     const rowNode = correctionTable.row.add([
                         `<span class="font-semibold text-gray-900 dark:text-white uppercase tracking-tight">${model.model_name}</span>`,
+                        `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">${model.customer_code || 'Unknown'}</span>`,
                         `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${model.event_count} events</span>`,
                         `<span class="inline-flex items-center justify-center font-bold text-[9px] px-2 py-0.5 rounded-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">${model.affected_parts} parts</span>`,
                         `<div class="font-mono font-bold text-xs text-gray-900 dark:text-white"><span class="text-[9.5px] font-semibold text-gray-400 dark:text-gray-550 mr-0.5">Rp</span>${absValFormatted}</div>`,
@@ -1746,7 +1799,21 @@
                     const isNegative = row.diff_qty < 0;
                     const amountColorClass = isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400';
                     const sign = isNegative ? '-' : '+';
-                                      tr.innerHTML = `
+                    
+                    const pcsPerUnit = parseFloat(row.pcs_per_unit) || 1;
+                    const grossCoil = parseFloat(row.gross_coil) || 0;
+                    const unitCode = row.unit_code || 'PCS';
+                    const unitLower = unitCode.toLowerCase();
+                    let diffPcs = 0;
+                    if (unitLower.includes('coil') && grossCoil > 0) {
+                        diffPcs = (row.diff_qty / grossCoil) * pcsPerUnit;
+                    } else {
+                        diffPcs = row.diff_qty * pcsPerUnit;
+                    }
+                    const roundedDiffPcs = Math.round(diffPcs);
+                    const diffPcsFormatted = new Intl.NumberFormat('id-ID').format(roundedDiffPcs);
+
+                    tr.innerHTML = `
                         <td class="py-3 px-4">
                             <div class="flex flex-col">
                                 <span class="font-bold text-gray-900 dark:text-white uppercase tracking-tight">${row.event_code}</span>
@@ -1761,7 +1828,7 @@
                         </td>
                         <td class="py-3 px-4 text-right">
                             <span class="font-bold font-mono ${isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
-                                ${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} pcs
+                                ${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode} (${roundedDiffPcs > 0 ? '+' : ''}${diffPcsFormatted} pcs)
                             </span>
                         </td>
                         <td class="py-3 px-4 text-right font-mono font-bold text-xs ${amountColorClass}">
