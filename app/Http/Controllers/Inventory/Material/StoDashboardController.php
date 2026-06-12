@@ -155,12 +155,14 @@ class StoDashboardController extends Controller
             ->leftJoin('customers as c', 'c.id', '=', 'm.customer_id')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
             ->join('products as p', 'p.id', '=', 'pd.product_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'pd.revision_id')
             ->whereIn('sd.event_id', $eventIds)
             ->whereNotNull('sd.reason_id')
             ->select(
                 DB::raw("ISNULL(m.name, 'No Model') as model_name"),
                 DB::raw("ISNULL(c.code, 'Unknown') as customer_code"),
                 'p.part_no',
+                'rev.code as revision_code',
                 DB::raw("ISNULL(r.name, 'Unknown') as reason_name"),
                 DB::raw("ISNULL(r.category, 'OTHERS') as reason_category"),
                 DB::raw("SUM(sd.system_qty_snapshot * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0)) as system_amount"),
@@ -169,7 +171,7 @@ class StoDashboardController extends Controller
                 DB::raw("SUM(ABS(sd.diff_qty * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0))) as abs_amount"),
                 DB::raw("COUNT(*) as entry_count")
             )
-            ->groupBy('m.name', 'c.code', 'p.part_no', 'r.name', 'r.category')
+            ->groupBy('m.name', 'c.code', 'p.part_no', 'rev.code', 'r.name', 'r.category')
             ->orderBy('m.name')
             ->orderByDesc(DB::raw("SUM(ABS(sd.diff_qty * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0)))"))
             ->get();
