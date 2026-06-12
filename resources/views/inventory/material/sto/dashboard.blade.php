@@ -704,6 +704,7 @@
     let recentEvents = @json($recentEvents);
     let statsData = @json($stats);
     let stoReasons = @json($reasons ?? []);
+    let lastStoDashboardData = null;
     
     // Sub-Tabs State
     let summaryActiveTab = 'amount';
@@ -987,6 +988,7 @@
                 
                 reasonBreakdownData = Object.values(aggregatedMap);
                 paretoPage = 1;
+                lastStoDashboardData = data;
 
                 renderParetoDashboard(data);
                 renderCustomerAccuracyCharts(data);
@@ -1154,12 +1156,18 @@
         }
         const pbCtx = document.getElementById('problemBreakdownChart').getContext('2d');
 
-        // Dynamic names from database
-        const labelsPB = stoReasons.map(item => item.name);
-        const dataPB = stoReasons.map(item => {
+        // Create reason list with count
+        const reasonList = stoReasons.map(item => {
             const found = distribution.find(d => d.reason_name === item.name || d.reason_name.toUpperCase() === item.name.toUpperCase());
-            return found ? found.count : 0;
+            const count = found ? found.count : 0;
+            return { name: item.name, count: count };
         });
+
+        // Sort descending by count
+        reasonList.sort((a, b) => b.count - a.count);
+
+        const labelsPB = reasonList.map(item => item.name);
+        const dataPB = reasonList.map(item => item.count);
 
         const maxValPB = Math.max(...dataPB) || 0;
         const suggestedMaxPB = maxValPB > 0 ? Math.ceil(maxValPB * 1.4) : 10;
@@ -1226,9 +1234,7 @@
     function prevParetoPage() {
         if (paretoPage > 1) {
             paretoPage--;
-            const scopeVal = $('#filterScope').val();
-            const activeVal = scopeVal === 'range' ? $('#rangeSelector').val() : $('#eventSelector').val();
-            changeStoEvent(activeVal);
+            renderParetoDashboard(lastStoDashboardData);
         }
     }
 
@@ -1237,9 +1243,7 @@
         const totalPages = Math.ceil(sortedBreakdown.length / itemsPerPage) || 1;
         if (paretoPage < totalPages) {
             paretoPage++;
-            const scopeVal = $('#filterScope').val();
-            const activeVal = scopeVal === 'range' ? $('#rangeSelector').val() : $('#eventSelector').val();
-            changeStoEvent(activeVal);
+            renderParetoDashboard(lastStoDashboardData);
         }
     }
 
@@ -1247,12 +1251,14 @@
 
     function renderCustomerAccuracyCharts(data) {
         const paretoData = data.pareto || [];
-        const labels = paretoData.map(d => [d.model_name, d.customer_code]);
+        // Sort descending by abs_amount
+        const sortedPareto = [...paretoData].sort((a, b) => b.abs_amount - a.abs_amount);
+        const labels = sortedPareto.map(d => [d.model_name, d.customer_code]);
         
-        const amountCO = paretoData.map(d => d.system_amount);
-        const amountSTO = paretoData.map(d => d.real_amount);
-        const sumNET = paretoData.map(d => d.net_amount);
-        const sumABS = paretoData.map(d => d.abs_amount);
+        const amountCO = sortedPareto.map(d => d.system_amount);
+        const amountSTO = sortedPareto.map(d => d.real_amount);
+        const sumNET = sortedPareto.map(d => d.net_amount);
+        const sumABS = sortedPareto.map(d => d.abs_amount);
 
         const commonScales = {
             y: {
