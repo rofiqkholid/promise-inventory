@@ -176,11 +176,10 @@
             </div>
         </div>
     </div>
-
     {{-- ROW 2: Bottom Cards --}}
     <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
-        <!-- Bottom-Left Card: Pareto Deviation by Part (2/3 width) -->
-        <div class="chart-card w-full lg:w-2/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
+        <!-- Bottom-Left Card: Pareto Deviation by Part (1/2 width) -->
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
             <div class="flex-none flex justify-between items-center mb-1">
                 <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                     <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i>
@@ -202,12 +201,12 @@
             </div>
         </div>
 
-        <!-- Bottom-Right Card: Problem Breakdown Frequency (1/3 width) -->
-        <div class="chart-card w-full lg:w-1/3 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
+        <!-- Bottom-Right Card: Problem Reason (1/2 width) -->
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
             <div class="flex-none flex justify-between items-center mb-1">
                 <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                     <i class="fa-solid fa-triangle-exclamation mr-2 text-primary-500"></i>
-                    <span class="truncate">Problem Breakdown Frequency</span>
+                    <span class="truncate">Problem Reason</span>
                 </h3>
             </div>
             <div class="relative w-full flex-1 min-h-0">
