@@ -1751,7 +1751,7 @@
                 
                 correctionTable.draw();
             });
-    }  }
+    }
     
     function openGlobalAuditLogsModal() {
         const modal = document.getElementById('correctionDetailModal');
