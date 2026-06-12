@@ -1813,6 +1813,13 @@
                     const roundedDiffPcs = Math.round(diffPcs);
                     const diffPcsFormatted = new Intl.NumberFormat('id-ID').format(roundedDiffPcs);
 
+                    let qtyAdjHtml = '';
+                    if (unitLower === 'pcs') {
+                        qtyAdjHtml = `${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} pcs`;
+                    } else {
+                        qtyAdjHtml = `${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode} (${roundedDiffPcs > 0 ? '+' : ''}${diffPcsFormatted} pcs)`;
+                    }
+
                     tr.innerHTML = `
                         <td class="py-3 px-4">
                             <div class="flex flex-col">
@@ -1828,7 +1835,7 @@
                         </td>
                         <td class="py-3 px-4 text-right">
                             <span class="font-bold font-mono ${isNegative ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">
-                                ${row.diff_qty > 0 ? '+' : ''}${diffQtyFormatted} ${unitCode} (${roundedDiffPcs > 0 ? '+' : ''}${diffPcsFormatted} pcs)
+                                ${qtyAdjHtml}
                             </span>
                         </td>
                         <td class="py-3 px-4 text-right font-mono font-bold text-xs ${amountColorClass}">
