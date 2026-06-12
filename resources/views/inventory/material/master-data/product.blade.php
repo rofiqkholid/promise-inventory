@@ -511,71 +511,6 @@
     </div>
 </div>
 
-{{-- Print Labels Modal --}}
-<div id="printLabelsModal" tabindex="-1" aria-hidden="true" class="hidden fixed inset-0 z-50 justify-center items-center w-full h-full bg-slate-900/50 flex">
-    <div class="relative p-4 w-full max-w-2xl max-h-[95vh] h-full md:h-auto">
-        <div class="relative bg-white rounded-xs shadow-2xl dark:bg-gray-800 flex flex-col max-h-[90vh] overflow-hidden">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-3 right-3 bg-transparent hover:bg-gray-100 hover:text-gray-900 rounded-xs text-sm p-2 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white z-10 transition-colors">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            
-            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-purple-50/80 dark:bg-slate-900/50">
-                <h3 class="text-base font-semibold text-purple-900 dark:text-purple-300 flex items-center gap-2">
-                    <i class="fa-solid fa-print text-purple-650"></i> Print Product Labels
-                </h3>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 font-normal">Select the product revisions you would like to print labels for. By default, all matching items are selected.</p>
-            </div>
-
-            <!-- Search and Select All Control bar -->
-            <div class="px-6 py-3 border-b border-gray-50 dark:border-gray-700/50 bg-slate-50/30 dark:bg-slate-900/10 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="chkPrintSelectAll" checked class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                    <label for="chkPrintSelectAll" class="text-xs font-semibold text-slate-700 dark:text-gray-300 select-none cursor-pointer">SELECT ALL</label>
-                </div>
-                <div class="relative w-64">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
-                    </span>
-                    <input type="text" id="txtPrintSearch" placeholder="Search products..." class="block w-full pl-9 pr-3 py-1.5 text-xs text-gray-900 bg-white border border-slate-200 rounded-xs focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white outline-none transition-all">
-                </div>
-            </div>
-
-            <div class="flex-1 overflow-y-auto min-h-0 custom-scrollbar relative p-6">
-                <!-- Loader inside modal -->
-                <div id="printLabelsLoader" class="hidden absolute inset-0 bg-white/60 dark:bg-gray-900/60 z-30 flex items-center justify-center backdrop-blur-[1px]">
-                    <div class="flex flex-col items-center">
-                        <i class="fa-solid fa-circle-notch fa-spin text-xl text-purple-600 mb-2"></i>
-                        <span class="text-[10px] font-medium text-slate-500 tracking-wider">Loading Products...</span>
-                    </div>
-                </div>
-
-                <div id="printLabelsEmpty" class="hidden py-10 text-center">
-                    <i class="fa-solid fa-box-open text-2xl text-slate-350 mb-2"></i>
-                    <p class="text-xs text-slate-400 italic">No products found matching the current filters.</p>
-                </div>
-
-                <ul id="printLabelsList" class="divide-y divide-slate-100 dark:divide-gray-700 max-h-[50vh]">
-                    <!-- items populated dynamically -->
-                </ul>
-            </div>
-
-            <div class="flex-none flex items-center justify-between gap-3 px-8 py-4 border-t border-gray-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/50">
-                <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
-                    Selected: <span id="lblSelectedCount" class="text-purple-600">0</span> / <span id="lblTotalCount">0</span> item(s)
-                </div>
-                <div class="flex gap-2">
-                    <button type="button" class="close-modal-button text-gray-700 bg-white hover:bg-gray-50 rounded-xs border border-gray-300 text-xs font-medium px-6 py-2.5 transition-all active:scale-95">
-                        Cancel
-                    </button>
-                    <button type="button" id="btnExecutePrint" class="text-white bg-purple-600 hover:bg-purple-700 rounded-xs text-xs font-medium px-6 py-2.5 text-center transition-all active:scale-95 flex items-center gap-1.5">
-                        <i class="fa-solid fa-print"></i> Print Labels
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('styles')
@@ -889,10 +824,7 @@ $(function() {
                 this.showOldRevisionsModal();
             });
 
-            $('#btnPrintLabels').on('click', () => this.showPrintLabelsModal());
-            $('#btnExecutePrint').on('click', () => this.executePrintLabels());
-            $('#chkPrintSelectAll').on('change', (e) => this.togglePrintSelectAll(e.target.checked));
-            $('#txtPrintSearch').on('input', () => this.filterPrintLabelsList());
+            $('#btnPrintLabels').on('click', () => this.handlePrintLabelsRedirect());
 
             $(document).on('change', '#oldRevModelFilter', () => {
                 if (this.state.isLoadingOldRevisions) return;
@@ -1239,21 +1171,11 @@ $(function() {
             });
         },
 
-        showPrintLabelsModal: function() {
-            const modal = $('#printLabelsModal');
-            const loader = $('#printLabelsLoader');
-            const listContainer = $('#printLabelsList');
-            const emptyEl = $('#printLabelsEmpty');
-            
-            listContainer.empty();
-            emptyEl.addClass('hidden');
-            loader.removeClass('hidden');
-            $('#chkPrintSelectAll').prop('checked', true);
-            $('#txtPrintSearch').val('');
-            
-            this.ui.showModal(modal);
+        handlePrintLabelsRedirect: function() {
+            const btn = $('#btnPrintLabels');
+            const originalHtml = btn.html();
+            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Loading...');
 
-            // Fetch filtered products without pagination (length = -1)
             const params = {
                 customer_id: this.elements.customerFilter.val(),
                 model_id: this.elements.modelFilter.val(),
@@ -1266,102 +1188,20 @@ $(function() {
                 .done((res) => {
                     const data = res.data || [];
                     if (data.length === 0) {
-                        emptyEl.removeClass('hidden');
-                        this.updatePrintLabelsCount(0, 0);
+                        window.showToast('No products found matching the current filters.', 'warning');
                         return;
                     }
 
-                    data.forEach(item => {
-                        listContainer.append(`
-                            <li class="py-3 flex items-center justify-between gap-4 label-print-item hover:bg-slate-50 dark:hover:bg-gray-750/30 px-2 transition-colors rounded-xs" data-search="${(item.part_no + ' ' + item.part_name + ' ' + item.customer + ' ' + item.model).toLowerCase()}">
-                                <div class="flex items-center gap-3">
-                                    <input type="checkbox" name="selected_print_ids[]" value="${item.id}" checked class="chk-print-item w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                    <div class="flex flex-col">
-                                        <span class="text-xs font-semibold text-slate-800 dark:text-gray-250">${item.part_no}</span>
-                                        <span class="text-[10px] text-gray-400 font-medium">${item.part_name || '-'}</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 uppercase">${item.customer}</span>
-                                    <span class="inline-flex items-center justify-center font-medium text-[9px] px-2 py-0.5 rounded-xs bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase">${item.model}</span>
-                                </div>
-                            </li>
-                        `);
-                    });
-
-                    this.updatePrintLabelsCount(data.length, data.length);
-
-                    // Re-bind item checkbox change event to recalculate selection count
-                    $('.chk-print-item').on('change', () => {
-                        const checkedCount = $('.chk-print-item:checked').length;
-                        const totalCount = $('.chk-print-item').length;
-                        $('#chkPrintSelectAll').prop('checked', checkedCount === totalCount);
-                        this.updatePrintLabelsCount(checkedCount, totalCount);
-                    });
+                    const ids = data.map(item => item.id).join(',');
+                    const printUrl = `${this.config.routes.base}/${ids}/print`;
+                    window.open(printUrl, '_blank');
                 })
                 .fail(() => {
                     window.showToast('Failed to load products for printing.', 'error');
                 })
                 .always(() => {
-                    loader.addClass('hidden');
+                    btn.prop('disabled', false).html(originalHtml);
                 });
-        },
-
-        updatePrintLabelsCount: function(selected, total) {
-            $('#lblSelectedCount').text(selected);
-            $('#lblTotalCount').text(total);
-        },
-
-        togglePrintSelectAll: function(isChecked) {
-            $('.chk-print-item:visible').prop('checked', isChecked);
-            const checkedCount = $('.chk-print-item:checked').length;
-            const totalCount = $('.chk-print-item').length;
-            this.updatePrintLabelsCount(checkedCount, totalCount);
-        },
-
-        filterPrintLabelsList: function() {
-            const query = $('#txtPrintSearch').val().toLowerCase().trim();
-            let visibleCount = 0;
-            let checkedVisibleCount = 0;
-
-            $('.label-print-item').each(function() {
-                const searchStr = $(this).attr('data-search');
-                if (searchStr.includes(query)) {
-                    $(this).removeClass('hidden');
-                    visibleCount++;
-                    if ($(this).find('.chk-print-item').is(':checked')) {
-                        checkedVisibleCount++;
-                    }
-                } else {
-                    $(this).addClass('hidden');
-                }
-            });
-
-            // Update Select All checkbox state based on visible items
-            $('#chkPrintSelectAll').prop('checked', visibleCount > 0 && checkedVisibleCount === visibleCount);
-            
-            if (visibleCount === 0) {
-                $('#printLabelsEmpty').removeClass('hidden');
-            } else {
-                $('#printLabelsEmpty').addClass('hidden');
-            }
-        },
-
-        executePrintLabels: function() {
-            const selectedIds = [];
-            $('.chk-print-item:checked').each(function() {
-                selectedIds.push($(this).val());
-            });
-
-            if (selectedIds.length === 0) {
-                window.showToast('Please select at least one product to print labels.', 'warning');
-                return;
-            }
-
-            const idsString = selectedIds.join(',');
-            const printUrl = `${this.config.routes.base}/${idsString}/print`;
-            window.open(printUrl, '_blank');
-            this.ui.hideModal($('#printLabelsModal'));
         },
 
         showOldRevisionsModal: function() {

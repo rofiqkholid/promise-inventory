@@ -58,6 +58,7 @@ class ProductService
         if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
 
         return (object) [
+            'hash_id' => $inventoryProduct->hash_id,
             'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
             'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
             'item_name' => $data->part_name,
