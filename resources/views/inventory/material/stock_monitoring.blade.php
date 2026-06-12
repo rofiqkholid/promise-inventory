@@ -286,11 +286,11 @@
                         <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-slate-50/50 dark:bg-slate-900/30">Balance</th>
 
                         @foreach($categories as $cat)
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] whitespace-nowrap">{{ $cat->code }}</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] whitespace-nowrap min-w-[85px]">{{ $cat->code }}</th>
                         @endforeach
                         
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-amber-50/30 dark:bg-amber-900/10">STO gap</th>
-                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-emerald-50/30 dark:bg-emerald-900/10">Amount (Rp)</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-amber-50/30 dark:bg-amber-900/10 whitespace-nowrap min-w-[85px]">STO gap</th>
+                        <th class="border-b border-slate-200 dark:border-gray-700 text-center font-medium tracking-wider text-[10px] bg-emerald-50/30 dark:bg-emerald-900/10 whitespace-nowrap min-w-[110px]">Amount (Rp)</th>
 
                         @if($categories->count() === 0)
                         <th class="border-b border-slate-200 dark:border-gray-700 text-center font-bold uppercase tracking-widest text-[9px]">-</th>
@@ -480,7 +480,7 @@
 
         const amountColumnDef = {
             data: 'total_amount',
-            className: 'text-right font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300',
+            className: 'text-right font-mono text-[11px] font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap',
             render: function(data) {
                 return data ? 'Rp ' + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(data) : 'Rp 0';
             }
@@ -488,7 +488,7 @@
 
         const stoColumnDef = {
             data: 'sto_gap', // Use raw data for sorting
-            className: 'text-center',
+            className: 'text-center whitespace-nowrap',
             render: function(data, type, row) {
                 if (type === 'display') {
                     const display = row.sto_gap_display;
@@ -498,8 +498,8 @@
                     else if (parseFloat(row.sto_gap) < 0) colorClass = 'text-rose-600 dark:text-rose-400';
                     
                     return `
-                        <div class="sto-log-trigger cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-all group/gap" data-id="${row.id}">
-                            <span class="${colorClass} font-mono font-bold text-[13px] tracking-tight transition-transform group-hover/gap:scale-110">${display}</span>
+                        <div class="sto-log-trigger cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 rounded-xs hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-all group/gap" data-id="${row.id}">
+                            <span class="${colorClass} transition-transform group-hover/gap:scale-105">${display}</span>
                             <i class="fa-solid fa-clock-rotate-left text-[9px] opacity-20 group-hover/gap:opacity-80 transition-opacity"></i>
                         </div>
                     `;
