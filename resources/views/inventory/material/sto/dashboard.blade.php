@@ -1828,7 +1828,10 @@
                             </div>
                         </td>
                         <td class="py-3 px-3">
-                            <span class="font-mono text-xs text-gray-900 dark:text-white font-semibold">${row.part_no}</span>
+                            <div class="flex flex-col">
+                                <span class="font-mono text-xs text-gray-900 dark:text-white font-semibold">${row.part_no}</span>
+                                <span class="text-[9px] text-slate-400 dark:text-slate-550 uppercase tracking-wider font-bold">Rev: ${row.revision_code || '-'}</span>
+                            </div>
                         </td>
                         <td class="py-3 px-3">
                             <span class="px-2 py-0.5 rounded-xs text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 uppercase tracking-wider">${row.reason_name}</span>

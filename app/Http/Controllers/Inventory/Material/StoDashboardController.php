@@ -233,6 +233,7 @@ class StoDashboardController extends Controller
             ->leftJoin('models as m', 'm.id', '=', 'pd.model_id')
             ->leftJoin('inv_m_sto_reasons as r', 'r.id', '=', 'sd.reason_id')
             ->leftJoin('inv_m_unit as u', 'u.id', '=', 'pd.unit_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'pd.revision_id')
             ->where(DB::raw("ISNULL(m.name, 'No Model')"), $modelName);
 
         if (!empty($eventIds)) {
@@ -245,6 +246,7 @@ class StoDashboardController extends Controller
                 'se.code as event_code',
                 'se.period_end',
                 'p.part_no',
+                'rev.code as revision_code',
                 DB::raw("ISNULL(r.name, '-') as reason_name"),
                 'sd.diff_qty',
                 DB::raw("sd.diff_qty * ISNULL(pd.weight_kg, 0) * ISNULL(pd.material_price, 0) as diff_amount"),
