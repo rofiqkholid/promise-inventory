@@ -1169,7 +1169,7 @@
         // Create reason list with count
         const reasonList = stoReasons.map(item => {
             const found = distribution.find(d => d.reason_name === item.name || d.reason_name.toUpperCase() === item.name.toUpperCase());
-            const count = found ? found.count : 0;
+            const count = found ? (parseInt(found.count, 10) || 0) : 0;
             return { name: item.name, count: count };
         });
 
