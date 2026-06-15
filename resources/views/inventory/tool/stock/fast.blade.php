@@ -227,7 +227,7 @@
                             <span class="text-[10px] font-bold text-gray-500 peer-checked:text-primary-600 dark:peer-checked:text-primary-400 uppercase tracking-wide text-center">Stock IN</span>
                         </label>
                         <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-red-600 has-[:checked]:bg-red-50/50 dark:has-[:checked]:bg-red-900/20">
-                            <input type="radio" name="transaction_type" value="OUT" class="hidden peer">
+                            <input type="radio" name="transaction_type" value="out" class="hidden peer">
                             <span class="text-[10px] font-bold text-gray-500 peer-checked:text-red-600 dark:peer-checked:text-red-400 uppercase tracking-wide text-center">Stock OUT</span>
                         </label>
                         <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/50 dark:has-[:checked]:bg-indigo-900/20">
@@ -681,7 +681,7 @@ $(document).ready(function() {
                 item.category = category;
             });
             
-            if (type === 'OUT') {
+            if (type === 'out') {
                 // Source can be any active stock location where tool exists
                 filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
                 
@@ -744,7 +744,7 @@ $(document).ready(function() {
             $('#transRefDoc').prop('required', true);
             $('#destinationGroup').addClass('hidden');
             $('#to_location_id').prop('required', false);
-        } else if (type === 'OUT') {
+        } else if (type === 'out') {
             $('#saveTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-indigo-600 hover:bg-indigo-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-red-600 hover:bg-red-700').text('Submit Stock OUT');
             $('#labelQty').text('Qty OUT *');
             
@@ -785,7 +785,7 @@ $(document).ready(function() {
         const type = $('input[name="transaction_type"]:checked').val();
         if (type !== 'IN') {
             const excludeId = $(this).val();
-            if (type === 'OUT') {
+            if (type === 'out') {
                 filterDestinations(['machine', 'subcont', 'scrap', 'lost'], excludeId);
             } else if (type === 'borrow') {
                 filterDestinations(['borrow'], excludeId);
@@ -809,7 +809,7 @@ $(document).ready(function() {
     if (preselectedToolId) {
         $('#formTransaction')[0].reset(); 
         if (preselectedAction === 'out') {
-            $('input[name="transaction_type"][value="OUT"]').prop('checked', true).trigger('change');
+            $('input[name="transaction_type"][value="out"]').prop('checked', true).trigger('change');
         } else if (preselectedAction === 'borrow') {
             $('input[name="transaction_type"][value="borrow"]').prop('checked', true).trigger('change');
         } else if (preselectedAction === 'return') {
@@ -823,7 +823,7 @@ $(document).ready(function() {
 
     $('#saveTransaction').on('click', function() {
         const type = $('input[name="transaction_type"]:checked').val();
-        const url = type === 'IN' ? apiIn : apiOut;
+        const url = type === 'IN' ? apiIn : apiOut; // IN → store endpoint, everything else → out endpoint
         
         // Temporarily enable location_id so it gets serialized correctly
         $('#transLocationId').prop('disabled', false);
