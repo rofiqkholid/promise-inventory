@@ -514,7 +514,7 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    const canUpdateTrans = {{ Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'update') ? 'true' : 'false' }};
+    const canUpdateTrans = {{ Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'edit') ? 'true' : 'false' }};
     const canDeleteTrans = {{ Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'delete') ? 'true' : 'false' }};
     // Location Click Popover Listener
     $(document).on('click', '.location-click-trigger', function(e) {

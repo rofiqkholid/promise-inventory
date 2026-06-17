@@ -473,7 +473,7 @@ class ToolFastStockController extends Controller
     /** Update an existing transaction and adjust stock accordingly */
     public function updateHistory(Request $request, $id)
     {
-        if (!Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'update')) {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'edit')) {
             return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
         }
 
