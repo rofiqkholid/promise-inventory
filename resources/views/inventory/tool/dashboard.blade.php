@@ -61,26 +61,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Period</label>
-                        <select name="period" id="periodSelect" onchange="handlePeriodChange(this.value)" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
-                            <option value="7d" {{ $period === '7d' ? 'selected' : '' }}>Last 7 Days</option>
-                            <option value="30d" {{ $period === '30d' ? 'selected' : '' }}>Last 30 Days</option>
-                            <option value="90d" {{ $period === '90d' ? 'selected' : '' }}>Last 90 Days</option>
-                            <option value="this_month" {{ $period === 'this_month' ? 'selected' : '' }}>This Month</option>
-                            <option value="this_year" {{ $period === 'this_year' ? 'selected' : '' }}>This Year</option>
-                            <option value="custom" {{ $period === 'custom' ? 'selected' : '' }}>Custom Range...</option>
-                        </select>
+                        <input type="month" id="month_picker" name="month_year" value="{{ $filters['month_year'] ?? date('Y-m') }}" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
                     </div>
-                    
-                    <div id="customDateRangeGroup" class="{{ $period === 'custom' ? 'block' : 'hidden' }} space-y-1.5 col-span-2">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Date Range</label>
-                        <div class="relative">
-                            <input type="text" id="filter_date_range" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 pl-9 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500" placeholder="Select date range..." readonly>
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-calendar-days text-[11px]"></i>
-                            </div>
-                            <input type="hidden" name="start_date" id="start_date" value="{{ request('start_date') }}">
-                            <input type="hidden" name="end_date" id="end_date" value="{{ request('end_date') }}">
-                        </div>
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Data Mode</label>
+                        <select id="filterAccumulate" name="accumulate" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
+                            <option value="single" {{ ($filters['accumulate'] ?? '') === 'single' ? 'selected' : '' }}>Single Month</option>
+                            <option value="ytd" {{ ($filters['accumulate'] ?? 'ytd') === 'ytd' ? 'selected' : '' }}>Accumulated (YTD)</option>
+                            <option value="all" {{ ($filters['accumulate'] ?? '') === 'all' ? 'selected' : '' }}>Accumulated (All-Time)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -550,52 +539,11 @@
         }
     });
 
-    function handlePeriodChange(val) {
-        const customGroup = document.getElementById('customDateRangeGroup');
-        if (val === 'custom') {
-            customGroup.classList.remove('hidden');
-            if (window.filterDatePicker) {
-                window.filterDatePicker.show();
-            }
-        } else {
-            customGroup.classList.add('hidden');
-            document.getElementById('start_date').value = '';
-            document.getElementById('end_date').value = '';
-            document.getElementById('filterForm').submit();
-        }
-    }
-
     $(document).ready(function() {
-        // Init Litepicker for Custom Date Range
-        let pickerStartDate = "{{ request('start_date') }}";
-        let pickerEndDate = "{{ request('end_date') }}";
-
-        window.filterDatePicker = new Litepicker({
-            element: document.getElementById('filter_date_range'),
-            singleMode: false,
-            autoApply: true,
-            format: 'DD-MM-YYYY',
-            delimiter: ' - ',
-            startDate: pickerStartDate ? new Date(pickerStartDate) : null,
-            endDate: pickerEndDate ? new Date(pickerEndDate) : null,
-            setup: (picker) => {
-                picker.on('selected', (date1, date2) => {
-                    document.getElementById('start_date').value = date1.format('YYYY-MM-DD');
-                    document.getElementById('end_date').value = date2.format('YYYY-MM-DD');
-                    // Automatically trigger form submit!
-                    document.getElementById('filterForm').submit();
-                });
-            }
+        // Auto-submit form on filter changes
+        $('#month_picker, #filterAccumulate').on('change', function() {
+            document.getElementById('filterForm').submit();
         });
-
-        // Set the input field display text manually on load if values exist
-        if (pickerStartDate && pickerEndDate) {
-            const formatDisplay = (dStr) => {
-                const parts = dStr.split('-');
-                return `${parts[2]}-${parts[1]}-${parts[0]}`; // YYYY-MM-DD to DD-MM-YYYY
-            };
-            document.getElementById('filter_date_range').value = `${formatDisplay(pickerStartDate)} - ${formatDisplay(pickerEndDate)}`;
-        }
 
         // Toggle Filter Logic
         $('#btnToggleDashFilter').on('click', function(e) {

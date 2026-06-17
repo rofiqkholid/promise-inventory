@@ -17,76 +17,27 @@ class ToolDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Parse Period/Time Filter
-        $period = $request->input('period', 'this_year');
-        $startDate = null;
-        $endDate = Carbon::now()->endOfDay();
-
-        if ($period === '7d') {
-            $startDate = Carbon::now()->subDays(7)->startOfDay();
-        } elseif ($period === '30d') {
-            $startDate = Carbon::now()->subDays(30)->startOfDay();
-        } elseif ($period === '90d') {
-            $startDate = Carbon::now()->subDays(90)->startOfDay();
-        } elseif ($period === 'this_month') {
-            $startDate = Carbon::now()->startOfMonth()->startOfDay();
-        } elseif ($period === 'this_year') {
-            $startDate = Carbon::now()->startOfYear()->startOfDay();
-        } elseif ($period === 'custom') {
-            $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
-            $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : Carbon::now()->endOfDay();
-        } else {
-            $startDate = Carbon::now()->startOfYear()->startOfDay();
+        // 1. Parse Period/Time Filter (Month Year and Accumulate Mode)
+        $monthYear = $request->input('month_year', date('Y-m'));
+        $accumulate = $request->input('accumulate', 'ytd');
+        
+        if ($accumulate === 'single') {
+            $startDate = Carbon::parse($monthYear . '-01')->startOfMonth()->startOfDay();
+            $endDate = Carbon::parse($monthYear . '-01')->endOfMonth()->endOfDay();
+        } elseif ($accumulate === 'ytd') {
+            $startDate = Carbon::parse($monthYear . '-01')->startOfYear()->startOfDay();
+            $endDate = Carbon::parse($monthYear . '-01')->endOfMonth()->endOfDay();
+        } else { // 'all'
+            $startDate = null;
+            $endDate = Carbon::parse($monthYear . '-01')->endOfMonth()->endOfDay();
         }
 
-        // 2. Fetch Card KPI Data
-        // Card 1: Total Value (Fast Stock Value + Slow Batch Value)
-        $fastStockValue = TolFastStock::join('tol_m_tools', 'tol_m_tools.id', '=', 'tol_t_fast_stock.tool_id')
-            ->sum(DB::raw('tol_t_fast_stock.current_qty * ISNULL(tol_m_tools.price_per_unit, 0)'));
-        
-        $slowBatchValue = TolSlowBatch::where('status', 'active')
-            ->sum('current_value');
-        
-        $totalValue = $fastStockValue + $slowBatchValue;
-
-        // Card 2: Total Stock (Fast Stock Qty + Active Slow Batch Current Qty)
-        $fastStockQty = TolFastStock::sum('current_qty');
-        $slowStockQty = TolSlowBatch::where('status', 'active')->sum('qty_current');
-        $totalStock = $fastStockQty + $slowStockQty;
-
-        // Card 3: Total In (Incoming transactions in date range)
-        $fastIn = TolTransaction::where('transaction_type', 'in')
-            ->whereBetween('transacted_at', [$startDate, $endDate])
-            ->sum('qty');
-        
-        $slowIn = TolSlowBatch::whereBetween('purchase_date', [$startDate, $endDate])
-            ->sum('qty_purchased');
-        
-        $totalIn = $fastIn + $slowIn;
-
-        // Card 4: Total Out (Outgoing transactions in date range)
-        $fastOut = abs(TolTransaction::where('transaction_type', 'out')
-            ->whereBetween('transacted_at', [$startDate, $endDate])
-            ->sum('qty'));
-
-        $slowOut = TolSlowBatch::whereIn('status', ['nok', 'retired'])
-            ->whereBetween('updated_at', [$startDate, $endDate])
-            ->sum('qty_purchased');
-
-        $totalOut = $fastOut + $slowOut;
-
-        // Card 5 & 6: Moving Breakdown
-        $totalFastMoving = $fastStockQty;
-        $totalSlowMoving = $slowStockQty;
-
-
-        // 3. Stock Status - Fast Moving - Group by Category (Critical, Warning, Over, Safe)
+        // Retrieve Tools & Reconstruct historical stock at $endDate for each tool first
         $tools = TolTool::with(['category', 'fastStock.location'])
             ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
             ->where('is_active', true)
             ->get();
 
-        // Reconstruct historical stock at $endDate for each tool
         foreach ($tools as $tool) {
             $qtyAfter = TolTransaction::leftJoin('tol_m_locations as l', 'l.id', '=', 'tol_t_transactions.to_location_id')
                 ->where('tol_t_transactions.tool_id', $tool->id)
@@ -98,6 +49,70 @@ class ToolDashboardController extends Controller
                 ->sum('tol_t_transactions.qty') ?? 0;
             $tool->historical_qty = $tool->total_qty - $qtyAfter;
         }
+
+        // 2. Fetch Card KPI Data dynamically based on the filtered end date
+        // Card 1: Total Value (Fast Stock Value + Slow Batch Value as of $endDate)
+        $fastStockValue = 0;
+        $fastStockQty = 0;
+        foreach ($tools as $tool) {
+            $fastStockQty += $tool->historical_qty;
+            $fastStockValue += ($tool->historical_qty * ($tool->price_per_unit ?? 0));
+        }
+        
+        $slowBatchesAtEndDate = TolSlowBatch::where('purchase_date', '<=', $endDate)
+            ->where(function($q) use ($endDate) {
+                $q->where('status', 'active')
+                  ->orWhere('updated_at', '>', $endDate);
+            })
+            ->get();
+        $slowStockQty = $slowBatchesAtEndDate->sum('qty_current');
+        $slowBatchValue = $slowBatchesAtEndDate->sum('current_value');
+        
+        $totalValue = $fastStockValue + $slowBatchValue;
+
+        // Card 2: Total Stock (Fast Stock Qty + Active Slow Batch Current Qty as of $endDate)
+        $totalStock = $fastStockQty + $slowStockQty;
+
+        // Card 3: Total In (Incoming transactions in date range)
+        $fastInQuery = TolTransaction::where('transaction_type', 'in')
+            ->where('transacted_at', '<=', $endDate);
+        if ($startDate) {
+            $fastInQuery->where('transacted_at', '>=', $startDate);
+        }
+        $fastIn = $fastInQuery->sum('qty');
+        
+        $slowInQuery = TolSlowBatch::where('purchase_date', '<=', $endDate);
+        if ($startDate) {
+            $slowInQuery->where('purchase_date', '>=', $startDate);
+        }
+        $slowIn = $slowInQuery->sum('qty_purchased');
+        
+        $totalIn = $fastIn + $slowIn;
+
+        // Card 4: Total Out (Outgoing transactions in date range)
+        $fastOutQuery = TolTransaction::where('transaction_type', 'out')
+            ->where('transacted_at', '<=', $endDate);
+        if ($startDate) {
+            $fastOutQuery->where('transacted_at', '>=', $startDate);
+        }
+        $fastOut = abs($fastOutQuery->sum('qty'));
+
+        $slowOutQuery = TolSlowBatch::whereIn('status', ['nok', 'retired'])
+            ->where('updated_at', '<=', $endDate);
+        if ($startDate) {
+            $slowOutQuery->where('updated_at', '>=', $startDate);
+        }
+        $slowOut = $slowOutQuery->sum('qty_purchased');
+
+        $totalOut = $fastOut + $slowOut;
+
+        // Card 5 & 6: Moving Breakdown
+        $totalFastMoving = $fastStockQty;
+        $totalSlowMoving = $slowStockQty;
+
+
+        // 3. Stock Status - Fast Moving - Group by Category (Critical, Warning, Over, Safe)
+        // (Reconstruction already done at the top)
             
         $groupedStockStatus = [];
 
@@ -208,59 +223,51 @@ class ToolDashboardController extends Controller
         });
 
 
-        // 5. Transaction Trend (IN vs OUT) Over Time
-        $trendData = [];
-        $labels = [];
+        // 5. Transaction Trend (IN vs OUT) Over Time - Grouped by Month for selected Year
+        $trendYear = substr($monthYear, 0, 4) ?: date('Y');
+        
+        // Fast IN grouped by month
+        $fastInRaw = TolTransaction::where('transaction_type', 'in')
+            ->whereYear('transacted_at', $trendYear)
+            ->select(DB::raw('MONTH(transacted_at) as month_num'), DB::raw('SUM(qty) as total'))
+            ->groupBy(DB::raw('MONTH(transacted_at)'))
+            ->pluck('total', 'month_num')
+            ->toArray();
+            
+        // Slow IN grouped by month
+        $slowInRaw = TolSlowBatch::whereYear('purchase_date', $trendYear)
+            ->select(DB::raw('MONTH(purchase_date) as month_num'), DB::raw('SUM(qty_purchased) as total'))
+            ->groupBy(DB::raw('MONTH(purchase_date)'))
+            ->pluck('total', 'month_num')
+            ->toArray();
+            
+        // Fast OUT grouped by month
+        $fastOutRaw = TolTransaction::where('transaction_type', 'out')
+            ->whereYear('transacted_at', $trendYear)
+            ->select(DB::raw('MONTH(transacted_at) as month_num'), DB::raw('SUM(qty) as total'))
+            ->groupBy(DB::raw('MONTH(transacted_at)'))
+            ->pluck('total', 'month_num')
+            ->toArray();
+            
+        // Slow OUT grouped by month
+        $slowOutRaw = TolSlowBatch::whereIn('status', ['nok', 'retired'])
+            ->whereYear('updated_at', $trendYear)
+            ->select(DB::raw('MONTH(updated_at) as month_num'), DB::raw('SUM(qty_purchased) as total'))
+            ->groupBy(DB::raw('MONTH(updated_at)'))
+            ->pluck('total', 'month_num')
+            ->toArray();
+
+        $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         $ins = [];
         $outs = [];
-
-        // Build a continuous sequence of labels based on period
-        if ($period === '7d') {
-            for ($i = 6; $i >= 0; $i--) {
-                $d = Carbon::now()->subDays($i);
-                $labels[] = $d->format('d M');
-                $dStart = (clone $d)->startOfDay();
-                $dEnd = (clone $d)->endOfDay();
-
-                $fastInQty = TolTransaction::where('transaction_type', 'in')->whereBetween('transacted_at', [$dStart, $dEnd])->sum('qty');
-                $slowInQty = TolSlowBatch::whereBetween('purchase_date', [$dStart, $dEnd])->sum('qty_purchased');
-                $ins[] = $fastInQty + $slowInQty;
-
-                $fastOutQty = abs(TolTransaction::where('transaction_type', 'out')->whereBetween('transacted_at', [$dStart, $dEnd])->sum('qty'));
-                $slowOutQty = TolSlowBatch::whereIn('status', ['nok', 'retired'])->whereBetween('updated_at', [$dStart, $dEnd])->sum('qty_purchased');
-                $outs[] = $fastOutQty + $slowOutQty;
-            }
-        } elseif ($period === 'this_year') {
-            for ($i = 1; $i <= 12; $i++) {
-                $labels[] = Carbon::create(null, $i, 1)->format('M');
-                $dStart = Carbon::now()->month($i)->startOfMonth();
-                $dEnd = Carbon::now()->month($i)->endOfMonth();
-
-                $fastInQty = TolTransaction::where('transaction_type', 'in')->whereBetween('transacted_at', [$dStart, $dEnd])->sum('qty');
-                $slowInQty = TolSlowBatch::whereBetween('purchase_date', [$dStart, $dEnd])->sum('qty_purchased');
-                $ins[] = $fastInQty + $slowInQty;
-
-                $fastOutQty = abs(TolTransaction::where('transaction_type', 'out')->whereBetween('transacted_at', [$dStart, $dEnd])->sum('qty'));
-                $slowOutQty = TolSlowBatch::whereIn('status', ['nok', 'retired'])->whereBetween('updated_at', [$dStart, $dEnd])->sum('qty_purchased');
-                $outs[] = $fastOutQty + $slowOutQty;
-            }
-        } else {
-            // Default 30 days grouped into weekly chunks or daily if needed
-            // For dashboard richness, let's group by daily intervals for the last 30 days
-            for ($i = 29; $i >= 0; $i -= 3) {
-                $d = Carbon::now()->subDays($i);
-                $labels[] = $d->format('d M');
-                $dStart = (clone $d)->subDays(2)->startOfDay();
-                $dEnd = (clone $d)->endOfDay();
-
-                $fastInQty = TolTransaction::where('transaction_type', 'in')->whereBetween('transacted_at', [$dStart, $dEnd])->sum('qty');
-                $slowInQty = TolSlowBatch::whereBetween('purchase_date', [$dStart, $dEnd])->sum('qty_purchased');
-                $ins[] = $fastInQty + $slowInQty;
-
-                $fastOutQty = abs(TolTransaction::where('transaction_type', 'out')->whereBetween('transacted_at', [$dStart, $dEnd])->sum('qty'));
-                $slowOutQty = TolSlowBatch::whereIn('status', ['nok', 'retired'])->whereBetween('updated_at', [$dStart, $dEnd])->sum('qty_purchased');
-                $outs[] = $fastOutQty + $slowOutQty;
-            }
+        for ($m = 1; $m <= 12; $m++) {
+            $fin = $fastInRaw[$m] ?? 0;
+            $sin = $slowInRaw[$m] ?? 0;
+            $ins[] = $fin + $sin;
+            
+            $fout = abs($fastOutRaw[$m] ?? 0);
+            $sout = $slowOutRaw[$m] ?? 0;
+            $outs[] = $fout + $sout;
         }
 
         $trendData = [
@@ -272,21 +279,27 @@ class ToolDashboardController extends Controller
 
         // 6. Pareto Diagram berdasarkan Transaksi OUT
         // We get total outbound qty per tool spec/name
-        $outboundByTool = DB::table('tol_t_transactions as t')
+        $outboundByToolQuery = DB::table('tol_t_transactions as t')
             ->join('tol_m_tools as tl', 'tl.id', '=', 't.tool_id')
             ->where('t.transaction_type', 'out')
-            ->whereBetween('t.transacted_at', [$startDate, $endDate])
-            ->select('tl.name as tool_name', DB::raw('SUM(t.qty) as total_qty'))
+            ->where('t.transacted_at', '<=', $endDate);
+        if ($startDate) {
+            $outboundByToolQuery->where('t.transacted_at', '>=', $startDate);
+        }
+        $outboundByTool = $outboundByToolQuery->select('tl.name as tool_name', DB::raw('SUM(t.qty) as total_qty'))
             ->groupBy('tl.name')
             ->orderBy('total_qty', 'desc')
             ->get();
 
         // Also mix in slow-moving NOK batches as outbound consumption
-        $slowOutboundByTool = DB::table('tol_t_slow_batches as b')
+        $slowOutboundByToolQuery = DB::table('tol_t_slow_batches as b')
             ->join('tol_m_tools as tl', 'tl.id', '=', 'b.tool_id')
             ->whereIn('b.status', ['nok', 'retired'])
-            ->whereBetween('b.updated_at', [$startDate, $endDate])
-            ->select('tl.name as tool_name', DB::raw('SUM(b.qty_purchased) as total_qty'))
+            ->where('b.updated_at', '<=', $endDate);
+        if ($startDate) {
+            $slowOutboundByToolQuery->where('b.updated_at', '>=', $startDate);
+        }
+        $slowOutboundByTool = $slowOutboundByToolQuery->select('tl.name as tool_name', DB::raw('SUM(b.qty_purchased) as total_qty'))
             ->groupBy('tl.name')
             ->get();
 
@@ -379,8 +392,13 @@ class ToolDashboardController extends Controller
             ? number_format($slowBatchValue / 1000000, 1, ',', '.') . 'M' 
             : number_format($slowBatchValue, 0, ',', '.');
 
+        $filters = [
+            'month_year' => $monthYear,
+            'accumulate' => $accumulate,
+        ];
+
         return view('inventory.tool.dashboard', compact(
-            'period', 'startDate', 'endDate',
+            'filters', 'startDate', 'endDate',
             'totalValue', 'totalStock', 'totalIn', 'totalOut', 'totalFastMoving', 'totalSlowMoving',
             'groupedStockStatus', 'balanceWarnings', 'trendData', 'paretoData', 'activities', 'latestSlowBatches',
             'fastValFormatted', 'slowValFormatted'
