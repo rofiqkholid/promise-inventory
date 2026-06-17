@@ -200,6 +200,8 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
                 Route::post('/', [ToolFastStockController::class, 'store'])->name('store');        // IN
                 Route::post('/out', [ToolFastStockController::class, 'out'])->name('out');          // OUT
                 Route::get('/history', [ToolFastStockController::class, 'history'])->name('history');
+                Route::put('/history/{id}', [ToolFastStockController::class, 'updateHistory'])->name('update-history');
+                Route::delete('/history/{id}', [ToolFastStockController::class, 'destroyHistory'])->name('destroy-history');
                 Route::get('/print-qr/{id}', [ToolMasterController::class, 'printQr'])->name('printQr');
             });
 

@@ -305,6 +305,105 @@
     </div>
 </div>
 
+{{-- Modal: Edit Tool Transaction --}}
+<div id="modal-edit-transaction" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50">
+    <div class="relative w-full max-w-md transform overflow-hidden rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col max-h-[90vh]">
+        <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2" id="edit-transaction-modal-title">
+                <i class="fa-solid fa-edit text-primary-500"></i> Edit Transaction
+            </h3>
+            <button class="close-modal text-gray-400 hover:text-gray-500 w-8 h-8 flex items-center justify-center rounded-xs hover:bg-gray-100 dark:hover:bg-gray-800"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="overflow-y-auto px-6 py-6 flex-1">
+            <form id="formEditTransaction">
+                @csrf
+                <input type="hidden" name="transaction_id" id="editTransId">
+                <div class="mb-6">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Transaction Type <span class="text-red-500">*</span></label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50/50 dark:has-[:checked]:bg-primary-900/20">
+                            <input type="radio" name="transaction_type" id="editTypeIn" value="IN" class="hidden peer">
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-primary-600 dark:peer-checked:text-primary-400 uppercase tracking-wide text-center">Stock IN</span>
+                        </label>
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-red-600 has-[:checked]:bg-red-50/50 dark:has-[:checked]:bg-red-900/20">
+                            <input type="radio" name="transaction_type" id="editTypeOut" value="out" class="hidden peer">
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-red-600 dark:peer-checked:text-red-400 uppercase tracking-wide text-center">Stock OUT</span>
+                        </label>
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/50 dark:has-[:checked]:bg-indigo-900/20">
+                            <input type="radio" name="transaction_type" id="editTypeBorrow" value="borrow" class="hidden peer">
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-indigo-600 dark:peer-checked:text-indigo-400 uppercase tracking-wide text-center">Borrow</span>
+                        </label>
+                        <label class="relative flex items-center justify-center p-2 border border-gray-200 dark:border-gray-700 rounded-xs cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-all has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-900/20">
+                            <input type="radio" name="transaction_type" id="editTypeReturn" value="return" class="hidden peer">
+                            <span class="text-[10px] font-bold text-gray-500 peer-checked:text-emerald-600 dark:peer-checked:text-emerald-400 uppercase tracking-wide text-center">Return</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Tool <span class="text-red-500">*</span></label>
+                    <select name="tool_id" id="editTransToolId" required class="select2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                        <option value="">-- Select Tool --</option>
+                        @foreach($tools as $tool)
+                            @php
+                                $activeStocks = $tool->fastStock->filter(fn($fs) => $fs->current_qty > 0)->map(fn($fs) => [
+                                    'location_id' => $fs->location_id,
+                                    'location_code' => $fs->location?->code ?? '?',
+                                    'location_name' => $fs->location?->name ?? '?',
+                                    'current_qty' => $fs->current_qty
+                                ])->values()->toArray();
+                            @endphp
+                            <option value="{{ $tool->id }}" 
+                                    data-location-id="{{ $tool->location_id }}"
+                                    data-stocks="{{ json_encode($activeStocks) }}">
+                                {{ $tool->name }} — {{ $tool->brand }} ({{ $tool->spec_code ?? 'No Spec' }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Source Location <span class="text-red-500">*</span></label>
+                    <select name="location_id" id="editTransLocationId" required class="select2-modal-edit bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3 transition-all">
+                        <option value="">-- Select Location --</option>
+                        @foreach($locations as $loc)
+                            <option value="{{ $loc->id }}" data-category="{{ $loc->category }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4 hidden" id="editDestinationGroup">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Destination <span class="text-red-500">*</span></label>
+                    <select name="to_location_id" id="edit_to_location_id" class="select2-modal-edit bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3">
+                        <option value="">-- Select Destination --</option>
+                        @foreach($destinations as $category => $locs)
+                            <optgroup label="{{ strtoupper($category) }}">
+                                @foreach($locs as $loc)
+                                    <option value="{{ $loc->id }}" data-category="{{ $loc->category }}">{{ $loc->code }} — {{ $loc->name }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider" id="editLabelQty">Quantity <span class="text-red-500">*</span></label>
+                    <input type="number" name="qty" id="editTransQty" min="1" required class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="0">
+                </div>
+                <div class="mb-4" id="editRefDocGroup">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Reference Doc <span class="text-red-500">*</span></label>
+                    <input type="text" name="ref_doc" id="editTransRefDoc" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" placeholder="e.g. PO-2024-001">
+                </div>
+                <div class="mb-2">
+                    <label class="block mb-2 text-[10px] font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider">Note</label>
+                    <textarea name="note" id="editTransNote" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-xs focus:ring-primary-500 focus:border-primary-500 block w-full p-3" rows="2"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="border-t border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex gap-3">
+            <button type="button" class="close-modal flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs text-[10px] font-bold text-gray-600 uppercase tracking-widest hover:bg-gray-50 transition-colors">Cancel</button>
+            <button type="button" id="saveEditTransaction" class="flex-1 px-4 py-3 bg-primary-600 border border-transparent rounded-xs text-[10px] font-bold text-white uppercase tracking-widest hover:bg-primary-700 transition-all">Save Changes</button>
+        </div>
+    </div>
+</div>
+
 {{-- Modal: History --}}
 <div id="modal-tool-history" class="modal-container hidden fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-0 md:p-4">
     <div class="relative w-full h-full md:h-[95vh] md:w-[95vw] transform overflow-hidden md:rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col shadow-2xl transition-all">
@@ -357,10 +456,11 @@
                         <th class="px-4 py-3 text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400" style="text-align: center !important;">Current Stock</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Ref / Destination</th>
                         <th class="px-4 py-3 text-left text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Operator</th>
+                        <th class="px-4 py-3 text-center w-[100px] text-[10px] font-bold tracking-wider text-gray-500 dark:text-gray-400">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
-            </x-table>
+            </x-table>x-table>
         </div>
     </div>
 </div>
@@ -414,6 +514,8 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    const canUpdateTrans = {{ Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'update') ? 'true' : 'false' }};
+    const canDeleteTrans = {{ Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'delete') ? 'true' : 'false' }};
     // Location Click Popover Listener
     $(document).on('click', '.location-click-trigger', function(e) {
         e.stopPropagation();
@@ -961,6 +1063,37 @@ $(document).ready(function() {
                         }
                     },
                     { data: 'operator.name', render: d => `<span class="text-xs text-gray-700 dark:text-gray-300 font-medium">${d || '-'}</span>` },
+                    {
+                        data: null, orderable: false, searchable: false, className: 'text-center',
+                        render: (d, t, r) => {
+                            let actionHtml = `<div class="flex items-center justify-center gap-1.5">`;
+                            if (canUpdateTrans) {
+                                actionHtml += `
+                                    <button class="edit-trans-btn w-7 h-7 inline-flex items-center justify-center text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-xs border border-indigo-100/50 dark:border-indigo-800/30 transition-all active:scale-95 text-xs"
+                                        data-id="${r.id}"
+                                        data-tool-id="${r.tool_id}"
+                                        data-type="${r.transaction_type}"
+                                        data-qty="${Math.abs(r.qty)}"
+                                        data-loc-id="${r.location_id}"
+                                        data-to-loc-id="${r.to_location_id || ''}"
+                                        data-ref-doc="${r.ref_doc || ''}"
+                                        data-note="${r.note || ''}"
+                                        title="Edit Transaction">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>`;
+                            }
+                            if (canDeleteTrans) {
+                                actionHtml += `
+                                    <button class="delete-trans-btn w-7 h-7 inline-flex items-center justify-center text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-xs border border-rose-100/50 dark:border-rose-800/30 transition-all active:scale-95 text-xs"
+                                        data-id="${r.id}"
+                                        title="Delete Transaction">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>`;
+                            }
+                            actionHtml += `</div>`;
+                            return actionHtml;
+                        }
+                    }
                 ],
                 order: [[0, 'desc']],
                 pageLength: 10,
@@ -970,6 +1103,13 @@ $(document).ready(function() {
             // Reactive Filters
             $('#filterHistToolId, #filterHistType').on('change', function() {
                 historyTable.ajax.reload();
+            });
+
+            // Clear date filter when user is typing/searching in the search box
+            $(document).on('keyup.dt search.dt input.dt', '#historyTable_filter input', function() {
+                if ($(this).val()) {
+                    $('#filter_date_range').val('');
+                }
             });
         } else {
             historyTable.ajax.reload();
@@ -1069,6 +1209,271 @@ $(document).ready(function() {
         $('#filter_category').val('').trigger('change');
         $('#filter_status').val('').trigger('change');
         fastStockTable.ajax.reload();
+    });
+
+    // --- EDIT & DELETE TRANSACTIONS ---
+    $('#editTransToolId').select2({
+        dropdownParent: $('#modal-edit-transaction'),
+        width: '100%'
+    });
+
+    $('.select2-modal-edit').select2({
+        dropdownParent: $('#modal-edit-transaction'),
+        width: '100%',
+        templateResult: formatLocationState,
+        templateSelection: formatLocationState
+    });
+
+    const editOriginalLocationsHTML = $('#editTransLocationId').html();
+    const editOriginalDestinationsHTML = $('#edit_to_location_id').html();
+
+    function filterEditDestinations(allowedCategories, excludeLocationId) {
+        const tempDiv = $('<div>').html(editOriginalDestinationsHTML);
+        tempDiv.find('option').each(function() {
+            const cat = $(this).data('category');
+            const val = $(this).val();
+            if ((cat && !allowedCategories.includes(cat)) || (excludeLocationId && val == excludeLocationId)) {
+                $(this).remove();
+            }
+        });
+        tempDiv.find('optgroup').each(function() {
+            if ($(this).find('option').length === 0) {
+                $(this).remove();
+            }
+        });
+        
+        $('#edit_to_location_id').select2('destroy');
+        $('#edit_to_location_id').html(tempDiv.html());
+        $('#edit_to_location_id').select2({
+            dropdownParent: $('#modal-edit-transaction'),
+            width: '100%',
+            templateResult: formatLocationState,
+            templateSelection: formatLocationState
+        }).trigger('change');
+    }
+
+    function updateEditLocationInputState(targetLocationId = null, targetToLocationId = null) {
+        const type = $('input[name="transaction_type"]:checked', '#formEditTransaction').val();
+        const selectedTool = $('#editTransToolId option:selected');
+        const defaultLocId = selectedTool.data('location-id');
+        const stocks = selectedTool.data('stocks') || [];
+        
+        if (type === 'IN') {
+            const tempDiv = $('<div>').html(editOriginalLocationsHTML);
+            tempDiv.find('option').each(function() {
+                const cat = $(this).data('category');
+                if (cat && cat !== 'storage') {
+                    $(this).remove();
+                }
+            });
+            $('#editTransLocationId').select2('destroy');
+            $('#editTransLocationId').html(tempDiv.html());
+            $('#editTransLocationId').select2({
+                dropdownParent: $('#modal-edit-transaction'),
+                width: '100%',
+                templateResult: formatLocationState,
+                templateSelection: formatLocationState
+            });
+            
+            if (targetLocationId) {
+                $('#editTransLocationId').val(targetLocationId).trigger('change');
+            } else if (defaultLocId) {
+                $('#editTransLocationId').val(defaultLocId).trigger('change');
+            } else {
+                $('#editTransLocationId').val('').trigger('change');
+            }
+            $('#editTransLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
+        } else {
+            $('#editTransLocationId').removeClass('bg-slate-50 dark:bg-gray-800/80 cursor-not-allowed opacity-75').prop('disabled', false);
+            
+            let sourceOptionsHTML = '<option value="">-- Select Source Location --</option>';
+            let filteredStocks = [];
+            
+            const tempLocs = $('<div>').html(editOriginalLocationsHTML);
+            stocks.forEach(item => {
+                const locOpt = tempLocs.find(`option[value="${item.location_id}"]`);
+                const category = locOpt.data('category') || 'storage';
+                item.category = category;
+            });
+            
+            if (type === 'out') {
+                filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
+                filterEditDestinations(['machine', 'subcont', 'scrap', 'lost'], targetLocationId);
+            } else if (type === 'borrow') {
+                filteredStocks = stocks.filter(item => ['storage', 'machine', 'subcont', 'borrow', 'return'].includes(item.category));
+                filterEditDestinations(['borrow'], targetLocationId);
+            } else if (type === 'return') {
+                filteredStocks = stocks.filter(item => item.category === 'borrow');
+                filterEditDestinations(['return'], targetLocationId);
+            }
+            
+            if (targetLocationId && !filteredStocks.some(item => item.location_id == targetLocationId)) {
+                const tempLocs = $('<div>').html(editOriginalLocationsHTML);
+                const opt = tempLocs.find(`option[value="${targetLocationId}"]`);
+                if (opt.length > 0) {
+                    sourceOptionsHTML += `<option value="${targetLocationId}" data-category="${opt.data('category')}">${opt.text()} (current transaction location)</option>`;
+                }
+            }
+            
+            if (filteredStocks.length === 0 && (!targetLocationId)) {
+                sourceOptionsHTML += '<option value="" disabled>No stock available in allowed locations</option>';
+            } else {
+                filteredStocks.forEach(item => {
+                    sourceOptionsHTML += `<option value="${item.location_id}" data-category="${item.category}">${item.location_code} — ${item.location_name} (${item.current_qty} pcs available)</option>`;
+                });
+            }
+            $('#editTransLocationId').select2('destroy');
+            $('#editTransLocationId').html(sourceOptionsHTML);
+            $('#editTransLocationId').select2({
+                dropdownParent: $('#modal-edit-transaction'),
+                width: '100%',
+                templateResult: formatLocationState,
+                templateSelection: formatLocationState
+            }).trigger('change');
+            
+            if (targetLocationId) {
+                $('#editTransLocationId').val(targetLocationId).trigger('change');
+            } else if (filteredStocks.length > 0) {
+                $('#editTransLocationId').val(filteredStocks[0].location_id).trigger('change');
+            }
+        }
+
+        if (targetToLocationId) {
+            $('#edit_to_location_id').val(targetToLocationId).trigger('change');
+        }
+    }
+
+    $('input[name="transaction_type"]', '#formEditTransaction').on('change', function() {
+        const type = $(this).val();
+        
+        if (type === 'IN') {
+            $('#saveEditTransaction').removeClass('bg-red-600 hover:bg-red-700 bg-indigo-600 hover:bg-indigo-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-primary-600 hover:bg-primary-700').text('Save Stock IN');
+            $('#editLabelQty').text('Qty IN *');
+            
+            $('#editRefDocGroup').removeClass('hidden');
+            $('#editTransRefDoc').prop('required', true);
+            $('#editDestinationGroup').addClass('hidden');
+            $('#edit_to_location_id').prop('required', false);
+        } else if (type === 'out') {
+            $('#saveEditTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-indigo-600 hover:bg-indigo-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-red-600 hover:bg-red-700').text('Save Stock OUT');
+            $('#editLabelQty').text('Qty OUT *');
+            
+            $('#editRefDocGroup').addClass('hidden');
+            $('#editTransRefDoc').prop('required', false);
+            $('#editDestinationGroup').removeClass('hidden');
+            $('#edit_to_location_id').prop('required', true);
+        } else if (type === 'borrow') {
+            $('#saveEditTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-red-600 hover:bg-red-700 bg-emerald-600 hover:bg-emerald-700').addClass('bg-indigo-600 hover:bg-indigo-700').text('Save Borrow');
+            $('#editLabelQty').text('Qty Borrow *');
+            
+            $('#editRefDocGroup').addClass('hidden');
+            $('#editTransRefDoc').prop('required', false);
+            $('#editDestinationGroup').removeClass('hidden');
+            $('#edit_to_location_id').prop('required', true);
+        } else if (type === 'return') {
+            $('#saveEditTransaction').removeClass('bg-primary-600 hover:bg-primary-700 bg-red-600 hover:bg-red-700 bg-indigo-600 hover:bg-indigo-700').addClass('bg-emerald-600 hover:bg-emerald-700').text('Save Return');
+            $('#editLabelQty').text('Qty Return *');
+            
+            $('#editRefDocGroup').addClass('hidden');
+            $('#editTransRefDoc').prop('required', false);
+            $('#editDestinationGroup').removeClass('hidden');
+            $('#edit_to_location_id').prop('required', true);
+        }
+        updateEditLocationInputState();
+    });
+
+    $('#editTransToolId').on('change', function() {
+        updateEditLocationInputState();
+    });
+
+    $('#editTransLocationId').on('change', function() {
+        const type = $('input[name="transaction_type"]:checked', '#formEditTransaction').val();
+        if (type !== 'IN') {
+            const excludeId = $(this).val();
+            if (type === 'out') {
+                filterEditDestinations(['machine', 'subcont', 'scrap', 'lost'], excludeId);
+            } else if (type === 'borrow') {
+                filterEditDestinations(['borrow'], excludeId);
+            } else if (type === 'return') {
+                filterEditDestinations(['return'], excludeId);
+            }
+        }
+    });
+
+    // Handle click edit transaction
+    $(document).on('click', '.edit-trans-btn', function() {
+        const btn = $(this);
+        const id = btn.data('id');
+        const toolId = btn.data('tool-id');
+        let type = btn.data('type').toLowerCase();
+        if (type === 'in') type = 'IN';
+        const qty = btn.data('qty');
+        const locId = btn.data('loc-id');
+        const toLocId = btn.data('to-loc-id');
+        const refDoc = btn.data('ref-doc');
+        const note = btn.data('note');
+
+        $('#editTransId').val(id);
+        $('#editTransToolId').val(toolId).trigger('change');
+        
+        $(`input[name="transaction_type"][value="${type}"]`, '#formEditTransaction').prop('checked', true).trigger('change');
+        
+        setTimeout(() => {
+            updateEditLocationInputState(locId, toLocId);
+            $('#editTransQty').val(qty);
+            $('#editTransRefDoc').val(refDoc);
+            $('#editTransNote').val(note);
+            showMdl('modal-edit-transaction');
+        }, 100);
+    });
+
+    // Save Edit Transaction
+    $('#saveEditTransaction').on('click', function() {
+        const id = $('#editTransId').val();
+        const url = `{{ url('inventory/tool/fast-stock/history') }}/${id}`;
+        
+        $('#editTransLocationId').prop('disabled', false);
+        const formData = $('#formEditTransaction').serialize();
+        
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: formData + '&_method=PUT',
+            success: (res) => {
+                toast('success', 'Success', res.message);
+                hideMdl('modal-edit-transaction');
+                if (historyTable) historyTable.ajax.reload();
+                fastStockTable.ajax.reload();
+            },
+            error: (xhr) => {
+                toast('error', 'Error', xhr.responseJSON?.message || 'Failed to update transaction.');
+            }
+        });
+    });
+
+    // Handle click delete transaction
+    $(document).on('click', '.delete-trans-btn', function() {
+        const id = $(this).data('id');
+        const url = `{{ url('inventory/tool/fast-stock/history') }}/${id}`;
+
+        if (confirm('Are you sure you want to delete this transaction? This will revert the associated stock levels.')) {
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: csrf,
+                    _method: 'DELETE'
+                },
+                success: (res) => {
+                    toast('success', 'Success', res.message);
+                    if (historyTable) historyTable.ajax.reload();
+                    fastStockTable.ajax.reload();
+                },
+                error: (xhr) => {
+                    toast('error', 'Error', xhr.responseJSON?.message || 'Failed to delete transaction.');
+                }
+            });
+        }
     });
 });
 </script>

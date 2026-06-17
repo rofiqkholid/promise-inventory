@@ -469,4 +469,232 @@ class ToolFastStockController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'AJAX only.'], 400);
     }
+
+    /** Update an existing transaction and adjust stock accordingly */
+    public function updateHistory(Request $request, $id)
+    {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'update')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        $validated = $request->validate([
+            'tool_id'          => 'required|exists:tol_m_tools,id',
+            'location_id'      => 'nullable|exists:tol_m_locations,id',
+            'to_location_id'   => 'nullable|required_if:transaction_type,out,borrow,return|exists:tol_m_locations,id',
+            'qty'              => 'required|integer|min:1',
+            'transaction_type' => 'required|string|in:IN,out,borrow,return',
+            'ref_doc'          => 'required_if:transaction_type,IN|nullable|string|max:100',
+            'note'             => 'nullable|string',
+        ]);
+
+        $transaction = TolTransaction::findOrFail($id);
+
+        try {
+            DB::transaction(function () use ($validated, $transaction) {
+                // 1. SIMULATE OLD TRANSACTION STOCK REVERSAL
+                $oldToolId = $transaction->tool_id;
+                $oldLocationId = $transaction->location_id;
+                $oldToLocationId = $transaction->to_location_id;
+                $oldType = strtolower($transaction->transaction_type);
+                $oldQtyVal = abs($transaction->qty);
+
+                $affectedStocks = [];
+
+                if ($oldType === 'in') {
+                    $oldStock = TolFastStock::where('tool_id', $oldToolId)
+                        ->where('location_id', $oldLocationId)
+                        ->first();
+                    if ($oldStock) {
+                        $oldStock->current_qty -= $oldQtyVal;
+                        $affectedStocks[] = $oldStock;
+                    }
+                } else {
+                    $oldStock = TolFastStock::firstOrCreate(
+                        ['tool_id' => $oldToolId, 'location_id' => $oldLocationId],
+                        ['current_qty' => 0]
+                    );
+                    $oldStock->current_qty += $oldQtyVal;
+                    $affectedStocks[] = $oldStock;
+
+                    if ($oldToLocationId) {
+                        $oldDest = TolLocation::find($oldToLocationId);
+                        if ($oldDest && in_array($oldDest->category, ['storage', 'machine', 'subcont', 'borrow', 'return'])) {
+                            $oldDestStock = TolFastStock::where('tool_id', $oldToolId)
+                                ->where('location_id', $oldToLocationId)
+                                ->first();
+                            if ($oldDestStock) {
+                                $oldDestStock->current_qty -= $oldQtyVal;
+                                $affectedStocks[] = $oldDestStock;
+                            }
+                        }
+                    }
+                }
+
+                // 2. SIMULATE NEW TRANSACTION STOCK APPLICATION
+                $newToolId = $validated['tool_id'];
+                $tool = TolTool::findOrFail($newToolId);
+                $newLocationId = $validated['location_id'] ?? $tool->location_id;
+                if (!$newLocationId) {
+                    throw new \Exception("Tool has no default location. Please set it first.");
+                }
+
+                $newType = strtolower($validated['transaction_type']);
+                $newQtyVal = (int) $validated['qty'];
+
+                if ($newType === 'in') {
+                    $newStock = null;
+                    foreach ($affectedStocks as $stock) {
+                        if ($stock->tool_id == $newToolId && $stock->location_id == $newLocationId) {
+                            $newStock = $stock;
+                            break;
+                        }
+                    }
+                    if (!$newStock) {
+                        $newStock = TolFastStock::firstOrCreate(
+                            ['tool_id' => $newToolId, 'location_id' => $newLocationId],
+                            ['current_qty' => 0]
+                        );
+                        $affectedStocks[] = $newStock;
+                    }
+                    $newStock->current_qty += $newQtyVal;
+                    $newStock->last_updated_at = now();
+                } else {
+                    $newToLocationId = $validated['to_location_id'];
+                    $newStock = null;
+                    foreach ($affectedStocks as $stock) {
+                        if ($stock->tool_id == $newToolId && $stock->location_id == $newLocationId) {
+                            $newStock = $stock;
+                            break;
+                        }
+                    }
+                    if (!$newStock) {
+                        $newStock = TolFastStock::firstOrCreate(
+                            ['tool_id' => $newToolId, 'location_id' => $newLocationId],
+                            ['current_qty' => 0]
+                        );
+                        $affectedStocks[] = $newStock;
+                    }
+                    $newStock->current_qty -= $newQtyVal;
+                    $newStock->last_updated_at = now();
+
+                    $destination = TolLocation::findOrFail($newToLocationId);
+                    if (in_array($destination->category, ['storage', 'machine', 'subcont', 'borrow', 'return'])) {
+                        $destStock = null;
+                        foreach ($affectedStocks as $stock) {
+                            if ($stock->tool_id == $newToolId && $stock->location_id == $newToLocationId) {
+                                $destStock = $stock;
+                                break;
+                            }
+                        }
+                        if (!$destStock) {
+                            $destStock = TolFastStock::firstOrCreate(
+                                ['tool_id' => $newToolId, 'location_id' => $newToLocationId],
+                                ['current_qty' => 0]
+                            );
+                            $affectedStocks[] = $destStock;
+                        }
+                        $destStock->current_qty += $newQtyVal;
+                        $destStock->last_updated_at = now();
+                    }
+                }
+
+                // 3. VALIDATE FINAL STOCKS ARE NOT NEGATIVE
+                foreach ($affectedStocks as $stock) {
+                    if ($stock->current_qty < 0) {
+                        $locCode = $stock->location?->code ?? 'Unknown';
+                        throw new \Exception("Cannot edit transaction. This modification would result in negative stock ({$stock->current_qty}) at location ({$locCode}).");
+                    }
+                }
+
+                // 4. SAVE ALL AFFECTED STOCKS
+                foreach ($affectedStocks as $stock) {
+                    $stock->save();
+                }
+
+                // 5. UPDATE TRANSACTION RECORD
+                $transaction->update([
+                    'tool_id'          => $newToolId,
+                    'location_id'      => $newLocationId,
+                    'to_location_id'   => ($newType === 'in' ? null : $validated['to_location_id']),
+                    'transaction_type' => $newType,
+                    'qty'              => ($newType === 'in' ? $newQtyVal : -$newQtyVal),
+                    'ref_doc'          => ($newType === 'in' ? $validated['ref_doc'] : null),
+                    'note'             => $validated['note'] ?? null,
+                    'transacted_by'    => Auth::user()->id,
+                    'transacted_at'    => now(),
+                ]);
+            });
+
+            return response()->json(['status' => 'success', 'message' => 'Transaction updated and stock synchronized successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    /** Delete an existing transaction and revert stock accordingly */
+    public function destroyHistory($id)
+    {
+        if (!Auth::user()->hasMenuPermission('inventory.tool.fast-stock.index', 'delete')) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized.'], 403);
+        }
+
+        $transaction = TolTransaction::findOrFail($id);
+
+        try {
+            DB::transaction(function () use ($transaction) {
+                // REVERSE OLD TRANSACTION STOCK
+                $toolId = $transaction->tool_id;
+                $locationId = $transaction->location_id;
+                $toLocationId = $transaction->to_location_id;
+                $type = strtolower($transaction->transaction_type);
+                $qtyVal = abs($transaction->qty);
+
+                if ($type === 'in') {
+                    // Reversed: subtract from location_id
+                    $stock = TolFastStock::where('tool_id', $toolId)
+                        ->where('location_id', $locationId)
+                        ->first();
+                    if ($stock) {
+                        $stock->current_qty -= $qtyVal;
+                        if ($stock->current_qty < 0) {
+                            $locCode = $stock->location?->code ?? 'Unknown';
+                            throw new \Exception("Cannot delete transaction. Reversing it would make stock at location ({$locCode}) negative ({$stock->current_qty}).");
+                        }
+                        $stock->save();
+                    }
+                } else {
+                    // Reversed: add back to source location_id, subtract from to_location_id
+                    $stock = TolFastStock::firstOrCreate(
+                        ['tool_id' => $toolId, 'location_id' => $locationId],
+                        ['current_qty' => 0]
+                    );
+                    $stock->current_qty += $qtyVal;
+                    $stock->save();
+
+                    if ($toLocationId) {
+                        $dest = TolLocation::find($toLocationId);
+                        if ($dest && in_array($dest->category, ['storage', 'machine', 'subcont', 'borrow', 'return'])) {
+                            $destStock = TolFastStock::where('tool_id', $toolId)
+                                ->where('location_id', $toLocationId)
+                                ->first();
+                            if ($destStock) {
+                                $destStock->current_qty -= $qtyVal;
+                                if ($destStock->current_qty < 0) {
+                                    throw new \Exception("Cannot delete transaction. Reversing it would make stock at destination location ({$dest->code}) negative ({$destStock->current_qty}).");
+                                }
+                                $destStock->save();
+                            }
+                        }
+                    }
+                }
+
+                // Delete the record
+                $transaction->delete();
+            });
+
+            return response()->json(['status' => 'success', 'message' => 'Transaction deleted and stock synchronized successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+        }
+    }
 }
