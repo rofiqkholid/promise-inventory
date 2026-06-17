@@ -18,25 +18,25 @@ class ToolDashboardController extends Controller
     public function index(Request $request)
     {
         // 1. Parse Period/Time Filter
-        $period = $request->input('period', '30d');
+        $period = $request->input('period', 'this_year');
         $startDate = null;
-        $endDate = Carbon::now();
+        $endDate = Carbon::now()->endOfDay();
 
         if ($period === '7d') {
-            $startDate = Carbon::now()->subDays(7);
+            $startDate = Carbon::now()->subDays(7)->startOfDay();
         } elseif ($period === '30d') {
-            $startDate = Carbon::now()->subDays(30);
+            $startDate = Carbon::now()->subDays(30)->startOfDay();
         } elseif ($period === '90d') {
-            $startDate = Carbon::now()->subDays(90);
+            $startDate = Carbon::now()->subDays(90)->startOfDay();
         } elseif ($period === 'this_month') {
-            $startDate = Carbon::now()->startOfMonth();
+            $startDate = Carbon::now()->startOfMonth()->startOfDay();
         } elseif ($period === 'this_year') {
-            $startDate = Carbon::now()->startOfYear();
+            $startDate = Carbon::now()->startOfYear()->startOfDay();
         } elseif ($period === 'custom') {
-            $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date')) : Carbon::now()->subDays(30);
-            $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date')) : Carbon::now();
+            $startDate = $request->input('start_date') ? Carbon::parse($request->input('start_date'))->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
+            $endDate = $request->input('end_date') ? Carbon::parse($request->input('end_date'))->endOfDay() : Carbon::now()->endOfDay();
         } else {
-            $startDate = Carbon::now()->subDays(30);
+            $startDate = Carbon::now()->startOfYear()->startOfDay();
         }
 
         // 2. Fetch Card KPI Data
@@ -85,6 +85,19 @@ class ToolDashboardController extends Controller
             ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
             ->where('is_active', true)
             ->get();
+
+        // Reconstruct historical stock at $endDate for each tool
+        foreach ($tools as $tool) {
+            $qtyAfter = TolTransaction::leftJoin('tol_m_locations as l', 'l.id', '=', 'tol_t_transactions.to_location_id')
+                ->where('tol_t_transactions.tool_id', $tool->id)
+                ->where('tol_t_transactions.transacted_at', '>', $endDate)
+                ->where(function($q) {
+                    $q->where('tol_t_transactions.transaction_type', 'in')
+                      ->orWhereIn('l.category', ['scrap', 'lost']);
+                })
+                ->sum('tol_t_transactions.qty') ?? 0;
+            $tool->historical_qty = $tool->total_qty - $qtyAfter;
+        }
             
         $groupedStockStatus = [];
 
@@ -115,7 +128,7 @@ class ToolDashboardController extends Controller
             }
 
             // Sum quantity across all locations
-            $qty = $tool->total_qty;
+            $qty = $tool->historical_qty;
             $qtyMin = $tool->qty_min ?? 0;
             $qtyMax = $tool->qty_max ?? 0;
 
@@ -153,7 +166,7 @@ class ToolDashboardController extends Controller
         // 4. Balance Warnings List
         $balanceWarnings = [];
         foreach ($tools as $tool) {
-            $qty = $tool->total_qty;
+            $qty = $tool->historical_qty;
             $qtyMin = $tool->qty_min ?? 0;
             $qtyMax = $tool->qty_max ?? 0;
 
