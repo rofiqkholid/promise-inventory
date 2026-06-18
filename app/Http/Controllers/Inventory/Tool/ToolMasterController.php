@@ -106,6 +106,7 @@ class ToolMasterController extends Controller
                     'depth_of_cut'             => $setting['depth_of_cut'] ?? null,
                     'step_over'                => $setting['step_over'] ?? null,
                     'cnc_small_plant_b'        => isset($setting['cnc_small_plant_b']),
+                    'cnc_lathe_plant_b'        => isset($setting['cnc_lathe_plant_b']),
                     'cnc_big_hartford_plant_f' => isset($setting['cnc_big_hartford_plant_f']),
                     'status'                   => $setting['status'] ?? 'USE',
                 ]);
@@ -152,6 +153,7 @@ class ToolMasterController extends Controller
                     'depth_of_cut'             => $setting['depth_of_cut'] ?? null,
                     'step_over'                => $setting['step_over'] ?? null,
                     'cnc_small_plant_b'        => isset($setting['cnc_small_plant_b']),
+                    'cnc_lathe_plant_b'        => isset($setting['cnc_lathe_plant_b']),
                     'cnc_big_hartford_plant_f' => isset($setting['cnc_big_hartford_plant_f']),
                     'status'                   => $setting['status'] ?? 'USE',
                 ]);

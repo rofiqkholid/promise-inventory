@@ -234,6 +234,7 @@
                                     <th scope="col" class="px-4 py-3 text-center w-28">Depth of Cut (ap)<br><span class="text-[8px] font-normal lowercase">mm</span></th>
                                     <th scope="col" class="px-4 py-3 text-center w-24">Step Over (%)</th>
                                     <th scope="col" class="px-3 py-3 text-center w-20">CNC Small<br><span class="text-[8px] font-normal uppercase">plant b</span></th>
+                                    <th scope="col" class="px-3 py-3 text-center w-28">CNC Lathe<br><span class="text-[8px] font-normal uppercase">plant b</span></th>
                                     <th scope="col" class="px-3 py-3 text-center w-28">CNC Hartford<br><span class="text-[8px] font-normal uppercase">plant f</span></th>
                                     <th scope="col" class="px-4 py-3 text-center w-24">Status</th>
                                 </tr>
@@ -498,8 +499,10 @@
                             </tr>
                         `;
                     } else {
-                        settings.forEach(item => {
-                            const badgeSmall = item.cnc_small_plant_b 
+                        settings.forEach(item => {                            const badgeSmall = item.cnc_small_plant_b 
+                                ? '<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check"></i></span>'
+                                : '<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-300"><i class="fa-solid fa-circle-minus"></i></span>';
+                            const badgeLathe = item.cnc_lathe_plant_b 
                                 ? '<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle-check"></i></span>'
                                 : '<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-300"><i class="fa-solid fa-circle-minus"></i></span>';
                             const badgeHartford = item.cnc_big_hartford_plant_f
@@ -509,11 +512,11 @@
                             const badgeStatus = item.status === 'USE'
                                 ? '<span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900 text-[9px] font-bold uppercase rounded-xs">USE</span>'
                                 : '<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-gray-700 text-[9px] font-bold uppercase rounded-xs">NOT USE</span>';
-
+ 
                             const stepOverDisplay = item.step_over 
                                 ? (String(item.step_over).endsWith('%') ? item.step_over : item.step_over + '%') 
                                 : '-';
-
+ 
                             settingsHtml += `
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                     <td class="px-4 py-3 font-bold text-slate-700 dark:text-gray-200">${item.material_category}</td>
@@ -522,6 +525,7 @@
                                     <td class="px-4 py-3 text-center text-slate-600 dark:text-gray-300 font-mono">${item.depth_of_cut ? item.depth_of_cut : '-'}</td>
                                     <td class="px-4 py-3 text-center text-slate-600 dark:text-gray-300 font-semibold">${stepOverDisplay}</td>
                                     <td class="px-3 py-3 text-center">${badgeSmall}</td>
+                                    <td class="px-3 py-3 text-center">${badgeLathe}</td>
                                     <td class="px-3 py-3 text-center">${badgeHartford}</td>
                                     <td class="px-4 py-3 text-center">${badgeStatus}</td>
                                 </tr>

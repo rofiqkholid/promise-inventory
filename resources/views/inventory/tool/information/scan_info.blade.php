@@ -247,6 +247,7 @@
                                 <th scope="col" class="px-4 py-3 text-center w-28">Depth of Cut (ap)<br><span class="text-[8px] font-normal lowercase">mm</span></th>
                                 <th scope="col" class="px-4 py-3 text-center w-24">Step Over (%)</th>
                                 <th scope="col" class="px-3 py-3 text-center w-20">CNC Small<br><span class="text-[8px] font-normal uppercase">plant b</span></th>
+                                <th scope="col" class="px-3 py-3 text-center w-28">CNC Lathe<br><span class="text-[8px] font-normal uppercase">plant b</span></th>
                                 <th scope="col" class="px-3 py-3 text-center w-28">CNC Hartford<br><span class="text-[8px] font-normal uppercase">plant f</span></th>
                                 <th scope="col" class="px-4 py-3 text-center w-24">Status</th>
                             </tr>
@@ -263,6 +264,15 @@
                                         <td class="px-3 py-3 text-center">
                                             <div class="flex items-center justify-center">
                                                 @if($setting->cnc_small_plant_b)
+                                                    <i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
+                                                @else
+                                                    <i class="fa-solid fa-circle-xmark text-slate-300 dark:text-slate-700 text-sm"></i>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-3 py-3 text-center">
+                                            <div class="flex items-center justify-center">
+                                                @if($setting->cnc_lathe_plant_b)
                                                     <i class="fa-solid fa-circle-check text-emerald-500 text-sm"></i>
                                                 @else
                                                     <i class="fa-solid fa-circle-xmark text-slate-300 dark:text-slate-700 text-sm"></i>

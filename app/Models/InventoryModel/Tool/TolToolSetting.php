@@ -16,6 +16,7 @@ class TolToolSetting extends Model
         'depth_of_cut',
         'step_over',
         'cnc_small_plant_b',
+        'cnc_lathe_plant_b',
         'cnc_big_hartford_plant_f',
         'status',
     ];
@@ -26,6 +27,7 @@ class TolToolSetting extends Model
         'table_feed'               => 'integer',
         'depth_of_cut'             => 'float',
         'cnc_small_plant_b'        => 'boolean',
+        'cnc_lathe_plant_b'        => 'boolean',
         'cnc_big_hartford_plant_f' => 'boolean',
     ];
 

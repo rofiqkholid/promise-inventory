@@ -176,6 +176,7 @@
                                     <th scope="col" class="px-3 py-2.5 w-28 text-center">Depth of Cut (ap)<br><span class="text-[8px] font-normal lowercase">mm</span></th>
                                     <th scope="col" class="px-3 py-2.5 w-24 text-center">Step Over (%)</th>
                                     <th scope="col" class="px-2 py-2.5 w-24 text-center">CNC Small<br><span class="text-[8px] font-normal uppercase">plant b</span></th>
+                                    <th scope="col" class="px-2 py-2.5 w-28 text-center">CNC Lathe<br><span class="text-[8px] font-normal uppercase">plant b</span></th>
                                     <th scope="col" class="px-2 py-2.5 w-28 text-center">CNC Hartford<br><span class="text-[8px] font-normal uppercase">plant f</span></th>
                                     <th scope="col" class="px-3 py-2.5 w-24">Status</th>
                                     <th scope="col" class="px-2 py-2.5 w-10 text-center"></th>
@@ -384,6 +385,7 @@
                 stepOver = String(stepOver).replace('%', '');
             }
             const cncSmall = data.cnc_small_plant_b ? 'checked' : '';
+            const cncLathe = data.cnc_lathe_plant_b ? 'checked' : '';
             const cncHartford = data.cnc_big_hartford_plant_f ? 'checked' : '';
             const status = data.status || 'USE';
 
@@ -411,6 +413,9 @@
                     </td>
                     <td class="px-2 py-2 text-center">
                         <input type="checkbox" name="settings[${rowId}][cnc_small_plant_b]" value="1" ${cncSmall} class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <input type="checkbox" name="settings[${rowId}][cnc_lathe_plant_b]" value="1" ${cncLathe} class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                     </td>
                     <td class="px-2 py-2 text-center">
                         <input type="checkbox" name="settings[${rowId}][cnc_big_hartford_plant_f]" value="1" ${cncHartford} class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
