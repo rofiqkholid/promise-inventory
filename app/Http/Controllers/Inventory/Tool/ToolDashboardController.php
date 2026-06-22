@@ -32,13 +32,31 @@ class ToolDashboardController extends Controller
             $endDate = Carbon::parse($monthYear . '-01')->endOfMonth()->endOfDay();
         }
 
-        // Retrieve Tools & Reconstruct historical stock at $endDate for each tool first
-        $tools = TolTool::with(['category', 'fastStock.location'])
+        // Retrieve Fast Tools & Reconstruct historical stock at $endDate
+        $fastTools = TolTool::with(['category', 'fastStock.location'])
             ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
             ->where('is_active', true)
             ->get();
 
-        foreach ($tools as $tool) {
+        foreach ($fastTools as $tool) {
+            $qtyAfter = TolTransaction::leftJoin('tol_m_locations as l', 'l.id', '=', 'tol_t_transactions.to_location_id')
+                ->where('tol_t_transactions.tool_id', $tool->id)
+                ->where('tol_t_transactions.transacted_at', '>', $endDate)
+                ->where(function($q) {
+                    $q->where('tol_t_transactions.transaction_type', 'in')
+                      ->orWhereIn('l.category', ['scrap', 'lost']);
+                })
+                ->sum('tol_t_transactions.qty') ?? 0;
+            $tool->historical_qty = $tool->total_qty - $qtyAfter;
+        }
+
+        // Retrieve Slow Tools & Reconstruct historical stock at $endDate
+        $slowTools = TolTool::with(['category', 'fastStock.location'])
+            ->whereHas('category', fn($q) => $q->where('moving_type', 'slow'))
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($slowTools as $tool) {
             $qtyAfter = TolTransaction::leftJoin('tol_m_locations as l', 'l.id', '=', 'tol_t_transactions.to_location_id')
                 ->where('tol_t_transactions.tool_id', $tool->id)
                 ->where('tol_t_transactions.transacted_at', '>', $endDate)
@@ -54,7 +72,7 @@ class ToolDashboardController extends Controller
         // Card 1: Total Value (Fast Stock Value + Slow Batch Value as of $endDate)
         $fastStockValue = 0;
         $fastStockQty = 0;
-        foreach ($tools as $tool) {
+        foreach ($fastTools as $tool) {
             $fastStockQty += $tool->historical_qty;
             $fastStockValue += ($tool->historical_qty * ($tool->price_per_unit ?? 0));
         }
@@ -110,39 +128,27 @@ class ToolDashboardController extends Controller
         $totalFastMoving = $fastStockQty;
         $totalSlowMoving = $slowStockQty;
 
-
-        // 3. Stock Status - Fast Moving - Group by Category (Critical, Warning, Over, Safe)
-        // (Reconstruction already done at the top)
-            
-        $groupedStockStatus = [];
-
-        // Prepopulate with all existing categories for consistent keys
-        $allCategories = TolCategory::where('is_active', true)->pluck('name')->toArray();
-        foreach ($allCategories as $catName) {
-            $groupedStockStatus[$catName] = [
-                'critical' => 0,
-                'warning' => 0,
-                'over' => 0,
-                'safe' => 0,
-                'total' => 0,
+        // 3. Stock Status - Group by Category
+        // Fast Stock Status
+        $groupedStockStatusFast = [];
+        $allFastCategories = TolCategory::where('is_active', true)
+            ->where('moving_type', 'fast')
+            ->pluck('name')
+            ->toArray();
+        foreach ($allFastCategories as $catName) {
+            $groupedStockStatusFast[$catName] = [
+                'critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0, 'total' => 0,
                 'need_action' => 'Stock level healthy. No action required.'
             ];
         }
-
-        foreach ($tools as $tool) {
+        foreach ($fastTools as $tool) {
             $catName = $tool->category?->name ?? 'Uncategorized';
-            if (!isset($groupedStockStatus[$catName])) {
-                $groupedStockStatus[$catName] = [
-                    'critical' => 0,
-                    'warning' => 0,
-                    'over' => 0,
-                    'safe' => 0,
-                    'total' => 0,
+            if (!isset($groupedStockStatusFast[$catName])) {
+                $groupedStockStatusFast[$catName] = [
+                    'critical' => 0, 'warning' => 0, 'over' => 0, 'safe' => 0, 'total' => 0,
                     'need_action' => 'Stock level healthy. No action required.'
                 ];
             }
-
-            // Sum quantity across all locations
             $qty = $tool->historical_qty;
             $qtyMin = $tool->qty_min ?? 0;
             $qtyMax = $tool->qty_max ?? 0;
@@ -156,13 +162,10 @@ class ToolDashboardController extends Controller
             } else {
                 $status = 'safe';
             }
-
-            $groupedStockStatus[$catName][$status]++;
-            $groupedStockStatus[$catName]['total']++;
+            $groupedStockStatusFast[$catName][$status]++;
+            $groupedStockStatusFast[$catName]['total']++;
         }
-
-        // Generate Action Notes dynamically based on priority (Critical > Warning > Over > Safe)
-        foreach ($groupedStockStatus as $catName => &$data) {
+        foreach ($groupedStockStatusFast as $catName => &$data) {
             if ($data['critical'] > 0) {
                 $data['need_action'] = "🚨 CRITICAL REORDER REQUIRED! {$data['critical']} items in {$catName} are depleted. Place procurement order immediately.";
             } elseif ($data['warning'] > 0) {
@@ -175,20 +178,73 @@ class ToolDashboardController extends Controller
                 $data['need_action'] = "ℹ️ NO STOCK RECORDS. No items registered in this category.";
             }
         }
-        unset($data); // Break reference
+        unset($data);
 
+        // Slow Stock Status
+        $groupedStockStatusSlow = [];
+        $allSlowCategories = TolCategory::where('is_active', true)
+            ->where('moving_type', 'slow')
+            ->pluck('name')
+            ->toArray();
+        foreach ($allSlowCategories as $catName) {
+            $groupedStockStatusSlow[$catName] = [
+                'retired' => 0, 'warning' => 0, 'still_good' => 0, 'good' => 0, 'ok' => 0, 'total' => 0,
+                'need_action' => 'Stock level healthy. No action required.'
+            ];
+        }
+        $slowBatches = TolSlowBatch::with(['tool.category'])
+            ->where('purchase_date', '<=', $endDate)
+            ->where(function($q) use ($endDate) {
+                $q->where('status', 'active')
+                  ->orWhere('updated_at', '>', $endDate);
+            })
+            ->get();
+        foreach ($slowBatches as $batch) {
+            $catName = $batch->tool?->category?->name ?? 'Uncategorized';
+            if (!isset($groupedStockStatusSlow[$catName])) {
+                $groupedStockStatusSlow[$catName] = [
+                    'retired' => 0, 'warning' => 0, 'still_good' => 0, 'good' => 0, 'ok' => 0, 'total' => 0,
+                    'need_action' => 'Stock level healthy. No action required.'
+                ];
+            }
+            $rate = (int)$batch->physical_rate;
+            if ($rate === 100) {
+                $status = 'ok';
+            } elseif ($rate === 75) {
+                $status = 'good';
+            } elseif ($rate === 50) {
+                $status = 'still_good';
+            } elseif ($rate === 25 || $rate === 20) {
+                $status = 'warning';
+            } else {
+                $status = 'retired';
+            }
+            $groupedStockStatusSlow[$catName][$status]++;
+            $groupedStockStatusSlow[$catName]['total']++;
+        }
+        foreach ($groupedStockStatusSlow as $catName => &$data) {
+            if ($data['retired'] > 0) {
+                $data['need_action'] = "🚨 RETIRED ASSETS DETECTED! {$data['retired']} items in {$catName} are retired. Consider replacement.";
+            } elseif ($data['warning'] > 0) {
+                $data['need_action'] = "⚠️ CONDITION WARNING. {$data['warning']} items in {$catName} are at warning condition limit.";
+            } elseif ($data['total'] > 0) {
+                $data['need_action'] = "✅ STABLE ASSETS. All {$data['total']} items in {$catName} are in usable condition.";
+            } else {
+                $data['need_action'] = "ℹ️ NO RECORDS. No items registered in this category.";
+            }
+        }
+        unset($data);
 
-        // 4. Balance Warnings List
-        $balanceWarnings = [];
-        foreach ($tools as $tool) {
+        // 4. Balance Warnings Lists
+        // Fast Balance Warnings
+        $balanceWarningsFast = [];
+        foreach ($fastTools as $tool) {
             $qty = $tool->historical_qty;
             $qtyMin = $tool->qty_min ?? 0;
             $qtyMax = $tool->qty_max ?? 0;
 
             if ($qty <= $qtyMin) {
                 $status = $qty < $qtyMin ? 'Critical' : 'Warning';
-
-                // Format location as comma-separated active locations
                 $activeStocks = $tool->fastStock->filter(fn($fs) => $fs->current_qty > 0);
                 if ($activeStocks->isEmpty()) {
                     $locStr = $tool->location?->code ?? '-';
@@ -196,32 +252,47 @@ class ToolDashboardController extends Controller
                     $locStr = $activeStocks->map(fn($fs) => $fs->location?->code ?? 'Unknown')->implode(', ');
                 }
 
-                $balanceWarnings[] = [
-                    'id' => $tool->id,
-                    'tool_name' => $tool->name,
-                    'brand' => $tool->brand ?? '-',
-                    'spec_code' => $tool->spec_code ?? '-',
-                    'category' => $tool->category?->name ?? 'Uncategorized',
-                    'location' => $locStr,
-                    'current_qty' => $qty,
-                    'qty_min' => $qtyMin,
-                    'limit_stock' => $qtyMin,
-                    'status' => $status,
-                    'action' => $status === 'Critical' ? 'Restock Immediately' : 'Schedule Restock',
-                    'action_status' => $tool->action_status,
-                    'action_remark' => $tool->action_remark
+                $balanceWarningsFast[] = [
+                    'id' => $tool->id, 'tool_name' => $tool->name, 'brand' => $tool->brand ?? '-', 'spec_code' => $tool->spec_code ?? '-',
+                    'category' => $tool->category?->name ?? 'Uncategorized', 'location' => $locStr, 'current_qty' => $qty, 'qty_min' => $qtyMin,
+                    'limit_stock' => $qtyMin, 'status' => $status, 'action' => $status === 'Critical' ? 'Restock Immediately' : 'Schedule Restock',
+                    'action_status' => $tool->action_status, 'action_remark' => $tool->action_remark
                 ];
             }
         }
-
-        // Sort warnings by Critical -> Warning
-        usort($balanceWarnings, function ($a, $b) {
-            if ($a['status'] === $b['status']) {
-                return $a['current_qty'] <=> $b['current_qty'];
-            }
+        usort($balanceWarningsFast, function ($a, $b) {
+            if ($a['status'] === $b['status']) return $a['current_qty'] <=> $b['current_qty'];
             return $a['status'] === 'Critical' ? -1 : 1;
         });
 
+        // Slow Balance Warnings
+        $balanceWarningsSlow = [];
+        foreach ($slowTools as $tool) {
+            $qty = $tool->historical_qty;
+            $qtyMin = $tool->qty_min ?? 0;
+            $qtyMax = $tool->qty_max ?? 0;
+
+            if ($qty <= $qtyMin) {
+                $status = $qty < $qtyMin ? 'Critical' : 'Warning';
+                $activeStocks = $tool->fastStock->filter(fn($fs) => $fs->current_qty > 0);
+                if ($activeStocks->isEmpty()) {
+                    $locStr = $tool->location?->code ?? '-';
+                } else {
+                    $locStr = $activeStocks->map(fn($fs) => $fs->location?->code ?? 'Unknown')->implode(', ');
+                }
+
+                $balanceWarningsSlow[] = [
+                    'id' => $tool->id, 'tool_name' => $tool->name, 'brand' => $tool->brand ?? '-', 'spec_code' => $tool->spec_code ?? '-',
+                    'category' => $tool->category?->name ?? 'Uncategorized', 'location' => $locStr, 'current_qty' => $qty, 'qty_min' => $qtyMin,
+                    'limit_stock' => $qtyMin, 'status' => $status, 'action' => $status === 'Critical' ? 'Restock Immediately' : 'Schedule Restock',
+                    'action_status' => $tool->action_status, 'action_remark' => $tool->action_remark
+                ];
+            }
+        }
+        usort($balanceWarningsSlow, function ($a, $b) {
+            if ($a['status'] === $b['status']) return $a['current_qty'] <=> $b['current_qty'];
+            return $a['status'] === 'Critical' ? -1 : 1;
+        });
 
         // 5. Transaction Trend (IN vs OUT) Over Time - Grouped by Month for selected Year
         $trendYear = substr($monthYear, 0, 4) ?: date('Y');
@@ -276,9 +347,7 @@ class ToolDashboardController extends Controller
             'outs' => $outs
         ];
 
-
         // 6. Pareto Diagram berdasarkan Transaksi OUT
-        // We get total outbound qty per tool spec/name
         $outboundByToolQuery = DB::table('tol_t_transactions as t')
             ->join('tol_m_tools as tl', 'tl.id', '=', 't.tool_id')
             ->where('t.transaction_type', 'out')
@@ -337,7 +406,6 @@ class ToolDashboardController extends Controller
             'cumulative' => $paretoCumulative
         ];
 
-
         // 7. Recent Activity Timeline (Fast Transactions only)
         $activities = [];
 
@@ -374,8 +442,6 @@ class ToolDashboardController extends Controller
         // Limit to top 10 recent activities
         $activities = array_slice($activities, 0, 10);
 
-
-
         $latestSlowBatches = TolSlowBatch::with(['tool', 'location'])
             ->where('status', 'active')
             ->get()
@@ -400,7 +466,9 @@ class ToolDashboardController extends Controller
         return view('inventory.tool.dashboard', compact(
             'filters', 'startDate', 'endDate',
             'totalValue', 'totalStock', 'totalIn', 'totalOut', 'totalFastMoving', 'totalSlowMoving',
-            'groupedStockStatus', 'balanceWarnings', 'trendData', 'paretoData', 'activities', 'latestSlowBatches',
+            'groupedStockStatusFast', 'groupedStockStatusSlow',
+            'balanceWarningsFast', 'balanceWarningsSlow',
+            'trendData', 'paretoData', 'activities', 'latestSlowBatches',
             'fastValFormatted', 'slowValFormatted'
         ));
     }
@@ -434,6 +502,10 @@ class ToolDashboardController extends Controller
         $pageSize   = $request->input('pageSize', 10);
         $page       = $request->input('page', 1);
         $offset     = ($page - 1) * $pageSize;
+        $stockMoving = $request->input('stock_moving', 'fast');
+        if ($stockMoving !== 'slow') {
+            $stockMoving = 'fast';
+        }
 
         $result = [];
         $title  = '';
@@ -444,7 +516,7 @@ class ToolDashboardController extends Controller
             $title = "Stock Detail — {$categoryName}";
 
             $query = TolTool::with(['category', 'fastStock.location', 'location'])
-                ->whereHas('category', fn($q) => $q->where('moving_type', 'fast'))
+                ->whereHas('category', fn($q) => $q->where('moving_type', $stockMoving))
                 ->where('is_active', true);
 
             if ($categoryName === 'Uncategorized') {

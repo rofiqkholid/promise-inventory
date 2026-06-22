@@ -57,6 +57,7 @@
     {{-- Collapsible Filter Card --}}
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4 mb-2">
         <form id="filterForm" method="GET" action="{{ route('inventory.tool.dashboard') }}">
+            <input type="hidden" name="stock_moving" id="stock_moving" value="{{ $filters['stock_moving'] ?? 'fast' }}">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                     <div class="space-y-1.5">
@@ -93,9 +94,12 @@
                     <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
                         <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i> 
                         <span class="truncate">Stock Status</span> 
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Fast Moving Category</span>
                     </h3>
                     <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="flex bg-gray-100 dark:bg-gray-700 p-0.5 rounded-xs mr-1">
+                            <button type="button" onclick="setStockMoving('fast')" id="btnStockFast" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all bg-white dark:bg-gray-600 text-primary-600 shadow-sm">Fast</button>
+                            <button type="button" onclick="setStockMoving('slow')" id="btnStockSlow" class="px-2 py-1 rounded-xs text-[9px] font-medium transition-all text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">Slow</button>
+                        </div>
                         <button id="btnStockPrev" onclick="changeStockPage(-1)" class="w-6 h-6 flex items-center justify-center rounded-xs bg-slate-50 hover:bg-slate-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-500 dark:text-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-slate-200 dark:border-gray-600" title="Previous page">
                             <i class="fa-solid fa-chevron-left text-[9px]"></i>
                         </button>
@@ -115,7 +119,8 @@
                 <div class="flex-none flex justify-between items-center mb-1">
                     <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center">
                         <i class="fa-solid fa-triangle-exclamation mr-2 text-rose-500"></i> Balance Warnings
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-rose-50 dark:bg-rose-950/20 text-[9px] font-bold text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 flex-shrink-0 whitespace-nowrap">{{ count($balanceWarnings) }} Alerts</span>
+                        <span id="balanceCountFast" class="ml-2 px-1.5 py-0.5 rounded-xs bg-rose-50 dark:bg-rose-950/20 text-[9px] font-bold text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 flex-shrink-0 whitespace-nowrap">{{ count($balanceWarningsFast) }} Alerts</span>
+                        <span id="balanceCountSlow" class="ml-2 px-1.5 py-0.5 rounded-xs bg-rose-50 dark:bg-rose-950/20 text-[9px] font-bold text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30 flex-shrink-0 whitespace-nowrap hidden">{{ count($balanceWarningsSlow) }} Alerts</span>
                     </h3>
                 </div>
                 <div class="overflow-y-auto flex-1 custom-scrollbar border border-gray-100 dark:border-gray-700/50 rounded-xs">
@@ -128,8 +133,57 @@
                                 <th class="py-2 px-3 text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider text-right">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-gray-700 text-[11px] font-medium">
-                            @forelse($balanceWarnings as $warning)
+                        {{-- Fast Moving Warnings --}}
+                        <tbody id="warningsFastTbody" class="divide-y divide-slate-100 dark:divide-gray-700 text-[11px] font-medium">
+                            @forelse($balanceWarningsFast as $warning)
+                                @php
+                                    $badgeClass = $warning['status'] === 'Critical' 
+                                        ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' 
+                                        : 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/40';
+                                @endphp
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer" onclick="openDrilldown('stock', '{{ addslashes($warning['category']) }}', '{{ $warning['status'] }}', '{{ addslashes($warning['tool_name']) }}')">
+                                    <td class="py-2 px-3 text-slate-800 dark:text-gray-200">
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="font-medium truncate max-w-[130px]" title="{{ $warning['tool_name'] }}">{{ $warning['tool_name'] }}</div>
+                                            @php
+                                                $actionIcon = '';
+                                                if ($warning['status'] === 'Critical' || $warning['status'] === 'Warning') {
+                                                    if ($warning['action_status'] === 'Process') {
+                                                        $actionIcon = '<i class="fa-solid fa-clock text-amber-500 text-[10px]" title="In Process"></i>';
+                                                    } elseif ($warning['action_status'] === 'Ordered') {
+                                                        $actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 text-[10px]" title="Ordered"></i>';
+                                                    } else {
+                                                        $actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 text-[10px]" title="Need Action"></i>';
+                                                    }
+                                                }
+                                            @endphp
+                                            {!! $actionIcon !!}
+                                        </div>
+                                        <div class="text-[9px] text-slate-400 font-medium truncate max-w-[130px]">{{ $warning['spec_code'] }} | {{ $warning['location'] }}</div>
+                                        @if($warning['action_remark'])
+                                            <p class="text-[8px] text-primary-500 italic mt-0.5 truncate max-w-[130px]"><i class="fa-solid fa-message mr-1 opacity-70"></i>{{ $warning['action_remark'] }}</p>
+                                        @endif
+                                    </td>
+                                    <td class="py-2 px-2 text-right text-slate-500 dark:text-slate-400 font-medium">{{ $warning['qty_min'] }}</td>
+                                    <td class="py-2 px-2 text-right font-bold text-rose-500 dark:text-rose-400">{{ $warning['current_qty'] }}</td>
+                                    <td class="py-2 px-3 text-right">
+                                        <span class="px-1.5 py-0.5 rounded-xs border text-[9px] font-black uppercase tracking-wider {{ $badgeClass }}">
+                                            {{ $warning['status'] }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="py-8 text-center text-slate-400">
+                                        <i class="fa-solid fa-circle-check text-emerald-500 text-lg mb-1 mx-auto block"></i>
+                                        <div class="text-xs font-medium">Stock nominal and safe!</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                        {{-- Slow Moving Warnings --}}
+                        <tbody id="warningsSlowTbody" class="divide-y divide-slate-100 dark:divide-gray-700 text-[11px] font-medium hidden">
+                            @forelse($balanceWarningsSlow as $warning)
                                 @php
                                     $badgeClass = $warning['status'] === 'Critical' 
                                         ? 'bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/40' 
@@ -540,7 +594,46 @@
     });
 
     $(document).ready(function() {
-        // Auto-submit form on filter changes
+        let currentStockMoving = 'fast';
+
+        const fastLabels = @json(array_keys($groupedStockStatusFast));
+        const fastData = @json(array_values($groupedStockStatusFast));
+        
+        const slowLabels = @json(array_keys($groupedStockStatusSlow));
+        const slowData = @json(array_values($groupedStockStatusSlow));
+        
+        let fullStockLabels = fastLabels;
+        let fullStockData = fastData;
+
+        window.setStockMoving = function(type) {
+            currentStockMoving = type;
+            
+            // Toggle active styling of switch buttons
+            const isFast = type === 'fast';
+            $('#btnStockFast').toggleClass('bg-white dark:bg-gray-600 text-primary-600 shadow-sm', isFast)
+                .toggleClass('text-gray-500 hover:text-gray-700 dark:hover:text-gray-300', !isFast);
+            $('#btnStockSlow').toggleClass('bg-white dark:bg-gray-600 text-primary-600 shadow-sm', !isFast)
+                .toggleClass('text-gray-500 hover:text-gray-700 dark:hover:text-gray-300', isFast);
+                
+            // Update labels and data sources
+            fullStockLabels = isFast ? fastLabels : slowLabels;
+            fullStockData = isFast ? fastData : slowData;
+            
+            // Re-initialize chart datasets config
+            stockStatusChart.data.datasets = isFast ? datasets_fast : datasets_slow;
+            
+            // Reset page and refresh chart
+            stockPage = 1;
+            updateStockChart();
+            
+            // Toggle Balance Warnings tables and alert counts
+            $('#warningsFastTbody').toggleClass('hidden', !isFast);
+            $('#warningsSlowTbody').toggleClass('hidden', isFast);
+            $('#balanceCountFast').toggleClass('hidden', !isFast);
+            $('#balanceCountSlow').toggleClass('hidden', isFast);
+        };
+
+        // Auto-submit form on filter changes (excluding stock moving since it is client side)
         $('#month_picker, #filterAccumulate').on('change', function() {
             document.getElementById('filterForm').submit();
         });
@@ -580,42 +673,30 @@
         };
 
         // 1. Stock Status Stacked Bar Chart
-        const fullStockLabels = @json(array_keys($groupedStockStatus));
-        const fullStockData = @json(array_values($groupedStockStatus));
         let stockPage = 1;
         const stockPageSize = 6;
+
+        const datasets_fast = [
+            { label: 'Critical', data: [], backgroundColor: '#ef4444', borderRadius: 2 },
+            { label: 'Warning', data: [], backgroundColor: '#f59e0b', borderRadius: 2 },
+            { label: 'Over', data: [], backgroundColor: '#3b82f6', borderRadius: 2 },
+            { label: 'Safe', data: [], backgroundColor: '#10b981', borderRadius: 2 }
+        ];
+
+        const datasets_slow = [
+            { label: 'Retired', data: [], backgroundColor: '#ef4444', borderRadius: 2 },
+            { label: 'Warning', data: [], backgroundColor: '#f59e0b', borderRadius: 2 },
+            { label: 'Still Good', data: [], backgroundColor: '#6366f1', borderRadius: 2 },
+            { label: 'Good', data: [], backgroundColor: '#3b82f6', borderRadius: 2 },
+            { label: 'OK', data: [], backgroundColor: '#10b981', borderRadius: 2 }
+        ];
 
         const stockCtx = document.getElementById('stockStatusChart').getContext('2d');
         const stockStatusChart = new Chart(stockCtx, {
             type: 'bar',
             data: {
                 labels: [],
-                datasets: [
-                    {
-                        label: 'Critical',
-                        data: [],
-                        backgroundColor: '#ef4444',
-                        borderRadius: 2
-                    },
-                    {
-                        label: 'Warning',
-                        data: [],
-                        backgroundColor: '#f59e0b',
-                        borderRadius: 2
-                    },
-                    {
-                        label: 'Over',
-                        data: [],
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 2
-                    },
-                    {
-                        label: 'Safe',
-                        data: [],
-                        backgroundColor: '#10b981',
-                        borderRadius: 2
-                    }
-                ]
+                datasets: currentStockMoving === 'slow' ? datasets_slow : datasets_fast
             },
             options: {
                 onClick: (e, elements) => {
@@ -679,10 +760,19 @@
             const slicedData = fullStockData.slice(start, end);
 
             stockStatusChart.data.labels = slicedLabels;
-            stockStatusChart.data.datasets[0].data = slicedData.map(d => d.critical);
-            stockStatusChart.data.datasets[1].data = slicedData.map(d => d.warning);
-            stockStatusChart.data.datasets[2].data = slicedData.map(d => d.over);
-            stockStatusChart.data.datasets[3].data = slicedData.map(d => d.safe);
+            
+            if (currentStockMoving === 'slow') {
+                stockStatusChart.data.datasets[0].data = slicedData.map(d => d.retired);
+                stockStatusChart.data.datasets[1].data = slicedData.map(d => d.warning);
+                stockStatusChart.data.datasets[2].data = slicedData.map(d => d.still_good);
+                stockStatusChart.data.datasets[3].data = slicedData.map(d => d.good);
+                stockStatusChart.data.datasets[4].data = slicedData.map(d => d.ok);
+            } else {
+                stockStatusChart.data.datasets[0].data = slicedData.map(d => d.critical);
+                stockStatusChart.data.datasets[1].data = slicedData.map(d => d.warning);
+                stockStatusChart.data.datasets[2].data = slicedData.map(d => d.over);
+                stockStatusChart.data.datasets[3].data = slicedData.map(d => d.safe);
+            }
             stockStatusChart.update();
 
             const maxPage = Math.ceil(fullStockLabels.length / stockPageSize) || 1;
@@ -938,7 +1028,7 @@
         let currentMonthYear = '{{ date("Y-m") }}'; // Fallback if no filter
 
         const DRILLDOWN_COLS = {
-            stock: [
+            stock_fast: [
                 { key: 'part_no',          label: 'Tool Information', cls: 'text-left py-2 px-3', style: 'min-width: 200px;' },
                 { key: 'location',         label: 'Stock / Location', cls: 'text-left py-2 px-2', style: 'min-width: 140px;' },
                 { key: 'min_stock',        label: 'Min',              cls: 'text-right py-2 px-2' },
@@ -946,6 +1036,15 @@
                 { key: 'status',           label: 'Status',           cls: 'text-center py-2 px-3' },
                 { key: 'action_status',    label: 'Action',           cls: 'text-center py-2 px-3' },
                 { key: 'action_remark',    label: 'Note',             cls: 'text-left py-2 px-3 max-w-[200px]' },
+            ],
+            stock_slow: [
+                { key: 'id_number',        label: 'ID Number',        cls: 'text-left py-2 px-3', style: 'min-width: 120px;' },
+                { key: 'part_no',          label: 'Tool Information', cls: 'text-left py-2 px-3', style: 'min-width: 200px;' },
+                { key: 'location',         label: 'Location',         cls: 'text-left py-2 px-2' },
+                { key: 'age_life',         label: 'Age / Life',       cls: 'text-center py-2 px-2' },
+                { key: 'physical_rate',    label: 'Rate (%)',         cls: 'text-center py-2 px-2' },
+                { key: 'condition_status', label: 'Condition Status', cls: 'text-center py-2 px-3' },
+                { key: 'asset_value',      label: 'Asset Value',      cls: 'text-right py-2 px-3' },
             ]
         };
 
@@ -953,7 +1052,11 @@
             'Critical':   'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
             'Warning':    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
             'Over':       'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-            'Safe':       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+            'Safe':       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+            'OK':         'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+            'GOOD':       'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+            'STILL GOOD': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+            'RETIRED':    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
         };
 
         let drilldownPage = 1;
@@ -1005,11 +1108,12 @@
                 status: drilldownCurrentStatus, 
                 search: search,
                 page: drilldownPage,
-                pageSize: pageSize
+                pageSize: pageSize,
+                stock_moving: currentStockMoving
             })
             .done(function(res) {
                 document.getElementById('drilldownTitle').textContent = res.title;
-                const cols = DRILLDOWN_COLS[res.chart] || [];
+                const cols = currentStockMoving === 'slow' ? DRILLDOWN_COLS.stock_slow : DRILLDOWN_COLS.stock_fast;
                 const tbody = document.getElementById('drilldownBody');
                 
                 // Header
@@ -1023,6 +1127,10 @@
                 } else {
                     tbody.innerHTML = res.data.map(row => {
                         return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
+                            if (c.key === 'id_number') {
+                                return `<td class="${c.cls}"><span class="font-mono font-semibold text-primary-600 dark:text-primary-400 text-xs">${row[c.key]}</span></td>`;
+                            }
+
                             if (c.key === 'part_no') {
                                 const brandStr = row.brand && row.brand !== '-' ? row.brand : 'No Brand';
                                 const specStr = row.spec_code && row.spec_code !== '-' ? row.spec_code : '';
@@ -1038,6 +1146,18 @@
                             if (c.key === 'location') {
                                 const val = row[c.key] ?? '';
                                 return `<td class="${c.cls}">${val}</td>`;
+                            }
+
+                            if (c.key === 'physical_rate') {
+                                const val = row[c.key] ?? '';
+                                const num = parseInt(val) || 0;
+                                const colorCls = num < 50 ? 'text-red-500' : 'text-emerald-600';
+                                return `<td class="${c.cls}"><span class="font-bold ${colorCls}">${val}</span></td>`;
+                            }
+
+                            if (c.key === 'asset_value') {
+                                const val = row[c.key] ?? '';
+                                return `<td class="${c.cls}"><span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">${val}</span></td>`;
                             }
 
                             if (c.key === 'action_status') {
@@ -1092,7 +1212,7 @@
                             }
 
                             const val = row[c.key] ?? '';
-                            const badgeCls = c.key === 'status' ? STATUS_BADGE[val] : null;
+                            const badgeCls = (c.key === 'status' || c.key === 'condition_status') ? STATUS_BADGE[val] : null;
 
                             if (c.key === 'action_remark') {
                                 const isCritical = row.status === 'Critical' || row.status === 'Warning';
@@ -1176,7 +1296,9 @@
             const container = document.getElementById('drilldownLegendButtons');
             container.innerHTML = '';
             
-            const legends = ['Critical', 'Warning', 'Over', 'Safe'];
+            const legends = currentStockMoving === 'slow' 
+                ? ['OK', 'Good', 'Still Good', 'Warning', 'Retired'] 
+                : ['Critical', 'Warning', 'Over', 'Safe'];
             
             const allBtn = createLegendBtn('All', activeStatus === '');
             allBtn.onclick = () => { drilldownCurrentStatus = ''; drilldownPage = 1; updateLegendActive(allBtn); fetchDrilldownData(); };
