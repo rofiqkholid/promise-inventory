@@ -210,7 +210,7 @@ $(document).ready(function() {
             const fullBase64 = e.target.result;
             const base64Only = fullBase64.split(',')[1];
             
-            const chunkSize = 256 * 1024; // Decreased to 256KB to avoid 413 payload limit issues
+            const chunkSize = 512 * 1024; // Diubah ke 512KB untuk mencoba performa upload yang lebih cepat
             const totalChunks = Math.ceil(base64Only.length / chunkSize);
             const uploadId = 'UP-VAVE-' + Date.now().toString() + '-' + Math.floor(Math.random() * 1000);
             
