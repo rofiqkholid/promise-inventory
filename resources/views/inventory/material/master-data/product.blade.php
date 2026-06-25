@@ -1385,7 +1385,7 @@ $(function() {
                 // so the server doesn't have to use regex on a massive string.
                 const base64Only = fullBase64.split(',')[1]; 
                 
-                const chunkSize = 1024 * 1024; // Increased to 1MB for faster uploads (safe for most servers)
+                const chunkSize = 256 * 1024; // Decreased to 256KB to avoid 413 payload limit issues (e.g. WAF limits)
                 const totalChunks = Math.ceil(base64Only.length / chunkSize);
                 const uploadId = 'UP-' + Date.now().toString() + '-' + Math.floor(Math.random() * 10000);
                 
