@@ -32,9 +32,9 @@ Dihitung per satuan (per piece atau per pitch) menggunakan density baja standar 
 
 | Jenis Unit | Spesifikasi Rumus |
 | :--- | :--- |
-| **SHEET** | `(thickness * width * length * density) / 1.000.000` |
-| **COIL** | `(thickness * width * pitch * density) / 1.000.000` (Berat per 1 pitch) |
-| **TRAPEZOID** | `(thickness * width * ((length + length_2) / 2) * density) / 1.000.000` |
+| **SHEET** | `((thickness * width * length * density) / 1.000.000) / pcs_per_unit` |
+| **COIL** | `((thickness * width * pitch * density) / 1.000.000) / pcs_per_pitch` |
+| **TRAPEZOID** | `((thickness * width * ((length + length_2) / 2) * density) / 1.000.000) / pcs_per_unit` |
 
 ### B. Minimum Stock (Safety Buffer)
 

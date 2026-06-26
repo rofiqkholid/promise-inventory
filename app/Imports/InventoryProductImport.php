@@ -106,6 +106,13 @@ class InventoryProductImport implements ToCollection, WithStartRow, WithMultiple
                     $revisionCode = strtoupper(trim($row[$col] ?? ''));
                     if (empty($revisionCode)) break;
 
+                    // Skip if revision details are empty (e.g. empty spec and unit in template)
+                    $msName = strtoupper(trim($row[$col + 1] ?? ''));
+                    $unitName = trim($row[$col + 2] ?? '');
+                    if (empty($msName) && empty($unitName)) {
+                        continue;
+                    }
+
                     $revErrors = [];
 
                     // 1. Resolve Revision ID from cache
