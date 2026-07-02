@@ -510,7 +510,7 @@ class StockMonitoringController extends Controller
                 'p.current_stock_qty',
                 'p.pcs_per_unit',
                 'u.code as unit_code',
-                'u.name as unit_name'
+                'u.name as unit_name',
             ])
             ->first();
 
@@ -537,14 +537,16 @@ class StockMonitoringController extends Controller
         if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
 
         $product = (object) [
-            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
-            'item_no' => $data->part_no . ($data->revision ? '-' . $data->revision : ''),
-            'item_name' => $data->part_name,
-            'model_name' => $data->model_name ?? '-',
-            'partner_code' => $data->customer_code ?? '-',
-            'dimension' => implode(' x ', $dimVal),
+            'hash_id'       => $inventoryProduct->hash_id,
+            'qrcode'        => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
+            'item_no'       => $data->part_no . ($data->revision ? '-' . $data->revision : ''),
+            'item_name'     => $data->part_name,
+            'model_name'    => $data->model_name ?? '-',
+            'partner_code'  => $data->customer_code ?? '-',
+            'dimension'     => implode(' x ', $dimVal),
             'dimension_label' => !empty($dimLbl) ? '(' . implode(' x ', $dimLbl) . ')' : '',
-            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : '')
+            'material'      => $data->material_spec ?? '',
+            'coating_type'  => $data->coating_type ?? '',
         ];
 
         $products = [$product];

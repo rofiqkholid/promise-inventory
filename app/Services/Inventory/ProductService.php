@@ -33,7 +33,7 @@ class ProductService
                 ->select([
                     'prod.part_no', 'prod.part_name', 'cust.code as customer_code', 'model.name as model_name',
                     'rev.code as revision', 'p.thickness', 'p.width', 'p.length', 'p.length_2', 'p.pitch',
-                    'ms.spec_name as material_spec', 'ms.coating_type', 'r.code as rank_code'
+                    'ms.spec_name as material_spec', 'ms.coating_type', 'r.code as rank_code',
                 ])
                 ->first();
 
@@ -58,15 +58,16 @@ class ProductService
         if ((float)$data->pitch > 0) { $dimVal[] = (float)$data->pitch; $dimLbl[] = 'P'; }
 
         return (object) [
-            'hash_id' => $inventoryProduct->hash_id,
-            'qrcode' => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
-            'item_no' => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
-            'item_name' => $data->part_name,
-            'model_name' => $data->model_name ?? '-',
-            'partner_code' => $data->customer_code ?? '-',
-            'dimension' => implode(' x ', $dimVal),
+            'hash_id'       => $inventoryProduct->hash_id,
+            'qrcode'        => QrCode::size(250)->errorCorrection('M')->margin(1)->generate(route('inventory.scanInfo', $inventoryProduct->hash_id)),
+            'item_no'       => $data->part_no . ($data->revision ? ' - ' . $data->revision : ''),
+            'item_name'     => $data->part_name,
+            'model_name'    => $data->model_name ?? '-',
+            'partner_code'  => $data->customer_code ?? '-',
+            'dimension'     => implode(' x ', $dimVal),
             'dimension_label' => !empty($dimLbl) ? '(' . implode(' x ', $dimLbl) . ')' : '',
-            'material' => $data->material_spec . ($data->coating_type ? " ($data->coating_type)" : '')
+            'material'      => $data->material_spec ?? '',
+            'coating_type'  => $data->coating_type ?? '',
         ];
     }
 }
