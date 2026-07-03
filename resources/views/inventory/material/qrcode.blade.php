@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <title>QR Labels</title>
-<style>
+<style id="dynamic-page-layout">
   @page {
     size: 45cm 7cm landscape;
-    margin: 0;
+    margin: 3mm;
   }
-
+</style>
+<style>
   html, body {
     padding: 0;
     margin: 0;
@@ -21,8 +22,8 @@
     background: #fff;
   }
 
-  /* ===================== MAIN LABEL CONTAINER ===================== */
-  .label {
+  /* ===================== DESIGN 1 (45x7 cm) ===================== */
+  .label-d1 {
     box-sizing: border-box;
     width: 45cm;
     height: 7cm;
@@ -34,7 +35,7 @@
     overflow: hidden;
     background: #fff;
   }
-  .label.last {
+  .label-d1.last {
     page-break-after: auto;
   }
 
@@ -201,6 +202,132 @@
     line-height: 1.3;
   }
 
+  /* ===================== DESIGN 2 (A6 Portrait) ===================== */
+  .label-d2 {
+    box-sizing: border-box;
+    width: 4.13in;
+    height: 5.83in;
+    padding: 0.15in;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 0.05in;
+    position: relative;
+    page-break-after: always;
+    border: 2px solid #000;
+    overflow: hidden;
+    background: #fff;
+  }
+  .label-d2.last {
+    page-break-after: auto;
+  }
+
+  .label-d2 .ga-status-center {
+    text-align: center;
+    margin: 2px 0;
+    z-index: 10;
+  }
+  .label-d2 .ga-status-text {
+    background: #000;
+    color: #fff;
+    padding: 3px 20px;
+    font-weight: 900;
+    font-size: 18px;
+    border-radius: 3px;
+    display: inline-block;
+    letter-spacing: 3px;
+    line-height: 1.1;
+  }
+
+  .label-d2 .qr-wrap {
+    flex: 0 0 35%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .label-d2 .qr-wrap svg,
+  .label-d2 .qr-wrap img,
+  .label-d2 .qr-wrap canvas,
+  .label-d2 .qr-wrap div {
+    width: 75% !important;
+    height: 75% !important;
+    object-fit: contain;
+  }
+
+  .label-d2 .details {
+    flex: 1;
+    border: 1px solid #000;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .label-d2 .details .title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 8px 0;
+    margin: 0;
+    background: #fff;
+    border-bottom: 1.5px solid #000;
+    letter-spacing: 1px;
+  }
+
+  .label-d2 .details table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 5px;
+  }
+  .label-d2 .details td {
+    padding: 3px 8px;
+    vertical-align: top;
+    line-height: 1.3;
+  }
+  .label-d2 .details .titleDetail {
+    width: 75px;
+    font-weight: bold;
+    color: #444;
+  }
+  .label-d2 .details .colon {
+    width: 10px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .label-d2 .details .valueContent {
+    font-weight: 500;
+  }
+
+  /* Dimension info styling */
+  .label-d2 .dim-info {
+    font-size: 9px;
+    color: #666;
+    font-weight: normal;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .label-d2 .badge {
+    background: #000;
+    color: #fff;
+    padding: 2px 6px;
+    margin-left: 4px;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 2px;
+    display: inline-block;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  .label-d2 .dim-unit {
+    color: #000;
+    font-weight: bold;
+    margin-right: 2px;
+  }
+
 
   /* ===================== TAMPILAN PREVIEW LAYAR KOMPUTER ===================== */
   @media screen {
@@ -241,14 +368,16 @@
     .panel-item-info .part-desc { font-size: 9px; color: #64748b; }
     .panel-footer { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid #e2e8f0; padding-top: 14px; flex-shrink: 0; }
     #btnPrintNow { width: 100%; padding: 10px; background: #6366f1; color: #fff; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
-    .print-preview-container { flex: 1; height: 100vh; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; }
-    .label { box-shadow: 0 4px 14px rgba(0,0,0,0.12); flex-shrink: 0; transform-origin: top left; }
+    .print-preview-container { flex: 1; height: 100vh; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; box-sizing: border-box; align-items: center; }
+    .label-d1 { box-shadow: 0 4px 14px rgba(0,0,0,0.12); flex-shrink: 0; transform-origin: top left; }
+    .label-d2 { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; background: #fff; flex-shrink: 0; transform-origin: top left; }
   }
 
   @media print {
     .print-panel { display: none !important; }
     .print-preview-container { margin: 0 !important; padding: 0 !important; display: block !important; height: auto !important; overflow: visible !important; }
-    .label { transform: none !important; margin-bottom: 0 !important; box-shadow: none !important; }
+    .label-d1 { transform: none !important; margin-bottom: 0 !important; box-shadow: none !important; }
+    .label-d2 { transform: none !important; margin-bottom: 0 !important; box-shadow: none !important; border: none !important; }
   }
 </style>
 </head>
@@ -259,6 +388,15 @@
       <h2>Print Labels</h2>
       <p>Select which items to include in the print result.</p>
     </div>
+    
+    <div style="margin-bottom: 12px;">
+      <label for="templateSelect" style="font-size: 11px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Template Desain</label>
+      <select id="templateSelect" style="width: 100%; box-sizing: border-box; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; cursor: pointer;">
+        <option value="1">Template 1 (45cm x 7cm)</option>
+        <option value="2">Template 2 (A6 Portrait)</option>
+      </select>
+    </div>
+
     <div class="panel-search">
       <input type="text" id="panelSearch" placeholder="Search part number, model...">
     </div>
@@ -300,9 +438,14 @@
         $lVal = $dimMap['L']  ?? ($dimMap['L2'] ?? '');
         $specStr    = trim($product->material ?? '');
         $coatingStr = trim($product->coating_type ?? '');
+
+        // Design 2 GA/Non-GA extraction
+        preg_match('/(Non-GA|GA)/i', $product->material, $matches);
+        $gaStatus = $matches[0] ?? null;
       @endphp
 
-      <section class="label {{ $loop->last ? 'last' : '' }}" id="label-{{ $product->hash_id }}">
+      <!-- Design 1: 45cm x 7cm -->
+      <section class="label-d1 {{ $loop->last ? 'last' : '' }}" id="label-d1-{{ $product->hash_id }}">
         
         <div class="main-left-section border-r">
           
@@ -389,6 +532,82 @@
         </div>
 
       </section>
+
+      <!-- Design 2: A6 Portrait -->
+      <section class="label-d2 {{ $loop->last ? 'last' : '' }}" id="label-d2-{{ $product->hash_id }}" style="display: none;">
+        <div class="qr-wrap">
+          {!! $product->qrcode !!}
+        </div>
+
+        @if($gaStatus)
+        <div class="ga-status-center">
+          <span class="ga-status-text">{{ strtoupper($gaStatus) }}</span>
+        </div>
+        @endif
+
+        <div class="details">
+          <div class="title">PRODUCT IDENTIFICATION</div>
+          <table>
+            <tr>
+              <td class="titleDetail">Part No</td>
+              <td class="colon">:</td>
+              <td class="valueContent"><b>{{ $product->item_no }}</b></td>
+            </tr>
+            <tr>
+              <td class="titleDetail">Part Name</td>
+              <td class="colon">:</td>
+              <td class="valueContent">{{ $product->item_name }}</td>
+            </tr>
+            <tr>
+              <td class="titleDetail">Model</td>
+              <td class="colon">:</td>
+              <td class="valueContent">{{ $product->model_name }}</td>
+            </tr>
+            <tr>
+              <td class="titleDetail">Customer</td>
+              <td class="colon">:</td>
+              <td class="valueContent">{{ $product->partner_code }}</td>
+            </tr>
+            <tr>
+              <td class="titleDetail">Dimension</td>
+              <td class="colon">:</td>
+              <td class="valueContent">
+                  @php
+                      $dimValues2 = explode(' x ', $product->dimension);
+                      $dimLabelsRaw2 = str_replace(['(', ')'], '', $product->dimension_label);
+                      $dimLabels2 = explode(' x ', $dimLabelsRaw2);
+                      $dimFormatted2 = [];
+                      foreach($dimValues2 as $i => $v) {
+                          $l = isset($dimLabels2[$i]) ? trim($dimLabels2[$i]) : '';
+                          // Bold specific headers for precision look
+                          $dimFormatted2[] = ($l ? "<span class='dim-unit'>$l:</span>" : "") . trim($v);
+                      }
+                  @endphp
+                  {!! implode(' &nbsp; ', $dimFormatted2) !!}
+              </td>
+            </tr>
+            <tr>
+              <td class="titleDetail">Material</td>
+              <td class="colon">:</td>
+              <td class="valueContent">
+                  @php
+                      $mat = preg_replace('/\(?(Non-GA|GA)\)?/i', '', $product->material);
+                  @endphp
+                  {{ trim($mat) }}
+              </td>
+            </tr>
+            @if($product->coating_type)
+            <tr style="background: #000; color: #fff;">
+              <td class="titleDetail" style="color: #fff; font-weight: bold; padding: 6px 8px;">Coating</td>
+              <td class="colon" style="color: #fff; padding: 6px 8px;">:</td>
+              <td class="valueContent" style="font-weight: bold; padding: 6px 8px; text-transform: uppercase;">
+                {{ $product->coating_type }}
+              </td>
+            </tr>
+            @endif
+          </table>
+        </div>
+      </section>
     @endforeach
   </main>
 
@@ -399,6 +618,8 @@
       const itemCheckboxes    = document.querySelectorAll('.panel-item-check');
       const printBtn          = document.getElementById('btnPrintNow');
       const selectedCountSpan = document.getElementById('selectedCount');
+      const templateSelect    = document.getElementById('templateSelect');
+      const dynamicPageLayout = document.getElementById('dynamic-page-layout');
 
       const COOKIE_PREFIX = 'lbl_arrow_';
       const COOKIE_DAYS   = 30;
@@ -443,17 +664,36 @@
 
       function updateLabelVisibility() {
         let selectedCount = 0;
+        const activeTemplate = templateSelect.value;
+
         itemCheckboxes.forEach(chk => {
-          const id        = chk.getAttribute('data-id');
-          const labelCard = document.getElementById('label-' + id);
+          const id = chk.getAttribute('data-id');
+          const labelCardD1 = document.getElementById('label-d1-' + id);
+          const labelCardD2 = document.getElementById('label-d2-' + id);
+
+          // Hide both first
+          if (labelCardD1) labelCardD1.style.display = 'none';
+          if (labelCardD2) labelCardD2.style.display = 'none';
+
           if (chk.checked) {
-            if (labelCard) labelCard.style.display = 'flex';
             selectedCount++;
-          } else {
-            if (labelCard) labelCard.style.display = 'none';
+            if (activeTemplate === '1') {
+              if (labelCardD1) labelCardD1.style.display = 'flex';
+            } else {
+              if (labelCardD2) labelCardD2.style.display = 'flex';
+            }
           }
         });
         selectedCountSpan.innerText = selectedCount;
+        selectAllChk.checked = (selectedCount === itemCheckboxes.length);
+
+        // Update page break class correctly: only the last VISIBLE label of the active template should have class 'last'
+        const labelClass = activeTemplate === '1' ? '.label-d1' : '.label-d2';
+        document.querySelectorAll('.label-d1, .label-d2').forEach(l => l.classList.remove('last'));
+        const visibleLabels = Array.from(document.querySelectorAll(labelClass)).filter(l => l.style.display !== 'none');
+        if (visibleLabels.length > 0) {
+          visibleLabels[visibleLabels.length - 1].classList.add('last');
+        }
       }
 
       itemCheckboxes.forEach(chk => chk.addEventListener('change', updateLabelVisibility));
@@ -461,15 +701,34 @@
       if(searchInput) {
         searchInput.addEventListener('input', function() {
           const query = this.value.toLowerCase().trim();
+          let visibleCount = 0;
+          let checkedVisibleCount = 0;
+
           document.querySelectorAll('.panel-item').forEach(item => {
-            if (item.getAttribute('data-search').includes(query)) {
+            const searchStr = item.getAttribute('data-search');
+            const chk = item.querySelector('.panel-item-check');
+            if (searchStr.includes(query)) {
               item.style.display = 'flex';
+              visibleCount++;
+              if (chk.checked) {
+                checkedVisibleCount++;
+              }
             } else {
               item.style.display = 'none';
             }
           });
+          selectAllChk.checked = visibleCount > 0 && checkedVisibleCount === visibleCount;
         });
       }
+
+      selectAllChk.addEventListener('change', function() {
+        const isChecked = this.checked;
+        const visibleItems = Array.from(document.querySelectorAll('.panel-item')).filter(item => item.style.display !== 'none');
+        visibleItems.forEach(item => {
+          item.querySelector('.panel-item-check').checked = isChecked;
+        });
+        updateLabelVisibility();
+      });
 
       printBtn.addEventListener('click', () => window.print());
 
@@ -477,21 +736,67 @@
         const container = document.querySelector('.print-preview-container');
         if (!container) return;
         const containerWidth = container.clientWidth - 48;
-        const labelWidthPx   = 45 * 37.7953;
-        const labelHeightPx  = 7  * 37.7953;
-        const scale = Math.min(1, containerWidth / labelWidthPx);
+        const activeTemplate = templateSelect.value;
 
-        document.querySelectorAll('.label').forEach(label => {
-          label.style.width         = labelWidthPx + 'px';
-          label.style.height        = labelHeightPx + 'px';
-          label.style.transform     = `scale(${scale})`;
-          label.style.marginBottom  = ((labelHeightPx * scale) - labelHeightPx) + 'px';
+        // Reset all sizes & styles first
+        document.querySelectorAll('.label-d1, .label-d2').forEach(label => {
+          label.style.width = '';
+          label.style.height = '';
+          label.style.transform = '';
+          label.style.marginBottom = '';
+          label.style.marginRight = '';
         });
+
+        if (activeTemplate === '1') {
+          container.style.alignItems = 'flex-start';
+          const labelWidthPx   = 45 * 37.7953;
+          const labelHeightPx  = 7  * 37.7953;
+          const scale = Math.min(1, containerWidth / labelWidthPx);
+
+          document.querySelectorAll('.label-d1').forEach(label => {
+            label.style.width         = labelWidthPx + 'px';
+            label.style.height        = labelHeightPx + 'px';
+            label.style.transform     = `scale(${scale})`;
+            label.style.marginBottom  = ((labelHeightPx * scale) - labelHeightPx) + 'px';
+            label.style.marginRight   = ((labelWidthPx * scale) - labelWidthPx) + 'px';
+          });
+        } else {
+          container.style.alignItems = 'center';
+          const labelWidthPx   = 4.13 * 96;
+          const labelHeightPx  = 5.83 * 96;
+          const scale = Math.min(1, containerWidth / labelWidthPx);
+
+          document.querySelectorAll('.label-d2').forEach(label => {
+            label.style.width         = labelWidthPx + 'px';
+            label.style.height        = labelHeightPx + 'px';
+            label.style.transform     = `scale(${scale})`;
+            label.style.marginBottom  = ((labelHeightPx * scale) - labelHeightPx) + 'px';
+            label.style.marginRight   = ((labelWidthPx * scale) - labelWidthPx) + 'px';
+          });
+        }
       }
 
-      scaleLabels();
-      window.addEventListener('resize', scaleLabels);
+      function updatePageSize() {
+        const activeTemplate = templateSelect.value;
+        if (activeTemplate === '1') {
+          dynamicPageLayout.innerHTML = `@page { size: 45cm 7cm landscape; margin: 3mm; }`;
+        } else {
+          dynamicPageLayout.innerHTML = `@page { size: A6 portrait; margin: 0; }`;
+        }
+      }
+
+      templateSelect.addEventListener('change', function() {
+        updatePageSize();
+        updateLabelVisibility();
+        scaleLabels();
+      });
+
+      // Initial runs
+      updatePageSize();
       updateLabelVisibility();
+      scaleLabels();
+      
+      window.addEventListener('resize', scaleLabels);
     });
   </script>
 </body>
