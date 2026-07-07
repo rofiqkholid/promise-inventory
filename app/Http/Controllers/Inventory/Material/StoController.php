@@ -107,7 +107,7 @@ class StoController extends Controller
                     'net_pcs' => $event->net_pcs ?? 0,
                     'net_amount' => $event->net_amount ?? 0,
                     // Minimal flags for UI logic in Blade/JS
-                    'can_manage' => auth()->user()->hasMenuPermission('inventory.sto.index', 'create') || auth()->user()->hasMenuPermission('inventory.sto.index', 'edit'),
+                    'can_manage' => auth()->user()->hasRole('Inv PIC|admin|Inv Admin'),
                     'is_approver' => auth()->user()->hasMenuPermission('inventory.sto.index', 'edit'),
                     'is_checker' => auth()->user()->hasMenuPermission('inventory.sto.index', 'edit'),
                 ];
@@ -163,6 +163,14 @@ class StoController extends Controller
      */
     public function edit($id)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('Inv PIC|admin|Inv Admin')) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Unauthorized.'
+             ], 403);
+        }
+
         $event = StoEvent::findByHashOrFail($id);
         
         return response()->json([
@@ -182,6 +190,14 @@ class StoController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = auth()->user();
+        if (!$user->hasRole('Inv PIC|admin|Inv Admin')) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Unauthorized.'
+             ], 403);
+        }
+
         $event = StoEvent::findByHashOrFail($id);
         
         $request->validate([
@@ -205,7 +221,7 @@ class StoController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        if (!$user->hasMenuPermission('inventory.sto.index', 'delete')) {
+        if (!$user->hasRole('Inv PIC|admin|Inv Admin')) {
              return response()->json([
                  'success' => false,
                  'message' => 'Unauthorized.'
@@ -398,7 +414,7 @@ class StoController extends Controller
         $isAdmin = $user->hasAppRole('admin') || $user->hasAppRole('Inv Admin');
         $isPic = $stoEvent->user_id === $user->id || $user->hasAppRole('pic') || $user->hasAppRole('Inv PIC'); // PIC role or event creator
         $isOperator = $user->hasAppRole('operator') || $user->hasAppRole('Inv Operator');
-        $canEditInline = ($isAdmin || $isPic || $isOperator) && $stoEvent->status === 'OPEN';
+        $canEditInline = ($isAdmin || $isPic) && $stoEvent->status === 'OPEN';
 
         // 1. Get the list of product IDs on current page
         $productIds = $data->pluck('product_detail_id')->unique();
