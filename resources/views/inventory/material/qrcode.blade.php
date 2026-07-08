@@ -378,6 +378,15 @@
     .print-preview-container { margin: 0 !important; padding: 0 !important; display: block !important; height: auto !important; overflow: visible !important; }
     .label-d1 { transform: none !important; margin-bottom: 0 !important; box-shadow: none !important; }
     .label-d2 { transform: none !important; margin-bottom: 0 !important; box-shadow: none !important; border: none !important; }
+    
+    /* Continuous / Multi-label printing mode styles */
+    body.print-multi .label-d1,
+    body.print-multi .label-d2 {
+      page-break-after: auto !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      margin-bottom: 20px !important;
+    }
   }
 </style>
 </head>
@@ -390,10 +399,18 @@
     </div>
     
     <div style="margin-bottom: 12px;">
-      <label for="templateSelect" style="font-size: 11px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Template Desain</label>
+      <label for="templateSelect" style="font-size: 11px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Design Template</label>
       <select id="templateSelect" style="width: 100%; box-sizing: border-box; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; cursor: pointer;">
         <option value="1">Template 1 (45cm x 7cm)</option>
         <option value="2">Template 2 (A6 Portrait)</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 12px;" id="printModeContainer">
+      <label for="printModeSelect" style="font-size: 11px; font-weight: bold; color: #475569; display: block; margin-bottom: 4px;">Print Mode</label>
+      <select id="printModeSelect" style="width: 100%; box-sizing: border-box; padding: 7px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; cursor: pointer;">
+        <option value="single">Single Label per Page (Single)</option>
+        <option value="multi">Multiple Labels per Page (Continuous)</option>
       </select>
     </div>
 
@@ -619,6 +636,8 @@
       const printBtn          = document.getElementById('btnPrintNow');
       const selectedCountSpan = document.getElementById('selectedCount');
       const templateSelect    = document.getElementById('templateSelect');
+      const printModeSelect   = document.getElementById('printModeSelect');
+      const printModeContainer = document.getElementById('printModeContainer');
       const dynamicPageLayout = document.getElementById('dynamic-page-layout');
 
       const COOKIE_PREFIX = 'lbl_arrow_';
@@ -665,6 +684,19 @@
       function updateLabelVisibility() {
         let selectedCount = 0;
         const activeTemplate = templateSelect.value;
+        const activePrintMode = printModeSelect ? printModeSelect.value : 'single';
+
+        if (activeTemplate === '1') {
+          printModeContainer.style.display = 'block';
+          if (activePrintMode === 'multi') {
+            document.body.classList.add('print-multi');
+          } else {
+            document.body.classList.remove('print-multi');
+          }
+        } else {
+          printModeContainer.style.display = 'none';
+          document.body.classList.remove('print-multi');
+        }
 
         itemCheckboxes.forEach(chk => {
           const id = chk.getAttribute('data-id');
@@ -778,8 +810,13 @@
 
       function updatePageSize() {
         const activeTemplate = templateSelect.value;
+        const activePrintMode = printModeSelect ? printModeSelect.value : 'single';
         if (activeTemplate === '1') {
-          dynamicPageLayout.innerHTML = `@page { size: 45cm 7cm landscape; margin: 3mm; }`;
+          if (activePrintMode === 'multi') {
+            dynamicPageLayout.innerHTML = `@page { size: auto; margin: 10mm; }`;
+          } else {
+            dynamicPageLayout.innerHTML = `@page { size: 45cm 7cm landscape; margin: 3mm; }`;
+          }
         } else {
           dynamicPageLayout.innerHTML = `@page { size: A6 portrait; margin: 0; }`;
         }
@@ -790,6 +827,14 @@
         updateLabelVisibility();
         scaleLabels();
       });
+
+      if (printModeSelect) {
+        printModeSelect.addEventListener('change', function() {
+          updatePageSize();
+          updateLabelVisibility();
+          scaleLabels();
+        });
+      }
 
       // Initial runs
       updatePageSize();
