@@ -344,6 +344,8 @@ class StockMonitoringController extends Controller
                 'total_amount' => $balancePcsVal * floatval($item->material_price),
                 'stock_status' => InventoryProduct::calculateStockStatus($balancePcsVal, $item->min_stock, $item->model_project_status, $item->product_status),
                 'project_status' => $item->product_status ?: ($item->model_project_status ?? 'Project'),
+                'model_project_status' => $item->model_project_status ?? 'Project',
+                'product_status' => $item->product_status,
                 
                 // Material Usage Fields
                 'supplier_name' => $item->supplier_name ?? '-',
