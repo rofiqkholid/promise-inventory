@@ -281,7 +281,11 @@ $(document).ready(function() {
         };
 
         const buildComputedRow = (label, valueGetter, unit = '', precision = 2, invertColor = false, isCurrency = false) => {
-            const getVal = (item) => typeof valueGetter === 'function' ? valueGetter(item) : parseFloat(item[valueGetter] || 0);
+            const getVal = (item) => {
+                if (typeof valueGetter === 'function') return valueGetter(item);
+                if (item[valueGetter] === null || item[valueGetter] === undefined || item[valueGetter] === '' || (valueGetter === 'net_weight' && parseFloat(item[valueGetter]) <= 0)) return NaN;
+                return parseFloat(item[valueGetter]);
+            };
             
             const formatVal = (val, isDelta = false) => {
                 if (isCurrency && (val === 0 || isNaN(val)) && !isDelta) return '<span class="text-red-500 text-[10px] uppercase font-bold tracking-wider">No Epicor Data</span>';
@@ -301,10 +305,12 @@ $(document).ready(function() {
                 const delta = actualVal - baseVal;
                 const isGood = invertColor ? delta > 0 : delta <= 0;
                 let cClass = 'text-gray-400', bClass = 'bg-gray-50'; 
-                if (Math.abs(delta) > 0.0001) { cClass = isGood ? 'text-green-600' : 'text-red-600'; bClass = isGood ? 'bg-green-50' : 'bg-red-50'; }
+                if (Math.abs(delta) > 0.0001 && !isNaN(delta)) { cClass = isGood ? 'text-green-600' : 'text-red-600'; bClass = isGood ? 'bg-green-50' : 'bg-red-50'; }
                 
                 let deltaStr = '-';
-                if (!isCurrency || (actualVal > 0 && baseVal > 0)) {
+                if (isNaN(delta)) {
+                    deltaStr = '<span class="text-gray-400 text-[10px] font-bold">-</span>';
+                } else if (!isCurrency || (actualVal > 0 && baseVal > 0)) {
                     deltaStr = `${delta > 0 ? '+' : ''}${formatVal(delta, true)}`;
                 } else if (isCurrency) {
                     deltaStr = '<span class="text-gray-400 text-[10px] font-bold">-</span>';
@@ -361,10 +367,13 @@ $(document).ready(function() {
         html += buildComputedRow('Pcs / Unit', 'pcs_per_unit', '', 0, true);
         html += buildComputedRow('Gross Weight (Kg)', 'weight_kg', '', 3, false); 
         html += buildComputedRow('Net Weight/Part (Kg)', 'net_weight', '', 3, false);
-        html += buildComputedRow('Scrap (Kg)', i => (parseFloat(i.weight_kg)||0) - (parseFloat(i.net_weight)||0), '', 3, false); 
+        html += buildComputedRow('Scrap (Kg)', i => {
+            if (i.net_weight === null || i.net_weight === undefined || i.net_weight === '') return NaN;
+            return (parseFloat(i.weight_kg)||0) - (parseFloat(i.net_weight)||0);
+        }, '', 3, false); 
         html += buildComputedRow('Yield Ratio (%)', i => {
             const g = parseFloat(i.weight_kg)||0, n = parseFloat(i.net_weight)||0;
-            return (g>0 && n>0) ? (n/g)*100 : 0;
+            return (g>0 && i.net_weight !== null && i.net_weight !== undefined && i.net_weight !== '') ? (n/g)*100 : 0;
         }, '', 1, true); 
 
         if (untCompare.includes('coil')) {

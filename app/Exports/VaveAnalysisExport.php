@@ -66,9 +66,12 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
         $deltaD = (float)($latestRev->density ?? 0) - (float)($vaveBase->density ?? 0);
         $deltaNW = (float)($latestRev->net_weight ?? 0) - (float)($vaveBase->net_weight ?? 0);
         
-        $baseScrap = $baseW - (float)($vaveBase->net_weight ?? 0);
-        $actScrap = $actW - (float)($latestRev->net_weight ?? 0);
-        $deltaScrap = $actScrap - $baseScrap;
+        $deltaPcsPitch = (int)($latestRev->pcs_per_pitch ?? 0) - (int)($vaveBase->pcs_per_pitch ?? 0);
+        $deltaPcsUnit = (int)($latestRev->pcs_per_unit ?? 0) - (int)($vaveBase->pcs_per_unit ?? 0);
+
+        $baseScrap = (is_null($vaveBase->net_weight) || $vaveBase->net_weight === '' || $vaveBase->net_weight <= 0) ? null : $baseW - (float)$vaveBase->net_weight;
+        $actScrap = (is_null($latestRev->net_weight) || $latestRev->net_weight === '' || $latestRev->net_weight <= 0) ? null : $actW - (float)$latestRev->net_weight;
+        $deltaScrap = (!is_null($actScrap) && !is_null($baseScrap)) ? $actScrap - $baseScrap : null;
 
         $impactPct = abs($baseW - $actW) / ($baseW ?: 1) * 100;
         $statusText = $isSaving ? "Saving Achievement: " . number_format($impactPct, 2) . "% Reduction" : "Loss Detected: " . number_format($impactPct, 2) . "% Increase";
@@ -79,7 +82,7 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
         $calcBud = function($i) {
             $g = (float)($i->weight_kg ?? 0);
             $n = (float)($i->net_weight ?? 0);
-            return ($g > 0 && $n > 0) ? ($n / $g) * 100 : 0;
+            return ($g > 0 && !is_null($i->net_weight) && $i->net_weight !== '') ? ($n / $g) * 100 : 0;
         };
 
         $baseBud = $calcBud($vaveBase);
@@ -135,6 +138,8 @@ class VaveAnalysisExport implements FromView, WithTitle, WithStyles, WithColumnW
             'deltaP' => $deltaP,
             'deltaD' => $deltaD,
             'deltaNW' => $deltaNW,
+            'deltaPcsPitch' => $deltaPcsPitch,
+            'deltaPcsUnit' => $deltaPcsUnit,
             'baseScrap' => $baseScrap,
             'actScrap' => $actScrap,
             'deltaScrap' => $deltaScrap,

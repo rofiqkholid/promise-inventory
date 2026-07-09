@@ -40,6 +40,16 @@
                     <option value="">All Bases</option>
                 </select>
             </div>
+            <div class="w-full md:w-64">
+                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">Analysis Status</label>
+                <select id="filterStatus" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">All Statuses</option>
+                    <option value="MERIT">MERIT</option>
+                    <option value="LOSS">LOSS</option>
+                    <option value="NO CHANGE">NO CHANGE</option>
+                    <option value="NO DATA">NO DATA</option>
+                </select>
+            </div>
             <div class="flex items-center gap-3 ml-auto w-full md:w-auto mt-4 md:mt-0">
                 <button type="button" id="btnResetFilter" class="h-9 px-4 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:bg-slate-50 transition-all text-xs font-medium active:scale-95">
                     <i class="fa-solid fa-rotate-left mr-2"></i> Reset
@@ -75,6 +85,9 @@
     @include('inventory.material.vave.partials.comparison_modal', ['isRegular' => true])
 @endsection
 
+@push('push_styles')
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -100,6 +113,7 @@ $(function() {
             data: function(d) {
                 d.customer_id = $('#filterCustomer').val();
                 d.model_id = $('#filterModel').val();
+                d.status = $('#filterStatus').val();
             }
         },
         columns: [
@@ -111,12 +125,26 @@ $(function() {
             { 
                 data: 'baseline_weight', 
                 className: 'text-center font-mono',
-                render: d => d ? parseFloat(d).toFixed(3) : '<span class="text-gray-400">-</span>'
+                render: (d, t, r) => {
+                    if (!d) return '<span class="text-gray-400">-</span>';
+                    let html = `<div>${parseFloat(d).toFixed(3)}</div>`;
+                    if (r.base_unit_name) {
+                        html += `<div class="text-[10px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">${r.base_unit_name}</div>`;
+                    }
+                    return html;
+                }
             },
             { 
                 data: 'latest_weight', 
                 className: 'text-center font-mono',
-                render: d => d ? parseFloat(d).toFixed(3) : '<span class="text-gray-400">-</span>'
+                render: (d, t, r) => {
+                    if (!d) return '<span class="text-gray-400">-</span>';
+                    let html = `<div>${parseFloat(d).toFixed(3)}</div>`;
+                    if (r.latest_unit_name) {
+                        html += `<div class="text-[10px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">${r.latest_unit_name}</div>`;
+                    }
+                    return html;
+                }
             },
             { 
                 data: 'status', 
@@ -200,10 +228,15 @@ $(function() {
             window.vaveTable.ajax.reload();
         });
 
+        $('#filterStatus').on('change', function() {
+            window.vaveTable.ajax.reload();
+        });
+
         $('#btnResetFilter').on('click', function() {
             $('#filterCustomer').val('').trigger('change');
             $('#filterModel').val('').trigger('change').prop('disabled', true);
             $('#filterSqBase').val('').trigger('change');
+            $('#filterStatus').val('').trigger('change');
             refreshSqBases(); // Reset to global bases
             window.vaveTable.ajax.reload();
         });

@@ -7,10 +7,10 @@
     <table>
        <thead>
             <tr>
-                <td colspan="24" style="font-weight: bold; font-size: 14pt; text-align: center;">VA/VE MATERIAL EFFICIENCY SUMMARY</td>
+                <td colspan="29" style="font-weight: bold; font-size: 14pt; text-align: center;">VA/VE MATERIAL EFFICIENCY SUMMARY</td>
             </tr>
             <tr>
-                <td colspan="24" style="text-align: center; font-size: 10pt; color: #666;">Report Generated: {{ date('Y-m-d H:i') }}</td>
+                <td colspan="29" style="text-align: center; font-size: 10pt; color: #666;">Report Generated: {{ date('Y-m-d H:i') }}</td>
             </tr>
             <tr>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">No</th>
@@ -20,17 +20,22 @@
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Part Name</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'SQ Reference' : 'EBD Reference' }}</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'Change Status (SQ)' : 'Change Status (EBD)' }}</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'Unit Type (SQ)' : 'Unit Type (EBD)' }}</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">{{ isset($isRegular) && $isRegular ? 'Gross Wt SQ' : 'Gross Wt EBD' }}</th>
                 
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Latest Revision</th>
                 
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Spec</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Stage (Revision)</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Unit Type</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">t</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">W</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">L1</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">L2</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Pitch</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Density</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Pcs/Pitch</th>
+                <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Pcs/Unit</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Gross Wt</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Net Wt</th>
                 <th style="font-weight: bold; text-align: center; background-color: #f1f5f9; border: 1px solid #000000;">Scrap (kg)</th>
@@ -97,6 +102,8 @@
                             elseif ($pChange === 'NEW') $pChangeBg = '#ecfdf5';
                         @endphp
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: {{ $pChangeBg }}; font-weight: bold;">{{ $pChange }}</td>
+                        
+                        <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center;">{{ $p->ebd_unit_name ?? '-' }}</td>
 
                         <td rowspan="{{ $rowCount }}" style="border: 1px solid #000000; vertical-align: top; text-align: center; background-color: #fffbeb; font-weight: bold;">{{ number_format($p->baseline_weight, 3) }}</td>
                     @endif
@@ -112,14 +119,18 @@
 
                     <td style="border: 1px solid #000000;">{{ $stage['spec'] }}</td>
                     <td style="border: 1px solid #000000; font-weight: bold;">{{ strtoupper($stage['name']) }}</td>
+                    <td style="border: 1px solid #000000; text-align: center;">{{ $stage['unit'] ?? '-' }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['t'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['w'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['l1'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['l2'], 2, '.', '') }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['pitch'], 2, '.', '') }}</td>
+                    <td style="border: 1px solid #000000; text-align: center;">{{ isset($stage['density']) && $stage['density'] > 0 ? number_format($stage['density'], 3) : '-' }}</td>
+                    <td style="border: 1px solid #000000; text-align: center;">{{ $stage['pcs_per_pitch'] ?? '-' }}</td>
+                    <td style="border: 1px solid #000000; text-align: center;">{{ $stage['pcs_per_unit'] ?? '-' }}</td>
                     <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['theoretical_weight'], 3, '.', '') }}</td>
-                    <td style="border: 1px solid #000000; text-align: center;">{{ number_format($stage['net_weight'], 3, '.', '') }}</td>
-                    <td style="border: 1px solid #000000; text-align: center; font-style: italic; color: #64748b;">{{ number_format($stage['theoretical_weight'] - $stage['net_weight'], 3) }}</td>
+                    <td style="border: 1px solid #000000; text-align: center;">{{ is_null($stage['net_weight']) || $stage['net_weight'] === '' || $stage['net_weight'] <= 0 ? '-' : number_format($stage['net_weight'], 3, '.', '') }}</td>
+                    <td style="border: 1px solid #000000; text-align: center; font-style: italic; color: #64748b;">{{ is_null($stage['net_weight']) || $stage['net_weight'] === '' || $stage['net_weight'] <= 0 ? '-' : number_format($stage['theoretical_weight'] - $stage['net_weight'], 3) }}</td>
                     <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ number_format($stage['budomari'], 2) }}%</td>
 
                     @php

@@ -40,11 +40,13 @@ class ProjectVaveAnalysisController extends Controller
                      ->where('base.is_active', '=', 1)
                      ->where('base.base_name', 'like', 'EBD%');
             })
+            ->leftJoin('inv_m_unit as base_unit', 'base_unit.id', '=', 'base.unit_id')
             // Get Latest Revision Weight
             ->leftJoin(DB::raw('(
-                SELECT product_id, weight_kg 
+                SELECT t1.product_id, t1.weight_kg, u1.name as unit_name
                 FROM inv_t_product_detail t1
                 JOIN inv_m_revision r1 ON r1.id = t1.revision_id
+                LEFT JOIN inv_m_unit u1 ON u1.id = t1.unit_id
                 WHERE r1.sort_order = (
                     SELECT MAX(r2.sort_order) 
                     FROM inv_t_product_detail t2 
@@ -71,7 +73,9 @@ class ProjectVaveAnalysisController extends Controller
                 'm.name as model_name',
                 'base.id as base_id',
                 'base.weight_kg as baseline_weight',
-                'latest_rev.weight_kg as latest_weight'
+                'base_unit.name as base_unit_name',
+                'latest_rev.weight_kg as latest_weight',
+                'latest_rev.unit_name as latest_unit_name'
             ]);
 
         $recordsTotal = (clone $query)->count();
@@ -93,6 +97,24 @@ class ProjectVaveAnalysisController extends Controller
         }
         if ($request->model_id) {
             $query->where('p.model_id', $request->model_id);
+        }
+
+        // Analysis Status Filter
+        if ($request->status) {
+            if ($request->status === 'MERIT') {
+                $query->whereRaw('(base.weight_kg - latest_rev.weight_kg) > 0.001');
+            } elseif ($request->status === 'LOSS') {
+                $query->whereRaw('(base.weight_kg - latest_rev.weight_kg) < -0.001');
+            } elseif ($request->status === 'NO CHANGE') {
+                $query->whereRaw('ABS(base.weight_kg - latest_rev.weight_kg) <= 0.001')
+                      ->whereNotNull('base.weight_kg')
+                      ->whereNotNull('latest_rev.weight_kg');
+            } elseif ($request->status === 'NO DATA') {
+                $query->where(function($q) {
+                    $q->whereNull('base.weight_kg')
+                      ->orWhere('base.weight_kg', '<=', 0);
+                });
+            }
         }
 
         $recordsFiltered = $query->count();
@@ -379,13 +401,21 @@ class ProjectVaveAnalysisController extends Controller
                     $p->baseline_weight = (float)$refBase->weight_kg;
                     $p->baseline_cost = (float)$refBase->weight_kg * (float)($refBase->material_price ?? 0);
                     $p->ebd_spec = $refBase->spec_name; $p->ebd_t = $refBase->thickness; $p->ebd_w = $refBase->width; $p->ebd_l1 = $refBase->length; $p->ebd_l2 = $refBase->length_2; $p->ebd_pitch = $refBase->pitch;
+                    $p->ebd_unit_name = $refBase->unit_name ?? '-';
+                    $p->ebd_density = (float)($refBase->density ?? 0);
+                    $p->ebd_pcs_per_pitch = (int)($refBase->pcs_per_pitch ?? 0);
+                    $p->ebd_pcs_per_unit = (int)($refBase->pcs_per_unit ?? 0);
+                    $p->ebd_net_weight = $refBase->net_weight;
                     $predecessor = $allProductBases->where('base_name', '<', $refBase->base_name)->sortByDesc('base_name')->first();
                     $p->change_status = 'NEW';
                     if ($predecessor) {
                         $hasDiff = round((float)$refBase->weight_kg, 4) != round((float)$predecessor->weight_kg, 4) || $refBase->material_spec_id != $predecessor->material_spec_id || (float)$refBase->thickness != (float)$predecessor->thickness || (float)$refBase->width != (float)$predecessor->width || (float)$refBase->length != (float)$predecessor->length || (float)$refBase->length_2 != (float)$predecessor->length_2 || (float)$refBase->pitch != (float)$predecessor->pitch;
                         $p->change_status = $hasDiff ? 'CHANGE' : 'NO CHANGE';
                     }
-                } else { $p->baseline_name = '-'; $p->baseline_weight = 0; $p->baseline_cost = 0; $p->change_status = '-'; }
+                } else { 
+                    $p->baseline_name = '-'; $p->baseline_weight = 0; $p->baseline_cost = 0; $p->change_status = '-'; 
+                    $p->ebd_unit_name = '-'; $p->ebd_density = 0; $p->ebd_pcs_per_pitch = 0; $p->ebd_pcs_per_unit = 0; $p->ebd_net_weight = null;
+                }
             } else {
                 $activeBase = $allProductBases->where('is_active', 1)->first() ?? $allProductBases->last();
                 $sfxStr = ($activeBase && $activeBase->suffix_name) ? ' - ' . $activeBase->suffix_name : '';
@@ -393,6 +423,11 @@ class ProjectVaveAnalysisController extends Controller
                 $p->baseline_weight = $activeBase ? (float)$activeBase->weight_kg : 0;
                 $p->baseline_cost = $activeBase ? ((float)$activeBase->weight_kg * (float)($activeBase->material_price ?? 0)) : 0;
                 $p->ebd_spec = $activeBase->spec_name ?? '-'; $p->ebd_t = $activeBase->thickness ?? 0; $p->ebd_w = $activeBase->width ?? 0; $p->ebd_l1 = $activeBase->length ?? 0; $p->ebd_l2 = $activeBase->length_2 ?? 0; $p->ebd_pitch = $activeBase->pitch ?? 0;
+                $p->ebd_unit_name = $activeBase->unit_name ?? '-';
+                $p->ebd_density = $activeBase ? (float)($activeBase->density ?? 0) : 0;
+                $p->ebd_pcs_per_pitch = $activeBase ? (int)($activeBase->pcs_per_pitch ?? 0) : 0;
+                $p->ebd_pcs_per_unit = $activeBase ? (int)($activeBase->pcs_per_unit ?? 0) : 0;
+                $p->ebd_net_weight = $activeBase ? $activeBase->net_weight : null;
                 if ($activeBase) {
                     $pIdx = $allProductBases->search(fn($b) => $b->id == $activeBase->id);
                     $predecessor = $pIdx > 0 ? $allProductBases[$pIdx - 1] : null;
@@ -404,7 +439,7 @@ class ProjectVaveAnalysisController extends Controller
             }
             foreach($revisions as $rev) {
                 $p->stages[] = [
-                    'source' => 'ACTUAL', 'name' => 'Revision ' . ($rev->revision_code ?? '-'), 'spec' => $rev->spec_name, 'unit' => $rev->unit_name, 't' => $rev->thickness, 'w' => $rev->width, 'l1' => $rev->length, 'l2' => $rev->length_2, 'pitch' => $rev->pitch, 'theoretical_weight' => $rev->weight_kg, 'net_weight' => $rev->net_weight, 'material_price' => $rev->material_price, 'cost' => $rev->weight_kg * ($rev->material_price ?? 0), 'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0, 'is_baseline' => false
+                    'source' => 'ACTUAL', 'name' => 'Revision ' . ($rev->revision_code ?? '-'), 'spec' => $rev->spec_name, 'unit' => $rev->unit_name, 't' => $rev->thickness, 'w' => $rev->width, 'l1' => $rev->length, 'l2' => $rev->length_2, 'pitch' => $rev->pitch, 'pcs_per_pitch' => $rev->pcs_per_pitch, 'pcs_per_unit' => $rev->pcs_per_unit, 'density' => $rev->density, 'theoretical_weight' => $rev->weight_kg, 'net_weight' => $rev->net_weight, 'material_price' => $rev->material_price, 'cost' => $rev->weight_kg * ($rev->material_price ?? 0), 'budomari' => $rev->weight_kg > 0 && !is_null($rev->net_weight) ? ($rev->net_weight / $rev->weight_kg) * 100 : 0, 'is_baseline' => false
                 ];
             }
             if (count($p->stages) > 0) $data[] = $p;

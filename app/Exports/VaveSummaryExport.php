@@ -37,10 +37,10 @@ class VaveSummaryExport implements FromView, WithTitle, WithStyles, ShouldAutoSi
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A:V')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-        $sheet->getStyle('J:S')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A1:V2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('T:V')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle('A:AZ')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getStyle('J:AZ')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('A1:AZ2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyle('AE:AZ')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
 
         return [
             1 => ['font' => ['bold' => true, 'size' => 14]],

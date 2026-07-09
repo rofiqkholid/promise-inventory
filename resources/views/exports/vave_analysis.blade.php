@@ -153,6 +153,22 @@
             @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->density, 3) }}</td> @endif @endforeach
         </tr>
         <tr>
+            <td style="border: 1px solid #000000;">Pcs / Pitch</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($vaveBase->pcs_per_pitch ?? 0, 0) }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($latestRev->pcs_per_pitch ?? 0, 0) }}</td>
+            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">{{ ($deltaPcsPitch > 0 ? '+' : '') . number_format($deltaPcsPitch, 0) }}</td>
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($r->pcs_per_pitch ?? 0, 0) }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->pcs_per_pitch ?? 0, 0) }}</td> @endif @endforeach
+        </tr>
+        <tr>
+            <td style="border: 1px solid #000000;">Pcs / Unit</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($vaveBase->pcs_per_unit ?? 0, 0) }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($latestRev->pcs_per_unit ?? 0, 0) }}</td>
+            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">{{ ($deltaPcsUnit > 0 ? '+' : '') . number_format($deltaPcsUnit, 0) }}</td>
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($r->pcs_per_unit ?? 0, 0) }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->pcs_per_unit ?? 0, 0) }}</td> @endif @endforeach
+        </tr>
+        <tr>
             <td style="border: 1px solid #000000;">Gross Weight (kg)</td>
             <td style="border: 1px solid #000000; text-align: center;">{{ number_format($baseW, 3) }}</td>
             <td style="border: 1px solid #000000; text-align: center; font-weight: bold;">{{ number_format($actW, 3) }}</td>
@@ -163,19 +179,19 @@
         </tr>
         <tr>
             <td style="border: 1px solid #000000;">Net Weight/Part (kg)</td>
-            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($vaveBase->net_weight, 3) }}</td>
-            <td style="border: 1px solid #000000; text-align: center;">{{ number_format($latestRev->net_weight, 3) }}</td>
-            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">{{ ($deltaNW > 0 ? '+' : '') . number_format($deltaNW, 3) }}</td>
-            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($r->net_weight, 3) }}</td> @endforeach
-            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ number_format($rev->net_weight, 3) }}</td> @endif @endforeach
+            <td style="border: 1px solid #000000; text-align: center;">{{ is_null($vaveBase->net_weight) || $vaveBase->net_weight === '' || $vaveBase->net_weight <= 0 ? '-' : number_format($vaveBase->net_weight, 3) }}</td>
+            <td style="border: 1px solid #000000; text-align: center;">{{ is_null($latestRev->net_weight) || $latestRev->net_weight === '' || $latestRev->net_weight <= 0 ? '-' : number_format($latestRev->net_weight, 3) }}</td>
+            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb;">{{ is_null($vaveBase->net_weight) || is_null($latestRev->net_weight) || $vaveBase->net_weight === '' || $latestRev->net_weight === '' || $vaveBase->net_weight <= 0 || $latestRev->net_weight <= 0 ? '-' : ($deltaNW > 0 ? '+' : '') . number_format($deltaNW, 3) }}</td>
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center;">{{ is_null($r->net_weight) || $r->net_weight === '' || $r->net_weight <= 0 ? '-' : number_format($r->net_weight, 3) }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center;">{{ is_null($rev->net_weight) || $rev->net_weight === '' || $rev->net_weight <= 0 ? '-' : number_format($rev->net_weight, 3) }}</td> @endif @endforeach
         </tr>
         <tr>
             <td style="border: 1px solid #000000; font-style: italic; color: #64748b;">Scrap (kg)</td>
-            <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ number_format($baseScrap, 3) }}</td>
-            <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ number_format($actScrap, 3) }}</td>
-            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb; color: #64748b;">{{ ($deltaScrap > 0 ? '+' : '') . number_format($deltaScrap, 3) }}</td>
-            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ number_format($r->weight_kg - $r->net_weight, 3) }}</td> @endforeach
-            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ number_format($rev->weight_kg - $rev->net_weight, 3) }}</td> @endif @endforeach
+            <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ is_null($baseScrap) ? '-' : number_format($baseScrap, 3) }}</td>
+            <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ is_null($actScrap) ? '-' : number_format($actScrap, 3) }}</td>
+            <td style="border: 1px solid #000000; text-align: center; background-color: #f9fafb; color: #64748b;">{{ is_null($deltaScrap) ? '-' : ($deltaScrap > 0 ? '+' : '') . number_format($deltaScrap, 3) }}</td>
+            @foreach($baseHistory as $r) <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ is_null($r->net_weight) || $r->net_weight === '' || $r->net_weight <= 0 ? '-' : number_format($r->weight_kg - $r->net_weight, 3) }}</td> @endforeach
+            @foreach($revisions as $idx => $rev) @if($idx > 0) <td style="border: 1px solid #000000; text-align: center; color: #64748b;">{{ is_null($rev->net_weight) || $rev->net_weight === '' || $rev->net_weight <= 0 ? '-' : number_format($rev->weight_kg - $rev->net_weight, 3) }}</td> @endif @endforeach
         </tr>
 
         @php

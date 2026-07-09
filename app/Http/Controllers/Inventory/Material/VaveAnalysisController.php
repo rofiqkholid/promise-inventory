@@ -472,10 +472,17 @@ class VaveAnalysisController extends Controller
                     // Store EBD Details for header
                     $p->ebd_spec = $refBase->spec_name;
                     $p->ebd_t = $refBase->thickness;
+                    $p->ebd_spec = $refBase->spec_name;
+                    $p->ebd_t = $refBase->thickness;
                     $p->ebd_w = $refBase->width;
                     $p->ebd_l1 = $refBase->length;
                     $p->ebd_l2 = $refBase->length_2;
                     $p->ebd_pitch = $refBase->pitch;
+                    $p->ebd_unit_name = $refBase->unit_name ?? '-';
+                    $p->ebd_density = (float)($refBase->density ?? 0);
+                    $p->ebd_pcs_per_pitch = (int)($refBase->pcs_per_pitch ?? 0);
+                    $p->ebd_pcs_per_unit = (int)($refBase->pcs_per_unit ?? 0);
+                    $p->ebd_net_weight = $refBase->net_weight;
 
                     // Calculate Change Status for the SELECTED EBD vs its previous
                     $predecessor = $allProductBases->where('base_name', '<', $refBase->base_name)
@@ -499,6 +506,11 @@ class VaveAnalysisController extends Controller
                     $p->baseline_weight = 0;
                     $p->baseline_cost = 0;
                     $p->change_status = '-';
+                    $p->ebd_unit_name = '-';
+                    $p->ebd_density = 0;
+                    $p->ebd_pcs_per_pitch = 0;
+                    $p->ebd_pcs_per_unit = 0;
+                    $p->ebd_net_weight = null;
                 }
             } else {
                 // Determine Global Active Baseline
@@ -515,6 +527,11 @@ class VaveAnalysisController extends Controller
                 $p->ebd_l1 = $activeBase->length ?? 0;
                 $p->ebd_l2 = $activeBase->length_2 ?? 0;
                 $p->ebd_pitch = $activeBase->pitch ?? 0;
+                $p->ebd_unit_name = $activeBase->unit_name ?? '-';
+                $p->ebd_density = $activeBase ? (float)($activeBase->density ?? 0) : 0;
+                $p->ebd_pcs_per_pitch = $activeBase ? (int)($activeBase->pcs_per_pitch ?? 0) : 0;
+                $p->ebd_pcs_per_unit = $activeBase ? (int)($activeBase->pcs_per_unit ?? 0) : 0;
+                $p->ebd_net_weight = $activeBase ? $activeBase->net_weight : null;
 
                 // Change status for active vs its predecessor
                 if ($activeBase) {
@@ -545,11 +562,14 @@ class VaveAnalysisController extends Controller
                     'l1' => $rev->length,
                     'l2' => $rev->length_2,
                     'pitch' => $rev->pitch,
+                    'pcs_per_pitch' => $rev->pcs_per_pitch,
+                    'pcs_per_unit' => $rev->pcs_per_unit,
+                    'density' => $rev->density,
                     'theoretical_weight' => $rev->weight_kg,
                     'net_weight' => $rev->net_weight,
                     'material_price' => $rev->material_price,
                     'cost' => $rev->weight_kg * ($rev->material_price ?? 0),
-                    'budomari' => $rev->weight_kg > 0 ? ($rev->net_weight / $rev->weight_kg) * 100 : 0,
+                    'budomari' => $rev->weight_kg > 0 && !is_null($rev->net_weight) ? ($rev->net_weight / $rev->weight_kg) * 100 : 0,
                     'is_baseline' => false
                 ];
             }
