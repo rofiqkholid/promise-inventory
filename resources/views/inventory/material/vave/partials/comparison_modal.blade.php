@@ -439,6 +439,60 @@ $(document).ready(function() {
         }
     }
 
+    // Helper to handle AJAX download with blob (precise spinner control)
+    function handleAjaxDownload($btn, url, fileNameDefault) {
+        const originalHtml = $btn.html();
+        
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-wait');
+        if($btn.find('.btn-icon').length) {
+            $btn.find('.btn-icon').attr('class', 'fa-solid fa-circle-notch fa-spin');
+            if($btn.find('.btn-text').length) $btn.find('.btn-text').text('Processing...');
+        } else {
+            $btn.html('<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Processing...');
+        }
+
+        $.ajax({
+            url: url,
+            method: 'GET',
+            xhrFields: { responseType: 'blob' },
+            success: function(data, status, xhr) {
+                const contentType = xhr.getResponseHeader('content-type');
+                const blob = new Blob([data], { type: contentType });
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                
+                let fileName = fileNameDefault;
+                const disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        fileName = matches[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(link.href);
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Download Failed',
+                    text: 'An error occurred while generating the export file.',
+                    customClass: {
+                        confirmButton: 'bg-primary-600 hover:bg-primary-700 text-white rounded px-4 py-2 font-semibold text-sm'
+                    }
+                });
+            },
+            complete: function() {
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-wait').html(originalHtml);
+            }
+        });
+    }
+
     // Handle Export Analysis di dalam Modal dengan AJAX Blob
     $(document).on('click', '#btnExportAnalysis', function(e) {
         e.preventDefault();
