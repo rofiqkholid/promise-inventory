@@ -655,14 +655,28 @@ $(function() {
                         data: 'product_status',
                         className: 'text-center',
                         render: (d, t, r) => {
-                            const status = d || r.model_project_status || 'Project';
+                            const projStatus = r.model_project_status || 'Project';
+                            const prodStatus = d;
                             const colors = {
                                 'Project': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
                                 'Regular': 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
                                 'Oldstock OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
                                 'Oldstock NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
-                            }[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
-                            return `<span class="px-2 py-1.5 rounded-xs text-[10px] font-medium whitespace-nowrap uppercase tracking-wide border ${colors}">${status}</span>`;
+                            };
+
+                            const getBadge = (status) => {
+                                if (!status) return '';
+                                const colorClass = colors[status] || 'bg-gray-50 text-gray-600 border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700';
+                                return `<span class="px-1.5 py-0.5 rounded-xs text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider border ${colorClass}">${status}</span>`;
+                            };
+
+                            let html = `<div class="flex flex-col items-center gap-1">`;
+                            html += getBadge(projStatus);
+                            if (prodStatus) {
+                                html += getBadge(prodStatus);
+                            }
+                            html += `</div>`;
+                            return html;
                         }
                     },
                     {
