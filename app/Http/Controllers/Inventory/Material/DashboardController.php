@@ -100,9 +100,21 @@ class DashboardController extends Controller
         $applyProjectStatusFilter = function($query, $status) {
             if (empty($status)) return;
             if (is_array($status)) {
-                $query->whereIn('ms.project_status', $status);
+                $query->where(function($q) use ($status) {
+                    $q->whereIn('ms.project_status', $status);
+                    if (in_array('Project', $status)) {
+                        $q->orWhereNull('ms.project_status');
+                    }
+                });
             } else {
-                $query->where('ms.project_status', $status);
+                if ($status === 'Project') {
+                    $query->where(function($q) {
+                        $q->where('ms.project_status', 'Project')
+                          ->orWhereNull('ms.project_status');
+                    });
+                } else {
+                    $query->where('ms.project_status', $status);
+                }
             }
         };
 
