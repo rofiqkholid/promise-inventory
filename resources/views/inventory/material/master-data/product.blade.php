@@ -44,7 +44,7 @@
             </h3>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 items-end">
                 {{-- CUSTOMER --}}
                 <div class="w-full">
                     <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Customer</label>
@@ -68,7 +68,7 @@
                 </div>
 
                 {{-- PART NUMBER (SELECT2 AJAX) --}}
-                <div class="w-full lg:col-span-1">
+                <div class="w-full">
                     <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Part Number</label>
                     <select id="filterPartNo" class="w-full">
                         <option value="">All Part Numbers</option>
@@ -80,13 +80,23 @@
                     <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Project Status</label>
                     <select id="filterProjectStatus" class="select2-filter w-full">
                         <option value="">All Status</option>
-                        <option value="project">Project</option>
-                        <option value="regular">Regular</option>
+                        <option value="Project">Project</option>
+                        <option value="Regular">Regular</option>
+                    </select>
+                </div>
+
+                {{-- PRODUCT STATUS FILTER --}}
+                <div class="w-full">
+                    <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Product Status</label>
+                    <select id="filterProductStatus" class="select2-filter w-full">
+                        <option value="">All Status</option>
+                        <option value="Oldstock OK">Oldstock OK</option>
+                        <option value="Oldstock NG">Oldstock NG</option>
                     </select>
                 </div>
 
                 {{-- ACTIONS --}}
-                <div class="flex items-center w-full lg:col-span-1">
+                <div class="flex items-center w-full">
                     <button type="button" id="btnResetFilter" class="h-9 px-4 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-200 dark:border-gray-700 transition-all active:scale-95 shadow-xs">
                         <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset
                     </button>
@@ -615,6 +625,8 @@ $(function() {
                         d.customer_id = this.elements.customerFilter.val();
                         d.model_id = this.elements.modelFilter.val();
                         d.part_no = this.elements.partNoFilter.val();
+                        d.project_status = $('#filterProjectStatus').val();
+                        d.product_status = $('#filterProductStatus').val();
                         d.incomplete_only = $('#filterDataStatus').val() === 'incomplete' ? 1 : null;
                     }
                 },
@@ -808,6 +820,8 @@ $(function() {
             });
             this.elements.partNoFilter.on('change', () => this.state.table.ajax.reload());
             $('#filterDataStatus').on('change', () => this.state.table.ajax.reload());
+            $('#filterProjectStatus').on('change', () => this.state.table.ajax.reload());
+            $('#filterProductStatus').on('change', () => this.state.table.ajax.reload());
             $('#btnResetFilter').on('click', () => this.resetFilters());
             $('#btnExport').on('click', () => this.handleExport());
             
@@ -946,6 +960,8 @@ $(function() {
                 customer_id: this.elements.customerFilter.val(),
                 model_id: this.elements.modelFilter.val(),
                 part_no: this.elements.partNoFilter.val(),
+                project_status: $('#filterProjectStatus').val(),
+                product_status: $('#filterProductStatus').val(),
                 search: this.state.table.search()
             };
             const queryString = $.param(params);
@@ -956,6 +972,8 @@ $(function() {
             this.elements.customerFilter.val(null).trigger('change.select2');
             this.elements.modelFilter.val(null).trigger('change.select2');
             this.elements.partNoFilter.val(null).trigger('change.select2');
+            $('#filterProjectStatus').val(null).trigger('change.select2');
+            $('#filterProductStatus').val(null).trigger('change.select2');
             $('#filterDataStatus').val(null).trigger('change.select2');
             
             $.get(this.config.routes.models, { for_filter: 1 }, (data) => {

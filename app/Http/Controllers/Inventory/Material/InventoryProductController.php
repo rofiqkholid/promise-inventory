@@ -84,6 +84,12 @@ class InventoryProductController extends Controller
                   });
             });
         }
+        if ($request->filled('project_status')) {
+            $query->where('ms_model.project_status', $request->project_status);
+        }
+        if ($request->filled('product_status')) {
+            $query->where('p.product_status', $request->product_status);
+        }
 
         // Global Search
         $searchValue = $request->input('search.value');
@@ -196,6 +202,12 @@ class InventoryProductController extends Controller
         }
         if ($request->filled('part_no')) {
             $query->where('prod.part_no', 'like', "%{$request->part_no}%");
+        }
+        if ($request->filled('project_status')) {
+            $query->where('ms_model.project_status', $request->project_status);
+        }
+        if ($request->filled('product_status')) {
+            $query->where('p.product_status', $request->product_status);
         }
 
         // Global Search
