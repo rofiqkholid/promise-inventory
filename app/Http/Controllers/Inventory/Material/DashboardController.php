@@ -129,6 +129,7 @@ class DashboardController extends Controller
         if (!empty($selectedCustomers)) $stockQuery->whereIn('prod.customer_id', $selectedCustomers);
         $applyProjectStatusFilter($stockQuery, $selectedProjectStatus);
         $histQtySql = $isHistorical ? "(p.current_stock_qty - ISNULL(adj.net_change_qty, 0))" : "p.current_stock_qty";
+        $stockQuery->whereRaw("{$histQtySql} > 0");
         $pcsSql = \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql($histQtySql, 'p', 'u.name');
         $amountSql = \App\Models\InventoryModel\Material\InventoryProduct::getAmountCalculationSql($histQtySql, 'p', 'u.name');
 
