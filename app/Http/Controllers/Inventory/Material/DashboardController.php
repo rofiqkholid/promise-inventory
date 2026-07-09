@@ -633,6 +633,7 @@ class DashboardController extends Controller
         }
 
         $histQtySql = $isHistorical ? "(p.current_stock_qty - ISNULL(adj.net_change_qty, 0))" : "p.current_stock_qty";
+        $baseProduct->whereRaw("{$histQtySql} > 0");
         $pcsSql = \App\Models\InventoryModel\Material\InventoryProduct::getPcsCalculationSql($histQtySql, 'p', 'u.name');
 
         $baseTrans = DB::table('inv_t_inventory_transaction as t')
