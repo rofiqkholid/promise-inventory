@@ -659,9 +659,7 @@ $(function() {
                             const prodStatus = d;
                             const colors = {
                                 'Project': 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/50',
-                                'Regular': 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50',
-                                'Oldstock OK': 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/50',
-                                'Oldstock NG': 'bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/50'
+                                'Regular': 'bg-primary-50 text-primary-700 border-primary-100 dark:bg-primary-900/20 dark:text-primary-400 dark:border-primary-800/50'
                             };
 
                             const getBadge = (status) => {
@@ -670,10 +668,20 @@ $(function() {
                                 return `<span class="px-1.5 py-0.5 rounded-xs text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider border ${colorClass}">${status}</span>`;
                             };
 
-                            let html = `<div class="flex flex-col items-center gap-1">`;
+                            const getMutedText = (status) => {
+                                if (!status) return '';
+                                const textColors = {
+                                    'Oldstock OK': 'text-emerald-600 dark:text-emerald-400',
+                                    'Oldstock NG': 'text-rose-600 dark:text-rose-400'
+                                };
+                                const colorClass = textColors[status] || 'text-gray-500 dark:text-gray-400';
+                                return `<span class="text-[9px] font-semibold tracking-tight uppercase whitespace-nowrap mt-0.5 ${colorClass}">${status}</span>`;
+                            };
+
+                            let html = `<div class="flex flex-col items-center">`;
                             html += getBadge(projStatus);
                             if (prodStatus) {
-                                html += getBadge(prodStatus);
+                                html += getMutedText(prodStatus);
                             }
                             html += `</div>`;
                             return html;
