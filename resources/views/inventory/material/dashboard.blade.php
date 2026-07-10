@@ -324,9 +324,7 @@
                     <button onclick="changeDrilldownPage(-1)" id="ddPrev" class="w-7 h-7 flex items-center justify-center rounded-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                         <i class="fa-solid fa-chevron-left text-[10px]"></i>
                     </button>
-                    <div class="px-2 text-[10px] font-bold text-slate-600 dark:text-slate-300">
-                        Page <span id="ddCurrentPage">1</span>
-                    </div>
+                    <div id="ddPageNumbers" class="flex items-center gap-1"></div>
                     <button onclick="changeDrilldownPage(1)" id="ddNext" class="w-7 h-7 flex items-center justify-center rounded-xs bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
                         <i class="fa-solid fa-chevron-right text-[10px]"></i>
                     </button>
@@ -1614,10 +1612,48 @@
             document.getElementById('ddTotal').textContent = total;
             document.getElementById('ddPageStart').textContent = total === 0 ? 0 : start;
             document.getElementById('ddPageEnd').textContent = end;
-            document.getElementById('ddCurrentPage').textContent = drilldownPage;
             
             document.getElementById('ddPrev').disabled = drilldownPage <= 1;
             document.getElementById('ddNext').disabled = end >= total;
+
+            // Render numbered page buttons
+            const totalPages = Math.ceil(total / pageSize);
+            const pageNumbersContainer = document.getElementById('ddPageNumbers');
+            pageNumbersContainer.innerHTML = '';
+            
+            if (totalPages > 1) {
+                let startPage = Math.max(1, drilldownPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                if (endPage - startPage < 4) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+
+                if (startPage > 1) {
+                    pageNumbersContainer.appendChild(createPageButton(1, false));
+                    if (startPage > 2) {
+                        const dots = document.createElement('span');
+                        dots.className = 'px-1 text-slate-400 text-[10px]';
+                        dots.textContent = '...';
+                        pageNumbersContainer.appendChild(dots);
+                    }
+                }
+
+                for (let p = startPage; p <= endPage; p++) {
+                    pageNumbersContainer.appendChild(createPageButton(p, p === drilldownPage));
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        const dots = document.createElement('span');
+                        dots.className = 'px-1 text-slate-400 text-[10px]';
+                        dots.textContent = '...';
+                        pageNumbersContainer.appendChild(dots);
+                    }
+                    pageNumbersContainer.appendChild(createPageButton(totalPages, false));
+                }
+            } else {
+                pageNumbersContainer.appendChild(createPageButton(1, true));
+            }
 
             if (isInitial) {
                 loader.classList.add('hidden');
@@ -1634,6 +1670,25 @@
         drilldownPage = 1;
         fetchDrilldownData();
     };
+
+    function createPageButton(pageNum, isActive) {
+        const btn = document.createElement('button');
+        btn.className = `w-7 h-7 flex items-center justify-center rounded-xs text-[10px] font-bold border transition-all ${
+            isActive 
+            ? 'bg-primary-500 text-white border-primary-500 shadow-sm' 
+            : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-600'
+        }`;
+        btn.textContent = pageNum;
+        btn.onclick = () => {
+            if (drilldownPage !== pageNum) {
+                drilldownPage = pageNum;
+                fetchDrilldownData();
+                const container = document.querySelector('#drilldownContent .overflow-y-auto');
+                if (container) container.scrollTop = 0;
+            }
+        };
+        return btn;
+    }
 
     window.changeDrilldownPage = function(dir) {
         drilldownPage += dir;

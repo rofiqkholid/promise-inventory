@@ -734,9 +734,13 @@ class DashboardController extends Controller
             }
 
             if ($stockMode === 'old') {
-                // Sort by part no
+                // Sort by Status Priority (Oldstock NG -> Oldstock OK -> Other) then Part No
                 usort($processed, function($a, $b) {
-                    return strcasecmp($a['part_no'], $b['part_no']);
+                    $order = ['Oldstock NG' => 1, 'Oldstock OK' => 2];
+                    $oA = $order[$a['status']] ?? 99;
+                    $oB = $order[$b['status']] ?? 99;
+                    if ($oA === $oB) return strcasecmp($a['part_no'], $b['part_no']);
+                    return $oA <=> $oB;
                 });
             } else {
                 // Sort by Status Priority (Critical -> Warning -> Over -> Safe) then Part No
