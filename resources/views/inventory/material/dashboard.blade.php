@@ -1357,6 +1357,7 @@
 
     const DRILLDOWN_COLS = {
         stock: [
+            { key: 'row_num',   label: '#',             cls: 'text-center py-2 px-1 w-6 text-slate-400 font-medium' },
             { key: 'part_no',   label: 'Part No',      cls: 'text-left py-2 px-3' },
             { key: 'stock',     label: 'Stock',         cls: 'text-right py-2 px-2' },
             { key: 'min_stock', label: 'Min',           cls: 'text-right py-2 px-2' },
@@ -1366,12 +1367,14 @@
             { key: 'action_remark', label: 'Note',      cls: 'text-left py-2 px-3 max-w-[200px]' },
         ],
         usage_model: [
+            { key: 'row_num',   label: '#',             cls: 'text-center py-2 px-1 w-6 text-slate-400 font-medium' },
             { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
             { key: 'category',  label: 'Category',      cls: 'text-center py-2 px-2' },
             { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 whitespace-nowrap' },
             { key: 'date',      label: 'Date',          cls: 'text-right py-2 px-3' }
         ],
         maker: [
+            { key: 'row_num',   label: '#',             cls: 'text-center py-2 px-1 w-6 text-slate-400 font-medium' },
             { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
             { key: 'model',     label: 'Model/Cust',    cls: 'text-left py-2 px-2 text-[10px]' },
             { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 whitespace-nowrap' },
@@ -1379,6 +1382,7 @@
             { key: 'status',    label: 'Status',        cls: 'py-2 px-3 text-right' }
         ],
         trendline: [
+            { key: 'row_num',   label: '#',             cls: 'text-center py-2 px-1 w-6 text-slate-400 font-medium' },
             { key: 'part_no',           label: 'Part Number',           cls: 'py-2 px-3' },
             { key: 'category',          label: 'Category',              cls: 'py-2 px-2 text-center' },
             { key: 'origin_destination', label: 'Origin / Destination', cls: 'py-2 px-3 text-left' },
@@ -1475,8 +1479,12 @@
             if (!res.data || res.data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="${cols.length}" class="py-10 text-center text-slate-400 italic text-[11px]">No data found.</td></tr>`;
             } else {
-                tbody.innerHTML = res.data.map(row => {
+                tbody.innerHTML = res.data.map((row, idx) => {
+                    const rowNum = (drilldownPage - 1) * pageSize + idx + 1;
                     return '<tr class="hover:bg-slate-50 dark:hover:bg-gray-800/60 transition-colors border-b border-gray-50 dark:border-gray-800">' + cols.map(c => {
+                        if (c.key === 'row_num') {
+                            return `<td class="${c.cls}">${rowNum}</td>`;
+                        }
                         if (c.key === 'action_status') {
                             const isCritical = row.status === 'Critical' || row.status === 'Warning' || row.status === 'Over';
                             if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
