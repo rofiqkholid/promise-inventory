@@ -1368,21 +1368,21 @@
         usage_model: [
             { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
             { key: 'category',  label: 'Category',      cls: 'text-center py-2 px-2' },
-            { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 font-mono whitespace-nowrap' },
+            { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 whitespace-nowrap' },
             { key: 'date',      label: 'Date',          cls: 'text-right py-2 px-3' }
         ],
         maker: [
             { key: 'part_no',   label: 'Part No',       cls: 'text-left py-2 px-3' },
             { key: 'model',     label: 'Model/Cust',    cls: 'text-left py-2 px-2 text-[10px]' },
-            { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 font-mono whitespace-nowrap' },
-            { key: 'gap',       label: 'Gap',           cls: 'text-right py-2 px-3 font-mono' },
+            { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 whitespace-nowrap' },
+            { key: 'gap',       label: 'Gap',           cls: 'text-right py-2 px-3' },
             { key: 'status',    label: 'Status',        cls: 'py-2 px-3 text-right' }
         ],
         trendline: [
             { key: 'part_no',           label: 'Part Number',           cls: 'py-2 px-3' },
             { key: 'category',          label: 'Category',              cls: 'py-2 px-2 text-center' },
             { key: 'origin_destination', label: 'Origin / Destination', cls: 'py-2 px-3 text-left' },
-            { key: 'quantity',          label: 'Quantity',              cls: 'py-2 px-3 text-right font-mono whitespace-nowrap' },
+            { key: 'quantity',          label: 'Quantity',              cls: 'py-2 px-3 text-right whitespace-nowrap' },
             { key: 'date',              label: 'Date',                  cls: 'py-2 px-3 text-right' }
         ]
     };
