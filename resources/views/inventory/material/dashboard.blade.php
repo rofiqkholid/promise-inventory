@@ -1471,9 +1471,10 @@
             const tbody = document.getElementById('drilldownBody');
             
             // Header
-            document.getElementById('drilldownHead').innerHTML = '<tr>' + cols.map(c =>
-                `<th class="${c.cls} text-[9px] font-bold text-slate-500 uppercase tracking-widest">${c.label}</th>`
-            ).join('') + '</tr>';
+            document.getElementById('drilldownHead').innerHTML = '<tr>' + cols.map(c => {
+                const headerCls = c.cls.replace('text-left', 'text-center').replace('text-right', 'text-center');
+                return `<th class="${headerCls} text-[9px] font-bold text-slate-500 uppercase tracking-widest text-center">${c.label}</th>`;
+            }).join('') + '</tr>';
 
             // Body
             if (!res.data || res.data.length === 0) {
