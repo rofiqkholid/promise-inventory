@@ -49,7 +49,7 @@ Route::get('/login', function () {
     if (request()->has('redirect')) {
         session()->put('url.intended', request()->get('redirect'));
     }
-    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
+    return redirect(config('services.portal_login_url'));
 })->name('login');
 
 Route::get('/', function () {
@@ -69,7 +69,7 @@ Route::post('/login', function () { return redirect()->route('login'); })->name(
 Route::post('/logout', function () { 
     Auth::logout();
     session()->invalidate();
-    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
+    return redirect(config('services.portal_login_url'));
 })->name('logout');
 
 // Public Scan Info (No Login Required)

@@ -35,4 +35,6 @@ return [
         ],
     ],
 
+
+    'portal_login_url' => env('PORTAL_LOGIN_URL', 'https://svr2-promise.summitadyawinsa.co.id/login'),
 ];
