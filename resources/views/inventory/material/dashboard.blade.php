@@ -891,8 +891,11 @@
                      }
                  }
 
+                 const labelStr = (row.model_name || 'N/A') + '|' + (row.customer_code || 'N/A');
+                 const cleanPartNo = (row.part_no || '').split(' ')[0];
+
                   return `
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors cursor-pointer" onclick="openDrilldown('stock', '${labelStr}', '${row.status || ''}', '${cleanPartNo}')">
                         <td class="py-1.5 px-3">
                             <div class="flex items-center">
                                 <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
@@ -915,11 +918,28 @@
             }
             function generateUsageRow(row) {
                 const color = row.status == 'Loss' ? 'red' : (row.status == 'Near Loss' ? 'amber' : 'emerald');
+
+                let actionIcon = '';
+                if (row.status === 'Loss' || row.status === 'Near Loss') {
+                    if (row.maker_action_status === 'As Plan') {
+                        actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 ml-1.5" title="As Plan"></i>';
+                    } else {
+                        actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 ml-1.5" title="Need Action"></i>';
+                    }
+                }
+
+                const supplierName = row.supplier_name || 'N/A';
+                const cleanPartNo = (row.part_no || '').split(' ')[0];
+
                 return `
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-gray-700/20 transition-colors cursor-pointer" onclick="openDrilldown('maker', '${supplierName}', '${row.status || ''}', '${cleanPartNo}')">
                         <td class="py-1.5 px-3">
-                            <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                            <div class="flex items-center">
+                                <p class="text-[11px] font-medium text-slate-700 dark:text-gray-200 tracking-tight leading-tight">${row.part_no} ${row.revision ? '- ' + row.revision : ''}</p>
+                                ${actionIcon}
+                            </div>
                             <p class="text-[9px] text-slate-400 tracking-tighter">${row.model_name || '-'} | ${row.customer_code || '-'}</p>
+                            ${row.maker_action_remark ? `<p class="text-[8px] text-primary-500 italic mt-0.5"><i class="fa-solid fa-message mr-1 opacity-70"></i>${row.maker_action_remark}</p>` : ''}
                         </td>
                         <td class="py-1.5 px-2 text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[80px]">${row.supplier_name || '-'}</td>
                         <td class="py-1.5 px-2 text-[11px] font-medium text-slate-800 dark:text-white text-right font-mono">${new Intl.NumberFormat().format(row.out_trial)}</td>
@@ -930,6 +950,7 @@
                     </tr>
                 `;
             }
+
             function generateHistoryRow(row) {
                 const date = new Date(row.transaction_date);
                 const createdAt = new Date(row.created_at);
@@ -979,6 +1000,29 @@
             renderTable('#balanceTableBody', @json($tables['balance'] ?? []), generateBalanceRow, 'All items are currently within safe limits.');
             renderTable('#usageTableBody', @json($tables['usage'] ?? []), generateUsageRow, 'No trial data available.');
             renderTable('#historyTableBody', @json($tables['history'] ?? []), generateHistoryRow, 'No recent activity.');
+            
+            // --- DRILLDOWN OPENER UPDATE ---
+            window.openDrilldown = function(chartType, label, status = null, search = '') {
+                drilldownCurrentType = chartType;
+                drilldownCurrentLabel = label;
+                drilldownCurrentStatus = status || '';
+                drilldownPage = 1;
+
+                const modal  = document.getElementById('drilldownModal');
+                const panel  = document.getElementById('drilldownPanel');
+                const searchInput = document.getElementById('drilldownSearch');
+
+                if(searchInput) searchInput.value = search || '';
+
+                modal.classList.remove('hidden');
+                requestAnimationFrame(() => panel.classList.remove('translate-x-full'));
+                
+                document.getElementById('drilldownTitle').textContent = 'Loading...';
+                document.getElementById('drilldownCountBadge').textContent = '0';
+
+                renderDrilldownLegend(chartType, drilldownCurrentStatus);
+                fetchDrilldownData(true);
+            };
 
 
                 if (document.getElementById('stockStatusChart')) {
@@ -1379,7 +1423,9 @@
             { key: 'model',     label: 'Model/Cust',    cls: 'text-left py-2 px-2 text-[10px]' },
             { key: 'quantity',  label: 'Quantity',      cls: 'text-right py-2 px-3 whitespace-nowrap' },
             { key: 'gap',       label: 'Gap',           cls: 'text-right py-2 px-3' },
-            { key: 'status',    label: 'Status',        cls: 'py-2 px-3 text-right' }
+            { key: 'status',    label: 'Status',        cls: 'py-2 px-3 text-center' },
+            { key: 'maker_action_status', label: 'Action',    cls: 'text-center py-2 px-3' },
+            { key: 'maker_action_remark', label: 'Note',      cls: 'text-left py-2 px-3 max-w-[200px]' }
         ],
         trendline: [
             { key: 'row_num',   label: '#',             cls: 'text-center py-2 px-1 w-6 text-slate-400 font-medium' },
@@ -1486,12 +1532,18 @@
                         if (c.key === 'row_num') {
                             return `<td class="${c.cls}">${rowNum}</td>`;
                         }
-                        if (c.key === 'action_status') {
-                            const isCritical = row.status === 'Critical' || row.status === 'Warning' || row.status === 'Over';
+                        if (c.key === 'action_status' || c.key === 'maker_action_status') {
+                            const isMaker = c.key === 'maker_action_status';
+                            const isCritical = isMaker 
+                                ? (row.status === 'Loss' || row.status === 'Near Loss')
+                                : ['Critical', 'Warning', 'Over'].includes(row.status);
                             if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
 
                             const current = row[c.key] || '';
-                            const statusMap = {
+                            const statusMap = isMaker ? {
+                                '': { label: 'NEED ACTION', cls: 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400' },
+                                'As Plan': { label: 'AS PLAN', cls: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400' }
+                            } : {
                                 '': { label: 'NEED ACTION', cls: 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/20 dark:text-rose-400' },
                                 'Process': { label: 'IN PROCESS', cls: 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400' },
                                 'Ordered': { label: 'ORDERED', cls: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400' }
@@ -1500,7 +1552,13 @@
 
                             let actionIcon = '';
                             const isOldMode = $('#stock_mode').val() === 'old';
-                            if (!isOldMode && (row.status === 'Critical' || row.status === 'Warning')) {
+                            if (isMaker) {
+                                if (row.maker_action_status === 'As Plan') {
+                                    actionIcon = '<i class="fa-solid fa-circle-check text-emerald-500 ml-1.5" title="As Plan"></i>';
+                                } else {
+                                    actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 ml-1.5" title="Need Action"></i>';
+                                }
+                            } else if (!isOldMode && ['Critical', 'Warning'].includes(row.status)) {
                                 if (row.action_status === 'Process') {
                                     actionIcon = '<i class="fa-solid fa-clock text-amber-500 ml-1.5" title="In Process"></i>';
                                 } else if (row.action_status === 'Ordered') {
@@ -1509,10 +1567,29 @@
                                     actionIcon = '<i class="fa-solid fa-circle-exclamation text-rose-500 ml-1.5" title="Need Action"></i>';
                                 }
                             }
+
+                            const dropdownOptions = isMaker ? `
+                                <button onclick="updateActionStatus('${row.id}', '', 'maker')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> NEED ACTION
+                                </button>
+                                <button onclick="updateActionStatus('${row.id}', 'As Plan', 'maker')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> AS PLAN
+                                </button>
+                            ` : `
+                                <button onclick="updateActionStatus('${row.id}', '', 'stock')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> NEED ACTION
+                                </button>
+                                <button onclick="updateActionStatus('${row.id}', 'Process', 'stock')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span> IN PROCESS
+                                </button>
+                                <button onclick="updateActionStatus('${row.id}', 'Ordered', 'stock')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> ORDERED
+                                </button>
+                            `;
                             
                             return `<td class="${c.cls}">
                                 <div class="relative inline-block text-left dropdown-action-container">
-                                    <div class="flex items-center">
+                                    <div class="flex items-center justify-center">
                                         <button onclick="toggleStatusDropdown(event, '${row.id}')" 
                                             class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-bold border transition-all hover:bg-slate-50 dark:hover:bg-gray-700 ${st.cls}">
                                             <span class="w-1 h-1 rounded-full bg-current mr-1"></span>
@@ -1523,15 +1600,7 @@
                                     </div>
                                     <div id="dropdown-${row.id}" class="hidden absolute right-0 mt-1 w-32 bg-white dark:bg-gray-800 rounded-xs shadow-xl border border-slate-200 dark:border-gray-700 z-[100] overflow-hidden">
                                         <div class="py-1">
-                                            <button onclick="updateActionStatus('${row.id}', '')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2"></span> NEED ACTION
-                                            </button>
-                                            <button onclick="updateActionStatus('${row.id}', 'Process')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 flex items-center">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span> IN PROCESS
-                                            </button>
-                                            <button onclick="updateActionStatus('${row.id}', 'Ordered')" class="w-full text-left px-3 py-1.5 text-[8px] font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 flex items-center">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> ORDERED
-                                            </button>
+                                            ${dropdownOptions}
                                         </div>
                                     </div>
                                 </div>
@@ -1570,12 +1639,16 @@
                             displayVal = Math.round(parseFloat(val) || 0).toLocaleString() + ' PCS';
                         }
 
-                        if (c.key === 'action_remark') {
-                            const isCritical = row.status === 'Critical' || row.status === 'Warning' || row.status === 'Over';
+                        if (c.key === 'action_remark' || c.key === 'maker_action_remark') {
+                            const isMaker = c.key === 'maker_action_remark';
+                            const isCritical = isMaker 
+                                ? (row.status === 'Loss' || row.status === 'Near Loss')
+                                : ['Critical', 'Warning', 'Over'].includes(row.status);
                             if (!isCritical) return `<td class="${c.cls}"><span class="text-slate-300 italic text-[9px]">N/A</span></td>`;
                             
                             const displayNote = val || 'Add note...';
                             const noteCls = val ? 'text-slate-600 dark:text-slate-300' : 'text-slate-300 italic';
+                            const saveType = isMaker ? 'maker' : 'stock';
 
                             return `<td class="${c.cls}">
                                 <div class="relative w-full dropdown-note-container">
@@ -1595,7 +1668,7 @@
                                             placeholder="Type follow-up note here...">${val}</textarea>
                                         <div class="flex justify-end gap-2">
                                             <button onclick="closeAllNoteDropdowns()" class="px-3 py-1.5 text-[10px] font-medium text-slate-400 hover:text-slate-600 transition-colors">Cancel</button>
-                                            <button onclick="saveActionNote('${row.id}')" class="px-4 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-[10px] font-bold rounded-xs shadow-sm transition-all active:scale-95">Save Changes</button>
+                                            <button onclick="saveActionNote('${row.id}', '${saveType}')" class="px-4 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-[10px] font-bold rounded-xs shadow-sm transition-all active:scale-95">Save Changes</button>
                                         </div>
                                     </div>
                                 </div>
@@ -1782,17 +1855,21 @@
         }
     });
 
-    window.updateActionStatus = function(id, status) {
+    window.updateActionStatus = function(id, status, type = 'stock') {
         // Close dropdown immediately
         const dropdown = document.getElementById(`dropdown-${id}`);
         if (dropdown) dropdown.classList.add('hidden');
 
         const url = '{{ route("inventory.master.product.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
         
-        $.post(url, {
-            _token: '{{ csrf_token() }}',
-            action_status: status
-        })
+        const payload = { _token: '{{ csrf_token() }}' };
+        if (type === 'maker') {
+            payload.maker_action_status = status;
+        } else {
+            payload.action_status = status;
+        }
+
+        $.post(url, payload)
         .done(function(res) {
             if (res.success) {
                 // Refresh drilldown data to show new status badge
@@ -1809,17 +1886,19 @@
         });
     };
 
-    window.updateActionRemark = function(id, remark) {
+    window.updateActionRemark = function(id, remark, type = 'stock') {
         const url = '{{ route("inventory.master.product.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
         
-        $.post(url, {
-            _token: '{{ csrf_token() }}',
-            action_remark: remark
-        })
+        const payload = { _token: '{{ csrf_token() }}' };
+        if (type === 'maker') {
+            payload.maker_action_remark = remark;
+        } else {
+            payload.action_remark = remark;
+        }
+
+        $.post(url, payload)
         .done(function(res) {
             if (res.success) {
-                // No need to refresh everything for just a remark update
-                // Unless we want to show a toast
                 console.log('Remark updated');
             }
         });
@@ -1844,14 +1923,18 @@
         document.querySelectorAll('[id^="note-dropdown-"]').forEach(el => el.classList.add('hidden'));
     };
 
-    window.saveActionNote = function(id) {
+    window.saveActionNote = function(id, type = 'stock') {
         const val = document.getElementById(`note-input-${id}`).value;
         const url = '{{ route("inventory.master.product.updateActionStatus", ["id" => ":id"]) }}'.replace(':id', id);
         
-        $.post(url, {
-            _token: '{{ csrf_token() }}',
-            action_remark: val
-        })
+        const payload = { _token: '{{ csrf_token() }}' };
+        if (type === 'maker') {
+            payload.maker_action_remark = val;
+        } else {
+            payload.action_remark = val;
+        }
+
+        $.post(url, payload)
         .done(function(res) {
             if (res.success) {
                 closeAllNoteDropdowns();

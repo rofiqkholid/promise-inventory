@@ -361,9 +361,11 @@ class DashboardController extends Controller
                 'p.pcs_per_unit',
                 'p.gross_coil',
                 'u.name as unit_name',
+                'p.maker_action_status',
+                'p.maker_action_remark',
                 DB::raw("SUM(t.qty) as usage_qty")
             ])
-            ->groupBy('s.code', 'prod.part_no', 'rev.code', 'm.name', 'c.code', 'p.id', 'r.code', 'r.process_type', 'r.limit_value', 'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name')
+            ->groupBy('s.code', 'prod.part_no', 'rev.code', 'm.name', 'c.code', 'p.id', 'r.code', 'r.process_type', 'r.limit_value', 'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name', 'p.maker_action_status', 'p.maker_action_remark')
             ->get();
 
         $makerData = [];
@@ -397,7 +399,9 @@ class DashboardController extends Controller
                 'rank_display' => ($item->rank_code ?? '-') . ' ' . number_format($limit),
                 'out_trial' => $usagePcs,
                 'gap' => $gap,
-                'status' => $statusRaw
+                'status' => $statusRaw,
+                'maker_action_status' => $item->maker_action_status,
+                'maker_action_remark' => $item->maker_action_remark,
             ];
         }
 
@@ -474,6 +478,41 @@ class DashboardController extends Controller
                 return in_array($item->status, ['Critical', 'Warning']);
             });
         }
+
+        $balanceStatusTable = $balanceStatusTable->sort(function($a, $b) {
+            $statusOrder = [
+                'Critical' => 1,
+                'Warning' => 2,
+                'Oldstock NG' => 3,
+                'Oldstock OK' => 4,
+            ];
+            $orderA = $statusOrder[$a->status] ?? 99;
+            $orderB = $statusOrder[$b->status] ?? 99;
+            
+            if ($orderA !== $orderB) {
+                return $orderA <=> $orderB;
+            }
+            
+            $minA = (float)$a->min_stock;
+            $pcsA = (float)$a->current_stock_pcs;
+            $rateA = ($minA > 0) ? (($minA - $pcsA) / $minA) : 0;
+
+            $minB = (float)$b->min_stock;
+            $pcsB = (float)$b->current_stock_pcs;
+            $rateB = ($minB > 0) ? (($minB - $pcsB) / $minB) : 0;
+
+            if ($rateA != $rateB) {
+                return $rateB <=> $rateA;
+            }
+
+            $gapA = $minA - $pcsA;
+            $gapB = $minB - $pcsB;
+            if ($gapA != $gapB) {
+                return $gapB <=> $gapA;
+            }
+
+            return strcasecmp($a->part_no, $b->part_no);
+        });
 
         $balanceStatusTable = $balanceStatusTable->values()->take(15);
 
@@ -902,18 +941,22 @@ class DashboardController extends Controller
 
             $items = $query->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
                 ->select(
+                    'p.id',
                     'prod.part_no', 'rev.code as revision',
                     'm.name as model_name', 'c.code as customer_code',
                     's.code as maker',
                     'r.code as rank_code', 'r.process_type', 'r.limit_value',
                     'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil',
                     'u.name as unit_name',
+                    'p.maker_action_status', 'p.maker_action_remark',
                     DB::raw('SUM(t.qty) as usage_qty')
                 )
                 ->groupBy(
+                    'p.id',
                     'prod.part_no', 'rev.code', 'm.name', 'c.code',
                     's.code', 'r.code', 'r.process_type', 'r.limit_value',
-                    'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name'
+                    'p.unit_per_car', 'p.pcs_per_unit', 'p.gross_coil', 'u.name',
+                    'p.maker_action_status', 'p.maker_action_remark'
                 )
                 ->get();
 
@@ -927,14 +970,17 @@ class DashboardController extends Controller
                 if ($statusFilter && $status !== $statusFilter) continue;
 
                 $processed[] = [
-                    'part_no'   => $row->part_no . ($row->revision ? '-' . $row->revision : ''),
-                    'model'     => $row->model_name ?? '-',
-                    'customer'  => $row->customer_code ?? '-',
-                    'qty'       => (float)$row->usage_qty,
-                    'unit'      => $row->unit_name,
-                    'qty_pcs'   => (float)$usagePcs,
-                    'gap'       => (float)$gap,
-                    'status'    => $status,
+                    'id'                  => \App\Models\InventoryModel\Material\InventoryProduct::encodeHash($row->id),
+                    'part_no'             => $row->part_no . ($row->revision ? '-' . $row->revision : ''),
+                    'model'               => $row->model_name ?? '-',
+                    'customer'            => $row->customer_code ?? '-',
+                    'qty'                 => (float)$row->usage_qty,
+                    'unit'                => $row->unit_name,
+                    'qty_pcs'             => (float)$usagePcs,
+                    'gap'                 => (float)$gap,
+                    'status'              => $status,
+                    'maker_action_status' => $row->maker_action_status,
+                    'maker_action_remark' => $row->maker_action_remark,
                 ];
             }
 

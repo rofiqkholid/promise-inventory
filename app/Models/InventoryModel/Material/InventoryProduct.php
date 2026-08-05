@@ -49,6 +49,8 @@ class InventoryProduct extends Model
         'product_status_remark',
         'action_status',
         'action_remark',
+        'maker_action_status',
+        'maker_action_remark',
     ];
 
     protected $casts = [

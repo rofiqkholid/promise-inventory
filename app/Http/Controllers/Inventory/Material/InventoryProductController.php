@@ -546,15 +546,21 @@ class InventoryProductController extends Controller
     public function updateActionStatus(Request $request, $id)
     {
         $product = InventoryProduct::findByHashOrFail($id);
-        $status = $request->action_status;
-        $remark = $request->action_remark;
         
         $updateData = [];
         if ($request->has('action_status')) {
+            $status = $request->action_status;
             $updateData['action_status'] = ($status === '' || $status === 'NULL') ? null : $status;
         }
         if ($request->has('action_remark')) {
-            $updateData['action_remark'] = $remark;
+            $updateData['action_remark'] = $request->action_remark;
+        }
+        if ($request->has('maker_action_status')) {
+            $status = $request->maker_action_status;
+            $updateData['maker_action_status'] = ($status === '' || $status === 'NULL') ? null : $status;
+        }
+        if ($request->has('maker_action_remark')) {
+            $updateData['maker_action_remark'] = $request->maker_action_remark;
         }
 
         if (!empty($updateData)) {
