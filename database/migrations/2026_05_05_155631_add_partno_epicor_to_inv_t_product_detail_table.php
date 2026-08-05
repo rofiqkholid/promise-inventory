@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('inv_t_product_detail', function (Blueprint $table) {
-            $table->string('partno_epicor', 20)->nullable()->after('product_id');
-        });
+        if (!Schema::hasColumn('inv_t_product_detail', 'partno_epicor')) {
+            Schema::table('inv_t_product_detail', function (Blueprint $table) {
+                $table->string('partno_epicor', 20)->nullable()->after('product_id');
+            });
+        }
     }
 
     /**

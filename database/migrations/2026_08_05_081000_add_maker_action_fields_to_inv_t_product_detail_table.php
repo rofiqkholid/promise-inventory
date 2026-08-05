@@ -12,8 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('inv_t_product_detail', function (Blueprint $table) {
-            $table->string('maker_action_status', 50)->nullable()->after('action_remark');
-            $table->string('maker_action_remark', 255)->nullable()->after('maker_action_status');
+            if (!Schema::hasColumn('inv_t_product_detail', 'maker_action_status')) {
+                $table->string('maker_action_status', 50)->nullable()->after('action_remark');
+            }
+            if (!Schema::hasColumn('inv_t_product_detail', 'maker_action_remark')) {
+                $table->string('maker_action_remark', 255)->nullable()->after('maker_action_status');
+            }
         });
     }
 
