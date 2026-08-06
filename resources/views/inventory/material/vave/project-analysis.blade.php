@@ -5,79 +5,100 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
-        <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Project VA/VE Analysis</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Compare EBD (Engineering Breakdown) data with production revisions to analyze material efficiency for Project models.</p>
-        </div>
-        @if(Auth::user()->hasMenuPermission('inventory.projectVaveAnalysis.index', 'create'))
-        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <button type="button" id="btnImportEbd" data-modal-target="importEbdModal" class="h-9 px-4 inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xs transition-all gap-2 active:scale-95 shadow-sm text-xs font-medium">
-                <i class="fa-solid fa-file-import"></i> Import EBD Data
-            </button>
-        </div>
-        @endif
+    {{-- Header Section --}}
+    <div class="mb-4">
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Project VA/VE Analysis</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Compare EBD (Engineering Breakdown) data with production revisions to analyze material efficiency for Project models.</p>
     </div>
 
-    {{-- Filter Card --}}
-    <div class="mb-6 p-5 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
-        <div class="flex flex-col md:flex-row items-end gap-5">
-            <div class="w-full md:w-64">
-                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">Customer</label>
-                <select id="filterCustomer" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All Customers</option>
-                </select>
-            </div>
-            <div class="w-full md:w-64">
-                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">Model</label>
-                <select id="filterModel" disabled class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All Models</option>
-                </select>
-            </div>
-            <div class="w-full md:w-64">
-                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">EBD Bases (Export Only)</label>
-                <select id="filterEbdBase" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All Bases</option>
-                </select>
-            </div>
-            <div class="w-full md:w-64">
-                <label class="block mb-2 text-[11px] font-bold text-slate-500 dark:text-gray-400">Analysis Status</label>
-                <select id="filterStatus" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-xs focus:ring-primary-500 focus:border-primary-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All Statuses</option>
-                    <option value="MERIT">MERIT</option>
-                    <option value="LOSS">LOSS</option>
-                    <option value="NO CHANGE">NO CHANGE</option>
-                    <option value="NO DATA">NO DATA</option>
-                </select>
-            </div>
-            <div class="flex items-center gap-3 ml-auto w-full md:w-auto mt-4 md:mt-0">
-                <button type="button" id="btnResetFilter" class="h-9 px-4 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:bg-slate-50 transition-all text-xs font-medium active:scale-95">
-                    <i class="fa-solid fa-rotate-left mr-2"></i> Reset
+    {{-- UNIFIED CARD WITH HEADER TOOLBAR & COLLAPSIBLE FILTER --}}
+    <div id="vaveFilterCard" class="mb-0 bg-white dark:bg-gray-800 rounded-t-xs rounded-b-none border border-b-0 border-slate-200 dark:border-gray-700 overflow-hidden shadow-xs">
+        {{-- Card Header Toolbar --}}
+        <div class="px-4 sm:px-5 py-3 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-2.5">
+            {{-- Left: Filter Toggle Button --}}
+            <div class="flex flex-col xs:flex-row sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+                <button type="button" id="btnToggleFilter" class="inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium active:scale-[0.98] transition-all shadow-xs w-full xs:w-auto">
+                    <i class="fa-solid fa-filter text-primary-600"></i>
+                    <span>Filters</span>
+                    <i id="vaveFilterChevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 text-xs ml-1"></i>
                 </button>
-                <div class="hidden md:block h-8 w-px bg-slate-100 dark:bg-gray-700 mx-1"></div>
-                <button type="button" id="btnExportSummary" class="h-9 px-6 inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xs transition-all gap-2 active:scale-95 shadow-sm">
-                    <i class="fa-solid fa-file-excel text-sm"></i> Export Summary
+            </div>
+
+            {{-- Right: Import & Export Buttons --}}
+            <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                @if(Auth::user()->hasMenuPermission('inventory.projectVaveAnalysis.index', 'create'))
+                <button type="button" id="btnImportEbd" data-modal-target="importEbdModal" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent text-white rounded-xs transition-all active:scale-[0.98] shadow-xs text-xs font-medium">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span class="truncate">Import EBD Data</span>
+                </button>
+                @endif
+                <button type="button" id="btnExportSummary" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-xs" title="Export Summary to Excel">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span class="truncate">Export Summary</span>
                 </button>
             </div>
         </div>
+
+        {{-- Collapsible Filter Body --}}
+        <div id="vaveFilterBody" class="hidden p-4 sm:p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div>
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Customer</label>
+                    <select id="filterCustomer" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-xs block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Customers</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Model</label>
+                    <select id="filterModel" disabled class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-xs block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Models</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">EBD Bases (Export Only)</label>
+                    <select id="filterEbdBase" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-xs block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Bases</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Analysis Status</label>
+                    <select id="filterStatus" class="select2-simple w-full bg-slate-50 border border-slate-200 text-slate-900 text-xs rounded-xs block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">All Statuses</option>
+                        <option value="MERIT">MERIT</option>
+                        <option value="LOSS">LOSS</option>
+                        <option value="NO CHANGE">NO CHANGE</option>
+                        <option value="NO DATA">NO DATA</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="button" id="btnResetFilter" class="w-full h-9 inline-flex items-center justify-center gap-1.5 px-3 bg-slate-100 dark:bg-gray-700/60 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 font-medium text-xs rounded-xs border border-slate-200 dark:border-gray-600 active:scale-[0.98] transition-all shadow-xs" title="Reset all filters">
+                        <i class="fa-solid fa-rotate-left text-slate-400"></i>
+                        <span class="truncate">Reset Filter</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <x-table id="vaveTable">
-        <thead>
-            <tr>
-                <th class="text-center w-16">No</th>
-                <th class="text-left w-48 min-w-[180px]">Part No</th>
-                <th class="text-left">Part Name</th>
-                <th class="text-center">Customer</th>
-                <th class="text-center">Model</th>
-                <th class="text-center">EBD (Kg)</th>
-                <th class="text-center">Latest (Kg)</th>
-                <th class="text-center">Analysis Status</th>
-                <th class="text-center w-[180px]">Action</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </x-table>
+    {{-- Seamless Table Wrapper --}}
+    <div class="[&>div]:rounded-t-none [&>div]:border-t-0">
+        <x-table id="vaveTable">
+            <thead>
+                <tr>
+                    <th class="text-center w-16">No</th>
+                    <th class="text-left w-48 min-w-[180px]">Part No</th>
+                    <th class="text-left">Part Name</th>
+                    <th class="text-center">Customer</th>
+                    <th class="text-center">Model</th>
+                    <th class="text-center">EBD (Kg)</th>
+                    <th class="text-center">Latest (Kg)</th>
+                    <th class="text-center">Analysis Status</th>
+                    <th class="text-center w-[180px]">Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </x-table>
+    </div>
 </div>
 
     @include('inventory.material.vave.partials.ebd_modal')
@@ -102,6 +123,14 @@ window.VAVE_CONFIG = {
 };
 
 $(function() {
+    // Collapsible Filter Drawer Toggle
+    $('#btnToggleFilter').on('click', function(e) {
+        e.stopPropagation();
+        $('#vaveFilterBody').slideToggle(200);
+        $('#vaveFilterChevron').toggleClass('rotate-180');
+        $(this).toggleClass('bg-primary-50 dark:bg-primary-950/60 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300');
+    });
+
     window.vaveTable = window.defaultDataTable('#vaveTable', {
         processing: true,
         serverSide: true,

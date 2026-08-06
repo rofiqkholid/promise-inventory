@@ -5,47 +5,59 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Model Configuration</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Batch manage specific configuration / status per model (e.g., Project vs Regular).</p>
+    {{-- Header Section --}}
+    <div class="mb-4">
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Model Configuration</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Batch manage specific configuration / status per model (e.g., Project vs Regular).</p>
+    </div>
+
+    {{-- UNIFIED CARD WITH TOOLBAR & COLLAPSIBLE FILTER --}}
+    <div id="modelConfigCard" class="mb-0 bg-white dark:bg-gray-800 rounded-t-xs rounded-b-none border border-b-0 border-slate-200 dark:border-gray-700 overflow-hidden shadow-xs">
+        <div class="px-5 py-3.5 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <button type="button" id="btnToggleFilter" class="inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium active:scale-[0.98] transition-all shadow-xs w-full sm:w-auto">
+                <i class="fa-solid fa-filter text-primary-600"></i>
+                <span>Filters</span>
+                <i id="modelConfigFilterChevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 text-xs ml-1"></i>
+            </button>
+        </div>
+
+        {{-- Collapsible Filter Body --}}
+        <div id="modelConfigFilterBody" class="hidden p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <!-- Customer Filter -->
+                <div>
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Customer</label>
+                    <select id="filterCustomer" class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-9 text-xs text-gray-700 dark:text-slate-200 focus:ring-0 focus:border-primary-500 w-full px-3 transition-all font-medium">
+                        <option value="">All Customers</option>
+                        @foreach($customers as $c)
+                            <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Project Status</label>
+                    <select id="filterStatus" class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-9 text-xs text-gray-700 dark:text-slate-200 focus:ring-0 focus:border-primary-500 w-full px-3 transition-all font-medium">
+                        <option value="">All Statuses</option>
+                        <option value="Project">Project Only</option>
+                        <option value="Regular">Regular Only</option>
+                    </select>
+                </div>
+
+                <!-- Validity Filter -->
+                <div id="containerValidity">
+                    <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Lifecycle Validity</label>
+                    <select id="filterValidity" class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-9 text-xs text-gray-700 dark:text-slate-200 focus:ring-0 focus:border-primary-500 w-full px-3 transition-all font-medium">
+                        <option value="">All (Active & Expired)</option>
+                        <option value="active">Active (Valid)</option>
+                        <option value="expired">Expired Only</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
-    <!-- Filter Bar -->
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-xs border border-gray-200 dark:border-gray-700 mb-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <!-- Customer Filter -->
-            <div>
-                <label class="block text-xs font-medium text-gray-900 dark:text-gray-900 mb-1">Customer</label>
-                <select id="filterCustomer" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All Customers</option>
-                    @foreach($customers as $c)
-                        <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
-                    @endforeach
-                </select>
-            </div>
 
-            <!-- Status Filter -->
-            <div>
-                <label class="block text-xs font-medium text-gray-900 dark:text-gray-900 mb-1">Project Status</label>
-                <select id="filterStatus" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All Statuses</option>
-                    <option value="Project">Project Only</option>
-                    <option value="Regular">Regular Only</option>
-                </select>
-            </div>
-
-            <!-- Validity Filter (Only relevant for Regular/All) -->
-            <div id="containerValidity">
-                <label class="block text-xs font-medium text-gray-900 dark:text-gray-900 mb-1">Lifecycle Validity</label>
-                <select id="filterValidity" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">All (Active & Expired)</option>
-                    <option value="active">Active (Valid)</option>
-                    <option value="expired">Expired Only</option>
-                </select>
-            </div>
-        </div>
-    </div>
     <!-- Data Table -->
     <x-table id="modelConfigTable">
         <thead class="bg-gray-50 dark:bg-gray-800/50">
@@ -67,6 +79,12 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        $('#btnToggleFilter').on('click', function(e) {
+            e.stopPropagation();
+            $('#modelConfigFilterBody').slideToggle(200);
+            $('#modelConfigFilterChevron').toggleClass('rotate-180');
+        });
+
         const table = window.defaultDataTable('#modelConfigTable', {
             processing: true,
             serverSide: true,

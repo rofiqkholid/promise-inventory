@@ -5,18 +5,23 @@
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-8">
-        <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Location</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage all storage locations (racks, warehouses, etc.)</p>
-        </div>
-        @if(Auth::user()->hasMenuPermission('inventory.master.location.index', 'create'))
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm" data-target="location">
+    <div class="mb-4">
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Location</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage all storage locations (racks, warehouses, etc.)</p>
+    </div>
+
+    {{-- UNIFIED CARD HEADER TOOLBAR --}}
+    <div id="locationCard" class="mb-0 bg-white dark:bg-gray-800 rounded-t-xs rounded-b-none border border-b-0 border-slate-200 dark:border-gray-700 overflow-hidden shadow-xs">
+        <div class="px-5 py-3.5 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 tracking-tight">
+                <i class="fa-solid fa-location-dot text-primary-600"></i> Location List
+            </h3>
+            @if(Auth::user()->hasMenuPermission('inventory.master.location.index', 'create'))
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs w-full sm:w-auto" data-target="location">
                 <i class="fa-solid fa-plus"></i> Add New
             </button>
+            @endif
         </div>
-        @endif
     </div>
 
     <x-table id="locationTable">

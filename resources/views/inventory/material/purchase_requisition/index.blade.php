@@ -5,95 +5,114 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-4 gap-4">
-        <div class="flex-1">
+    {{-- Header Section & Stat Badges --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+        <div>
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Purchase Requisition</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">List of parts below minimum stock requiring procurement requisition.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-3 shrink-0">
             {{-- Urgent (Critical) --}}
-            <div class="flex-none min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
-                <div class="w-9 h-9 rounded-xs bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50">
-                    <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            <div class="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-2xs">
+                <div class="w-9 h-9 rounded-xs bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-none mb-1">Urgent (Critical)</p>
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['critical']) }}</h3>
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-gray-400 tracking-tight leading-none mb-1">Urgent (Critical)</p>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white leading-none">{{ number_format($stats['critical']) }}</h3>
                 </div>
             </div>
 
             {{-- Replenish (Warning) --}}
-            <div class="flex-none min-w-[160px] bg-white dark:bg-gray-800 p-3 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
-                <div class="w-9 h-9 rounded-xs bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50">
-                    <i class="fa-solid fa-circle-exclamation text-base"></i>
+            <div class="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-2xs">
+                <div class="w-9 h-9 rounded-xs bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/50 shrink-0">
+                    <i class="fa-solid fa-circle-exclamation text-sm"></i>
                 </div>
                 <div>
-                    <p class="text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-tight leading-none mb-1">Replenish (Warning)</p>
-                    <h3 class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['warning']) }}</h3>
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-gray-400 tracking-tight leading-none mb-1">Replenish (Warning)</p>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white leading-none">{{ number_format($stats['warning']) }}</h3>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Filter Bar --}}
-    <div class="mb-4 p-6 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700">
-        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end">
-            <div class="col-span-1">
-                <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Customer</label>
-                <select id="filterCustomer" class="select2-filter w-full">
-                    <option value="">All Customers</option>
-                    @foreach($customers as $c)
-                        <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-span-1">
-                <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Model</label>
-                <select id="filterModel" class="select2-filter w-full">
-                    <option value="">All Models</option>
-                    @foreach($models as $m)
-                        <option value="{{ $m->id }}">{{ $m->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-span-1">
-                <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Stock Status</label>
-                <select id="filterStatus" class="select2-filter w-full">
-                    <option value="">All Problematic</option>
-                    <option value="critical">Critical Only</option>
-                    <option value="warning">Warning Only</option>
-                </select>
-            </div>
-            <div class="col-span-1 lg:col-span-2 flex items-center gap-3">
-                <button type="button" id="btnResetFilter" class="flex-1 h-9 px-4 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-200 dark:border-gray-700 transition-all active:scale-95">
-                    <i class="fa-solid fa-rotate-left mr-1"></i> Reset
-                </button>
-                <button type="button" id="btnExport" class="flex-1 h-9 inline-flex items-center justify-center px-4 bg-emerald-600 border border-transparent text-white text-xs font-medium rounded-xs transition-all hover:bg-emerald-700 gap-2">
-                    <i class="fa-solid fa-file-excel"></i> Export PR Draft
-                </button>
-            </div>
-        </div>
-    </div>
+    {{-- UNIFIED CARD WITH TOOLBAR & COLLAPSIBLE FILTER --}}
+    <div id="prCard" class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-xs">
+        {{-- Header Toolbar --}}
+        <div class="px-5 py-3.5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/70 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3" id="prHeader">
+            <div class="flex items-center gap-3">
+                <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5 tracking-tight shrink-0">
+                    <i class="fa-solid fa-list-check text-primary-600"></i> Part Shortage List
+                </h3>
 
-    {{-- Table Section --}}
-    <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-between">
-            <h3 class="text-xs font-bold text-gray-900 dark:text-white flex items-center">
-                <i class="fa-solid fa-list-check mr-3 text-primary-600"></i> Part Shortage List
-            </h3>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-red-500 shadow-sm shadow-red-200"></span>
-                    <span class="text-[10px] font-medium text-slate-600 dark:text-gray-400 uppercase tracking-tight">Critical</span>
+                {{-- Status Indicators --}}
+                <div class="hidden sm:flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-gray-700">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-gray-400">Critical</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span class="text-[11px] font-medium text-slate-600 dark:text-gray-400">Warning</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 shadow-sm shadow-amber-200"></span>
-                    <span class="text-[10px] font-medium text-slate-600 dark:text-gray-400 uppercase tracking-tight">Warning</span>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button id="btnToggleFilter" type="button" class="inline-flex items-center justify-center gap-1.5 px-3.5 h-9 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium active:scale-95 transition-all shadow-2xs shrink-0">
+                    <i class="fa-solid fa-filter text-primary-600 text-xs"></i>
+                    <span>Filters</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform duration-200 ml-0.5" id="prFilterChevron"></i>
+                </button>
+
+                <button id="btnExport" type="button" class="inline-flex items-center justify-center gap-1.5 px-3.5 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-95 transition-all shadow-2xs shrink-0">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span>Export PR Draft</span>
+                </button>
+            </div>
+        </div>
+
+        {{-- Collapsible Filter Body --}}
+        <div id="prFilterBody" class="hidden p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                <div class="w-full">
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">Customer</label>
+                    <select id="filterCustomer" class="select2-filter w-full">
+                        <option value="">All Customers</option>
+                        @foreach($customers as $c)
+                            <option value="{{ $c->id }}">{{ $c->code }} - {{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-full">
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">Model</label>
+                    <select id="filterModel" class="select2-filter w-full">
+                        <option value="">All Models</option>
+                        @foreach($models as $m)
+                            <option value="{{ $m->id }}">{{ $m->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-full">
+                    <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">Stock Status</label>
+                    <select id="filterStatus" class="select2-filter w-full">
+                        <option value="">All Problematic</option>
+                        <option value="critical">Critical Only</option>
+                        <option value="warning">Warning Only</option>
+                    </select>
+                </div>
+                <div class="w-full">
+                    <button type="button" id="btnResetFilter" class="w-full h-8 inline-flex items-center justify-center gap-1.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-600 dark:text-gray-200 rounded-xs text-xs font-medium transition-all shadow-2xs">
+                        <i class="fa-solid fa-rotate-left text-[10px]"></i>
+                        <span>Reset Filters</span>
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="p-0">
+
+        {{-- Table Container --}}
+        <div class="overflow-x-auto bg-white dark:bg-gray-800">
             <x-table id="prTable">
                 <thead>
                     <tr>
@@ -205,11 +224,18 @@
 @push('scripts')
 <script>
 $(function() {
+    // Filter Toggle Handler
+    $('#btnToggleFilter').on('click', function(e) {
+        e.stopPropagation();
+        $('#prFilterBody').slideToggle(200);
+        $('#prFilterChevron').toggleClass('rotate-180');
+    });
+
     // Datatable Init
     const table = window.defaultDataTable('#prTable', {
         processing: true,
         serverSide: true,
-        dom: "<'flex flex-col sm:flex-row justify-between items-center mb-4 gap-4'<'flex items-center gap-4'l B> f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex flex-col md:flex-row justify-between items-center mt-4 gap-4 px-2'i p>",
+        dom: "<'overflow-x-auto w-full't><'flex flex-col sm:flex-row justify-between items-center px-4 py-3 gap-3 border-t border-slate-100 dark:border-gray-700/50'i p>",
         ajax: {
             url: '{{ route("inventory.purchaseRequisition.data") }}',
             data: function(d) {

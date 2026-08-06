@@ -4,397 +4,383 @@
 @section('page_title', 'Stock Opname')
 
 @section('content')
-<div class="text-gray-900 dark:text-gray-100">
-    <!-- Header -->
-    <div class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div class="flex-1">
-            <div class="flex items-center gap-3 mb-2.5">
-                <a href="{{ route('inventory.sto.index') }}" class="h-9 px-3 inline-flex items-center justify-center rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-500 hover:text-primary-600 hover:border-primary-100 hover:bg-primary-50 transition-all shadow-sm" title="Back to STO Monitor">
-                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
-                    <span class="ml-2 text-xs font-medium">Back</span>
-                </a>
-                <span class="w-1 h-1 rounded-xs bg-gray-300 dark:bg-gray-700"></span>
-                @php
-                    $statusClasses = [
-                        'OPEN' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800',
-                        'WAITING CHECK' => 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800',
-                        'WAITING APPROVAL' => 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800',
-                        'CLOSED' => 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
-                    ];
-                    $currentStatusClass = $statusClasses[$stoEvent->status] ?? $statusClasses['CLOSED'];
-                @endphp
-                <span class="px-2 py-1 text-[10px] rounded-xs font-bold border {{ $currentStatusClass }}">
-                    {{ str_replace('_', ' ', $stoEvent->status) }}
-                </span>
-            </div>
+<div class="text-gray-900 dark:text-gray-100 space-y-4">
+    @php
+        $statusClasses = [
+            'OPEN' => 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-400 dark:border-emerald-800',
+            'WAITING CHECK' => 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/40 dark:text-amber-400 dark:border-amber-800',
+            'WAITING APPROVAL' => 'bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/40 dark:text-primary-400 dark:border-primary-800',
+            'CLOSED' => 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900/40 dark:text-slate-400 dark:border-slate-800'
+        ];
+        $currentStatusClass = $statusClasses[$stoEvent->status] ?? $statusClasses['CLOSED'];
+        
+        $user = auth()->user();
+        $isPic = $user->hasRole('Inv PIC|admin|Inv Admin') || $stoEvent->user_id === $user->id;
+        $isChecker = $user->hasRole('Inv Checker|checker|admin|Inv Admin');
+        $isApprover = $user->hasRole('Inv Approver|approver|admin|Inv Admin');
+    @endphp
 
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">{{ $stoEvent->name }}</h2>
-
-            <div class="mt-3 flex flex-wrap items-center gap-4 text-[11px] font-bold">
-                <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-xs border border-gray-100 dark:border-gray-700">
-                    <span class="text-[9px] uppercase tracking-wider opacity-60">Code:</span>
-                    <span class="font-mono text-gray-700 dark:text-gray-300">#{{ $stoEvent->code }}</span>
+    {{-- UNIFIED TOP HEADER & EVENT STATISTICS CARD --}}
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-2xs divide-y divide-slate-100 dark:divide-gray-700">
+        {{-- Section 0: Main Header & Action Toolbar --}}
+        <div class="p-4 sm:px-5 sm:py-3.5 bg-white dark:bg-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
+                <div class="flex items-center justify-between sm:justify-start gap-2.5">
+                    <a href="{{ route('inventory.sto.index') }}" class="h-8 px-2.5 inline-flex items-center justify-center rounded-xs bg-slate-100 dark:bg-gray-700 text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-gray-600 transition-all text-xs font-medium shrink-0 shadow-2xs" title="Back to STO Monitor">
+                        <i class="fa-solid fa-arrow-left text-[10px] mr-1.5"></i> Back
+                    </a>
+                    <span class="h-8 px-2.5 inline-flex items-center justify-center text-[10px] rounded-xs font-bold border shrink-0 {{ $currentStatusClass }}">
+                        {{ str_replace('_', ' ', $stoEvent->status) }}
+                    </span>
+                    <div class="h-6 w-px bg-slate-200 dark:bg-gray-700 hidden sm:block"></div>
                 </div>
-                <div class="flex items-center gap-1.5 text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-xs border border-gray-100 dark:border-gray-700">
-                    <i class="fa-solid fa-calendar-alt opacity-60"></i>
-                    <span class="text-[9px] uppercase tracking-wider opacity-60 mr-0.5">Started:</span>
-                    <span class="text-gray-700 dark:text-gray-300">{{ $stoEvent->period_start->format('d M Y') }}</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="flex flex-wrap items-center gap-2.5">
-            <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                <i class="fa-solid fa-file-excel text-sm"></i>
-                Export Result
-            </a>
-
-            @php
-                 $user = auth()->user();
-                 $isPic = $user->hasRole('Inv PIC|admin|Inv Admin') || $stoEvent->user_id === $user->id;
-                 $isChecker = $user->hasRole('Inv Checker|checker|admin|Inv Admin');
-                 $isApprover = $user->hasRole('Inv Approver|approver|admin|Inv Admin');
-            @endphp
-
-            @if($stoEvent->status === 'OPEN' && $isPic)
-                <form action="{{ route('inventory.sto.submitForCheck', $stoEvent->hash_id) }}" method="POST" id="submitForCheckForm" class="inline">
-                    @csrf
-                    <button type="button" onclick="confirmSubmitForCheck()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                        <i class="fa-solid fa-paper-plane text-sm"></i>
-                        Submit for Check
-                    </button>
-                </form>
-            @endif
-
-            @if($stoEvent->status === 'WAITING CHECK' && $isChecker)
-                <form action="{{ route('inventory.sto.verify', $stoEvent->hash_id) }}" method="POST" id="verifyForm" class="inline">
-                    @csrf
-                    <button type="button" onclick="confirmVerify()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                        <i class="fa-solid fa-check-double text-sm"></i>
-                        Verify Data
-                    </button>
-                </form>
-                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                    Reject
-                </button>
-            @endif
-
-            @if($stoEvent->status === 'WAITING APPROVAL' && $isApprover)
-                <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="inline">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium rounded-xs hover:bg-slate-800 transition-all active:scale-[0.98] shadow-sm">
-                        <i class="fa-solid fa-lock text-sm"></i>
-                        Finalize & Adjust
-                    </button>
-                </form>
-                <button type="button" onclick="openRejectModal()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                    <i class="fa-solid fa-xmark text-sm"></i>
-                    Reject
-                </button>
-            @endif
-
-            @if(($stoEvent->status === 'CLOSED' || $stoEvent->status === 'WAITING CHECK' || $stoEvent->status === 'WAITING APPROVAL') && $isApprover)
-                <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="inline">
-                    @csrf
-                    <button type="button" onclick="confirmReopen()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                        <i class="fa-solid fa-rotate-left text-sm"></i>
-                        Reopen
-                    </button>
-                </form>
-            @endif
-        </div>
-    </div>
-
-    <!-- Main Content Flex Container for Mobile Reordering -->
-    <div class="flex flex-col-reverse lg:flex-col gap-6 mb-6">
-        <!-- Top Section: Stats & Alerts -->
-        <div class="flex flex-col gap-6">
-            <!-- Statistics Dashboard -->
-            <div class="bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden relative">
-                <!-- Toggle Header -->
-                <button type="button" class="w-full px-4 py-2.5 flex items-center justify-between bg-slate-50 dark:bg-gray-800/50 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors border-b border-slate-200 dark:border-gray-700" onclick="$('#stats-content').slideToggle(); $('#stats-chevron').toggleClass('rotate-180');">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-primary-600"></i>
-                        <span class="text-[10px] font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Event Statistics</span>
+                <div class="min-w-0">
+                    <h2 class="text-sm sm:text-base font-bold text-gray-900 dark:text-white tracking-tight leading-snug break-all sm:break-normal">{{ $stoEvent->name }}</h2>
+                    <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-500 dark:text-gray-400 mt-0.5 font-medium">
+                        <span>Code: <strong class="font-mono text-slate-700 dark:text-gray-300">#{{ $stoEvent->code }}</strong></span>
+                        <span class="text-slate-300 dark:text-gray-600 hidden sm:inline">•</span>
+                        <span>Started: <strong class="text-slate-700 dark:text-gray-300">{{ $stoEvent->period_start->format('d M Y') }}</strong></span>
                     </div>
-                    <i class="fa-solid fa-chevron-up text-gray-400 transition-transform duration-300" id="stats-chevron"></i>
-                </button>
-
-                <!-- Collapsible Content -->
-                <div id="stats-content" style="display: block;">
-                    <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-gray-100 dark:divide-gray-700">
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
-                    <i class="fa-solid fa-boxes-stacked"></i>
                 </div>
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Recorded</span>
-                <div class="flex items-baseline gap-1">
-                    <span id="stat-total-items" class="text-xl font-bold text-gray-900 dark:text-white">{{ $stats['total_items'] }}</span>
-                    <span class="text-[9px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/40 px-1.5 py-0.5 rounded-xs"><span id="stat-progress">{{ $progress }}</span>%</span>
-                </div>
-                <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Items Recorded</span>
             </div>
 
-            <!-- Total Recorded PCS -->
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
-                    <i class="fa-solid fa-calculator"></i>
-                </div>
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Qty Counted</span>
-                <span id="stat-total-recorded-pcs" class="text-xl font-bold text-primary-700 dark:text-primary-400 leading-none">
-                    {{ number_format($stats['total_recorded_pcs'] ?? 0, 0) }}
-                </span>
-                <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">PCS Recorded</span>
-            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                <a href="{{ route('inventory.sto.exportExcel', $stoEvent->hash_id) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-2xs">
+                    <i class="fa-solid fa-file-excel text-xs"></i>
+                    <span>Export Result</span>
+                </a>
 
-            <!-- Remaining -->
-            <div onclick="openRemainingModal()" class="p-4 flex flex-col items-center text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all relative overflow-hidden">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-xs text-amber-600 dark:text-amber-400">
-                    <i class="fa-solid fa-clock-rotate-left"></i>
-                </div>
-                <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Remaining</span>
-                <span id="stat-total-missing-items" class="text-xl font-bold text-amber-600 leading-none">
-                    {{ $stats['total_missing_items'] ?? ($stats['total_count'] - $stats['total_items']) }}
-                </span>
-            </div>
+                @if($stoEvent->status === 'OPEN' && $isPic)
+                    <form action="{{ route('inventory.sto.submitForCheck', $stoEvent->hash_id) }}" method="POST" id="submitForCheckForm" class="flex-1 sm:flex-none inline">
+                        @csrf
+                        <button type="button" onclick="confirmSubmitForCheck()" class="w-full inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-2xs">
+                            <i class="fa-solid fa-paper-plane text-xs"></i>
+                            <span>Submit for Check</span>
+                        </button>
+                    </form>
+                @endif
 
-            <!-- Increment -->
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 rounded-xs text-emerald-600 dark:text-emerald-400">
-                    <i class="fa-solid fa-square-plus text-lg"></i>
-                </div>
-                <span class="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400 uppercase tracking-widest mb-1">Stock Increment</span>
-                <span id="stat-total-increase-pcs" class="text-lg font-bold text-emerald-700 dark:text-emerald-400 leading-none">{{ number_format($stats['total_increase_pcs'], 0) }} Pcs</span>
-                <span id="stat-total-increase" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ number_format($stats['total_increase'], $stats['total_increase'] == (int)$stats['total_increase'] ? 0 : 1) }} Unit / {{ $stats['count_increase'] }} items)
-                </span>
-            </div>
+                @if($stoEvent->status === 'WAITING CHECK' && $isChecker)
+                    <form action="{{ route('inventory.sto.verify', $stoEvent->hash_id) }}" method="POST" id="verifyForm" class="flex-1 sm:flex-none inline">
+                        @csrf
+                        <button type="button" onclick="confirmVerify()" class="w-full inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-2xs">
+                            <i class="fa-solid fa-check-double text-xs"></i>
+                            <span>Verify Data</span>
+                        </button>
+                    </form>
+                    <button type="button" onclick="openRejectModal()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-2xs">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                        <span>Reject</span>
+                    </button>
+                @endif
 
-            <!-- Decrement -->
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-rose-50 dark:bg-rose-900/30 rounded-xs text-rose-600 dark:text-rose-400">
-                    <i class="fa-solid fa-square-minus text-lg"></i>
-                </div>
-                <span class="text-[9px] font-bold text-rose-600/70 dark:text-rose-400 uppercase tracking-widest mb-1">Stock Decrement</span>
-                <span id="stat-total-decrease-pcs" class="text-lg font-bold text-rose-700 dark:text-rose-400 leading-none">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
-                <span id="stat-total-decrease" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ number_format($stats['total_decrease'], $stats['total_decrease'] == (int)$stats['total_decrease'] ? 0 : 1) }} Unit / {{ $stats['count_decrease'] }} items)
-                </span>
-            </div>
+                @if($stoEvent->status === 'WAITING APPROVAL' && $isApprover)
+                    <form action="{{ route('inventory.sto.finalize', $stoEvent->hash_id) }}" method="POST" id="finalizeForm" class="flex-1 sm:flex-none inline">
+                        @csrf
+                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-medium rounded-xs hover:bg-slate-800 transition-all active:scale-[0.98] shadow-2xs">
+                            <i class="fa-solid fa-lock text-xs"></i>
+                            <span>Finalize & Adjust</span>
+                        </button>
+                    </form>
+                    <button type="button" onclick="openRejectModal()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-rose-500 hover:bg-rose-600 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-2xs">
+                        <i class="fa-solid fa-xmark text-xs"></i>
+                        <span>Reject</span>
+                    </button>
+                @endif
 
-            <!-- Net Adjustment -->
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 rounded-xs text-purple-600 dark:text-purple-400">
-                    <span class="font-black text-xs">NET</span>
-                </div>
-                <span class="text-[9px] font-bold text-purple-600/70 dark:text-purple-400 uppercase tracking-widest mb-1">Adjustment Impact</span>
-                <span id="stat-net-adjustment-pcs" class="text-lg font-bold text-purple-700 dark:text-purple-400 leading-none">{{ ($stats['net_adjustment_pcs'] >= 0 ? '+' : '') . number_format($stats['net_adjustment_pcs'], 0) }} Pcs</span>
-                <span id="stat-net-adjustment" class="text-[9px] font-medium text-gray-400 mt-1">
-                    ({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, $netAdjustment == (int)$netAdjustment ? 0 : 1) }} Unit)
-                </span>
+                @if(($stoEvent->status === 'CLOSED' || $stoEvent->status === 'WAITING CHECK' || $stoEvent->status === 'WAITING APPROVAL') && $isApprover)
+                    <form action="{{ route('inventory.sto.reopen', $stoEvent->hash_id) }}" method="POST" id="reopenForm" class="flex-1 sm:flex-none inline">
+                        @csrf
+                        <button type="button" onclick="confirmReopen()" class="w-full inline-flex items-center justify-center gap-2 px-3.5 h-8.5 bg-gray-600 hover:bg-gray-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-2xs">
+                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                            <span>Reopen</span>
+                        </button>
+                    </form>
+                @endif
             </div>
+        </div>
 
-            <!-- Financial Impact -->
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div id="stat-net-amount-bg" class="w-10 h-10 mb-2 flex items-center justify-center rounded-xs {{ $stats['net_amount_impact'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' }}">
-                    <i class="fa-solid fa-coins text-lg"></i>
+        {{-- Section 1: Collapsible Event Statistics Dashboard --}}
+        <div>
+            <button type="button" class="w-full px-5 py-2.5 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-gray-700 transition-colors border-b border-slate-100 dark:border-gray-700" onclick="$('#stats-content').slideToggle(200); $('#stats-chevron').toggleClass('rotate-180');">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-chart-pie text-primary-600 text-xs"></i>
+                    <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 tracking-tight">Event Statistics</span>
                 </div>
-                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">Financial Impact</span>
-                <span id="stat-net-amount-impact" class="text-lg font-bold leading-none {{ $stats['net_amount_impact'] >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
-                    {{ ($stats['net_amount_impact'] > 0 ? '+' : ($stats['net_amount_impact'] < 0 ? '-' : '')) . number_format(abs($stats['net_amount_impact'] ?? 0), 0) }}
-                </span>
-                <span class="text-[9px] font-medium text-gray-400 mt-1 uppercase">Total Currency</span>
-            </div>
+                <i class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200" id="stats-chevron"></i>
+            </button>
 
-            <!-- Perfect Match -->
-            <div class="p-4 flex flex-col items-center text-center group">
-                <div class="w-10 h-10 mb-2 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-xs text-slate-400 border border-slate-100 dark:border-slate-800">
-                    <i class="fa-solid fa-circle-check text-lg"></i>
+            <div id="stats-content" style="display: block;">
+                <div class="relative grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 divide-x divide-y md:divide-y-0 divide-dashed divide-slate-300 dark:divide-gray-600">
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
+                            <i class="fa-solid fa-boxes-stacked text-xs"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Recorded</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="stat-total-items" class="text-base font-bold text-gray-900 dark:text-white">{{ $stats['total_items'] }}</span>
+                            <span class="text-[8px] font-bold text-primary-500 bg-primary-50 dark:bg-primary-900/40 px-1 py-0.2 rounded-xs"><span id="stat-progress">{{ $progress }}</span>%</span>
+                        </div>
+                        <span class="text-[8px] font-medium text-gray-400 uppercase">Items Recorded</span>
+                    </div>
+
+                    <!-- Total Recorded PCS -->
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-xs text-primary-600 dark:text-primary-400">
+                            <i class="fa-solid fa-calculator text-xs"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Total Qty Counted</span>
+                        <span id="stat-total-recorded-pcs" class="text-base font-bold text-primary-700 dark:text-primary-400 leading-none">
+                            {{ number_format($stats['total_recorded_pcs'] ?? 0, 0) }}
+                        </span>
+                        <span class="text-[8px] font-medium text-gray-400 mt-1 uppercase">PCS Recorded</span>
+                    </div>
+
+                    <!-- Remaining -->
+                    <div onclick="openRemainingModal()" class="p-3.5 flex flex-col items-center text-center group cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all relative overflow-hidden">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-xs text-amber-600 dark:text-amber-400">
+                            <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                        </div>
+                        <span class="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Remaining</span>
+                        <span id="stat-total-missing-items" class="text-base font-bold text-amber-600 leading-none">
+                            {{ $stats['total_missing_items'] ?? ($stats['total_count'] - $stats['total_items']) }}
+                        </span>
+                        <span class="text-[8px] font-medium text-amber-500 mt-1 uppercase">Uncounted</span>
+                    </div>
+
+                    <!-- Increment -->
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 rounded-xs text-emerald-600 dark:text-emerald-400">
+                            <i class="fa-solid fa-square-plus text-sm"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-emerald-600/70 dark:text-emerald-400 uppercase tracking-wide mb-0.5">Stock Increment</span>
+                        <span id="stat-total-increase-pcs" class="text-base font-bold text-emerald-700 dark:text-emerald-400 leading-none">{{ number_format($stats['total_increase_pcs'], 0) }} Pcs</span>
+                        <span id="stat-total-increase" class="text-[8px] font-medium text-gray-400 mt-0.5">
+                            ({{ number_format($stats['total_increase'], $stats['total_increase'] == (int)$stats['total_increase'] ? 0 : 1) }} Unit / {{ $stats['count_increase'] }} items)
+                        </span>
+                    </div>
+
+                    <!-- Decrement -->
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-rose-50 dark:bg-rose-900/30 rounded-xs text-rose-600 dark:text-rose-400">
+                            <i class="fa-solid fa-square-minus text-sm"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-rose-600/70 dark:text-rose-400 uppercase tracking-wide mb-0.5">Stock Decrement</span>
+                        <span id="stat-total-decrease-pcs" class="text-base font-bold text-rose-700 dark:text-rose-400 leading-none">{{ number_format($stats['total_decrease_pcs'], 0) }} Pcs</span>
+                        <span id="stat-total-decrease" class="text-[8px] font-medium text-gray-400 mt-0.5">
+                            ({{ number_format($stats['total_decrease'], $stats['total_decrease'] == (int)$stats['total_decrease'] ? 0 : 1) }} Unit / {{ $stats['count_decrease'] }} items)
+                        </span>
+                    </div>
+
+                    <!-- Net Adjustment -->
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 rounded-xs text-purple-600 dark:text-purple-400">
+                            <span class="font-black text-[10px]">NET</span>
+                        </div>
+                        <span class="text-[9px] font-bold text-purple-600/70 dark:text-purple-400 uppercase tracking-wide mb-0.5">Adjustment Impact</span>
+                        <span id="stat-net-adjustment-pcs" class="text-base font-bold text-purple-700 dark:text-purple-400 leading-none">{{ ($stats['net_adjustment_pcs'] >= 0 ? '+' : '') . number_format($stats['net_adjustment_pcs'], 0) }} Pcs</span>
+                        <span id="stat-net-adjustment" class="text-[8px] font-medium text-gray-400 mt-0.5">
+                            ({{ ($netAdjustment >= 0 ? '+' : '') . number_format($netAdjustment, $netAdjustment == (int)$netAdjustment ? 0 : 1) }} Unit)
+                        </span>
+                    </div>
+
+                    <!-- Financial Impact -->
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div id="stat-net-amount-bg" class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center rounded-xs {{ $stats['net_amount_impact'] >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600' }}">
+                            <i class="fa-solid fa-coins text-xs"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wide mb-0.5">Financial Impact</span>
+                        <span id="stat-net-amount-impact" class="text-base font-bold leading-none {{ $stats['net_amount_impact'] >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                            {{ ($stats['net_amount_impact'] > 0 ? '+' : ($stats['net_amount_impact'] < 0 ? '-' : '')) . number_format(abs($stats['net_amount_impact'] ?? 0), 0) }}
+                        </span>
+                        <span class="text-[8px] font-medium text-gray-400 mt-0.5 uppercase">Total Currency</span>
+                    </div>
+
+                    <!-- Perfect Match -->
+                    <div class="p-3.5 flex flex-col items-center text-center group">
+                        <div class="w-8.5 h-8.5 mb-1.5 flex items-center justify-center bg-slate-50 dark:bg-slate-900 rounded-xs text-slate-400 border border-slate-100 dark:border-slate-800">
+                            <i class="fa-solid fa-circle-check text-xs"></i>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">Perfect Match</span>
+                        <span id="stat-total-matched" class="text-base font-bold text-slate-900 dark:text-white leading-none">{{ $stats['total_matched'] }}</span>
+                        <span class="text-[8px] font-medium text-slate-400 mt-0.5 lowercase">items found match</span>
+                    </div>
                 </div>
-                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Perfect Match</span>
-                <span id="stat-total-matched" class="text-lg font-bold text-slate-900 dark:text-white leading-none">{{ $stats['total_matched'] }}</span>
-                <span class="text-[9px] font-medium text-slate-400 mt-1 lowercase">items found match</span>
-            </div>
             </div>
         </div>
     </div>
 
+    {{-- REJECTION FEEDBACK ALERT BANNER --}}
     @if($stoEvent->status === 'OPEN' && $stoEvent->rejection_note)
-    <div class="bg-rose-50 dark:bg-rose-900/20 border-l-4 border-rose-500 p-4 rounded-xs shadow-sm animate-pulse-once">
-        <div class="flex items-start gap-4">
-            <div class="p-2 bg-rose-100 dark:bg-rose-900/40 rounded-xs text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
-                <i class="fa-solid fa-circle-exclamation text-xl"></i>
+    <div class="bg-rose-50/80 dark:bg-rose-900/20 border-l-4 border-rose-500 p-3.5 rounded-xs shadow-2xs">
+        <div class="flex items-start gap-3">
+            <div class="p-1.5 bg-rose-100 dark:bg-rose-900/40 rounded-xs text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800">
+                <i class="fa-solid fa-circle-exclamation text-base"></i>
             </div>
             <div class="flex-1">
                 <h3 class="text-[10px] font-bold text-red-800 dark:text-red-300 uppercase tracking-wider mb-1 flex items-center gap-2">
                     Rejection Feedback Received
                 </h3>
-                <div class="bg-white/50 dark:bg-black/20 p-3 rounded border border-red-100 dark:border-red-800/50 italic font-semibold text-sm text-red-700 dark:text-red-400 leading-relaxed shadow-inner">
+                <div class="bg-white/60 dark:bg-black/20 p-2.5 rounded border border-red-100 dark:border-red-800/50 italic font-semibold text-xs text-red-700 dark:text-red-400 leading-relaxed">
                     "{{ $stoEvent->rejection_note }}"
                 </div>
-                <div class="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-red-500 uppercase tracking-wide">
-                   Please rectify reported issues and resubmit for verification.
-                </div>
             </div>
         </div>
     </div>
     @endif
 
+    {{-- SEPARATED COUNT ENTRY CARD (WITH INTEGRATED MISSING COUNTS BADGE) --}}
     @if($stoEvent->status === 'OPEN')
-    <!-- ATTENTION BANNER -->
-    <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} bg-amber-50 dark:bg-amber-900/20 border-l-4 border-l-amber-500 p-4 rounded-xs shadow-sm">
-        <div class="flex items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <div class="flex-shrink-0 w-8 h-8 bg-amber-100 dark:bg-amber-900/40 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                </div>
-                <div>
-                    <h4 class="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-widest">Missing Counts</h4>
-                    <p class="text-xs text-amber-700 dark:text-amber-400">
-                        <span id="banner-missing-count" class="font-bold">{{ $stats['total_missing_items'] }}</span> items have not been recorded yet.
-                    </p>
-                </div>
-            </div>
-            <button onclick="openRemainingModal()" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-xs transition-all active:scale-[0.98] shadow-sm">
-                View Missing
-            </button>
-        </div>
-    </div>
-    @endif
-        </div> <!-- End Top Section -->
-
-    @if($stoEvent->status === 'OPEN')
-    <!-- SCANNER SECTION -->
-    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs p-5">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-xs flex items-center gap-2">
-                <i class="fa-solid fa-barcode text-primary-600"></i> Count Entry
+    <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-2xs">
+        <div class="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-gray-700 bg-slate-50/70 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5 tracking-tight shrink-0">
+                <i class="fa-solid fa-barcode text-primary-600"></i> Quick Count Entry & QR Scanner
             </h3>
-        </div>
 
-        <div class="flex flex-col sm:flex-row gap-3">
-            <div class="flex-1 min-w-0">
-                <select id="product_detail_id" class="select2 w-full" data-placeholder="Pick Product via Search or Scanning...">
-                    <option value="">Pick Product via Search or Scanning...</option>
-                    @foreach($allProducts as $product)
-                        @php $is_counted = in_array($product->id, $countedIds); @endphp
-                        <option value="{{ $product->hash_id }}" data-partno="[{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
-                             [{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}
-                        </option>
-                    @endforeach
-                </select>
+            {{-- Split Pill Badge: Responsive Full-Width on Mobile --}}
+            <div id="missing-alert-banner" class="{{ ($stats['total_missing_items'] ?? 0) > 0 ? '' : 'hidden' }} w-full sm:w-auto inline-flex items-center justify-between gap-1.5 p-1 bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/60 rounded-full shadow-2xs">
+                <div class="flex items-center gap-1.5 px-2 text-amber-800 dark:text-amber-300 text-xs truncate">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xs shrink-0"></i>
+                    <span class="text-[11px] font-medium truncate"><strong id="banner-missing-count" class="font-bold">{{ $stats['total_missing_items'] }}</strong> Uncounted</span>
+                </div>
+                <button onclick="openRemainingModal()" type="button" class="inline-flex items-center gap-1 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-[11px] font-semibold transition-all active:scale-95 shadow-2xs shrink-0">
+                    <span>View List</span>
+                    <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                </button>
             </div>
-            <button id="btn-scan" class="w-full sm:w-auto md:flex-none inline-flex items-center justify-center gap-2 px-6 h-[42px] bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-xs text-xs font-bold transition-all active:scale-[0.98] shadow-sm" title="Open Scanner Camera">
-                <i class="fa-solid fa-qrcode text-base"></i>
-                <span>Scan QR Code</span>
-            </button>
         </div>
 
-        <div class="mt-4 hidden" id="scanResultArea">
-             <div class="flex flex-col md:flex-row items-stretch gap-6 p-4 md:p-5 rounded-xs border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+        <div class="p-4 sm:p-5">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-3xl mx-auto">
+                <div class="flex-1 w-full min-w-0">
+                    <select id="product_detail_id" class="select2 w-full" data-placeholder="Pick Product via Search or Scanning...">
+                        <option value="">Pick Product via Search or Scanning...</option>
+                        @foreach($allProducts as $product)
+                            @php $is_counted = in_array($product->id, $countedIds); @endphp
+                            <option value="{{ $product->hash_id }}" data-partno="[{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }}" data-counted="{{ $is_counted ? 'true' : 'false' }}">
+                                 [{{ $product->model_name ?? 'No Model' }}] {{ $product->part_no }} {{ $product->revision ? '- ' . $product->revision : '' }} - {{ $product->part_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button id="btn-scan" type="button" class="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 h-[42px] bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 text-white rounded-xs text-xs font-semibold transition-all active:scale-[0.98] shadow-2xs" title="Open Scanner Camera">
+                    <i class="fa-solid fa-qrcode text-base"></i>
+                    <span>Scan QR Code</span>
+                </button>
+            </div>
 
-                 <!-- Product Info Section -->
-                 <div class="flex-1 flex flex-col justify-center min-w-0">
-                     <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1 opacity-70">Selected Product</span>
-                     <div class="text-xl font-semibold text-gray-900 dark:text-white tracking-tighter leading-none mb-1 break-all" id="resPartNo">-</div>
-                     <div class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide truncate" id="resPartName">-</div>
-
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
-                            <span class="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1">Unit</span>
-                            <span class="text-xs font-bold text-gray-900 dark:text-white truncate" id="resUnit">-</span>
+            <div class="mt-4 hidden border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden" id="scanResultArea">
+                <!-- Sleek SaaS Part Summary Header Strip -->
+                <div class="bg-slate-50/80 dark:bg-slate-900/60 p-3.5 sm:p-4 border-b border-slate-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <!-- Left: Cube Icon + Part No Title + Part Name Subtitle -->
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold shadow-2xs shrink-0">
+                            <i class="fa-solid fa-cube text-sm"></i>
                         </div>
-                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
-                            <span class="text-[8px] font-bold text-primary-400 uppercase leading-none mb-1">System</span>
-                            <span class="text-xs font-bold text-primary-600 dark:text-primary-400 truncate" id="resSystemQty">0</span>
-                        </div>
-                        <div class="flex flex-col px-3 py-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-100 dark:border-gray-700">
-                            <span class="text-[8px] font-bold text-purple-400 uppercase leading-none mb-1">Entries</span>
-                            <span class="text-xs font-bold text-purple-600 dark:text-purple-400 truncate" id="resEntriesCount">0</span>
+                        <div class="min-w-0">
+                            <h4 class="text-sm font-bold text-slate-900 dark:text-white font-mono tracking-tight leading-tight truncate" id="resPartNo">-</h4>
+                            <p class="text-xs font-medium text-slate-500 dark:text-gray-400 truncate mt-0.5" id="resPartName">-</p>
                         </div>
                     </div>
-                 </div>
 
-                 <div class="hidden md:block w-px bg-gray-200 dark:bg-gray-700 my-2"></div>
+                    <!-- Right: White Segmented Metadata Bar (Horizontal Scrollable on Mobile) -->
+                    <div class="max-w-full overflow-x-auto scrollbar-none">
+                        <div class="inline-flex items-center bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden divide-x divide-slate-200 dark:divide-gray-700 text-xs shrink-0 shadow-2xs min-w-max">
+                            <div class="px-3.5 py-2 flex items-center gap-1.5">
+                                <span class="text-[10px] text-slate-400 dark:text-gray-400 font-bold uppercase">Unit:</span>
+                                <strong id="resUnit" class="font-extrabold text-slate-800 dark:text-white">-</strong>
+                            </div>
+                            <div class="px-3.5 py-2 flex items-center gap-1.5">
+                                <span class="text-[10px] text-slate-400 dark:text-gray-400 font-bold uppercase">System:</span>
+                                <div id="resSystemQty" class="font-extrabold text-primary-600 dark:text-primary-400 flex items-center gap-1">0</div>
+                            </div>
+                            <div class="px-3.5 py-2 flex items-center gap-1.5">
+                                <span class="text-[10px] text-slate-400 dark:text-gray-400 font-bold uppercase">Entries:</span>
+                                <strong id="resEntriesCount" class="font-extrabold text-purple-600 dark:text-purple-400">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                 <!-- Entry Form Section -->
-                  <div class="flex-[2] flex flex-col gap-4" id="entriesFormContainer">
-                     <!-- Dynamic Rows -->
-                  </div>
-               </div>
-               <div class="mt-4 flex justify-center">
-                  <button type="button" onclick="addNewEntryRow()" class="flex items-center justify-center gap-2 px-4 h-8 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 rounded-full text-[10px] font-bold transition-all active:scale-[0.98]">
-                      <i class="fa-solid fa-plus text-sm"></i>
-                      Add New
-                  </button>
-               </div>
-             <input type="hidden" id="currentHashId">
-        </div>
-        <div id="scanError" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold rounded-xs border border-red-100 dark:border-red-800 hidden items-center gap-2">
-            <i class="fa-solid fa-triangle-exclamation"></i> <span id="errorMsg"></span>
+                <!-- Form Grid Header & Container -->
+                <div class="p-4 bg-white dark:bg-gray-800">
+                    <div id="entriesFormContainer" class="space-y-2.5">
+                        <!-- Dynamic Rows -->
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100 dark:border-gray-700/60 flex justify-center">
+                        <button type="button" onclick="addNewEntryRow()" class="inline-flex items-center justify-center gap-2 px-4 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-full text-xs font-bold transition-all active:scale-95 shadow-2xs">
+                            <i class="fa-solid fa-plus text-xs text-emerald-600 dark:text-emerald-400"></i>
+                            <span>Add Entry Row</span>
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" id="currentHashId">
+            </div>
+            <div id="scanError" class="mt-3 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 text-xs font-bold rounded-xs border border-red-100 dark:border-red-800 hidden items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> <span id="errorMsg"></span>
+            </div>
         </div>
     </div>
     @endif
-    </div> <!-- End Main Content Flex Container -->
 
     @include('components.scanner-modal')
 
-    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="p-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 flex-1 w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-slate-100 dark:bg-slate-700 rounded-xs">
-                   <i class="fa-solid fa-list-check text-slate-600 dark:text-slate-300"></i>
-                </div>
-                <div>
-                   <h3 class="font-bold text-gray-900 dark:text-white uppercase tracking-widest text-sm">Counting Journal</h3>
-                   <p class="text-[11px] text-gray-550 dark:text-gray-400 font-normal">Real-time log of recorded quantities.</p>
-                </div>
+    {{-- COUNTING JOURNAL DATA TABLE CARD --}}
+    <div id="journalCard" class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-xs">
+        <div class="px-5 py-3.5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/70 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5 tracking-tight">
+                    <i class="fa-solid fa-list-check text-primary-600"></i> Counting Journal
+                </h3>
+                <span class="text-[11px] text-slate-400 dark:text-gray-500 hidden sm:inline">• Real-time log of recorded quantities</span>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div class="px-4 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-xs flex items-center gap-3">
-                    <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Matched</span>
-                    <span id="table-total-matched" class="text-sm font-bold text-emerald-700 dark:text-emerald-400">{{ $stats['total_matched'] }}</span>
+            <div class="flex items-center gap-2">
+                <div class="px-3 py-1 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/60 rounded-xs flex items-center gap-2">
+                    <span class="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-tight">Matched</span>
+                    <span id="table-total-matched" class="text-xs font-bold text-emerald-700 dark:text-emerald-400">{{ $stats['total_matched'] }}</span>
                 </div>
-                <div class="px-4 py-1.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-xs flex items-center gap-3">
-                    <span class="text-[9px] font-bold text-red-600 dark:text-red-400 uppercase tracking-widest">Mismatch</span>
-                    <span id="table-total-diff" class="text-sm font-bold text-red-700 dark:text-red-400">{{ $stats['total_diff'] }}</span>
+                <div class="px-3 py-1 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/60 rounded-xs flex items-center gap-2">
+                    <span class="text-[10px] font-semibold text-red-700 dark:text-red-400 uppercase tracking-tight">Mismatch</span>
+                    <span id="table-total-diff" class="text-xs font-bold text-red-700 dark:text-red-400">{{ $stats['total_diff'] }}</span>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- RESULTS TABLE -->
-    <x-table id="stoDetailsTable" class="w-full">
-        <thead>
-            <tr class="bg-slate-50 dark:bg-gray-850">
-                <th rowspan="2" class="w-12 text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">No</th>
-                <th rowspan="2" class="w-32 text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Model</th>
-                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Material Information</th>
-                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Auditor</th>
-                <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-slate-100/50 dark:bg-gray-800/50 border-x border-slate-200/80 dark:border-gray-750">System Status</th>
-                <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-primary-50/30 dark:bg-primary-950/20 border-r border-slate-200/80 dark:border-gray-750">Real Count</th>
-                <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-slate-100/50 dark:bg-gray-800/50 border-r border-slate-200/80 dark:border-gray-750">Variance</th>
-                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Location</th>
-                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Reason</th>
-                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Remark</th>
-                <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Timestamp</th>
-                @if($stoEvent->status === 'OPEN')
-                <th rowspan="2" class="w-[60px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
-                @endif
-            </tr>
-            <tr class="bg-slate-50 dark:bg-gray-850">
-                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-l border-slate-200/80 dark:border-gray-750">Qty</th>
-                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
-                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-primary-50/20 dark:bg-primary-950/10">Qty</th>
-                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-primary-50/20 dark:bg-primary-950/10 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
-                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30">Qty</th>
-                <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </x-table>
+        <div class="overflow-x-auto bg-white dark:bg-gray-800">
+            <x-table id="stoDetailsTable" class="w-full">
+                <thead>
+                    <tr class="bg-slate-50 dark:bg-gray-850">
+                        <th rowspan="2" class="w-12 text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">No</th>
+                        <th rowspan="2" class="w-32 text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Model</th>
+                        <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Material Information</th>
+                        <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Auditor</th>
+                        <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-slate-100/50 dark:bg-gray-800/50 border-x border-slate-200/80 dark:border-gray-750">System Status</th>
+                        <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-primary-50/30 dark:bg-primary-950/20 border-r border-slate-200/80 dark:border-gray-750">Real Count</th>
+                        <th colspan="2" class="text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase bg-slate-100/50 dark:bg-gray-800/50 border-r border-slate-200/80 dark:border-gray-750">Variance</th>
+                        <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Location</th>
+                        <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Reason</th>
+                        <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Remark</th>
+                        <th rowspan="2" class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Timestamp</th>
+                        @if($stoEvent->status === 'OPEN')
+                        <th rowspan="2" class="w-[60px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
+                        @endif
+                    </tr>
+                    <tr class="bg-slate-50 dark:bg-gray-850">
+                        <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-l border-slate-200/80 dark:border-gray-750">Qty</th>
+                        <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
+                        <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-primary-50/20 dark:bg-primary-950/10">Qty</th>
+                        <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-primary-50/20 dark:bg-primary-950/10 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
+                        <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30">Qty</th>
+                        <th class="text-center text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase bg-slate-100/30 dark:bg-gray-800/30 border-r border-slate-200/80 dark:border-gray-750">Amount</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </x-table>
+        </div>
+    </div>
 
 <!-- Finalize Modal & Reject Modal UI logic remains the same, but styled consistently -->
 
@@ -1111,48 +1097,50 @@
         });
 
         const rowHtml = `
-            <div id="${rowId}" class="flex flex-col sm:flex-row items-end gap-3 p-3 rounded-xs bg-white dark:bg-gray-800 border ${entry ? 'border-primary-100 dark:border-primary-900/10 bg-primary-50/5' : 'border-gray-200 dark:border-gray-700'} transition-all hover:bg-gray-50 dark:hover:bg-gray-700/30 relative">
+            <div id="${rowId}" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5 p-3.5 rounded-xs bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 shadow-xs relative transition-all hover:border-slate-300">
                 <input type="hidden" class="row-detail-hash" value="${entry ? entry.detail_id_hash : ''}">
 
                 ${entry ? `
-                    <div class="absolute -top-2 left-3 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-[8px] font-bold text-gray-500 rounded-full border border-gray-200 dark:border-gray-600 uppercase tracking-tighter">
-                        <i class="fa-solid fa-user-check mr-1 opacity-70"></i> Recorded by: ${entry.auditor_name || 'System'}
+                    <div class="absolute -top-2.5 left-3 px-2.5 py-0.5 bg-primary-50 dark:bg-primary-950/60 text-[9px] font-bold text-primary-700 dark:text-primary-300 rounded-full border border-primary-200 dark:border-primary-800">
+                        <i class="fa-solid fa-user-check text-primary-600 mr-1"></i> Recorded by: ${entry.auditor_name || 'System'}
                     </div>
                 ` : ''}
 
-                <div class="flex-1 w-full mt-2 sm:mt-0 font-bold">
-                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Qty (${currentProductData.unit?.toUpperCase().includes('COIL') ? 'KG' : (currentProductData.unit || 'PCS')})</div>
-                    <input type="number" step="any" class="row-qty w-full bg-white dark:bg-gray-900 border-2 border-primary-100 dark:border-primary-900/30 rounded-xs h-[40px] text-center font-bold text-sm focus:border-primary-500 transition-all outline-none text-primary-700 dark:text-primary-300"
+                <div class="w-full sm:w-32 font-bold shrink-0">
+                    <label class="text-[9px] font-bold text-slate-600 dark:text-gray-300 uppercase tracking-wider block mb-1">Qty (${currentProductData.unit?.toUpperCase().includes('COIL') ? 'KG' : (currentProductData.unit || 'PCS')})</label>
+                    <input type="number" step="any" class="row-qty w-full h-9 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 rounded-xs text-center font-extrabold text-sm text-slate-900 dark:text-white focus:border-primary-600 focus:ring-1 focus:ring-primary-500 transition-all outline-none"
                            placeholder="0.00" value="${entry ? entry.real_qty : ''}">
                 </div>
 
-                <div class="flex-[1.5] w-full">
-                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Location</div>
-                    <select class="row-location w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 rounded-xs h-[40px] text-xs px-3 outline-none transition-all">
+                <div class="w-full sm:w-48 shrink-0">
+                    <label class="text-[9px] font-bold text-slate-600 dark:text-gray-300 uppercase tracking-wider block mb-1">Location</label>
+                    <select class="row-location w-full h-9 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 focus:border-primary-600 focus:ring-1 focus:ring-primary-500 rounded-xs text-xs font-medium px-2.5 outline-none transition-all text-slate-900 dark:text-gray-100">
                         ${locationOptions}
                     </select>
                 </div>
 
-                <div class="flex-[2] w-full">
-                    <div class="text-[8px] font-bold text-gray-400 uppercase mb-1">Remark</div>
-                    <input type="text" class="row-remark w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus:border-primary-500 rounded-xs h-[40px] text-xs px-3 outline-none transition-all"
+                <div class="flex-1 w-full min-w-0">
+                    <label class="text-[9px] font-bold text-slate-600 dark:text-gray-300 uppercase tracking-wider block mb-1">Remark</label>
+                    <input type="text" class="row-remark w-full h-9 bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-600 focus:border-primary-600 focus:ring-1 focus:ring-primary-500 rounded-xs text-xs font-medium px-3 outline-none transition-all text-slate-900 dark:text-gray-100"
                            placeholder="Optional Note..." value="${entry ? entry.remark || '' : ''}">
                 </div>
 
-                <button type="button" onclick="saveRowCount('${rowId}')"
-                        class="h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2 active:scale-95">
-                    ${entry ? '<i class="fa-solid fa-check"></i> Update' : '<i class="fa-solid fa-plus"></i> Save'}
-                </button>
+                <div class="flex items-center justify-between sm:justify-start gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-gray-700/60 shrink-0">
+                    <button type="button" onclick="saveRowCount('${rowId}')"
+                            class="flex-1 sm:flex-initial h-9 px-4 rounded-xs font-bold text-xs transition-all bg-primary-600 hover:bg-primary-700 text-white inline-flex items-center justify-center gap-1.5 active:scale-95 shadow-xs">
+                        ${entry ? '<i class="fa-solid fa-check text-xs"></i> Update' : '<i class="fa-solid fa-plus text-xs"></i> Save'}
+                    </button>
 
-                ${entry ? `
-                    <button type="button" onclick="deleteItem('${entry.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                ` : `
-                    <button type="button" onclick="document.getElementById('${rowId}').remove()" class="h-[40px] w-[40px] flex items-center justify-center text-gray-400 hover:text-red-400">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                `}
+                    ${entry ? `
+                        <button type="button" onclick="deleteItem('${entry.detail_id_hash}')" class="h-9 w-9 border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-700 shrink-0 inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xs transition-colors" title="Delete Entry">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    ` : `
+                        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="h-9 w-9 border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-700 shrink-0 inline-flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700 rounded-xs transition-colors" title="Remove Row">
+                            <i class="fa-solid fa-xmark text-xs"></i>
+                        </button>
+                    `}
+                </div>
             </div>
         `;
 
@@ -1209,21 +1197,19 @@
                 });
 
                 row.querySelector('.row-detail-hash').value = data.detail_id_hash || '';
-                btn.innerHTML = '<i class="fa-solid fa-check"></i> Update';
-                btn.className = 'h-[40px] px-4 rounded-xs font-bold text-[10px] uppercase tracking-widest transition-all bg-primary-600 hover:bg-primary-700 text-white flex items-center justify-center gap-2';
+                btn.innerHTML = '<i class="fa-solid fa-check text-xs"></i> Update';
+                btn.className = 'flex-1 sm:flex-initial h-9 px-4 rounded-xs font-bold text-xs transition-all bg-primary-600 hover:bg-primary-700 text-white inline-flex items-center justify-center gap-1.5 active:scale-95 shadow-xs';
                 btn.disabled = false;
-                row.classList.replace('border-gray-200', 'border-primary-100');
                 row.classList.add('bg-primary-50/10');
 
-                if (!row.querySelector('.fa-trash-can')) {
-                    const deleteBtnHtml = `
-                        <button type="button" onclick="deleteItem('${data.detail_id_hash}')" class="h-[40px] w-[40px] flex items-center justify-center text-red-400 hover:text-red-600 transition-colors">
-                            <i class="fa-solid fa-trash-can"></i>
+                // Seamlessly swap remove (X) button with styled Delete (trash) button inside row-actions-container
+                const removeBtn = row.querySelector('.row-remove-btn');
+                if (removeBtn) {
+                    removeBtn.outerHTML = `
+                        <button type="button" onclick="deleteItem('${data.detail_id_hash}')" class="row-delete-btn h-9 w-9 border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-700 shrink-0 inline-flex items-center justify-center text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xs transition-colors" title="Delete Entry">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     `;
-                    const xBtn = row.querySelector('.fa-xmark')?.parentElement;
-                    if (xBtn) xBtn.remove();
-                    row.insertAdjacentHTML('beforeend', deleteBtnHtml);
                 }
 
                 table.ajax.reload(null, false);
@@ -1298,9 +1284,16 @@
         if (displayUnit.toUpperCase().includes('COIL')) displayUnit = 'KG';
         resUnit.innerText = displayUnit;
 
-        // System Qty Display (Follow new format)
-        const sysQtyHtml = InventoryHelper.formatQtyHtml(data.system_qty, data.pcs_per_unit, data.unit, 0, '', data.gross_coil);
-        resSystemQty.innerHTML = sysQtyHtml;
+        // System Qty Display (Single line separated by /)
+        let mainQtyFormatted = parseFloat(data.system_qty || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2}) + ' ' + (displayUnit || '').toUpperCase();
+        let pcsVal = InventoryHelper.calculatePcs(data.system_qty, data.pcs_per_unit, data.unit, data.gross_coil);
+        let pcsFormatted = Math.abs(pcsVal).toLocaleString(undefined, {maximumFractionDigits: 0}) + ' PCS';
+
+        if (displayUnit.toUpperCase() !== 'PCS') {
+            resSystemQty.innerHTML = `<span>${mainQtyFormatted}</span> <span class="text-slate-400 font-semibold mx-1">/</span> <span class="text-slate-500 dark:text-gray-400 font-medium">${pcsFormatted}</span>`;
+        } else {
+            resSystemQty.innerHTML = `<span>${mainQtyFormatted}</span>`;
+        }
 
         // Update entries count display
         const entriesCountEl = document.getElementById('resEntriesCount');

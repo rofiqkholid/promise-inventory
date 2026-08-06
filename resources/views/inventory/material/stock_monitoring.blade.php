@@ -5,266 +5,289 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-4">
-        <div>
+    {{-- Header Section: Title (Left) & Active KPI Cards Grid (Right) --}}
+    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-4">
+        <!-- Section 1: Title -->
+        <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Material Monitoring</h2>
             <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Real-time status of material balance and usage.</p>
         </div>
 
-        {{-- Action Toolbar --}}
-        <div class="flex items-center gap-2 mt-4 sm:mt-0 relative">
-            {{-- Mode Switch --}}
-            <div class="bg-slate-100 dark:bg-gray-900/50 p-1 rounded-xs flex items-center mr-2 border border-slate-200 dark:border-gray-700">
-                <button id="mode-balance" class="px-4 py-1.5 text-xs font-medium tracking-wider rounded-xs transition-all duration-200 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm">Balance Stock</button>
-                <button id="mode-usage" class="px-4 py-1.5 text-xs font-medium tracking-wider rounded-xs transition-all duration-200 text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200">Material Usage</button>
+        <!-- Section 2: Active KPI Grid (Sebaris dengan Title) -->
+        <div class="flex-1 flex justify-start xl:justify-end">
+            {{-- Balance Stock KPI Grid --}}
+            <div id="kpi-balance" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2 w-full xl:w-auto">
+                <!-- Total Parts -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-sm shrink-0">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-tight truncate mb-0.5">Total parts</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['total'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- Safe Stock -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-sm shrink-0">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-tight truncate mb-0.5">Safe stock</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['safe'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- Warning -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-sm shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-tight truncate mb-0.5">Warning</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['warning'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- Critical -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center text-red-600 dark:text-red-400 text-sm shrink-0">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-red-600 dark:text-red-500 uppercase tracking-tight truncate mb-0.5">Critical</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['critical'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- Over Stock -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px] col-span-2 sm:col-span-1">
+                    <div class="w-8 h-8 rounded-xs bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-400 text-sm shrink-0">
+                        <i class="fa-solid fa-arrow-trend-up"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-primary-600 dark:text-primary-500 uppercase tracking-tight truncate mb-0.5">Over stock</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['over'] ?? 0) }}</h3>
+                    </div>
+                </div>
             </div>
 
-            <button id="btnToggleFilter" class="h-9 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Toggle Filters">
-                <i class="fa-solid fa-filter text-sm mr-2.5"></i>
-                <span class="text-xs font-medium">Filters</span>
+            {{-- Material Usage KPI Grid (Hidden by Default) --}}
+            <div id="kpi-usage" class="hidden grid-cols-2 sm:grid-cols-4 gap-2 w-full xl:w-auto">
+                <!-- Total Trial Parts -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-sm shrink-0">
+                        <i class="fa-solid fa-flask"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tight truncate mb-0.5">Total trial parts</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['total'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- On Budget -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-sm shrink-0">
+                        <i class="fa-solid fa-piggy-bank"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-tight truncate mb-0.5">On budget</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['on_budget'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- Near Loss -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-sm shrink-0">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-tight truncate mb-0.5">Near loss</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['near_loss'] ?? 0) }}</h3>
+                    </div>
+                </div>
+
+                <!-- Loss -->
+                <div class="bg-white dark:bg-gray-800 px-3 py-1.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
+                    <div class="w-8 h-8 rounded-xs bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center text-red-600 dark:text-red-400 text-sm shrink-0">
+                        <i class="fa-solid fa-arrow-trend-down"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-bold text-red-600 dark:text-red-500 uppercase tracking-tight truncate mb-0.5">Loss</p>
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['loss'] ?? 0) }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- UNIFIED CARD WITH HEADER TOOLBAR & COLLAPSIBLE FILTER --}}
+    <div id="monitoringFilterCard" class="mb-0 bg-white dark:bg-gray-800 rounded-t-xs rounded-b-none border border-b-0 border-slate-200 dark:border-gray-700 overflow-hidden shadow-xs">
+        {{-- Card Header: Filter Toggle (Left) & Mode Switch/Actions (Right) --}}
+        <div class="px-5 py-3 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            {{-- Left: Filter Toggle Button --}}
+            <button type="button" id="btnToggleFilter" class="inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium active:scale-[0.98] transition-all shadow-xs w-full md:w-auto">
+                <i class="fa-solid fa-filter text-primary-600"></i>
+                <span>Filters</span>
+                <i id="monitoringFilterChevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 text-xs ml-1"></i>
             </button>
 
-            <button id="btnExportExcel" class="h-9 px-4 rounded-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm flex items-center justify-center transition-all duration-200 active:scale-95" title="Export Excel">
-                <i class="fa-solid fa-file-excel text-sm mr-2.5"></i>
-                <span class="text-xs font-medium">Export Excel</span>
-            </button>
-            
-            <div class="relative">
-                <button id="toggleLegend" class="h-9 px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Legend & Help">
-                    <i class="fa-solid fa-circle-question text-sm mr-2.5"></i>
-                    <span class="text-xs font-medium">Legend</span>
-                </button>
+            {{-- Right: Mode Switch & Action Buttons --}}
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
+                {{-- Mode Switch --}}
+                <div class="bg-slate-100 dark:bg-gray-900/50 p-1 rounded-xs flex items-center border border-slate-200 dark:border-gray-700 w-full sm:w-auto">
+                    <button id="mode-balance" class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-medium tracking-wider rounded-xs transition-all duration-200 bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm whitespace-nowrap">Balance Stock</button>
+                    <button id="mode-usage" class="flex-1 sm:flex-none px-3 sm:px-4 py-1.5 text-xs font-medium tracking-wider rounded-xs transition-all duration-200 text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200 whitespace-nowrap">Material Usage</button>
+                </div>
 
-                {{-- Legend Popover Content --}}
-                <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-6 z-50">
-                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-2">Stock Status</h4>
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-primary-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Over <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &gt; [Min Stock x 3])</span></div>
+                <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                    <button id="btnExportExcel" class="w-full sm:w-auto h-9 px-3 sm:px-4 rounded-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs flex items-center justify-center transition-all duration-200 active:scale-95" title="Export Excel">
+                        <i class="fa-solid fa-file-excel text-xs sm:text-sm mr-1.5 sm:mr-2"></i>
+                        <span class="text-xs font-medium truncate">Export</span>
+                    </button>
+                    
+                    <div class="relative w-full sm:w-auto">
+                        <button id="toggleLegend" class="w-full sm:w-auto h-9 px-3 sm:px-4 rounded-xs bg-white dark:bg-gray-800 text-slate-600 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 border border-slate-200 dark:border-gray-700 flex items-center justify-center transition-all duration-200" title="Legend & Help">
+                            <i class="fa-solid fa-circle-question text-xs sm:text-sm mr-1.5 sm:mr-2"></i>
+                            <span class="text-xs font-medium truncate">Legend</span>
+                        </button>
+
+                        {{-- Legend Popover Content --}}
+                        <div id="legendPopover" class="hidden absolute right-0 top-full mt-2 w-72 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-6 z-50 shadow-xl">
+                            <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-2">Stock Status</h4>
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-primary-500 mr-2 flex-shrink-0"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">Over <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &gt; [Min Stock x 3])</span></div>
+                                </div>
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">Safe <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock to [Min Stock x 3])</span></div>
+                                </div>
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">Warning <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock-30 to Min Stock)</span></div>
+                                </div>
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0 animate-pulse"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">Critical <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &lt; Min Stock-30)</span></div>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-gray-100 dark:border-gray-700 my-3"></div>
+
+                            <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-3">Trial Material Usage</h4>
+                            <div class="space-y-2 mb-4">
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">On Budget <span class="text-gray-400 text-[10px] tracking-tighter">(Usage 0 to Rank-50)</span></div>
+                                </div>
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">Near Loss <span class="text-gray-400 text-[10px] tracking-tighter">(Usage Rank-49 to Rank)</span></div>
+                                </div>
+                                <div class="flex items-center text-xs">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
+                                    <div class="text-gray-600 dark:text-gray-300 font-medium">Loss <span class="text-gray-400 text-[10px] tracking-tighter">(Usage &gt; Rank)</span></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Safe <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock to [Min Stock x 3])</span></div>
-                        </div>
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Warning <span class="text-gray-400 text-[10px] tracking-tighter">(Min Stock-30 to Min Stock)</span></div>
-                        </div>
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0 animate-pulse"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Critical <span class="text-gray-400 text-[10px] tracking-tighter">(Stock &lt; Min Stock-30)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Collapsible Filter Card Content --}}
+        <div id="filterCard" class="hidden p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="flex flex-col xl:flex-row gap-3 xl:items-end">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 flex-1">
+                    <!-- Customer -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Customer</label>
+                        <div class="w-full">
+                            <select id="filter_customer" class="select2 w-full">
+                                <option value="">All Customers</option>
+                                @foreach($customers as $c)
+                                <option value="{{ $c->id }}">{{ $c->code }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
-                    <div class="border-t border-gray-100 dark:border-gray-700 my-3"></div>
-
-                    <h4 class="font-bold text-gray-900 dark:text-gray-100 text-xs tracking-wider mb-3">Trial Material Usage</h4>
-                    <div class="space-y-2 mb-4">
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">On Budget <span class="text-gray-400 text-[10px] tracking-tighter">(Usage 0 to Rank-50)</span></div>
-                        </div>
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Near Loss <span class="text-gray-400 text-[10px] tracking-tighter">(Usage Rank-49 to Rank)</span></div>
-                        </div>
-                        <div class="flex items-center text-xs">
-                            <span class="w-2.5 h-2.5 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
-                            <div class="text-gray-600 dark:text-gray-300 font-medium">Loss <span class="text-gray-400 text-[10px] tracking-tighter">(Usage &gt; Rank)</span></div>
+                    <!-- Model -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Model</label>
+                        <div class="w-full">
+                            <select id="filter_model" class="select2 w-full">
+                                <option value="">All Models</option>
+                            </select>
                         </div>
                     </div>
+
+                    <!-- Status -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Project Status</label>
+                        <div class="w-full">
+                            <select id="filter_project_status" class="select2 w-full">
+                                <option value="">All Status</option>
+                                @foreach($project_statuses as $ps)
+                                    <option value="{{ $ps }}">{{ $ps }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="space-y-1.5" id="filter_status_container">
+                        <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Stock Status</label>
+                        <div class="w-full">
+                            <select id="filter_status" class="select2 w-full">
+                                <option value="">All Status</option>
+                                <option value="safe">Safe</option>
+                                <option value="warning">Warning</option>
+                                <option value="critical">Critical</option>
+                                <option value="over">Over</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Usage Status (Hidden by default) -->
+                    <div class="space-y-1.5 hidden" id="filter_usage_status_container">
+                        <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Usage Status</label>
+                        <div class="w-full">
+                            <select id="filter_usage_status" class="select2 w-full">
+                                <option value="">All Status</option>
+                                <option value="on_budget">On Budget</option>
+                                <option value="near_loss">Near Loss</option>
+                                <option value="loss">Loss</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full xl:w-auto">
+                    <button type="button" id="reset_filters" class="w-full h-9 inline-flex items-center justify-center gap-1.5 px-4 bg-slate-100 dark:bg-gray-700/60 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 font-medium text-xs rounded-xs border border-slate-200 dark:border-gray-600 active:scale-[0.98] transition-all shadow-xs" title="Reset all filters">
+                        <i class="fa-solid fa-rotate-left text-slate-400"></i>
+                        <span class="truncate">Reset Filter</span>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Collapsible Filter Card --}}
-    <div id="filterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-4 mb-4 relative">
-        <div class="absolute -top-2 right-14 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-slate-200 dark:border-b-gray-700"></div>
-        <div class="absolute -top-[7px] right-14 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-white dark:border-b-gray-800"></div>
-        
-        <div class="flex flex-col xl:flex-row gap-3 xl:items-end">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 flex-1">
-
-                <!-- Customer -->
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Customer</label>
-                    <div class="w-full">
-                        <select id="filter_customer" class="select2 w-full">
-                            <option value="">All Customers</option>
-                            @foreach($customers as $c)
-                            <option value="{{ $c->id }}">{{ $c->code }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Model -->
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Model</label>
-                    <div class="w-full">
-                        <select id="filter_model" class="select2 w-full">
-                            <option value="">All Models</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Status -->
-                <div class="space-y-1.5">
-                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Project Status</label>
-                    <div class="w-full">
-                        <select id="filter_project_status" class="select2 w-full">
-                            <option value="">All Status</option>
-                            @foreach($project_statuses as $ps)
-                                <option value="{{ $ps }}">{{ $ps }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Stock Status -->
-                <div class="space-y-1.5" id="filter_status_container">
-                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Stock Status</label>
-                    <div class="w-full">
-                        <select id="filter_status" class="select2 w-full">
-                            <option value="">All Status</option>
-                            <option value="safe">Safe</option>
-                            <option value="warning">Warning</option>
-                            <option value="critical">Critical</option>
-                            <option value="over">Over</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Usage Status (Hidden by default) -->
-                <div class="space-y-1.5 hidden" id="filter_usage_status_container">
-                    <label class="block text-xs font-medium text-slate-900 dark:text-gray-500 tracking-wider leading-tight">Usage Status</label>
-                    <div class="w-full">
-                        <select id="filter_usage_status" class="select2 w-full">
-                            <option value="">All Status</option>
-                            <option value="on_budget">On Budget</option>
-                            <option value="near_loss">Near Loss</option>
-                            <option value="loss">Loss</option>
-                        </select>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="flex gap-2 pt-2 xl:pt-0">
-                <button type="button" id="reset_filters" class="h-9 px-4 flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-slate-500 hover:text-primary-600 border border-slate-200 dark:border-gray-700 rounded-xs transition-all text-xs font-medium active:scale-95 shadow-xs">
-                    <i class="fa-solid fa-rotate-left"></i> Reset
-                </button>
-            </div>
-        </div>
-    </div>
-    
-    {{-- Individual KPI Cards - Forced Single Row --}}
-    <div id="kpi-balance" class="flex flex-nowrap gap-3 mb-4 overflow-x-auto scrollbar-hide">
-        <!-- Total -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
-            <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
-                <i class="fa-solid fa-layer-group"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-slate-900 dark:text-gray-500 tracking-tight mb-1">Total parts</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['total'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- Safe -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-emerald-600 dark:text-emerald-500 tracking-tight mb-1">Safe stock</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['safe'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- Warning -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-lg">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">Warning</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['warning'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- Critical -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center text-red-600 dark:text-red-400 text-lg">
-                <i class="fa-solid fa-bell"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-red-600 dark:text-red-500 tracking-tight mb-1">Critical</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['critical'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- Over Stock -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800/50 flex items-center justify-center text-primary-600 dark:text-primary-400 text-lg">
-                <i class="fa-solid fa-arrow-trend-up"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-primary-600 dark:text-primary-500 tracking-tight mb-1">Over stock</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['balance']['over'] ?? 0) }}</div>
-            </div>
-        </div>
-    </div>
-    
-    {{-- Individual KPI Cards - Usage / Out Trial --}}
-    <div id="kpi-usage" class="hidden flex-nowrap gap-3 mb-4 overflow-x-auto scrollbar-hide">
-        <!-- Total Trial Parts -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all hover:bg-slate-50/50 dark:hover:bg-gray-700/50">
-            <div class="w-10 h-10 rounded-xs bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 text-lg">
-                <i class="fa-solid fa-flask"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-gray-400 dark:text-gray-500 tracking-tight mb-1">Total trial parts</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['total'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- On Budget -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg">
-                <i class="fa-solid fa-piggy-bank"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-emerald-600 dark:text-emerald-500 tracking-tight mb-1">On budget</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['on_budget'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- Near Loss -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/50 flex items-center justify-center text-amber-600 dark:text-amber-400 text-lg">
-                <i class="fa-solid fa-coins"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-amber-600 dark:text-amber-500 tracking-tight mb-1">Near loss</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['near_loss'] ?? 0) }}</div>
-            </div>
-        </div>
-
-        <!-- Loss -->
-        <div class="flex-none w-[180px] flex-grow bg-white dark:bg-gray-800 p-3.5 rounded-xs border border-slate-200 dark:border-gray-700 flex items-center gap-3 transition-all">
-            <div class="w-10 h-10 rounded-xs bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center text-red-600 dark:text-red-400 text-lg">
-                <i class="fa-solid fa-arrow-trend-down"></i>
-            </div>
-            <div>
-                <div class="text-sm font-bold text-red-600 dark:text-red-500 tracking-tight mb-1">Loss</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-white leading-none tracking-tighter">{{ number_format($stats['usage']['loss'] ?? 0) }}</div>
-            </div>
-        </div>
-    </div>
+    <style>
+        #monitoringFilterCard + #balanceView,
+        #monitoringFilterCard + #usageView {
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+        #balanceView > div,
+        #usageView > div {
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+    </style>
 
 
 
@@ -690,8 +713,8 @@
             $(this).addClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').removeClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
             $('#mode-usage').removeClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').addClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
             
-            $('#kpi-balance').removeClass('hidden').addClass('flex');
-            $('#kpi-usage').addClass('hidden').removeClass('flex');
+            $('#kpi-balance').removeClass('hidden').addClass('grid');
+            $('#kpi-usage').addClass('hidden').removeClass('grid');
             
             $('#balanceView').removeClass('hidden');
             $('#usageView').addClass('hidden');
@@ -711,8 +734,8 @@
             $(this).addClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').removeClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
             $('#mode-balance').removeClass('bg-white dark:bg-gray-800 text-primary-600 dark:text-primary-400 shadow-sm').addClass('text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200');
             
-            $('#kpi-usage').removeClass('hidden').addClass('flex');
-            $('#kpi-balance').addClass('hidden').removeClass('flex');
+            $('#kpi-usage').removeClass('hidden').addClass('grid');
+            $('#kpi-balance').addClass('hidden').removeClass('grid');
             
             $('#usageView').removeClass('hidden');
             $('#balanceView').addClass('hidden');
@@ -739,11 +762,10 @@
         // Filter Toggle Logic
         $('#btnToggleFilter').on('click', function(e) {
             e.stopPropagation();
-            const btn = $(this);
             const card = $('#filterCard');
             
             card.slideToggle(200);
-            btn.toggleClass('bg-primary-50 text-primary-600 ring-2 ring-primary-500/50');
+            $('#monitoringFilterChevron').toggleClass('rotate-180');
             
             // Close Legend if open
             if (!$('#legendPopover').hasClass('hidden')) {
@@ -754,8 +776,10 @@
         // Close Filter Card when clicking outside
         $(document).click(function(e) {
             if (!$(e.target).closest('#filterCard, #btnToggleFilter, .select2-container').length) {
-                $('#filterCard').slideUp(200);
-                $('#btnToggleFilter').removeClass('bg-primary-50 text-primary-600 ring-2 ring-primary-500/50');
+                if ($('#filterCard').is(':visible')) {
+                    $('#filterCard').slideUp(200);
+                    $('#monitoringFilterChevron').removeClass('rotate-180');
+                }
             }
         });
 

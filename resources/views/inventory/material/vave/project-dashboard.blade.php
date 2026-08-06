@@ -52,22 +52,25 @@
     #tablePaginateWrapper .dataTables_paginate {
         float: none !important;
         padding-top: 0 !important;
-        display: flex;
-        align-items: center;
-        gap: 2px;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 2px !important;
+        flex-wrap: nowrap !important;
+        margin: 0 !important;
     }
     #tablePaginateWrapper .dataTables_paginate .paginate_button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 26px;
-        height: 26px;
-        padding: 0 6px;
-        font-size: 11px;
-        border-radius: 3px;
-        cursor: pointer;
-        color: #64748b;
-        border: 1px solid transparent;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 24px !important;
+        height: 24px !important;
+        padding: 0 4px !important;
+        font-size: 10px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+        color: #64748b !important;
+        border: 1px solid transparent !important;
+        white-space: nowrap !important;
     }
     #tablePaginateWrapper .dataTables_paginate .paginate_button:hover {
         background: #f1f5f9;
@@ -90,17 +93,17 @@
 
 <div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar lg:pb-0">
     {{-- Header & KPI Stats --}}
-    <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4">
+    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-y-3 gap-x-4">
         <!-- Title Section -->
         <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-white leading-tight mb-0.5 tracking-tight">Project Model Vave Analysis</h2>
             <p class="text-[11px] text-gray-500 dark:text-gray-400 font-normal leading-tight">Gap Benefit: (Plan - Act Kg) × Price × Qty In</p>
         </div>
 
-            <!-- KPI Grid & Filter Toggle -->
-        <div class="flex-1 flex flex-col md:flex-row gap-2 items-stretch lg:justify-end min-w-[100%] xl:min-w-[850px]">
+        <!-- KPI Grid & Filter Toggle -->
+        <div class="flex-1 flex flex-col sm:flex-row gap-2 items-stretch lg:justify-end w-full min-w-full sm:min-w-0 xl:min-w-[850px]">
             <!-- KPI Cards -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2 flex-1">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 flex-1">
                 @foreach([
                     ['id' => 'kpi-benefit', 'label' => 'Total Benefit', 'val' => 'Rp 0', 'unit' => 'IDR', 'icon' => 'fa-money-bill-trend-up', 'color' => 'primary'],
                     ['id' => 'kpi-kg', 'label' => 'Saving Weight', 'val' => '0.000', 'unit' => 'KG', 'icon' => 'fa-weight-hanging', 'color' => 'blue'],
@@ -108,12 +111,12 @@
                     ['id' => 'kpi-merit', 'label' => 'Merit Items', 'val' => '0', 'unit' => 'PART', 'icon' => 'fa-circle-arrow-up', 'color' => 'emerald'],
                 ] as $stat)
                 <div class="bg-white dark:bg-gray-800 px-2.5 py-2 rounded-xs border border-gray-200 dark:border-gray-700 flex items-center gap-2.5 h-[52px]">
-                    <div class="w-9 h-9 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-base shrink-0">
+                    <div class="w-8 h-8 rounded-xs bg-{{ $stat['color'] }}-50 dark:bg-{{ $stat['color'] }}-900/20 flex items-center justify-center text-{{ $stat['color'] }}-600 dark:text-{{ $stat['color'] }}-400 text-sm shrink-0">
                         <i class="fa-solid {{ $stat['icon'] }}"></i>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 truncate">{{ $stat['label'] }}</p>
-                        <h3 class="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
+                        <p class="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight leading-none mb-1 truncate">{{ $stat['label'] }}</p>
+                        <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight whitespace-nowrap" id="{{ $stat['id'] }}">
                             {{ $stat['val'] }} <span class="text-[9px] text-slate-400 font-normal ml-0.5">{{ $stat['unit'] }}</span>
                         </h3>
                     </div>
@@ -123,7 +126,7 @@
 
             <!-- Filter Toggle -->
             <div class="shrink-0 flex items-stretch">
-                <button id="btnToggleDashFilter" title="Toggle Filters" class="group flex items-center justify-center w-full md:w-[52px] h-[52px] md:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xs transition-all hover:bg-slate-50 dark:hover:bg-gray-700">
+                <button id="btnToggleDashFilter" title="Toggle Filters" class="group flex items-center justify-center w-full sm:w-[52px] h-[42px] sm:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-600 rounded-xs transition-all hover:bg-slate-50 dark:hover:bg-gray-700">
                     <i class="fa-solid fa-filter text-slate-400 group-hover:text-primary-500 transition-colors text-sm"></i>
                 </button>
             </div>
@@ -131,10 +134,10 @@
     </div>
 
     {{-- Collapsible Filter Card --}}
-    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4">
+    <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-600 p-4 mb-2">
         <form id="filterForm">
             <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4 flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 flex-1">
                     <div class="space-y-1.5">
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-200">Analysis Mode</label>
                         <select id="filterMode" class="w-full text-xs font-medium border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-slate-900 dark:text-white rounded-xs h-[40px] px-3 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all focus:border-primary-500">
@@ -168,11 +171,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="flex gap-2 items-end">
-                        <button type="button" id="btnReset" class="h-10 px-6 bg-slate-600 hover:bg-slate-700 rounded-xs text-xs font-medium text-white transition-all shadow-sm active:scale-95">
-                            <i class="fa-solid fa-rotate-left mr-2"></i> Reset Filters
-                        </button>
-                    </div>
+                </div>
+
+                <div class="flex gap-2 pt-2 lg:pt-0">
+                    <button type="button" id="btnReset" class="h-9 px-6 bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-xs text-xs font-medium text-slate-600 dark:text-gray-300 transition-all border border-slate-200 dark:border-gray-600">
+                        Reset Filters
+                    </button>
                 </div>
             </div>
         </form>
@@ -185,9 +189,9 @@
             {{-- Combined Chart --}}
             <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
                 <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-1">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight" id="combinedChartTitle">
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight" id="combinedChartTitle">
                         <i class="fa-solid fa-money-bill-trend-up mr-2 text-emerald-500" id="combinedChartIcon"></i> <span id="combinedChartText">Benefit by Model</span>
-                        <span id="combinedChartUnit" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">IDR</span>
+                        <span id="combinedChartUnit" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 shrink-0 whitespace-nowrap">IDR</span>
                     </h3>
                     <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-xs p-0.5 shrink-0">
                         <button type="button" class="combined-chart-switch active px-2.5 py-1 text-[10px] font-bold rounded-xs transition-all bg-white dark:bg-gray-600 shadow-sm text-emerald-600 dark:text-emerald-400" data-type="benefit" data-color="emerald">Benefit</button>
@@ -203,9 +207,9 @@
             {{-- Pareto Chart --}}
             <div class="chart-card bg-white dark:bg-gray-800 p-2.5 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative lg:w-1/2 min-w-0 h-[300px] lg:h-[320px]">
                 <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-1">
-                    <h3 class="text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-100 flex items-center truncate tracking-tight">
                         <i class="fa-solid fa-chart-simple mr-2 text-primary-500"></i> Pareto Analysis
-                        <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">Contribution</span>
+                        <span class="hidden sm:inline-block ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[8px] font-medium text-slate-500 dark:text-slate-400 tracking-wider border border-slate-200/50 dark:border-slate-600/50 shrink-0 whitespace-nowrap">Contribution</span>
                     </h3>
                     <div class="flex items-center bg-slate-100 dark:bg-slate-700 rounded-xs p-0.5 shrink-0">
                         <button type="button" class="pareto-chart-switch px-2.5 py-1 text-[10px] font-medium rounded-xs transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" data-by="model" data-color="primary">Model</button>
@@ -220,20 +224,21 @@
 
         {{-- Detailed Data Table --}}
         <div class="table-container bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative flex-1 min-h-0">
-            <div class="flex-none flex flex-wrap justify-between items-center gap-2 mb-2">
-                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                    <i class="fa-solid fa-table-list mr-2 text-primary-500"></i> Detailed VAVE Analysis (Project Model)
+            <div class="flex-none flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-2.5">
+                <h3 class="text-xs sm:text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center min-w-0">
+                    <i class="fa-solid fa-table-list mr-2 text-primary-500 shrink-0"></i>
+                    <span class="truncate">Detailed VAVE Analysis (Project Model)</span>
                 </h3>
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                     {{-- Search with icon inside --}}
-                    <div class="relative">
-                        <input type="text" id="vaveTableSearch" placeholder="Search Part... " class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-[11px] rounded-xs h-[30px] pl-8 pr-3 w-44 focus:ring-1 focus:ring-primary-500 outline-none transition-all text-slate-700 dark:text-slate-200">
+                    <div class="relative flex-1 sm:flex-initial">
+                        <input type="text" id="vaveTableSearch" placeholder="Search Part..." class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-[11px] rounded-xs h-[30px] pl-8 pr-3 w-full sm:w-44 focus:ring-1 focus:ring-primary-500 outline-none transition-all text-slate-700 dark:text-slate-200">
                     </div>
                     {{-- Pagination inline --}}
-                    <div id="tablePaginateWrapper" class="flex items-center"></div>
+                    <div id="tablePaginateWrapper" class="flex items-center shrink-0"></div>
                     {{-- Export --}}
-                    <button id="btnExportExcel" class="h-[30px] px-3 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wide flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all whitespace-nowrap">
-                        <i class="fa-solid fa-file-excel text-[10px]"></i> Export Excel
+                    <button id="btnExportExcel" class="h-[30px] px-3 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 tracking-wide flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-xs border border-emerald-100 dark:border-emerald-800/50 transition-all whitespace-nowrap shrink-0">
+                        <i class="fa-solid fa-file-excel text-[10px]"></i> <span class="hidden sm:inline">Export</span> Excel
                     </button>
                 </div>
             </div>
@@ -241,7 +246,6 @@
             <div class="flex-1 overflow-auto custom-scrollbar" style="min-height:0">
                 <table id="vaveDetailTable" class="w-full text-left" style="min-width:700px">
                     <thead class="bg-gray-50/80 dark:bg-gray-700/50 sticky top-0 z-10 backdrop-blur-md">
-                        <tr>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Part No</th>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">Model</th>
                             <th class="py-2 px-3 text-[11px] font-medium text-slate-500 tracking-wider">EBD Version</th>
@@ -289,15 +293,23 @@ $(function() {
 
     Chart.register(ChartDataLabels);
 
-    // Toggle Filter Logic
+    // Toggle Filter Logic with Soft Active Highlight
     $('#btnToggleDashFilter').on('click', function(e) {
         e.stopPropagation();
-        $('#dashboardFilterCard').slideToggle(200);
-        
-        $(this).toggleClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-700');
-        $(this).toggleClass('bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-700 hover:bg-primary-100 dark:hover:bg-primary-900/40');
-        $(this).find('i').toggleClass('text-slate-400 group-hover:text-primary-500');
-        $(this).find('i').toggleClass('text-primary-600 dark:text-primary-400');
+        const $filterCard = $('#dashboardFilterCard');
+        $filterCard.slideToggle(200, function() {
+            const isOpen = $filterCard.is(':visible');
+            const $btn = $('#btnToggleDashFilter');
+            if (isOpen) {
+                $btn.addClass('bg-primary-50 dark:bg-primary-950/60 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 shadow-2xs')
+                    .removeClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200');
+                $btn.find('i').addClass('text-primary-600 dark:text-primary-400').removeClass('text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white');
+            } else {
+                $btn.removeClass('bg-primary-50 dark:bg-primary-950/60 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 shadow-2xs')
+                    .addClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200');
+                $btn.find('i').removeClass('text-primary-600 dark:text-primary-400').addClass('text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white');
+            }
+        });
     });
 
     // Register Plugin

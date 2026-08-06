@@ -5,24 +5,26 @@
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
     {{-- Header Section --}}
-    <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Revision</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage product revision codes and their order</p>
-        </div>
-        @if(Auth::user()->hasMenuPermission('inventory.master.revision.index', 'create'))
-
-        <div class="mt-4 sm:mt-0">
-            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm" data-target="revision">
-                <i class="fa-solid fa-plus"></i> Add New
-            </button>
-        </div>
-        @endif
+    <div class="mb-4">
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Revision</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage product revision codes and their order</p>
     </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xs overflow-hidden">
-        <div class="p-0 overflow-x-auto">
-             <x-table id="revisionTable">
+    {{-- UNIFIED CARD HEADER TOOLBAR --}}
+    <div id="revisionCard" class="mb-0 bg-white dark:bg-gray-800 rounded-t-xs rounded-b-none border border-b-0 border-slate-200 dark:border-gray-700 overflow-hidden shadow-xs">
+        <div class="px-5 py-3.5 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2 tracking-tight">
+                <i class="fa-solid fa-code-branch text-primary-600"></i> Revision List
+            </h3>
+            @if(Auth::user()->hasMenuPermission('inventory.master.revision.index', 'create'))
+            <button type="button" class="add-button inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs w-full sm:w-auto" data-target="revision">
+                <i class="fa-solid fa-plus"></i> Add New
+            </button>
+            @endif
+        </div>
+    </div>
+
+    <x-table id="revisionTable">
                 <thead class="bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400">
                     <tr>
                         <th class="px-6 py-4 w-16 text-center text-xs font-bold border-b border-gray-200 dark:border-gray-700">No</th>
@@ -35,8 +37,6 @@
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
             </x-table>
-        </div>
-    </div>
 </div>
 
 {{-- Modals --}}

@@ -397,6 +397,7 @@ Route::middleware(['auth', 'inventory.role'])->group(function () {
     Route::middleware(['inventory.role:admin,approver,checker'])->group(function () {
         Route::get('transaction-history', [TransactionHistoryController::class, 'index'])->name('transactionHistory');
         Route::get('transaction-history/getData', [TransactionHistoryController::class, 'getData'])->name('transactionHistory.getData');
+        Route::get('transaction-history/export-excel', [TransactionHistoryController::class, 'exportExcel'])->name('transactionHistory.exportExcel');
         Route::get('transaction-history/{id}/edit', [TransactionHistoryController::class, 'edit'])->name('transactionHistory.edit');
         Route::put('transaction-history/{id}', [TransactionHistoryController::class, 'update'])->name('transactionHistory.update');
     });

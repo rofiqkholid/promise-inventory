@@ -6,7 +6,7 @@
 @section('content')
 <div class="dashboard-container w-full h-auto overflow-y-auto lg:h-[calc(100vh-85px)] lg:overflow-hidden flex flex-col gap-2 pb-0 custom-scrollbar select-none">
     {{-- Header, KPIs & Filters --}}
-    <div class="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 shrink-0">
+    <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 shrink-0">
         <!-- Section 1: Title & Subtitle Section -->
         <div class="flex-none">
             <h2 class="text-xl xl:text-2xl font-bold text-gray-800 dark:text-white leading-tight mb-0.5 flex items-center gap-2">
@@ -16,15 +16,32 @@
         </div>
 
         <!-- Section 2: KPI Cards & Filter Toggle -->
-        <div class="flex-1 flex flex-col md:flex-row gap-2 items-stretch lg:justify-end min-w-[100%] xl:min-w-[750px]">
-            <!-- KPI Grid -->
-            <div class="grid grid-cols-2 xl:grid-cols-5 gap-2 flex-1">
+        <div class="flex-1 flex flex-col gap-2 items-stretch xl:items-center xl:flex-row lg:justify-end w-full">
+            <!-- KPI Grid (6 slots total = 3 full 2-col rows on mobile) -->
+            <div class="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-6 gap-2 flex-1">
+                <!-- 1. Latest Event Card (Spans 2 columns) -->
+                <div class="col-span-2 sm:col-span-1 xl:col-span-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 min-h-[52px] h-auto transition-all duration-200">
+                    <div class="w-8 h-8 rounded-xs bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
+                        <i class="fa-solid fa-tag text-xs"></i>
+                    </div>
+                    <div class="min-w-0 flex-1 flex flex-col justify-center">
+                        <p class="text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider leading-none mb-0.5">Latest Event</p>
+                        <div class="flex flex-wrap items-baseline gap-x-1.5 min-w-0">
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-white leading-tight truncate">{{ $stats['last_event'] }}</span>
+                            @if($stats['last_period'] && $stats['last_period'] !== '-')
+                                <span class="text-[8.5px] font-semibold text-slate-400 dark:text-slate-500 truncate">({{ $stats['last_period'] }})</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2, 3, 4. KPI Cards -->
                 @foreach([
                     ['icon' => 'fa-calendar-check', 'color' => 'slate',   'label' => 'Total Events',   'val' => $stats['total_events'],   'unit' => 'STO cycles'],
                     ['icon' => 'fa-lock',           'color' => 'indigo',  'label' => 'Closed Events',  'val' => $stats['closed_events'],  'unit' => 'completed'],
                     ['icon' => 'fa-spinner',        'color' => 'emerald', 'label' => 'Open Events',    'val' => $stats['open_events'],    'unit' => 'in progress'],
                 ] as $kpi)
-                <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 h-[52px] transition-all duration-200">
+                <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 min-h-[52px] h-auto transition-all duration-200">
                     <div class="w-8 h-8 rounded-xs bg-{{ $kpi['color'] }}-50 dark:bg-{{ $kpi['color'] }}-900/20 flex items-center justify-center text-{{ $kpi['color'] }}-600 dark:text-{{ $kpi['color'] }}-400 flex-shrink-0">
                         <i class="fa-solid {{ $kpi['icon'] }} text-xs"></i>
                     </div>
@@ -37,30 +54,17 @@
                 </div>
                 @endforeach
 
-                <!-- Latest Event Card (Spans 1 column on mobile, 2 columns on desktop) -->
-                <div class="col-span-1 xl:col-span-2 bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center gap-2.5 h-[52px] transition-all duration-200">
-                    <div class="w-8 h-8 rounded-xs bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
-                        <i class="fa-solid fa-tag text-xs"></i>
-                    </div>
-                    <div class="min-w-0 flex-1 flex flex-col justify-center">
-                        <p class="text-[9px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-wider leading-none mb-0.5">Latest Event</p>
-                        <div class="flex flex-wrap items-baseline gap-x-1.5 min-w-0">
-                            <span class="text-xs font-extrabold text-slate-800 dark:text-white leading-none truncate">{{ $stats['last_event'] }}</span>
-                            @if($stats['last_period'] && $stats['last_period'] !== '-')
-                                <span class="text-[8.5px] font-semibold text-slate-400 dark:text-slate-500 truncate">({{ $stats['last_period'] }})</span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+                <!-- 5. Filter Toggle Button (Fills 6th slot next to Open Events on Mobile) -->
+                <button id="btnToggleDashFilter" type="button" title="Toggle Filters" class="col-span-1 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 px-2.5 py-1.5 flex items-center justify-center gap-2 min-h-[52px] h-auto transition-all duration-200 hover:bg-slate-50 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200 font-bold text-xs shadow-2xs group">
+                    <i class="fa-solid fa-filter text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white text-xs"></i>
+                    <span class="uppercase tracking-wider text-[10px]">Filter</span>
+                </button>
             </div>
 
-            <!-- Filter Toggle Section & Correction Logs -->
-            <div class="shrink-0 flex items-stretch gap-2">
-                <button onclick="openGlobalAuditLogsModal()" title="View Global Correction Log" class="px-3 flex items-center justify-center gap-2 text-xs font-bold text-slate-700 hover:text-slate-900 dark:text-gray-300 dark:hover:text-white bg-white hover:bg-slate-50 dark:bg-gray-800 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs transition-all h-[52px] md:h-auto shadow-3xs hover:shadow-2xs">
-                    <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400"></i> <span class="hidden xl:inline uppercase tracking-widest text-[9px] font-black">Correction Log</span>
-                </button>
-                <button id="btnToggleDashFilter" title="Toggle Filters" class="group flex items-center justify-center w-full md:w-[52px] h-[52px] md:h-auto bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs transition-all">
-                    <i class="fa-solid fa-filter text-slate-400 text-sm"></i>
+            <!-- Correction Log Button -->
+            <div class="shrink-0 flex items-stretch">
+                <button onclick="openGlobalAuditLogsModal()" title="View Global Correction Log" class="w-full xl:w-auto px-4 flex items-center justify-center gap-2 text-xs font-bold text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-500 rounded-xs transition-all h-[42px] xl:h-[52px] shadow-2xs">
+                    <i class="fa-solid fa-clock-rotate-left text-xs text-white/80"></i> <span class="uppercase tracking-widest text-[9px] font-black">Correction Log</span>
                 </button>
             </div>
         </div>
@@ -68,11 +72,11 @@
 
     {{-- Collapsible Filter Card --}}
     <div id="dashboardFilterCard" class="hidden bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 p-3 shrink-0 mb-1">
-        <div class="flex flex-wrap items-center gap-6">
+        <div class="flex flex-wrap items-center gap-4 sm:gap-6">
             <!-- Filter Mode Select -->
-            <div class="flex items-center gap-2">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
                 <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">Filter Scope:</label>
-                <div class="w-[180px]">
+                <div class="w-full sm:w-[180px]">
                     <select id="filterScope" class="w-full">
                         <option value="event" selected>Single STO Event</option>
                         <option value="range">Aggregate Range</option>
@@ -81,9 +85,9 @@
             </div>
 
             <!-- Single STO Event Container -->
-            <div id="divEventSelector" class="flex items-center gap-2">
+            <div id="divEventSelector" class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
                 <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">STO Cycle:</label>
-                <div class="w-[240px]">
+                <div class="w-full sm:w-[240px]">
                     <select id="eventSelector" class="w-full">
                         @foreach($recentEvents as $e)
                             <option value="{{ $e['hash_id'] }}" data-code="{{ $e['code'] }}" data-period="{{ $e['period'] }}">{{ $e['code'] }} ({{ $e['period'] }})</option>
@@ -93,9 +97,9 @@
             </div>
 
             <!-- Time Range Container (Hidden by default) -->
-            <div id="divRangeSelector" class="flex items-center gap-2 hidden">
+            <div id="divRangeSelector" class="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full sm:w-auto hidden">
                 <label class="text-[11px] font-bold text-slate-550 dark:text-slate-400 uppercase tracking-widest leading-none whitespace-nowrap">Aggregate Range:</label>
-                <div class="w-[200px]">
+                <div class="w-full sm:w-[200px]">
                     <select id="rangeSelector" class="w-full">
                         <option value="3m" data-code="Last 3 Months (Overall)" data-period="3 Months">Last 3 Months</option>
                         <option value="6m" data-code="Last 6 Months (Overall)" data-period="6 Months">Last 6 Months</option>
@@ -110,12 +114,12 @@
     {{-- ROW 1: Top Cards --}}
     <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
         <!-- Top-Left Card: Summary Result -->
-        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
-            <div class="flex-none flex justify-between items-center mb-1">
-                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 min-w-0 pr-2">
-                    <i class="fa-solid fa-square-poll-vertical mr-1 text-primary-500"></i>
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2.5 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-[280px] lg:min-h-0 overflow-hidden transition-all duration-200">
+            <div class="flex-none flex flex-wrap sm:flex-nowrap justify-between items-center gap-2 mb-1.5">
+                <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center gap-1.5 min-w-0 pr-1">
+                    <i class="fa-solid fa-square-poll-vertical mr-1 text-primary-500 shrink-0"></i>
                     <span class="truncate">Summary Result</span>
-                    <span class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">(Target: Net ±1%, Abs 4%)</span>
+                    <span class="hidden sm:inline-block ml-1 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 shrink-0 whitespace-nowrap">(Target: Net ±1%, Abs 4%)</span>
                 </h3>
                 <!-- Inner Card Tabs -->
                 <div class="flex bg-gray-100 dark:bg-gray-700/80 p-0.5 rounded-xs shrink-0 gap-0.5">
@@ -131,9 +135,9 @@
                 </div>
             </div>
             
-            <div class="flex-1 flex min-h-0 items-center w-full h-full">
+            <div class="flex-1 flex min-h-[220px] lg:min-h-0 items-center w-full h-full">
                 <!-- Mini Chart Panel (full width) -->
-                <div class="w-full h-full relative min-w-0">
+                <div class="w-full h-full relative min-w-0 min-h-[220px] lg:min-h-0">
                      <div id="summaryAmountContainer" class="absolute inset-0 w-full h-full">
                           <canvas id="summaryAmountChart" class="w-full h-full"></canvas>
                      </div>
@@ -148,10 +152,10 @@
         </div>
 
         <!-- Top-Right Card: Accuracy Based on Cust -->
-        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
-            <div class="flex-none flex justify-between items-center mb-1">
-                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
-                    <i class="fa-solid fa-scale-unbalanced mr-2 text-primary-500"></i>
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2.5 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-[280px] lg:min-h-0 overflow-hidden transition-all duration-200">
+            <div class="flex-none flex justify-between items-center mb-1.5">
+                <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-1">
+                    <i class="fa-solid fa-scale-unbalanced mr-1.5 text-primary-500 shrink-0"></i>
                     <span class="truncate">Accuracy based on Cust</span>
                 </h3>
                 <!-- Inner Card Tabs -->
@@ -166,7 +170,7 @@
             </div>
 
             <!-- Chart Panel -->
-            <div class="flex-1 min-h-0 relative mt-1">
+            <div class="flex-1 min-h-[220px] lg:min-h-0 relative mt-1 w-full h-full">
                  <div id="accuracyNetContainer" class="absolute inset-0 w-full h-full">
                      <canvas id="accuracyNetChart" class="w-full h-full"></canvas>
                  </div>
@@ -179,14 +183,14 @@
     {{-- ROW 2: Bottom Cards --}}
     <div class="lg:flex-[50] flex flex-col lg:flex-row gap-2 min-h-0">
         <!-- Bottom-Left Card: Pareto Deviation by Part (1/2 width) -->
-        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
-            <div class="flex-none flex justify-between items-center mb-1">
-                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
-                    <i class="fa-solid fa-chart-column mr-2 text-primary-500 flex-shrink-0"></i>
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2.5 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-[280px] lg:min-h-0 overflow-hidden transition-all duration-200">
+            <div class="flex-none flex justify-between items-center mb-1.5">
+                <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-1">
+                    <i class="fa-solid fa-chart-column mr-1.5 text-primary-500 shrink-0"></i>
                     <span class="truncate">Pareto Deviation by Part</span>
-                    <span id="tab1-event-badge" class="ml-2 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 flex-shrink-0 whitespace-nowrap">...</span>
+                    <span id="tab1-event-badge" class="hidden sm:inline-block ml-1 px-1.5 py-0.5 rounded-xs bg-slate-100 dark:bg-slate-700 text-[10px] font-medium text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-600/50 shrink-0 whitespace-nowrap">...</span>
                 </h3>
-                <div class="flex items-center gap-1 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 pl-2">
+                <div class="flex items-center gap-1 shrink-0 border-l border-gray-200 dark:border-gray-700 pl-2">
                     <button id="btnParetoPrev" onclick="prevParetoPage()" class="w-6 h-6 flex items-center justify-center rounded-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors" title="Previous page">
                         <i class="fa-solid fa-chevron-left text-[10px]"></i>
                     </button>
@@ -196,23 +200,24 @@
                     </button>
                 </div>
             </div>
-            <div class="relative w-full flex-1 min-h-0">
+            <div class="relative w-full flex-1 min-h-[220px] lg:min-h-0">
                 <canvas id="paretoModelChart" class="absolute inset-0 w-full h-full"></canvas>
             </div>
         </div>
 
         <!-- Bottom-Right Card: Problem Reason (1/2 width) -->
-        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-0 overflow-hidden transition-all duration-200">
-            <div class="flex-none flex justify-between items-center mb-1">
-                <h3 class="text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-2">
-                    <i class="fa-solid fa-triangle-exclamation mr-2 text-primary-500"></i>
+        <div class="chart-card w-full lg:w-1/2 bg-white dark:bg-gray-800 p-2.5 lg:p-2.5 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col relative min-h-[280px] lg:min-h-0 overflow-hidden transition-all duration-200">
+            <div class="flex-none flex justify-between items-center mb-1.5">
+                <h3 class="text-xs sm:text-sm lg:text-base font-bold text-gray-800 dark:text-gray-100 flex items-center min-w-0 pr-1">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5 text-primary-500 shrink-0"></i>
                     <span class="truncate">Problem Reason</span>
                 </h3>
             </div>
-            <div class="relative w-full flex-1 min-h-0">
+            <div class="relative w-full flex-1 min-h-[220px] lg:min-h-0">
                 <canvas id="problemBreakdownChart" class="absolute inset-0 w-full h-full"></canvas>
             </div>
-        </div>    </div></div>{{-- Global Correction Log Modal (Original Audit Table Interface) --}}
+        </div>
+    </div></div>{{-- Global Correction Log Modal (Original Audit Table Interface) --}}
 <div id="correctionDetailModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 p-0 md:p-4" role="dialog" aria-modal="true">
     <div class="relative w-full h-full md:h-[95vh] md:w-[95vw] transform overflow-hidden md:rounded-xs bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 flex flex-col shadow-2xl transition-all">
         <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
@@ -723,9 +728,9 @@
     let summaryActiveTab = 'amount';
     let accuracyActiveTab = 'net';
 
-    // Pareto Client-Side Pagination
+    // Pareto Client-Side Pagination (Displays 7 data items per page)
     let paretoPage = 1;
-    const itemsPerPage = 15;
+    const itemsPerPage = 7;
 
     // Chart instances
     let paretoChart = null;
@@ -740,16 +745,23 @@
 
     // --- Initialization ---
     document.addEventListener('DOMContentLoaded', function() {
-        // Toggle Filter Logic
+        // Toggle Filter Logic with Soft Active Highlight
         $('#btnToggleDashFilter').on('click', function(e) {
             e.stopPropagation();
-            $('#dashboardFilterCard').slideToggle(200);
-            
-            // Toggle active styling
-            $(this).toggleClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700');
-            $(this).toggleClass('bg-slate-100 dark:bg-gray-750 border-slate-350 dark:border-gray-650');
-            $(this).find('i').toggleClass('text-slate-400');
-            $(this).find('i').toggleClass('text-slate-700 dark:text-slate-200');
+            const $filterCard = $('#dashboardFilterCard');
+            $filterCard.slideToggle(200, function() {
+                const isOpen = $filterCard.is(':visible');
+                const $btn = $('#btnToggleDashFilter');
+                if (isOpen) {
+                    $btn.addClass('bg-primary-50 dark:bg-primary-950/60 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 shadow-2xs')
+                        .removeClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200');
+                    $btn.find('i').addClass('text-primary-600 dark:text-primary-400').removeClass('text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white');
+                } else {
+                    $btn.removeClass('bg-primary-50 dark:bg-primary-950/60 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 shadow-2xs')
+                        .addClass('bg-white dark:bg-gray-800 border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-700 text-slate-700 dark:text-gray-200');
+                    $btn.find('i').removeClass('text-primary-600 dark:text-primary-400').addClass('text-slate-400 group-hover:text-slate-600 dark:group-hover:text-white');
+                }
+            });
         });
 
         // Initialize Select2 on #filterScope
@@ -1175,12 +1187,12 @@
         }
         const pbCtx = document.getElementById('problemBreakdownChart').getContext('2d');
 
-        // Create reason list with count
+        // Create reason list with count (Filtered to only include items with volume > 0)
         const reasonList = stoReasons.map(item => {
             const found = distribution.find(d => d.reason_name === item.name || d.reason_name.toUpperCase() === item.name.toUpperCase());
             const count = found ? (parseInt(found.count, 10) || 0) : 0;
             return { name: item.name, count: count };
-        });
+        }).filter(item => item.count > 0);
 
         // Sort descending by count
         reasonList.sort((a, b) => b.count - a.count);
@@ -1210,6 +1222,8 @@
                         barPercentage: 0.8,
                         categoryPercentage: 0.9,
                         yAxisID: 'y',
+                        yellowLabels: true,
+                        yellowLabelFormat: v => new Intl.NumberFormat('id-ID').format(v),
                         order: 2,
                         pointStyle: 'rect'
                     },

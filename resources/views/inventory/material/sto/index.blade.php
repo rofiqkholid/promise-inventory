@@ -5,46 +5,52 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
+    {{-- Header Section --}}
     <div class="mb-4">
         <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Stock Opname</h2>
         <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Coordinate and track physical inventory count events.</p>
     </div>
 
-    <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="p-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 flex-1 w-full flex flex-col md:flex-row items-center justify-between gap-4">
+    {{-- UNIFIED CARD CONTAINER --}}
+    <div id="stoCard" class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-xs">
+        {{-- Header Toolbar --}}
+        <div class="px-5 py-3.5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/70 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h3 class="font-bold text-slate-800 dark:text-white leading-tight">Active STO Events</h3>
-                <p class="text-[11px] text-gray-500 font-normal">List of scheduled and completed inventory counts.</p>
+                <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5 tracking-tight">
+                    <i class="fa-solid fa-clipboard-check text-primary-600"></i> Active STO Events
+                </h3>
             </div>
             
-            <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
                 @if(Auth::user()->hasMenuPermission('inventory.sto.index', 'create'))
-                    <button onclick="window.openCreateModal()" class="flex-1 md:flex-none inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all whitespace-nowrap shadow-sm">
-                        <i class="fa-solid fa-calendar-plus text-sm"></i> 
-                        New STO Event
+                    <button onclick="window.openCreateModal()" type="button" class="inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-95 transition-all shadow-xs w-full sm:w-auto">
+                        <i class="fa-solid fa-calendar-plus text-xs"></i> 
+                        <span>New STO Event</span>
                     </button>
                 @endif
             </div>
         </div>
-    </div>
 
-    <!-- Events Table -->
-    <x-table id="stoEventsTable">
-        <thead>
-            <tr>
-                <th class="w-16 text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">No</th>
-                <th class="text-left w-48 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Event Code</th>
-                <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Counting Period</th>
-                <th class="text-left w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">PIC</th>
-                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Amount (Rp)</th>
-                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Qty</th>
-                <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Status</th>
-                <th class="text-center w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">STO Control</th>
-                <th class="w-[100px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </x-table>
+        {{-- Events Table --}}
+        <div class="overflow-x-auto bg-white dark:bg-gray-800">
+            <x-table id="stoEventsTable">
+                <thead>
+                    <tr>
+                        <th class="w-16 text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">No</th>
+                        <th class="text-left w-48 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Event Code</th>
+                        <th class="text-left text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Counting Period</th>
+                        <th class="text-left w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">PIC</th>
+                        <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Amount (Rp)</th>
+                        <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Net Qty</th>
+                        <th class="text-center w-32 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Status</th>
+                        <th class="text-center w-40 text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">STO Control</th>
+                        <th class="w-[100px] text-center text-[10px] font-semibold tracking-wider text-slate-550 dark:text-slate-400 uppercase">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </x-table>
+        </div>
+    </div>
 </div>
 
 <!-- Create Modal -->

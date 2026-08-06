@@ -5,33 +5,30 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-4">
-        <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-slate-800 dark:text-white tracking-tight leading-none">Inventory Transactions</h2>
-            <p class="mt-1 text-[11px] text-slate-500 dark:text-slate-400 font-normal">Manage material incoming and outgoing records.</p>
-        </div>
+    {{-- Header Section --}}
+    <div class="mb-4">
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Inventory Transactions</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage material incoming and outgoing records.</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
         {{-- Transaction Form Panel --}}
         <div class="lg:col-span-1">
-            <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden">
-                <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-3">
+            <div id="transactionFormCard" class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-xs h-full flex flex-col">
+                <div class="px-5 py-3.5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/70 dark:bg-slate-900/40 flex items-center justify-between shrink-0">
+                    <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5 tracking-tight">
                         <i class="fa-solid fa-right-left text-primary-600"></i> Transaction Input
                     </h3>
+                    <button type="button" id="btn-scan" class="inline-flex items-center justify-center gap-1.5 px-3 h-8 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-200 dark:border-primary-800/60 rounded-xs transition-all active:scale-95 shadow-2xs">
+                        <i class="fa-solid fa-barcode"></i> Scan Camera
+                    </button>
                 </div>
-                <div class="p-6">
-                    <form id="transactionForm">
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <form id="transactionForm" class="space-y-4">
                         @csrf
                         {{-- Product Selection --}}
-                        <div class="mb-6">
-                            <div class="flex justify-between items-end mb-3">
-                                <label for="product_detail_id" class="block text-xs font-medium text-slate-900 dark:text-gray-300 mb-2">Part <span class="text-red-500">*</span></label>
-                                <button type="button" id="btn-scan" class="inline-flex items-center justify-center px-4 h-9 text-xs font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-400 border border-primary-200 dark:border-primary-800 rounded-xs transition-all active:scale-95">
-                                    <i class="fa-solid fa-barcode mr-2"></i> Scan Camera
-                                </button>
-                            </div>
+                        <div>
+                            <label for="product_detail_id" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Part Number <span class="text-red-500">*</span></label>
                             <select name="product_detail_id" id="product_detail_id" class="premium-input select2" data-placeholder="Select Part via Search or Scanner..." required>
                                 <option value="">Select Part via Search or Scanner...</option>
                                 @foreach($products as $product)
@@ -52,19 +49,19 @@
                             
                             {{-- Balance Display --}}
                             <div id="balanceDisplay" class="mt-2 hidden">
-                                <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 rounded-xs flex items-center justify-between">
+                                <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700/80 rounded-xs flex items-center justify-between">
                                     <div class="flex items-center gap-2">
                                         <i class="fa-solid fa-boxes-stacked text-primary-500 text-xs"></i>
-                                        <span class="text-xs font-medium text-slate-500">Current Balance</span>
+                                        <span class="text-xs font-medium text-slate-500 dark:text-gray-400">Current Balance</span>
                                     </div>
-                                    <span id="currentBalanceVal" class="text-sm font-medium text-slate-900 dark:text-white">0</span>
+                                    <span id="currentBalanceVal" class="text-xs font-bold text-slate-900 dark:text-white">0</span>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Transaction Category --}}
-                        <div class="mb-6">
-                            <label for="transaction_category_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Category <span class="text-red-500">*</span></label>
+                        <div>
+                            <label for="transaction_category_id" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Category <span class="text-red-500">*</span></label>
                             <select name="transaction_category_id" id="transaction_category_id" class="premium-input" required>
                                 <option value="">Select Category...</option>
                                 @foreach($categories as $category)
@@ -76,8 +73,8 @@
                         </div>
 
                         {{-- Coil Center (For IN) --}}
-                        <div class="mb-6 hidden" id="coilCenterContainer">
-                            <label for="coil_center_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Coil Center <span class="text-red-500">*</span></label>
+                        <div class="hidden" id="coilCenterContainer">
+                            <label for="coil_center_id" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Coil Center <span class="text-red-500">*</span></label>
                             <select name="coil_center_id" id="coil_center_id" class="premium-input select2" style="width: 100%">
                                 <option value="">Select Coil Center...</option>
                                 @foreach($coilCenters as $cc)
@@ -87,9 +84,9 @@
                         </div>
 
                         {{-- Supplier & Destination Row (For OUT) --}}
-                        <div class="grid grid-cols-2 gap-5 mb-6 hidden" id="outFieldsContainer">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 hidden" id="outFieldsContainer">
                             <div>
-                                <label for="supplier_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Supplier <span class="text-red-500">*</span></label>
+                                <label for="supplier_id" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Supplier <span class="text-red-500">*</span></label>
                                 <select name="supplier_id" id="supplier_id" class="premium-input select2" style="width: 100%">
                                     <option value="">Select Supplier...</option>
                                     @foreach($suppliers as $supplier)
@@ -98,7 +95,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="destination_id" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Destination <span class="text-red-500">*</span></label>
+                                <label for="destination_id" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Destination <span class="text-red-500">*</span></label>
                                 <select name="destination_id" id="destination_id" class="premium-input select2" style="width: 100%">
                                     <option value="">Select Destination...</option>
                                     @foreach($suppliers as $supplier)
@@ -109,13 +106,13 @@
                         </div>
 
                         {{-- Qty & Date Row --}}
-                        <div class="grid grid-cols-2 gap-5 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label id="qtyLabel" for="qty" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Qty (Unit) <span class="text-red-500">*</span></label>
+                                <label id="qtyLabel" for="qty" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Qty (Unit) <span class="text-red-500">*</span></label>
                                 <input type="number" name="qty" id="qty" step="any" min="0.01" class="premium-input w-full" required placeholder="0">
                                 
                                 {{-- Calculator Preview --}}
-                                <div id="qtyPreview" class="mt-2 opacity-0 transition-opacity flex items-center gap-2 text-[10px]">
+                                <div id="qtyPreview" class="mt-1.5 opacity-0 transition-opacity flex items-center gap-1.5 text-[10px]">
                                     <i class="fa-solid fa-calculator text-primary-500"></i>
                                     <div class="flex items-center gap-1 font-medium text-primary-600 dark:text-primary-400 tracking-wider">
                                         <span id="calcResult">0</span> <span>PCS</span>
@@ -124,7 +121,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label for="transaction_date" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">Date <span class="text-red-500">*</span></label>
+                                <label for="transaction_date" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Date <span class="text-red-500">*</span></label>
                                 <input type="date" name="transaction_date" id="transaction_date" value="{{ date('Y-m-d') }}" 
                                     onclick="this.showPicker()"
                                     class="premium-input w-full" required>
@@ -132,24 +129,26 @@
                         </div>
 
                         {{-- PIC --}}
-                        <div class="mb-6">
-                            <label class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300">PIC Name</label>
-                            <div class="bg-gray-50 dark:bg-gray-900/50 border border-slate-200 dark:border-gray-700 text-slate-500 text-xs font-medium rounded-xs block w-full px-4 h-10 flex items-center gap-2">
-                                <i class="fa-solid fa-user-circle text-gray-400 text-sm"></i>
+                        <div>
+                            <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">PIC Name</label>
+                            <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300 text-xs font-medium rounded-xs block w-full px-3.5 h-9 flex items-center gap-2">
+                                <i class="fa-solid fa-user-circle text-slate-400 text-sm"></i>
                                 <span>{{ Auth::user()->name }}</span>
                             </div>
                         </div>
 
                         {{-- Remark --}}
-                        <div class="mb-4">
-                            <label for="remark" class="block mb-2 text-xs font-medium text-slate-900 dark:text-gray-300 tracking-wider">Remark</label>
-                            <textarea name="remark" id="remark" rows="2" class="block p-3 w-full text-xs font-medium text-gray-900 bg-white dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700 focus:ring-0 focus:border-primary-500 transition-all dark:text-white placeholder-gray-300" placeholder="Optional notes..."></textarea>
+                        <div>
+                            <label for="remark" class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-300">Remark</label>
+                            <textarea name="remark" id="remark" rows="2" class="block p-3 w-full text-xs font-medium text-gray-900 bg-white dark:bg-gray-900 rounded-xs border border-slate-200 dark:border-gray-700 focus:ring-0 focus:border-primary-500 transition-all dark:text-white placeholder-gray-400" placeholder="Optional notes..."></textarea>
                         </div>
 
                         {{-- Submit Button --}}
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
-                            <i class="fa-solid fa-save"></i> Save Transaction
-                        </button>
+                        <div class="pt-2">
+                            <button type="submit" class="w-full inline-flex items-center justify-center gap-2 px-5 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Transaction
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -157,75 +156,90 @@
 
         {{-- Recent Transactions Table --}}
         <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden h-full flex flex-col">
-                <div class="px-6 py-5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-                    <div class="flex flex-wrap justify-between items-center gap-4" id="activityHeader">
-                        <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center">
-                            <i class="fa-solid fa-clock-rotate-left mr-3 text-primary-600"></i> Transaction Log
-                        </h3>
-                        <div class="flex items-center gap-3">
-                            <button id="toggleFilters" class="flex items-center gap-2 px-4 h-9 text-xs font-medium text-gray-500 hover:text-primary-600 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs transition-all group active:scale-95 shadow-xs">
-                                <i class="fa-solid fa-filter text-xs text-gray-400 group-hover:text-primary-500 transition-colors"></i>
-                                <span>Filter</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 ml-1" id="filterChevron"></i>
-                            </button>
-                            <button id="refreshTable" class="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs active:scale-95">
-                                <i class="fa-solid fa-arrows-rotate text-sm"></i>
-                            </button>
+            <div id="recentTransactionCard" class="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs overflow-hidden shadow-xs h-full flex flex-col justify-between">
+                {{-- Header Toolbar --}}
+                <div class="px-5 py-3.5 border-b border-slate-100 dark:border-gray-700 bg-slate-50/70 dark:bg-slate-900/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shrink-0" id="activityHeader">
+                    <h3 class="text-xs font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2.5 tracking-tight shrink-0">
+                        <i class="fa-solid fa-clock-rotate-left text-primary-600"></i> Transaction Log
+                    </h3>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        {{-- Search Input Integrated in Toolbar --}}
+                        <div class="relative w-full sm:w-56">
+                            <input type="text" id="logSearchInput" placeholder="Search records..." class="w-full h-8 pl-8 pr-3 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-primary-500 transition-all shadow-2xs">
                         </div>
-                    </div>
 
-                    <div id="filterContainer" class="hidden pt-6 border-t border-slate-100 dark:border-gray-700/50">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {{-- Part Filter --}}
-                            <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">Part</label>
-                                <select id="filter_product_detail_id" class="select2-filter-log w-full">
-                                    <option value="">All Parts</option>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->hash_id }}">{{ '[' . ($product->model_name ?? 'No Model') . '] ' . $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }} - {{ $product->part_name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        <button id="toggleFilters" type="button" class="inline-flex items-center justify-center gap-1.5 px-3 h-8 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium active:scale-95 transition-all shadow-2xs shrink-0">
+                            <i class="fa-solid fa-filter text-primary-600 text-xs"></i>
+                            <span>Filters</span>
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform duration-200 ml-0.5" id="filterChevron"></i>
+                        </button>
 
-                            {{-- Category Filter --}}
-                            <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">Category</label>
-                                <select id="filter_category_id" class="select2-filter-log w-full">
-                                    <option value="">All Categories</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}" data-code="{{ $category->code }}" data-name="{{ $category->name }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- PIC Filter --}}
-                            <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">PIC</label>
-                                <select id="filter_pic_id" class="select2-filter-log w-full">
-                                    <option value="">All PIC</option>
-                                    @foreach($pics as $p)
-                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            {{-- Date Filter --}}
-                            <div class="relative group">
-                                <label class="block mb-2 text-[11px] font-medium text-gray-900 dark:text-gray-500">Date Range</label>
-                                <div class="relative">
-                                    <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[10px] pointer-events-none transition-colors z-10"></i>
-                                    <input type="text" id="filter_date_range" readonly 
-                                        value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
-                                        class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-10 text-xs text-gray-600 dark:text-gray-400 focus:ring-0 focus:border-primary-500 cursor-pointer w-full transition-all" 
-                                        placeholder="Filter by Date">
-                                </div>
-                            </div>
+                        {{-- Active Date Range Badge --}}
+                        <div id="activeDateBadge" class="hidden sm:inline-flex items-center justify-center gap-1.5 px-3 py-1 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full border border-primary-100 dark:border-primary-800/50 text-[11px] font-medium transition-all whitespace-nowrap shrink-0">
+                            <i class="fa-regular fa-calendar-days text-primary-500 shrink-0"></i>
+                            <span id="activeDateText" class="truncate">{{ date('01-m-Y') . ' - ' . date('t-m-Y') }}</span>
+                        </div>
+                        <button id="refreshTable" type="button" class="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-xs transition-all active:scale-95 shadow-2xs shrink-0" title="Refresh Table">
+                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
+                        </button>
+                        <a href="{{ route('transactionHistory') }}" class="inline-flex items-center justify-center gap-1.5 px-2.5 h-8 bg-slate-100 dark:bg-gray-700 hover:bg-slate-200 dark:hover:bg-gray-600 text-slate-600 dark:text-gray-200 rounded-xs text-xs font-medium transition-all shadow-2xs shrink-0" title="View Full Transaction History">
+                            <span>View All</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
                     </div>
                 </div>
-            </div>
 
-            <div class="overflow-x-auto flex-1 bg-white dark:bg-gray-800">
+                {{-- Collapsible Filter Body --}}
+                <div id="filterContainer" class="hidden p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+                        {{-- Part Filter --}}
+                        <div class="w-full">
+                            <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">Part</label>
+                            <select id="filter_product_detail_id" class="select2-filter-log w-full">
+                                <option value="">All Parts</option>
+                                @foreach($products as $product)
+                                    <option value="{{ $product->hash_id }}">{{ '[' . ($product->model_name ?? 'No Model') . '] ' . $product->part_no }}{{ $product->revision ? ' - ' . $product->revision : '' }} - {{ $product->part_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Category Filter --}}
+                        <div class="w-full">
+                            <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">Category</label>
+                            <select id="filter_category_id" class="select2-filter-log w-full">
+                                <option value="">All Categories</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->hash_id }}" data-effect="{{ $category->effect }}" data-code="{{ $category->code }}" data-name="{{ $category->name }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- PIC Filter --}}
+                        <div class="w-full">
+                            <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">PIC</label>
+                            <select id="filter_pic_id" class="select2-filter-log w-full">
+                                <option value="">All PIC</option>
+                                @foreach($pics as $p)
+                                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Date Filter --}}
+                        <div class="w-full">
+                            <label class="block mb-1.5 text-xs font-medium text-slate-700 dark:text-gray-400">Date Range</label>
+                            <div class="relative group">
+                                <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none transition-colors z-10"></i>
+                                <input type="text" id="filter_date_range" readonly 
+                                    value="{{ date('Y-m-01') . ' - ' . date('Y-m-t') }}"
+                                    class="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs h-9 text-xs text-slate-700 dark:text-slate-200 pl-9 cursor-pointer w-full transition-all font-medium" 
+                                    placeholder="Filter by Date">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-1 flex flex-col justify-between overflow-x-auto min-h-[360px] bg-white dark:bg-gray-800">
                     <x-table id="recentTransactionTable">
                         <thead>
                             <tr>
@@ -534,11 +548,16 @@
                 @endif
             ],
             order: [[0, 'desc']],
-            pageLength: 10,
+            pageLength: 5,
             lengthChange: false,
             bLengthChange: false,
-            dom: "<'flex justify-between items-center mb-4'f><'overflow-x-auto w-full border border-slate-100 dark:border-gray-700/50 rounded-xs mb-2't><'flex justify-between items-center mt-4 gap-4 px-2'i p>",
+            dom: "<'flex-1 flex flex-col justify-between overflow-x-auto w-full't><'flex flex-col sm:flex-row justify-between items-center px-4 py-3 gap-3 border-t border-slate-100 dark:border-gray-700/50 mt-auto'i p>",
             searching: true
+        });
+
+        // Search Input Event
+        $('#logSearchInput').on('keyup search input', function() {
+            table.search(this.value).draw();
         });
 
         $('#refreshTable').click(function() {
@@ -546,17 +565,26 @@
         });
 
         // Date Picker Init
+        function updateDateBadgeText() {
+            const val = $('#filter_date_range').val();
+            if (val && val.includes(' - ')) {
+                $('#activeDateText').text(val);
+            } else {
+                $('#activeDateText').text('All Dates');
+            }
+        }
+
         const dateRangePicker = new Litepicker({
             element: document.getElementById('filter_date_range'),
             singleMode: false,
             autoApply: true,
             format: 'DD-MM-YYYY',
             delimiter: ' - ',
-            // dropdowns: { months: true, years: true },
             startDate: "{{ date('Y-m-01') }}",
             endDate: "{{ date('Y-m-t') }}",
             setup: (picker) => {
                 picker.on('selected', (date1, date2) => {
+                    updateDateBadgeText();
                     setTimeout(() => table.ajax.reload(), 10);
                 });
             }
@@ -566,16 +594,13 @@
         $('#toggleFilters').click(function() {
             const container = $('#filterContainer');
             const chevron = $('#filterChevron');
-            const header = $('#activityHeader');
             
             if (container.hasClass('hidden')) {
-                container.removeClass('hidden').hide().slideDown(300);
+                container.removeClass('hidden').hide().slideDown(200);
                 chevron.addClass('rotate-180');
-                header.addClass('mb-6');
             } else {
-                container.slideUp(300, function() {
+                container.slideUp(200, function() {
                     $(this).addClass('hidden');
-                    header.removeClass('mb-6');
                 });
                 chevron.removeClass('rotate-180');
             }

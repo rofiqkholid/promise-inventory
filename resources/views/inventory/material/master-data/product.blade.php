@@ -5,46 +5,52 @@
 
 @section('content')
 <div class="text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <div>
-            <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Inventory Product</h2>
-            <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage inventory product details.</p>
-        </div>
-        <div class="mt-4 sm:mt-0 flex gap-2">
-            <button type="button" id="btnOldRevisions" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-amber-600 hover:bg-amber-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                Old Revisions Status
-            </button>
-            <button type="button" id="btnExport" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
-                <i class="fa-solid fa-file-excel"></i>
-                Export Excel
-            </button>
-            <button type="button" id="btnPrintLabels" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-purple-600 hover:bg-purple-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
-                <i class="fa-solid fa-print"></i>
-                Print Labels
-            </button>
-            @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'create'))
-            <button type="button" id="btnImport" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
-                <i class="fa-solid fa-file-import"></i>
-                Import Excel
-            </button>
-            <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-sm">
-                <i class="fa-solid fa-plus"></i>
-                Add New
-            </button>
-            @endif
-        </div>
+    <div class="mb-4">
+        <h2 class="text-xl xl:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tighter leading-none">Inventory Product</h2>
+        <p class="mt-1 text-[11px] text-gray-500 dark:text-gray-400 font-normal">Manage inventory product details.</p>
     </div>
 
-    {{-- FILTER BAR --}}
-    <div class="mb-4 bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 bg-slate-50/50 dark:bg-slate-900/30">
-            <h3 class="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-3">
-                <i class="fa-solid fa-filter text-primary-600"></i> Product Filter
-            </h3>
+    {{-- UNIFIED CARD WITH HEADER TOOLBAR & COLLAPSIBLE FILTER --}}
+    <div id="productFilterCard" class="mb-0 bg-white dark:bg-gray-800 rounded-t-xs rounded-b-none border border-b-0 border-slate-200 dark:border-gray-700 overflow-hidden shadow-xs">
+        {{-- Card Header: Filter Toggle (Left) & Actions (Right) --}}
+        <div class="px-5 py-3 bg-slate-50/70 dark:bg-slate-900/40 border-b border-slate-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            {{-- Left: Filter Toggle Button --}}
+            <button type="button" id="btnToggleFilter" class="inline-flex items-center justify-center gap-2 px-3.5 h-9 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-200 hover:bg-slate-50 dark:hover:bg-gray-700 border border-slate-200 dark:border-gray-700 rounded-xs text-xs font-medium active:scale-[0.98] transition-all shadow-xs w-full md:w-auto">
+                <i class="fa-solid fa-filter text-primary-600"></i>
+                <span>Filters</span>
+                <i id="productFilterChevron" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 text-xs ml-1"></i>
+            </button>
+
+            {{-- Right: Action Buttons --}}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-center gap-2 w-full md:w-auto">
+                <button type="button" id="btnOldRevisions" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 sm:px-4 h-9 bg-amber-600 hover:bg-amber-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span class="truncate">Old Revisions Status</span>
+                </button>
+                <button type="button" id="btnExport" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 sm:px-4 h-9 bg-emerald-600 hover:bg-emerald-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs">
+                    <i class="fa-solid fa-file-excel"></i>
+                    <span class="truncate">Export Excel</span>
+                </button>
+                <button type="button" id="btnPrintLabels" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 sm:px-4 h-9 bg-purple-600 hover:bg-purple-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="truncate">Print Labels</span>
+                </button>
+                @if(Auth::user()->hasMenuPermission('inventory.master.product.index', 'create'))
+                <button type="button" id="btnImport" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 sm:px-4 h-9 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span class="truncate">Import Excel</span>
+                </button>
+                <button type="button" id="add-button" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 sm:px-4 h-9 bg-primary-600 hover:bg-primary-700 border border-transparent rounded-xs text-xs font-medium text-white active:scale-[0.98] transition-all shadow-xs">
+                    <i class="fa-solid fa-plus"></i>
+                    <span class="truncate">Add New</span>
+                </button>
+                @endif
+            </div>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 items-end">
+
+        {{-- Collapsible Filter Body --}}
+        <div id="productFilterBody" class="hidden p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                 {{-- CUSTOMER --}}
                 <div class="w-full">
                     <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Customer</label>
@@ -96,14 +102,22 @@
                 </div>
 
                 {{-- ACTIONS --}}
-                <div class="flex items-center w-full">
-                    <button type="button" id="btnResetFilter" class="h-9 px-4 text-xs font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xs border border-slate-200 dark:border-gray-700 transition-all active:scale-95 shadow-xs">
-                        <i class="fa-solid fa-rotate-left mr-1.5"></i> Reset
+                <div class="w-full">
+                    <button type="button" id="btnResetFilter" class="w-full h-9 inline-flex items-center justify-center gap-1.5 px-3 bg-slate-100 dark:bg-gray-700/60 hover:bg-slate-200 dark:hover:bg-gray-700 text-slate-600 dark:text-gray-300 font-medium text-xs rounded-xs border border-slate-200 dark:border-gray-600 active:scale-[0.98] transition-all shadow-xs" title="Reset all filters">
+                        <i class="fa-solid fa-rotate-left text-slate-400"></i>
+                        <span class="truncate">Reset Filter</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        #productFilterCard + div {
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+    </style>
 
     <x-table id="inventoryProductTable">
         <thead>
@@ -835,6 +849,10 @@ $(function() {
          * EVENT BINDING CATEGORIES
          */
         bindFilterEvents: function() {
+            $('#productFilterHeader, #btnToggleFilter').on('click', function(e) {
+                $('#productFilterBody').slideToggle(200);
+                $('#productFilterChevron').toggleClass('rotate-180');
+            });
             this.elements.customerFilter.on('change', () => this.handleCustomerFilterChange());
             this.elements.modelFilter.on('change', () => {
                 this.elements.partNoFilter.val(null).trigger('change');

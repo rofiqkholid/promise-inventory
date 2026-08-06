@@ -200,6 +200,71 @@ class TransactionHistoryController extends Controller
     ]);
 }
 
+    public function exportExcel(Request $request)
+    {
+        $query = InventoryTransaction::with([
+            'product.product',
+            'product.model',
+            'product.revision',
+            'user',
+            'transactionCategory',
+            'coilCenter',
+            'supplier',
+            'destination'
+        ]);
+
+        if (!empty($request->product_detail_id)) {
+            $prodId = InventoryProduct::decodeHash($request->product_detail_id);
+            if ($prodId) $query->where('product_detail_id', $prodId);
+        }
+
+        if (!empty($request->transaction_category_id)) {
+            $categoryId = TransactionCategory::decodeHash($request->transaction_category_id);
+            if ($categoryId) $query->where('transaction_category_id', $categoryId);
+        }
+
+        if (!empty($request->user_id)) {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('date_range') && str_contains($request->date_range, ' - ')) {
+            [$start, $end] = explode(' - ', $request->date_range);
+            if ($start && $end) {
+                $query->whereBetween('transaction_date', [
+                    Carbon::parse($start)->startOfDay(),
+                    Carbon::parse($end)->endOfDay()
+                ]);
+            }
+        }
+
+        if (!empty($request->search)) {
+            $search = is_array($request->search) ? ($request->search['value'] ?? '') : $request->search;
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('transactionCategory', function ($q2) use ($search) {
+                            $q2->where('name', 'like', "%{$search}%")
+                               ->orWhere('code', 'like', "%{$search}%");
+                        })
+                      ->orWhereHas('user', function ($q3) use ($search) {
+                            $q3->where('name', 'like', "%{$search}%");
+                        })
+                      ->orWhereHas('product.product', function ($q4) use ($search) {
+                            $q4->where('part_no', 'like', "%{$search}%")
+                               ->orWhere('part_name', 'like', "%{$search}%");
+                        })
+                      ->orWhere('inv_t_inventory_transaction.remark', 'like', "%{$search}%");
+                });
+            }
+        }
+
+        $transactions = $query->orderBy('transaction_date', 'desc')
+                              ->orderBy('updated_at', 'desc')
+                              ->get();
+
+        $fileName = 'Transaction_History_' . date('Ymd_His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\TransactionHistoryExport($transactions), $fileName);
+    }
+
     public function edit($id)
     {
         $decodedId = InventoryTransaction::decodeHash($id);
