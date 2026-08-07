@@ -39,15 +39,19 @@
 <style>
     #qr-reader video {
         object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
         border-radius: 2px !important;
         z-index: 10;
         position: relative;
     }
     #qr-reader {
         border: none !important;
+        width: 100% !important;
+        height: 100% !important;
     }
     #qr-reader__scan_region {
-        background: black !important;
+        background: transparent !important;
     }
     #qr-status.status-initializing {
         @apply bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30;
@@ -147,31 +151,63 @@
                 },
                 aspectRatio: 1.0,
                 showTorchButtonIfSupported: true,
-                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-                videoConstraints: {
-                    facingMode: "environment",
-                    focusMode: "continuous"
-                }
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
             };
 
-            this.html5QrCode.start(
-                config.videoConstraints,
-                config,
-                (decodedText) => {
-                    this.stopCamera();
-                    this.processQRInput(decodedText.trim());
-                },
-                (errorMessage) => { } 
-            ).then(() => {
+            const onScanSuccess = (decodedText) => {
+                this.stopCamera();
+                this.processQRInput(decodedText.trim());
+            };
+
+            const onScanError = (errorMessage) => {};
+
+            const applySuccessState = () => {
                 $('#qr-status').html('<i class="fa-solid fa-expand fa-beat text-xs mr-2"></i> Scanning System Ready')
                     .removeClass('status-initializing')
                     .addClass('status-scanning');
                 this.applyMirror();
-            }).catch((err) => {
-                console.error(err);
-                Swal.fire('Camera Error', 'Unable to start camera.', 'error');
-                $(this.modalId).addClass('hidden').removeClass('flex');
+            };
+
+            const fallbackFacingMode = () => {
+                this.html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+                    .then(applySuccessState)
+                    .catch(err => this.handleCameraError(err));
+            };
+
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 0) {
+                    // Filter for main rear/back camera
+                    let backCamera = devices.find(device => {
+                        const label = (device.label || '').toLowerCase();
+                        return label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('0') || label.includes('main');
+                    });
+
+                    // On Android / Zebra devices, rear camera is typically the last device if no clear label exists
+                    let cameraId = backCamera ? backCamera.id : devices[devices.length - 1].id;
+
+                    this.html5QrCode.start(cameraId, config, onScanSuccess, onScanError)
+                        .then(applySuccessState)
+                        .catch(err => {
+                            console.warn("Failed starting with specific camera ID, trying fallback facingMode", err);
+                            fallbackFacingMode();
+                        });
+                } else {
+                    fallbackFacingMode();
+                }
+            }).catch(err => {
+                console.warn("getCameras failed, trying fallback facingMode", err);
+                fallbackFacingMode();
             });
+        }
+
+        handleCameraError(err) {
+            console.error("Camera Error:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Camera Error',
+                text: 'Unable to start camera stream. Please check browser camera permissions or use the Zebra built-in hardware scanner button.'
+            });
+            $(this.modalId).addClass('hidden').removeClass('flex');
         }
 
         stopCamera() {
