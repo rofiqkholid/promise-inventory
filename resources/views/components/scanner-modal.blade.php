@@ -4,15 +4,24 @@
     <div class="relative w-full max-w-lg h-auto">
         <div class="relative bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-xl overflow-hidden">
             <!-- Header -->
-            <div class="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white tracking-tight">QR Scanner</h3>
-                <div class="flex items-center gap-1.5">
-                    <button type="button" id="toggleMirror" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:text-gray-700 dark:hover:text-white transition-all" title="Mirror Camera">
-                        <i class="fa-solid fa-arrows-left-right text-xs"></i>
-                    </button>
-                    <button type="button" id="closeScanner" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:text-rose-600 transition-all">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
+            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-qrcode text-primary-600"></i> QR Scanner
+                    </h3>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" id="toggleMirror" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:text-gray-700 dark:hover:text-white transition-all" title="Mirror Camera">
+                            <i class="fa-solid fa-arrows-left-right text-xs"></i>
+                        </button>
+                        <button type="button" id="closeScanner" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:text-rose-600 transition-all">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- Camera Select Dropdown (Auto-shown if device has multiple cameras) -->
+                <div id="cameraSelectContainer" class="hidden">
+                    <select id="cameraSelect" class="w-full h-8 px-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs text-xs text-slate-700 dark:text-gray-200 font-medium focus:outline-none focus:border-primary-500">
+                    </select>
                 </div>
             </div>
 
@@ -30,6 +39,11 @@
                 <p class="mt-3 text-[11px] text-gray-400 dark:text-gray-500 font-medium italic text-center">
                     Align the QR code within the frame.
                 </p>
+
+                <div class="mt-3 p-2 bg-slate-50 dark:bg-slate-900/60 rounded border border-slate-200/60 dark:border-gray-700/60 flex items-start gap-2 text-[10px] text-slate-500 dark:text-gray-400">
+                    <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5 shrink-0"></i>
+                    <span><strong>Handheld Tip:</strong> You can scan barcodes directly using the <strong>hardware trigger button</strong> on your scanner device without opening this camera window.</span>
+                </div>
             </div>
         </div>
     </div>
@@ -37,21 +51,21 @@
 
 @push('style')
 <style>
-    #qr-reader video {
-        object-fit: cover !important;
-        width: 100% !important;
-        height: 100% !important;
-        border-radius: 2px !important;
-        z-index: 10;
-        position: relative;
-    }
     #qr-reader {
         border: none !important;
         width: 100% !important;
         height: 100% !important;
     }
+    #qr-reader video, #qr-reader__scan_region video {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 2px !important;
+    }
     #qr-reader__scan_region {
         background: transparent !important;
+        width: 100% !important;
+        height: 100% !important;
     }
     #qr-status.status-initializing {
         @apply bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30;
@@ -81,6 +95,7 @@
             this.html5QrCode = null;
             this.scannerBuffer = "";
             this.scannerTimeout = null;
+            this.cameras = [];
 
             this.init();
         }
@@ -125,7 +140,11 @@
 
                 $(this.modalId).removeClass('hidden').addClass('flex');
                 $('#qr-status').addClass('status-initializing').html('<i class="fa-solid fa-circle-notch fa-spin text-xs mr-2"></i> Initializing Engine...');
-                this.startCamera();
+                
+                // Allow DOM animation/layout to finish before starting stream
+                setTimeout(() => {
+                    this.startCamera();
+                }, 250);
             });
 
             $('#closeScanner').on('click', () => this.stopCamera());
@@ -135,6 +154,13 @@
                 this.applyMirror();
                 $(e.currentTarget).toggleClass('text-primary-600 dark:text-primary-400', this.isMirrored);
             });
+
+            $('#cameraSelect').on('change', (e) => {
+                const selectedCameraId = $(e.target).val();
+                if (selectedCameraId) {
+                    this.switchCameraTo(selectedCameraId);
+                }
+            });
         }
 
         startCamera() {
@@ -142,6 +168,57 @@
                 this.html5QrCode = new Html5Qrcode("qr-reader", { verbose: false });
             }
 
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length > 0) {
+                    this.cameras = devices;
+                    
+                    const $select = $('#cameraSelect');
+                    $select.empty();
+                    
+                    devices.forEach((device, idx) => {
+                        const label = device.label || `Camera ${idx + 1} (${device.id.substring(0, 6)}...)`;
+                        $select.append(new Option(label, device.id));
+                    });
+
+                    if (devices.length > 1) {
+                        $('#cameraSelectContainer').removeClass('hidden');
+                    } else {
+                        $('#cameraSelectContainer').addClass('hidden');
+                    }
+
+                    // Find main rear/back camera
+                    let preferredCam = devices.find(d => {
+                        const l = (d.label || '').toLowerCase();
+                        return (l.includes('back') || l.includes('rear') || l.includes('environment') || l.includes('main')) && !l.includes('front');
+                    });
+
+                    let selectedId = preferredCam ? preferredCam.id : devices[devices.length - 1].id;
+                    $select.val(selectedId);
+
+                    this.startCameraWithId(selectedId);
+                } else {
+                    this.startCameraFallback();
+                }
+            }).catch(err => {
+                console.warn("getCameras failed, trying fallback facingMode", err);
+                this.startCameraFallback();
+            });
+        }
+
+        switchCameraTo(cameraId) {
+            if (this.html5QrCode && this.html5QrCode.isScanning) {
+                this.html5QrCode.stop().then(() => {
+                    this.startCameraWithId(cameraId);
+                }).catch(err => {
+                    console.error("Error stopping camera for switch:", err);
+                    this.startCameraWithId(cameraId);
+                });
+            } else {
+                this.startCameraWithId(cameraId);
+            }
+        }
+
+        startCameraWithId(cameraId) {
             const config = {
                 fps: 25,
                 qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -168,36 +245,44 @@
                 this.applyMirror();
             };
 
-            const fallbackFacingMode = () => {
-                this.html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
-                    .then(applySuccessState)
-                    .catch(err => this.handleCameraError(err));
+            this.html5QrCode.start(cameraId, config, onScanSuccess, onScanError)
+                .then(applySuccessState)
+                .catch(err => {
+                    console.warn("Failed starting with camera ID, trying fallback facingMode", err);
+                    this.startCameraFallback();
+                });
+        }
+
+        startCameraFallback() {
+            const config = {
+                fps: 25,
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                    let qrboxSize = Math.floor(minEdgeSize * 0.85);
+                    return { width: qrboxSize, height: qrboxSize };
+                },
+                aspectRatio: 1.0,
+                showTorchButtonIfSupported: true,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
             };
 
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length > 0) {
-                    // Filter for main rear/back camera
-                    let backCamera = devices.find(device => {
-                        const label = (device.label || '').toLowerCase();
-                        return label.includes('back') || label.includes('rear') || label.includes('environment') || label.includes('0') || label.includes('main');
-                    });
+            const onScanSuccess = (decodedText) => {
+                this.stopCamera();
+                this.processQRInput(decodedText.trim());
+            };
 
-                    // On Android / Zebra devices, rear camera is typically the last device if no clear label exists
-                    let cameraId = backCamera ? backCamera.id : devices[devices.length - 1].id;
+            const onScanError = (errorMessage) => {};
 
-                    this.html5QrCode.start(cameraId, config, onScanSuccess, onScanError)
-                        .then(applySuccessState)
-                        .catch(err => {
-                            console.warn("Failed starting with specific camera ID, trying fallback facingMode", err);
-                            fallbackFacingMode();
-                        });
-                } else {
-                    fallbackFacingMode();
-                }
-            }).catch(err => {
-                console.warn("getCameras failed, trying fallback facingMode", err);
-                fallbackFacingMode();
-            });
+            const applySuccessState = () => {
+                $('#qr-status').html('<i class="fa-solid fa-expand fa-beat text-xs mr-2"></i> Scanning System Ready')
+                    .removeClass('status-initializing')
+                    .addClass('status-scanning');
+                this.applyMirror();
+            };
+
+            this.html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanError)
+                .then(applySuccessState)
+                .catch(err => this.handleCameraError(err));
         }
 
         handleCameraError(err) {
@@ -205,7 +290,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Camera Error',
-                text: 'Unable to start camera stream. Please check browser camera permissions or use the Zebra built-in hardware scanner button.'
+                text: 'Unable to start camera stream. Please check browser camera permissions or use the built-in hardware scanner button.'
             });
             $(this.modalId).addClass('hidden').removeClass('flex');
         }
