@@ -397,7 +397,7 @@
 
 @push('scripts')
 {{-- html5-qrcode library --}}
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
     $(document).ready(function() {
         // Pre-select product from URL if exists

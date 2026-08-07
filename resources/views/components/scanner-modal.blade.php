@@ -4,23 +4,23 @@
     <div class="relative w-full max-w-lg h-auto">
         <div class="relative bg-white dark:bg-gray-800 rounded-xs border border-slate-200 dark:border-gray-700 shadow-xl overflow-hidden">
             <!-- Header -->
-            <div class="px-5 py-3 border-b border-slate-100 dark:border-gray-700 flex flex-col gap-2">
+            <div class="px-5 py-3.5 border-b border-slate-100 dark:border-gray-700 flex flex-col gap-2.5 bg-slate-50/50 dark:bg-gray-800">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-base font-semibold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <h3 class="text-sm sm:text-base font-semibold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
                         <i class="fa-solid fa-qrcode text-primary-600"></i> QR Scanner
                     </h3>
-                    <div class="flex items-center gap-1.5">
-                        <button type="button" id="toggleMirror" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:text-gray-700 dark:hover:text-white transition-all" title="Mirror Camera">
-                            <i class="fa-solid fa-arrows-left-right text-xs"></i>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="toggleMirror" class="w-8.5 h-8.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-xs bg-slate-100 hover:bg-slate-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-slate-600 dark:text-gray-300 transition-all active:scale-95 border border-slate-200/80 dark:border-gray-600 shadow-2xs" title="Mirror Camera View">
+                            <i class="fa-solid fa-arrows-rotate text-xs"></i>
                         </button>
-                        <button type="button" id="closeScanner" class="w-8 h-8 flex items-center justify-center rounded-xs text-gray-400 hover:text-rose-600 transition-all">
-                            <i class="fa-solid fa-xmark text-lg"></i>
+                        <button type="button" id="closeScanner" class="w-8.5 h-8.5 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-xs bg-slate-100 hover:bg-rose-100 hover:text-rose-600 dark:bg-gray-700 dark:hover:bg-rose-900/40 dark:text-gray-300 dark:hover:text-rose-400 text-slate-600 transition-all active:scale-95 border border-slate-200/80 dark:border-gray-600 shadow-2xs" title="Close Scanner">
+                            <i class="fa-solid fa-xmark text-sm"></i>
                         </button>
                     </div>
                 </div>
                 <!-- Camera Select Dropdown (Auto-shown if device has multiple cameras) -->
                 <div id="cameraSelectContainer" class="hidden">
-                    <select id="cameraSelect" class="w-full h-8 px-2.5 bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs text-xs text-slate-700 dark:text-gray-200 font-medium focus:outline-none focus:border-primary-500">
+                    <select id="cameraSelect" class="w-full min-h-[42px] px-3 py-2 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xs text-xs text-slate-800 dark:text-gray-200 font-medium focus:outline-none focus:border-primary-500 leading-normal shadow-2xs cursor-pointer">
                     </select>
                 </div>
             </div>
@@ -77,7 +77,7 @@
 @endpush
 
 @push('scripts')
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
 <script>
     /**
      * Inventory Scanner Helper
@@ -152,7 +152,7 @@
             $('#toggleMirror').on('click', (e) => {
                 this.isMirrored = !this.isMirrored;
                 this.applyMirror();
-                $(e.currentTarget).toggleClass('text-primary-600 dark:text-primary-400', this.isMirrored);
+                $(e.currentTarget).toggleClass('bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-300 border-primary-300 dark:border-primary-700', this.isMirrored);
             });
 
             $('#cameraSelect').on('change', (e) => {
