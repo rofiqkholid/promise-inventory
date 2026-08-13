@@ -42,10 +42,18 @@ class InventoryProductController extends Controller
             ->orderBy('m.name')
             ->get();
 
+        $filterMaterialSpecs = DB::table('inv_m_material_spec as ms')
+            ->join('inv_t_product_detail as pd', 'pd.material_spec_id', '=', 'ms.id')
+            ->where('pd.is_active', 1)
+            ->select('ms.id', 'ms.spec_name')
+            ->distinct()
+            ->orderBy('ms.spec_name')
+            ->get();
+
         // For Import & Add: We need ALL customers
         $customers = DB::table('customers')->select('id', 'code')->orderBy('code')->get();
 
-        return view('inventory.material.master-data.product', compact('customers', 'filterCustomers', 'filterModels'));
+        return view('inventory.material.master-data.product', compact('customers', 'filterCustomers', 'filterModels', 'filterMaterialSpecs'));
     }
 
     /**
@@ -72,6 +80,9 @@ class InventoryProductController extends Controller
         }
         if ($request->filled('part_no')) {
             $query->where('part_no', 'like', "%{$request->part_no}%");
+        }
+        if ($request->filled('material_spec_id')) {
+            $query->where('p.material_spec_id', $request->material_spec_id);
         }
         if ($request->filled('incomplete_only')) {
             $query->where(function($q) {
@@ -202,6 +213,9 @@ class InventoryProductController extends Controller
         }
         if ($request->filled('part_no')) {
             $query->where('prod.part_no', 'like', "%{$request->part_no}%");
+        }
+        if ($request->filled('material_spec_id')) {
+            $query->where('p.material_spec_id', $request->material_spec_id);
         }
         if ($request->filled('project_status')) {
             $query->where('ms_model.project_status', $request->project_status);
@@ -659,6 +673,64 @@ class InventoryProductController extends Controller
         $ids = explode(',', $id);
         $products = $productService->generateLabelData($ids);
         
+        if (empty($products)) abort(404);
+
+        return view('inventory.material.qrcode', compact('products'));
+    }
+
+    /**
+     * Bulk Print Labels based on filters or ID array (POST method to avoid URL length limit in IIS).
+     */
+    public function printLabelsBulk(Request $request, ProductService $productService)
+    {
+        if ($request->has('ids')) {
+            $rawIds = $request->input('ids');
+            $ids = is_array($rawIds) ? $rawIds : explode(',', $rawIds);
+        } else {
+            $query = $this->buildBaseProductQuery();
+
+            if ($request->filled('customer_id')) {
+                $query->where('prod.customer_id', $request->customer_id);
+            }
+            if ($request->filled('model_id')) {
+                $selectedModel = DB::table('models')->where('id', $request->model_id)->first();
+                if ($selectedModel) {
+                     $query->where('model.name', $selectedModel->name);
+                }
+            }
+            if ($request->filled('part_no')) {
+                $query->where('prod.part_no', 'like', "%{$request->part_no}%");
+            }
+            if ($request->filled('material_spec_id')) {
+                $query->where('p.material_spec_id', $request->material_spec_id);
+            }
+            if ($request->filled('project_status')) {
+                $query->where('ms_model.project_status', $request->project_status);
+            }
+            if ($request->filled('product_status')) {
+                $query->where('p.product_status', $request->product_status);
+            }
+            if ($request->filled('incomplete_only')) {
+                $query->where(function($q) {
+                    $q->whereRaw("LOWER(COALESCE(u.name, '')) LIKE '%coil%'")
+                      ->where(function($qq) {
+                          $qq->whereRaw("ISNULL(p.gross_coil, 0) <= 0")
+                             ->orWhereRaw("ISNULL(p.top_coil, 0) <= 0")
+                             ->orWhereRaw("ISNULL(p.end_coil, 0) <= 0")
+                             ->orWhereRaw("ISNULL(p.pitch, 0) <= 0");
+                      });
+                });
+            }
+
+            $ids = $query->pluck('p.id')->toArray();
+        }
+
+        if (empty($ids)) {
+            abort(404, 'No products found matching the criteria.');
+        }
+
+        $products = $productService->generateLabelData($ids);
+
         if (empty($products)) abort(404);
 
         return view('inventory.material.qrcode', compact('products'));

@@ -50,7 +50,7 @@
 
         {{-- Collapsible Filter Body --}}
         <div id="productFilterBody" class="hidden p-5 border-b border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4 items-end">
                 {{-- CUSTOMER --}}
                 <div class="w-full">
                     <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Customer</label>
@@ -78,6 +78,17 @@
                     <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Part Number</label>
                     <select id="filterPartNo" class="w-full">
                         <option value="">All Part Numbers</option>
+                    </select>
+                </div>
+
+                {{-- MATERIAL SPEC --}}
+                <div class="w-full">
+                    <label class="block mb-2 text-xs font-medium text-gray-900 dark:text-gray-500">Material Spec</label>
+                    <select id="filterMaterialSpec" class="select2-filter w-full">
+                        <option value="">All Material Specs</option>
+                        @foreach($filterMaterialSpecs as $ms)
+                            <option value="{{ $ms->id }}">{{ $ms->spec_name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -598,6 +609,7 @@ $(function() {
             customerFilter: $('#filterCustomer'),
             modelFilter: $('#filterModel'),
             partNoFilter: $('#filterPartNo'),
+            materialSpecFilter: $('#filterMaterialSpec'),
             customerSelect: $('#customer_id'),
             modelSelect: $('#model_id'),
             productSelect: $('#product_id'),
@@ -639,6 +651,7 @@ $(function() {
                         d.customer_id = this.elements.customerFilter.val();
                         d.model_id = this.elements.modelFilter.val();
                         d.part_no = this.elements.partNoFilter.val();
+                        d.material_spec_id = this.elements.materialSpecFilter.val();
                         d.project_status = $('#filterProjectStatus').val();
                         d.product_status = $('#filterProductStatus').val();
                         d.incomplete_only = $('#filterDataStatus').val() === 'incomplete' ? 1 : null;
@@ -859,6 +872,7 @@ $(function() {
                 this.state.table.ajax.reload();
             });
             this.elements.partNoFilter.on('change', () => this.state.table.ajax.reload());
+            this.elements.materialSpecFilter.on('change', () => this.state.table.ajax.reload());
             $('#filterDataStatus').on('change', () => this.state.table.ajax.reload());
             $('#filterProjectStatus').on('change', () => this.state.table.ajax.reload());
             $('#filterProductStatus').on('change', () => this.state.table.ajax.reload());
@@ -1000,6 +1014,7 @@ $(function() {
                 customer_id: this.elements.customerFilter.val(),
                 model_id: this.elements.modelFilter.val(),
                 part_no: this.elements.partNoFilter.val(),
+                material_spec_id: this.elements.materialSpecFilter.val(),
                 project_status: $('#filterProjectStatus').val(),
                 product_status: $('#filterProductStatus').val(),
                 search: this.state.table.search()
@@ -1012,6 +1027,7 @@ $(function() {
             this.elements.customerFilter.val(null).trigger('change.select2');
             this.elements.modelFilter.val(null).trigger('change.select2');
             this.elements.partNoFilter.val(null).trigger('change.select2');
+            this.elements.materialSpecFilter.val(null).trigger('change.select2');
             $('#filterProjectStatus').val(null).trigger('change.select2');
             $('#filterProductStatus').val(null).trigger('change.select2');
             $('#filterDataStatus').val(null).trigger('change.select2');
@@ -1232,34 +1248,51 @@ $(function() {
         handlePrintLabelsRedirect: function() {
             const btn = $('#btnPrintLabels');
             const originalHtml = btn.html();
-            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Loading...');
+            btn.prop('disabled', true).html('<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Preparing...');
 
-            const params = {
-                customer_id: this.elements.customerFilter.val(),
-                model_id: this.elements.modelFilter.val(),
-                part_no: this.elements.partNoFilter.val(),
-                incomplete_only: $('#filterDataStatus').val() === 'incomplete' ? 1 : null,
-                length: -1
-            };
+            try {
+                const params = {
+                    customer_id: this.elements.customerFilter.val() || '',
+                    model_id: this.elements.modelFilter.val() || '',
+                    part_no: this.elements.partNoFilter.val() || '',
+                    material_spec_id: this.elements.materialSpecFilter.val() || '',
+                    project_status: $('#filterProjectStatus').val() || '',
+                    product_status: $('#filterProductStatus').val() || '',
+                    incomplete_only: $('#filterDataStatus').val() === 'incomplete' ? 1 : ''
+                };
 
-            $.get(this.config.routes.data, params)
-                .done((res) => {
-                    const data = res.data || [];
-                    if (data.length === 0) {
-                        window.showToast('No products found matching the current filters.', 'warning');
-                        return;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route("inventory.master.product.printBulk") }}';
+                form.target = '_blank';
+
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_token';
+                csrfInput.value = this.config.csrfToken;
+                form.appendChild(csrfInput);
+
+                Object.keys(params).forEach(key => {
+                    if (params[key]) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = params[key];
+                        form.appendChild(input);
                     }
-
-                    const ids = data.map(item => item.id).join(',');
-                    const printUrl = `${this.config.routes.base}/${ids}/print`;
-                    window.open(printUrl, '_blank');
-                })
-                .fail(() => {
-                    window.showToast('Failed to load products for printing.', 'error');
-                })
-                .always(() => {
-                    btn.prop('disabled', false).html(originalHtml);
                 });
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
+            } catch (err) {
+                console.error(err);
+                window.showToast('Failed to trigger bulk label printing.', 'error');
+            } finally {
+                setTimeout(() => {
+                    btn.prop('disabled', false).html(originalHtml);
+                }, 500);
+            }
         },
 
         showOldRevisionsModal: function() {

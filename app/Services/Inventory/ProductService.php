@@ -16,29 +16,51 @@ class ProductService
      */
     public function generateLabelData($ids)
     {
-        $ids = is_array($ids) ? $ids : [$ids];
-        $labels = [];
+        if (is_string($ids)) {
+            $ids = array_filter(explode(',', $ids));
+        }
+        $ids = (array) $ids;
+        if (empty($ids)) return [];
 
+        $numericIds = [];
         foreach ($ids as $id) {
-            $inventoryProduct = InventoryProduct::findByHashOrFail($id);
-            
-            $data = DB::table('inv_t_product_detail as p')
-                ->join('products as prod', 'prod.id', '=', 'p.product_id')
-                ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
-                ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
-                ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
-                ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
-                ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
-                ->where('p.id', $inventoryProduct->id)
-                ->select([
-                    'prod.part_no', 'prod.part_name', 'cust.code as customer_code', 'model.name as model_name',
-                    'rev.code as revision', 'p.thickness', 'p.width', 'p.length', 'p.length_2', 'p.pitch',
-                    'ms.spec_name as material_spec', 'ms.coating_type', 'r.code as rank_code',
-                ])
-                ->first();
+            if (is_numeric($id)) {
+                $numericIds[] = (int) $id;
+            } else {
+                try {
+                    $decoded = InventoryProduct::decodeHash($id);
+                    if ($decoded) {
+                        $numericIds[] = $decoded;
+                    }
+                } catch (\Exception $e) {}
+            }
+        }
 
-            if ($data) {
-                $labels[] = $this->formatLabelObject($inventoryProduct, $data);
+        if (empty($numericIds)) return [];
+
+        $rawList = DB::table('inv_t_product_detail as p')
+            ->join('products as prod', 'prod.id', '=', 'p.product_id')
+            ->leftJoin('customers as cust', 'cust.id', '=', 'prod.customer_id')
+            ->leftJoin('models as model', 'model.id', '=', 'p.model_id')
+            ->leftJoin('inv_m_material_spec as ms', 'ms.id', '=', 'p.material_spec_id')
+            ->leftJoin('inv_m_rank as r', 'r.id', '=', 'p.rank_id')
+            ->leftJoin('inv_m_revision as rev', 'rev.id', '=', 'p.revision_id')
+            ->whereIn('p.id', $numericIds)
+            ->select([
+                'p.id', 'prod.part_no', 'prod.part_name', 'cust.code as customer_code', 'model.name as model_name',
+                'rev.code as revision', 'p.thickness', 'p.width', 'p.length', 'p.length_2', 'p.pitch',
+                'ms.spec_name as material_spec', 'ms.coating_type', 'r.code as rank_code',
+            ])
+            ->get()
+            ->keyBy('id');
+
+        $labels = [];
+        foreach ($numericIds as $numId) {
+            if (isset($rawList[$numId])) {
+                $data = $rawList[$numId];
+                $hashId = InventoryProduct::encodeHash($data->id);
+                $inventoryProductObj = (object) ['hash_id' => $hashId, 'id' => $data->id];
+                $labels[] = $this->formatLabelObject($inventoryProductObj, $data);
             }
         }
 
